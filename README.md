@@ -6,6 +6,21 @@
 
 ---
 
+## 开发文档
+
+改代码前请先读 **[`docs/README.md`](docs/README.md)**（快速检查入口）：
+
+| 你要做的事 | 读哪份 |
+|---|---|
+| 改数据（章节/学时/顺序/外链） | [`docs/DATA-SCHEMA.md`](docs/DATA-SCHEMA.md) |
+| 改组件（顶栏/侧栏/测验/图表） | [`docs/MODULES.md`](docs/MODULES.md) |
+| 改公式 / 图表 / 打包 | [`docs/ENGINES.md`](docs/ENGINES.md) |
+| 动手前·提交前自检 | [`docs/CHECKLIST.md`](docs/CHECKLIST.md) |
+| 项目结构与故障排查 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| 历史修复索引 | [`docs/CHANGELOG.md`](docs/CHANGELOG.md) |
+
+---
+
 ## 一、怎么打开
 
 **双击 `index.html`** 即可，零构建、零依赖、无需服务器。
