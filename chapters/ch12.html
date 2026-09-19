@@ -58,8 +58,8 @@
     /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
     if (/[?&]eager=1/.test(location.search)) return;
 
-    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title';
-    var pending = [], busy = false, started = false;
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head';
+    var pending = [], busy = false, started = false, sweepDone = false;
 
     function idle(fn) {
       if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
@@ -74,7 +74,19 @@
       idle(function () {
         MJ.typesetPromise(batch).catch(function () {}).then(function () {
           busy = false;
-          if (pending.length) schedule();
+          if (pending.length) { schedule(); return; }
+          /* 兜底补排（第 32 节）：例题标题 .example-head 里的公式此前从不进入队列，
+             导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
+             凡是仍含 `$` 且未被 MathJax 处理的 .example-head，补排一次。
+             只处理这一类元素，不影响其他已排好的内容。 */
+          if (!sweepDone) {
+            sweepDone = true;
+            var left = Array.prototype.slice.call(document.querySelectorAll('.example-head'))
+              .filter(function (el) {
+                return !el.querySelector('mjx-container') && /\$[^$]{1,200}\$/.test(el.textContent || '');
+              });
+            if (left.length) { pending = pending.concat(left); schedule(); }
+          }
         });
       });
     }
