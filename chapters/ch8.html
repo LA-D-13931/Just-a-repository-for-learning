@@ -2527,8 +2527,15 @@
       var zTop = v * T;
       projXZ.push(t2([x, 0, z]));          /* 投影到 xOz：y=0 */
     }
-    /* 绘图范围取所有点的包围盒 */
-    var all = helix.concat(projXY).concat(projXZ);
+    /* 绘图范围取所有点的包围盒。
+       第 34 节：加入三条坐标轴后，轴的端点也要纳入包围盒，
+       否则轴的箭头会被面板裁掉（实测 x 由 2.63 扩到 4.13）。 */
+    var AX_LEN = 3.2, AY_LEN = 2.6, AZ_LEN = 7.6;
+    var O = [0, 0, 0];
+    var axisEnds = [[AX_LEN,0,0], [0,AY_LEN,0], [0,0,AZ_LEN]];
+    var all = helix.concat(projXY).concat(projXZ)
+                   .concat(axisEnds.map(t2))
+                   .concat([O]);
     var xs = all.map(function (p) { return p[0]; }), ys = all.map(function (p) { return p[1]; });
     var pad = 1.1;   /* 原 0.9：实测最左侧投影点超出 viewBox 3px 被裁（用户反馈图 5） */
     /* 右侧要多留：'起点 (2, 0, 0)' 标注锚在右端，只有 pad=0.9 时会被画布裁掉
@@ -2543,9 +2550,18 @@
       legend: [
         { c: 'brand', t: '螺旋线 x = 2cos t，y = 2sin t，z = 0.6t' },
         { c: 'method', t: '在 xOy 面的投影：圆 x² + y² = 4', dash: true },
-        { c: 'warn', t: '在 xOz 面的投影：x = 2cos t，z = 0.6t', dash: true }
+        { c: 'warn', t: '在 xOz 面的投影：x = 2cos t，z = 0.6t', dash: true },
+        { c: 'soft', t: '坐标轴', dash: true }
       ],
       elements: [
+        /* 三条坐标轴（第 34 节：此前 axes:false 且无轴，看不出空间方位）。
+           与 ch8「向量的线性运算」图同款画法：arrow + label 手动绘制。 */
+        { type: 'arrow', from: t2(O), to: t2([AX_LEN, 0, 0]), color: 'soft', role: 'guide' },
+        { type: 'arrow', from: t2(O), to: t2([0, AY_LEN, 0]), color: 'soft', role: 'guide' },
+        { type: 'arrow', from: t2(O), to: t2([0, 0, AZ_LEN]), color: 'soft', role: 'guide' },
+        { type: 'label', at: t2([AX_LEN + 0.35, 0, 0]), text: 'x', color: 'soft' },
+        { type: 'label', at: t2([0, AY_LEN + 0.35, 0]), text: 'y', color: 'soft' },
+        { type: 'label', at: t2([0, 0, AZ_LEN + 0.35]), text: 'z', color: 'soft' },
         { type: 'poly', pts: projXY, color: 'method', dash: true, role: 'guide' },
         { type: 'poly', pts: projXZ, color: 'warn', dash: true, role: 'guide' },
         { type: 'poly', pts: helix, color: 'brand', width: 2.4 },
