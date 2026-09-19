@@ -37,3 +37,18 @@ manifest.txt
 *.rej
 *~
 *.swp
+
+# ── ⚠️ 敏感信息防护（第 31 节）────────────────────────────────
+# 签名私钥、证书、激活密钥一律不得入库。私钥存放于仓库外的 ../.keys/
+*.pem
+*.p12
+*.pfx
+*.key
+*.keystore
+*.jks
+.keys/
+.env
+.env.*
+*secret*
+*token*.json
+credentials.json
