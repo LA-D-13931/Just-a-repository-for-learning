@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>托马斯补充一　函数与变化率 · 高等数学学习站</title>
+<meta name="description" content="托马斯 14 版独有内容：数学软件绘图与作为变化率的导数（对应 Thomas 14e §1.4 / §3.4，本站在此编号为 §TX1-1 / §TX1-2）。共 2 节 3 学时。">
+<script>
+  /* 尽早应用主题与亮暗模式，避免刷新时"先亮后暗"闪一下。
+     theme.js 里还有一份同样的逻辑，这里是关键路径上的同步版本。 */
+  (function () {
+    try {
+      var t = localStorage.getItem('advmath.theme.v1') || 'default';
+      var m = localStorage.getItem('advmath.mode.v1') || 'auto';
+      var e = document.documentElement;
+      e.setAttribute('data-theme', t);
+      if (m !== 'auto') e.setAttribute('data-mode', m);
+      /* 语言：纯中文模式下要把英文段与行内英文整段隐藏，
+         所以必须在首屏渲染前就把 data-lang 写上去，否则会闪一下英文。 */
+      if ((localStorage.getItem('advmath.lang.v1') || 'both') === 'zh') {
+        e.setAttribute('data-lang', 'zh');
+      }
+    } catch (err) { /* 隐私模式下 localStorage 不可用，退回默认主题 */ }
+  })();
+</script>
+<link rel="stylesheet" href="../assets/css/theme-tokens.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script>
+  /* MathJax 配置。
+     性能与正确性的折中（2026-09-18）：
+     本站公式密集（ch1 有 7518 个），一次性排版全页会生成约 19 万 DOM 元素，
+     任何重排都要 200 ms —— 侧栏拖动会卡。
+     但如果"只为视口内排版"，未被滚到的公式会一直显示成 $\sqrt{x}$ 这样的源码，
+     这对读者是明显的文字损坏，不可接受。
+     因此改为：首屏立即排版（保证打开就是正确文字），
+     其余公式在浏览器空闲时段分片补排（不阻塞交互）。
+     两全：文字正确，且拖动期间几乎没有排版开销。 */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\(', '\)']], displayMath: [['$$', '$$'], ['\[', '\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    /* 关键（第 26 节 · 页面切换性能）：
+       默认 startup 会在 MathJax 就绪时自动同步扫描全页并排版，
+       实测这一步在主线程上连续占用 1.7 s（ch3：0 → 5484 个公式一次成型），
+       期间点击无响应——这就是"切换卡顿/点击无反应"的根因。
+       改为 typeset:false：既不自动排版，也不自动扫描；
+       排版全部由下面这段脚本按"首屏优先 + 分片"驱动。 */
+    startup: {
+      typeset: false,
+      ready: function () {
+        MathJax.startup.defaultReady();
+        window.__mjxReady = true;   /* 供下面的分片调度感知 */
+      }
+    }
+  };
+
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title';
+    var pending = [], busy = false, started = false;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) schedule();
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL));
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+</script>
+<script id="MathJax-script" async src="../assets/js/vendor/tex-svg.js"></script>
+</head>
+<body data-page="supp1" data-chapter="101">
+
+                                      <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="../index.html">
+      <span class="brand-mark">AM</span>
+      <span>高等数学学习站<small>同济八版骨架 · 托马斯映射 · 中英对照</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="../index.html">首页</a>
+      <a href="../cheatsheet.html">公式速查表</a>
+      <a href="../exam.html">综合自测卷</a>
+    </nav>
+    <span class="crumb">托马斯补充</span>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+                                                                                                                  <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="ch1.html"><span class="num">1</span>函数与极限</a>
+          <a class="toc-chapter" href="ch2.html"><span class="num">2</span>导数与微分</a>
+          <a class="toc-chapter" href="ch3.html"><span class="num">3</span>微分中值定理与导数的应用</a>
+          <a class="toc-chapter" href="ch4.html"><span class="num">4</span>不定积分</a>
+          <a class="toc-chapter" href="ch5.html"><span class="num">5</span>定积分</a>
+          <a class="toc-chapter" href="ch6.html"><span class="num">6</span>定积分的应用</a>
+          <a class="toc-chapter" href="ch7.html"><span class="num">7</span>微分方程</a>
+          <a class="toc-chapter" href="ch8.html"><span class="num">8</span>向量代数与空间解析几何</a>
+          <a class="toc-chapter" href="ch9.html"><span class="num">9</span>多元函数微分法及其应用</a>
+          <a class="toc-chapter" href="ch10.html"><span class="num">10</span>重积分</a>
+          <a class="toc-chapter" href="ch11.html"><span class="num">11</span>曲线积分与曲面积分</a>
+          <a class="toc-chapter" href="ch12.html"><span class="num">12</span>无穷级数</a>
+          <a class="toc-chapter is-active" href="supp1.html"><span class="num">TX</span>托马斯补充</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">本页目录</div>
+          <nav class="toc" data-toc></nav>
+        </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+          <a class="toc-chapter" href="../cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter" href="../exam.html">综合自测卷</a>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div class="page-eyebrow"><span class="en-inline">SUPPLEMENT 1</span> · Thomas 14e §1.4 / §3.4</div>
+        <h1>托马斯补充一　函数与变化率</h1>
+                <div class="bi">
+        <p class="zh" lang="zh">这两节在同济体系里没有独立小节，却是英文教材直接讲的内容：用数学软件绘图（以及它带来的陷阱），和把导数解释成变化率。</p>
+        <p class="en" lang="en">These two topics have no separate section in the Tongji system, yet the English textbook treats them directly: graphing with software, together with the pitfalls it brings, and the derivative read as a rate of change.</p>
+      </div>
+      </div>
+
+      <!-- ======== 以下为小节内容 ======== -->
+
+            <div class="sec">
+<h2 id="tx1-1" data-hours="1.5"
+          data-video-map="tx1-1"
+          data-video-title="《高等数学》同济版 全程教学视频（宋浩老师）">§TX1-1 数学软件绘图<span class="en-inline"> / Graphing with Software</span></h2>
+
+      <!-- 视频入口（顶部）：渲染由 assets/js/videos.js 完成，正文里不硬编码 URL -->
+      <div data-video-entry="tx1-1" data-video-pos="top"></div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">前置知识</span>　本节不引入新的数学工具，用的全是已经学过的三样：函数的定义域与四种特性（由 §1-1 定义 1.2、定义 1.3 给出）、极限的严格定义（§1-3）、导数的定义与求导法则（§2-1、§2-2）。</p>
+        <p class="zh" lang="zh">另外只需要一件工具：一台能画图的软件（图形计算器、数学软件或电子表格都可以），不需要会写程序。</p>
+        <p class="en" lang="en"><strong>Prerequisites.</strong> This section introduces no new mathematics. Everything used here has been met before: the domain and the four properties of a function (given in §1-1, Definitions 1.2 and 1.3), the precise definition of a limit (§1-3), and the definition of the derivative together with the differentiation rules (§2-1, §2-2).</p>
+        <p class="en" lang="en">One tool is also needed: graphing software — a graphing calculator, a mathematics package or a spreadsheet will do. No programming is required.</p>
+      </div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">本节要解决的问题</span>　手绘图只能画你已经熟悉的函数，坐标精度也有限，而形如 $y=\cos x+\frac{1}{200}\sin 200x$ 的函数根本画不出来。</p>
+        <p class="zh" lang="zh">软件把"取点—连线"这一步自动化了，代价是它只回答"在你给定的视窗里，这些采样点连起来是什么样"，不回答"函数的真实行为是什么"。视窗选错，图形会失真、会漏掉极值，甚至在根本不振荡的地方画出振荡。</p>
+        <p class="zh" lang="zh">本节做三件事：说清为什么需要软件作图、给出选视窗的判据与方法、点出三类典型陷阱。这套"先用解析性质定范围、再用图形复核"的做法，在 §2-4 处理参数方程 $x=x(t)$、$y=y(t)$ 的曲线时直接沿用，第 3 章求极值时也要回来核对图形。</p>
+        <p class="en" lang="en"><strong>The problem this section solves.</strong> A hand-drawn graph can show only functions you already know, and its coordinate accuracy is limited; a function such as $y=\cos x+\frac{1}{200}\sin 200x$ cannot be sketched by hand at all.</p>
+        <p class="en" lang="en">Software automates the step "plot points, join them". The price is that it answers only one question — what the joined sample points look like inside the window you supplied — and not "what the function really does". Choose the window badly and the picture is distorted, loses extrema, or displays oscillations where there are none.</p>
+        <p class="en" lang="en">This section does three things: it explains why software is needed, states a criterion and a procedure for choosing a viewing window, and names three typical traps. The same order — fix the range from analytic properties first, confirm with a picture afterwards — carries over to the parametric curves $x=x(t)$, $y=y(t)$ of §2-4 and returns in Chapter 3, where derivatives locate extrema.</p>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>手绘的局限与软件的位置<span class="en-inline"> / What Hand Sketching Cannot Do</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">手绘的坐标精度大约是一毫米。在一条长 10 厘米、量程 20 个单位的横轴上，1 毫米对应 $0.2$ 个单位，比 $0.2$ 更小的差别画不出来。</p>
+          <p class="zh" lang="zh">而 $\sin x$ 与 $x-\frac{x^3}{6}$ 在 $|x|\le0.5$ 上相差不到 $3\times10^{-4}$：这两条曲线的手绘图会完全重合，区别只能在数值上看见。</p>
+          <p class="zh" lang="zh">软件把取点、连线、换视窗全部自动化，试错成本接近零，还能画出参数曲线与隐式方程给出的曲线。但它给出的仍然只是"采样点连起来的样子"，所以图是线索，结论要由定义域、单调性、极限这些解析性质定。</p>
+          <p class="en" lang="en">Hand sketching resolves about one millimetre. On an axis $10$ cm long carrying $20$ units, one millimetre stands for $0.2$ units, and anything finer than that cannot be drawn.</p>
+          <p class="en" lang="en">Yet $\sin x$ and $x-\frac{x^3}{6}$ differ by less than $3\times10^{-4}$ on $|x|\le0.5$, so a hand sketch makes the two curves coincide; only numbers can separate them.</p>
+          <p class="en" lang="en">Software automates plotting, joining and re-windowing, so experiments cost almost nothing, and it can draw parametric curves and curves given by implicit equations. What it returns is still only the joined sample points, so a picture is a clue; the conclusion must come from the domain, monotonicity and limits.</p>
+        </div>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 1.1　视窗、方形视窗与采样<span class="en-inline"> / Viewing Window, Square Window, and Sampling</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh"><strong>视窗</strong>（<span class="term-en">viewing window</span>）：作图时显示出来的那块矩形区域，用两个区间指定，记作 $[a,b]\times[c,d]$，意思是 $a\le x\le b$ 且 $c\le y\le d$。默认视窗由软件选定，与函数的真实范围无关。</p>
+          <p class="zh" lang="zh">方形视窗（<span class="term-en">square window</span>）：两轴<strong>单位长度相同</strong>的视窗，即 $x$ 轴上 1 个单位的图上长度等于 $y$ 轴上 1 个单位的图上长度。它<strong>不是</strong>指显示区本身是正方形——显示区通常是矩形；"方形"说的是度量方式。</p>
+          <p class="zh" lang="zh"><strong>采样</strong>：软件在 $[a,b]$ 内取一组等距的 $x$ 值，只有当 $x$ 落在定义域内、并且 $f(x)\in[c,d]$ 时才画出点 $(x,f(x))$，然后把相邻的已画点用短线段依次连接。</p>
+          <p class="zh" lang="zh">由此得到三条推论：视窗之外的部分被裁掉；连线是画出来的，不是算出来的；采样点之间的行为（极值、间断、振荡）软件没有数据，只能由相邻点的位置去猜。</p>
+          <p class="en" lang="en">A <strong>viewing window</strong> is the rectangular region shown on screen, specified by two intervals and written $[a,b]\times[c,d]$, meaning $a\le x\le b$ and $c\le y\le d$. The default window is chosen by the software, not by the function and not by its true range.</p>
+          <p class="en" lang="en">A <strong>square window</strong> is one in which the units on the two axes have the same length: one unit on the $x$-axis occupies the same screen length as one unit on the $y$-axis. It does <strong>not</strong> mean that the display is square — the display is normally rectangular; the word describes the scaling.</p>
+          <p class="en" lang="en"><strong>Sampling</strong> means that the software takes equally spaced $x$-values in $[a,b]$ and plots the point $(x,f(x))$ only when $x$ lies in the domain and $f(x)$ lies in $[c,d]$; neighbouring plotted points are then joined by short line segments.</p>
+          <p class="en" lang="en">Three consequences follow: whatever lies outside the window is cut off; the joining segments are drawn, not computed; and between sample points the software holds no data about extrema, jumps or oscillations, so it can only guess from the neighbouring points.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>判定 1.1　真实比例条件<span class="en-inline"> / Condition for an Undistorted Window</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh"><span class="thm-name">判定 1.1</span>　设显示区可作图部分的像素宽为 $W$、高为 $H$，视窗为 $[a,b]\times[c,d]$，其中 $a&lt;b$、$c&lt;d$。则视窗是方形视窗（图形的形状与真实形状一致）<strong>当且仅当</strong></p>
+          <p class="zh" lang="zh">$$\frac{b-a}{d-c}=\frac{W}{H}.$$</p>
+          <p class="zh" lang="zh">理由是一行比例：$x$ 方向每 1 个单位占 $\frac{W}{b-a}$ 个像素，$y$ 方向每 1 个单位占 $\frac{H}{d-c}$ 个像素，两者相等恰好就是上式。等价的说法是：视窗的宽高比必须等于显示区的宽高比。</p>
+          <p class="zh" lang="zh">推论（失真有多大）记 $k=\frac{W(d-c)}{H(b-a)}$，则显示出的斜率等于真实斜率除以 $k$，长度也按同一因子拉伸；$k\ne1$ 时角度与形状都不可信。</p>
+          <p class="zh" lang="zh">若要把 $y$ 范围固定为 $[c,d]$ 而让视窗变成方形，应取 $b-a=(d-c)\frac{W}{H}$。</p>
+          <p class="en" lang="en"><span class="thm-name">Criterion 1.1</span> Let the drawable part of the display be $W$ pixels wide and $H$ pixels high, and let the window be $[a,b]\times[c,d]$ with $a&lt;b$ and $c&lt;d$. The window is square — the picture has the true shape — <strong>if and only if</strong></p>
+          <p class="en" lang="en">$$\frac{b-a}{d-c}=\frac{W}{H}.$$</p>
+          <p class="en" lang="en">The reason is a one-line ratio: one unit in $x$ occupies $\frac{W}{b-a}$ pixels and one unit in $y$ occupies $\frac{H}{d-c}$ pixels, and the two agree exactly when the displayed equation holds. Equivalently, the width-to-height ratio of the window must equal that of the display.</p>
+          <p class="en" lang="en">A corollary measures the distortion. Put $k=\frac{W(d-c)}{H(b-a)}$; the displayed slope is the true slope divided by $k$, lengths are stretched by the same factor, and when $k\ne1$ neither angles nor shapes can be trusted.</p>
+          <p class="en" lang="en">To keep the $y$-range $[c,d]$ and still obtain a square window, take $b-a=(d-c)\frac{W}{H}$.</p>
+        </div>
+      </div>
+
+      <!-- ===== 图 1：同一组曲线在两个视窗下的形状差异（数形结合） =====
+           SVG 内的 <text> 不会被 MathJax 处理，故图内只写纯文本。
+           两个面板的绘图框都是 282 x 186 像素（= 94*3 x 62*3），比例与屏幕 94:62 严格一致；
+           横向映射 x(v) = 框左 + (v - xlo) * 282/(xhi-xlo)，纵向 y(v) = 框上 + (yhi - v) * 186/14。 -->
+      <figure class="plot-figure">
+        <div id="fig-aspect"></div>
+        <figcaption>图 1　看什么：同一组曲线——圆 $x^2+y^2=9$ 与两条互相垂直的直线 $y=x$、$y=-x+3\sqrt2$——在两块显示比例不同的视窗下的样子。左图视窗 $[-4,4]\times[-6,8]$，$x$ 方向 1 个单位占 35.25 像素、$y$ 方向只占 13.29 像素，$x$ 单位被拉长 $2.65$ 倍，于是圆变成横向的扁椭圆，$90^\circ$ 的夹角看起来只有 $41.3^\circ$。右图 $[-10.61,10.61]\times[-6,8]$ 是方形视窗，两轴单位长度都是 13.29 像素，圆是圆、直线垂直。两图的差别全部来自视窗比例，与函数本身无关。</figcaption>
+      </figure>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法 1.1　选视窗、复核图形<span class="en-inline"> / Choosing and Checking a Viewing Window</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">顺序是"先解析、后图形"：先用函数的解析性质定出该看多大范围，再让软件画图复核；不要让默认视窗决定你的判断。</p>
+          <ol>
+            <li class="zh"><strong>定定义域。</strong>只在定义域内看图形（§1-1 定义 1.2）。越出定义域出现的近竖直线段是连线造成的假象。</li>
+            <li class="zh"><strong>用对称性减半。</strong>奇函数只看 $x\ge0$ 再对原点对称，偶函数只看 $x\ge0$ 再对 $y$ 轴对称，周期函数只看一个周期（§1-1 定义 1.3）。</li>
+            <li class="zh"><strong>用导数定 $y$ 的量级。</strong>解 $f'=0$ 得临界点，把临界值与端点值比一遍，由最大最小定出 $[c,d]$（§2-1、§2-2）。</li>
+            <li class="zh"><strong>定 $[a,b]$ 并核对比例。</strong>$[a,b]$ 要覆盖全部临界点并留出边距；需要真实形状时按判定 1.1 取 $b-a=(d-c)\frac{W}{H}$。</li>
+            <li class="zh"><strong>换一档再看一次。</strong>把视窗放大或缩小一个量级各画一次。两次图形不一致的地方，正是裁剪或采样在起作用，必须回到解析判断。</li>
+            <li class="zh"><strong>参数曲线与隐式曲线各加一步。</strong>参数曲线先定 $t\in[t_{\min},t_{\max}]$，再由 $x(t)$、$y(t)$ 的取值范围定视窗；隐式方程 $F(x,y)=0$ 先按 §1-1 判定 1.1 确认它在所求区间上唯一确定 $y$，再逐级加密网格，直到图形不再变化。</li>
+          </ol>
+          <p class="zh" lang="zh">按这六步画出的图可以直接写进作业或报告：视窗与采样写在图上，别人才复核得了。</p>
+          <p class="en" lang="en">The order is analytic first, graphical second: fix the range from the function's own properties, then let software confirm it. Never let a default window make the decision.</p>
+          <ol>
+            <li class="en" lang="en"><strong>Fix the domain.</strong> Only the domain is worth looking at (§1-1, Definition 1.2). Near-vertical strokes outside the domain are artefacts of the joining.</li>
+            <li class="en" lang="en"><strong>Halve the work with symmetry.</strong> An odd function needs only $x\ge0$ plus a reflection in the origin, an even function only $x\ge0$ plus a reflection in the $y$-axis, a periodic function only one period (§1-1, Definition 1.3).</li>
+            <li class="en" lang="en"><strong>Size the $y$-range with the derivative.</strong> Solve $f'=0$ for the critical points, compare their values with the endpoint values, and choose $[c,d]$ from the resulting range (§2-1, §2-2).</li>
+            <li class="en" lang="en"><strong>Choose $[a,b]$ and check the scaling.</strong> It must cover every critical point with a margin, and when the true shape matters use Criterion 1.1, $b-a=(d-c)\frac{W}{H}$.</li>
+            <li class="en" lang="en"><strong>Replot one order of magnitude in or out.</strong> Where the two pictures disagree, clipping or sampling is at work, and the analytic argument decides.</li>
+            <li class="en" lang="en"><strong>Add one step for parametric and implicit curves.</strong> For $x=x(t)$, $y=y(t)$ fix $t\in[t_{\min},t_{\max}]$ first and read the ranges of $x(t)$ and $y(t)$ off the curve; for $F(x,y)=0$ check by §1-1, Criterion 1.1 that it defines $y$ uniquely on the interval in question, then refine the grid until the picture stops changing.</li>
+          </ol>
+          <p class="en" lang="en">A graph produced this way can go straight into homework or a report; record the window and the sampling on the figure, otherwise nobody can check it.</p>
+        </div>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>图形证据与严格证明的分工<span class="en-inline"> / What Numerical and Graphical Evidence Can Do</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">图形与数值实验能做的是<strong>提出猜想、暴露反例</strong>：画出 $y=\frac{\sin x}{x}$ 会看到 $x\to0$ 时空洞的高度趋向 1；列表算 $x=0.1,\,0.01,\,0.001$ 得 $0.9983$、$0.99998$、$0.9999998$，都指向 1。</p>
+          <p class="zh" lang="zh">它们<strong>不能</strong>证明这个极限。要证明，必须回到 §1-3 的 $\varepsilon$-$\delta$ 定义，或者用 §1-6 的两个重要极限与 §1-7 的等价无穷小把结论推出来。</p>
+          <p class="zh" lang="zh">数值实验本身也有边界。用双精度浮点算 $\frac{1-\cos x}{x^2}$：当 $x=10^{-9}$ 时，$\cos x$ 与 1 的差约 $5\times10^{-19}$，小于浮点数在 1 附近的分辨率 $2.2\times10^{-16}$。</p>
+          <p class="zh" lang="zh">于是 $1-\cos x$ 被舍入成 0，表格里出现 0，而真实极限是 $\frac12$。数字失效不等于极限不存在，只说明这个算法在这个量级上不再有效。</p>
+          <p class="zh" lang="zh">分工由此确定：图与数值用来选方向、排除错误猜想、检查解析结果是否合理；不等式与定义负责给结论。三者对不上时，先怀疑视窗、采样与浮点误差，再回头检查推导。</p>
+          <p class="en" lang="en">Numerical experiments and graphs <strong>propose conjectures and expose counterexamples</strong>: the graph of $y=\frac{\sin x}{x}$ shows the height of the hole near $x\to0$ approaching 1, and a table at $x=0.1,\,0.01,\,0.001$ gives $0.9983$, $0.99998$, $0.9999998$; both point to 1.</p>
+          <p class="en" lang="en">Neither <strong>proves</strong> the limit. A proof must return to the $\varepsilon$-$\delta$ definition of §1-3, or be built from the two basic limits of §1-6 and the equivalent infinitesimals of §1-7.</p>
+          <p class="en" lang="en">Numerical work has limits of its own. Compute $\frac{1-\cos x}{x^2}$ in double precision: at $x=10^{-9}$ the difference between $\cos x$ and 1 is about $5\times10^{-19}$, below the resolution $2.2\times10^{-16}$ of floating-point numbers near 1.</p>
+          <p class="en" lang="en">So $1-\cos x$ is rounded to 0 and the table shows 0, although the true limit is $\frac12$. Numbers that fail do not deny the limit; they mark where the algorithm stops working.</p>
+          <p class="en" lang="en">The division of labour is therefore fixed: pictures and numbers choose the direction, discard wrong guesses and test whether an analytic answer is reasonable, while inequalities and definitions supply the conclusion. When the three disagree, suspect the window, the sampling and floating-point error first, then re-read the derivation.</p>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 1.1</span> 判断视窗是否失真，并把它改成方形视窗
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>某软件的显示区可作图为 $94\times62$ 像素（宽 $\times$ 高）。把圆 $x^2+y^2=9$ 与直线 $y=x$、$y=-x+3\sqrt2$ 画在视窗 $[-4,4]\times[-6,8]$ 中（Thomas 14e §1.4 的例 2 用的就是同一组数据与视窗）。判断图形是否失真；若失真，算出失真因子 $k$，说明斜率与形状各变了多少；再求出保持 $y$ 范围不变时的方形视窗。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，写出视窗两边的长度。</strong>$b-a=4-(-4)=8$，$d-c=8-(-6)=14$。</p>
+            <p><strong>第二步，按判定 1.1 比比例。</strong>$\frac{b-a}{d-c}=\frac{8}{14}\approx0.571$，而 $\frac{W}{H}=\frac{94}{62}\approx1.516$。两者不等，所以视窗不是方形视窗，图形失真。</p>
+            <p><strong>第三步，算失真因子。</strong>由判定 1.1 的推论，</p>
+            <p>$$k=\frac{W(d-c)}{H(b-a)}=\frac{94\times14}{62\times8}=\frac{1316}{496}\approx2.65$$</p>
+            <p>。$k>1$ 表示横向被拉长 2.65 倍；等价地说，$y$ 方向的单位长度只有 $x$ 方向的 $\frac{1}{2.65}$。</p>
+            <p><strong>第四步，看斜率。</strong>显示斜率 $=$ 真实斜率 $\div k$。$y=x$ 的斜率是 1，显示出来约 $0.377$，倾斜角约 $20.7^\circ$；$y=-x+3\sqrt2$ 的斜率是 $-1$，显示出来约 $-0.377$，倾斜角约 $-20.7^\circ$。两条直线的夹角由 $90^\circ$ 变成约 $41.3^\circ$，所以看起来不垂直。</p>
+            <p><strong>第五步，看形状。</strong>圆的半径是 3。$x$ 方向 1 个单位占 $\frac{94}{8}=11.75$ 像素，$y$ 方向 1 个单位占 $\frac{62}{14}\approx4.43$ 像素，于是横向半轴 $3\times11.75=35.3$ 像素、纵向半轴 $3\times4.43\approx13.3$ 像素，两半轴之比 $35.3/13.3\approx2.65$，与第三步的 $k$ 相同：圆被压成横向的扁椭圆。</p>
+            <p><strong>第六步，求方形视窗。</strong>要求 $y$ 范围不变，即 $d-c=14$。由判定 1.1 的推论</p>
+            <p>$$b-a=(d-c)\frac{W}{H}=14\times\frac{94}{62}=\frac{1316}{62}\approx21.23.$$</p>
+            <p>取 $x$ 中心为 0，得到方形视窗 $[-10.61,10.61]\times[-6,8]$。</p>
+            <p><strong>验算</strong>：把 $b-a=21.23$、$d-c=14$ 代回判定 1.1，$\frac{21.23}{14}\approx1.516$，与 $\frac{94}{62}\approx1.516$ 一致 ✓。再验单位长度：此时 $x$ 方向 1 个单位占 </p>
+            <p>$$\frac{21.23}{8}\cdot\frac{94}{21.23}=\frac{94}{21.23}\approx4.43$$</p>
+            <p> 像素，与 $y$ 方向的 $\frac{62}{14}\approx4.43$ 像素相等 ✓。</p>
+            <p><strong>说明</strong>：这正是图 1 的两个面板。左图是原来的 $[-4,4]\times[-6,8]$，一个圆与两条互相垂直的直线看起来是扁椭圆与夹角 $41^\circ$ 的两条斜线；右图是修正后的方形视窗，形状恢复。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 1.2</span> 采样不足与 $K$ 值：$\sin(Kx)$ 要选多宽的视窗
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>设 $f(x)=\sin(Kx)$，$K>0$ 是频率参数（Thomas 14e §1.4 的例 3 取 $K=100$）。某软件在视窗 $[a,b]\times[-1,1]$ 上取 $N=500$ 个等距的 $x$ 值，相邻两点间距为 $\frac{b-a}{N-1}$。</p>
+          <p>（1）$K=100$ 时求周期，并说明在视窗 $[-12,12]\times[-1,1]$ 中图形为什么不像正弦曲线。</p>
+          <p>（2）若要求每个周期至少有 4 个采样点，视窗宽度 $b-a$ 最大是多少？</p>
+          <p>（3）按（2）给出一个具体视窗，并验算端点值。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，算周期。</strong></p>
+            <p>$$T=\frac{2\pi}{K}=\frac{2\pi}{100}=0.0628319\ldots\approx0.0628$$</p>
+            <p>也就是说，横向每走 $0.0628$ 个竖线单位，函数就完成一次完整振荡。</p>
+            <p><strong>第二步，看视窗 $[-12,12]$ 里的采样密度。</strong>这个视窗覆盖 $\frac{24}{0.0628}\approx382$ 个周期；采样间距是 $\frac{24}{500-1}\approx0.0481$，一个周期平均只有 $\frac{0.0628}{0.0481}\approx1.3$ 个采样点：多数周期一个点都采不到，少数周期采到 2 个。</p>
+            <p><strong>第三步，判断这样连出来的折线为什么是假的。</strong>相邻两点的自变量相差 $0.0481$，代入 $\sin(100x)$ 后相位相差 $100\times0.0481\approx4.81$ 弧度。相位差超过 $\pi$ 时，两点的函数值可以一个在上、一个在下，$\sin$ 的真实振荡被完全跳过，连出来的折线频率远低于 100。这个现象叫混叠：它是采样不足的产物，不是函数的性质。</p>
+            <p><strong>第四步，解（2）。</strong>一个周期内至少 4 个采样点，等价于采样间距不超过 $\frac{T}{4}=\frac{2\pi}{4K}=\frac{\pi}{2K}$，即</p>
+            <p>$$\frac{b-a}{N-1}\le\frac{\pi}{2K}\quad\Longrightarrow\quad b-a\le(N-1)\frac{\pi}{2K}.$$</p>
+            <p>代入 $N=500$、$K=100$：</p>
+            <p>$$b-a\le499\times\frac{\pi}{200}\approx499\times0.015708\approx7.84$$</p>
+            <p>。视窗宽度不超过约 7.84。</p>
+            <p><strong>第五步，取一个具体视窗（3）。</strong>取 $[-0.1,0.1]$，宽度 $0.2$，含 $\frac{0.2}{0.0628}\approx3.18$ 个周期。此时采样间距 $\frac{0.2}{499}\approx4.0\times10^{-4}$，每个周期约 $\frac{0.0628}{4.0\times10^{-4}}\approx157$ 个采样点，振荡的形状能看出来了。</p>
+            <p><strong>验算</strong>：$f(0.1)=\sin 10\approx-0.5440$。用周期 $T=0.0628319$ 往回平移：$f(0.1-0.0628319)=f(0.0371681)=\sin 3.71681$；而 $3.71681-\pi\approx0.5752$，$\sin 3.71681=-\sin 0.5752\approx-0.5440$，与 $f(0.1)$ 一致 ✓，说明周期算对了。再验一个零点：$f\left(\frac{\pi}{100}\right)=\sin\pi=0$ ✓。</p>
+            <p><strong>$K$ 值的作用</strong>：改变 $K$ 只改变横向的频率，不改变 $y$ 的取值范围 $[-1,1]$。所以 $[c,d]$ 不必跟着改，但 $[a,b]$ 必须重新选：$K$ 放大 10 倍，能看清振荡的视窗宽度就缩小 10 倍。这就是"$K$ 值一变、视窗要重选"的含义。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 1.3</span> 给定函数与三个视窗：逐一诊断失真与漏掉的特征
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $f(x)=x^3-7x^2+28$（Thomas 14e §1.4 的例 1）。分别用视窗</p>
+          <p>(a) $[-10,10]\times[-10,10]$；　(b) $[-4,4]\times[-50,10]$；　(c) $[-4,10]\times[-60,60]$</p>
+          <p>作图。对每个视窗判断：是否是方形视窗？是否漏掉了 $f$ 的关键特征（两个极值、单调区间、两端走向）？最后给出一个把全部关键特征都包含在内的视窗，并验算。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，先把解析性质算清楚——这是后面判断的依据，不能靠看图猜。</strong></p>
+            <p>$f'(x)=3x^2-14x=x(3x-14)$，临界点是 $x=0$ 与 $x=\frac{14}{3}$。</p>
+            <p>符号：$x&lt;0$ 时 $x&lt;0$、$3x-14&lt;0$，乘积为正；$0&lt;x&lt;\frac{14}{3}$ 时乘积为负；$x>\frac{14}{3}$ 时乘积为正。所以 $f$ 在 $(-\infty,0]$ 上单调增加，在 $\left[0,\frac{14}{3}\right]$ 上单调减少，在 $\left[\frac{14}{3},+\infty\right)$ 上单调增加。</p>
+            <p>$f(0)=28$ 是极大值；</p>
+            <p>$$f\left(\frac{14}{3}\right)=\frac{2744}{27}-\frac{1372}{9}+28=\frac{2744-4116+756}{27}=-\frac{616}{27}\approx-22.8$$</p>
+            <p> 是极小值。$f$ 是多项式，处处有定义，没有竖直渐近线；$x\to\pm\infty$ 时 $f\to\pm\infty$。</p>
+            <p><strong>第二步，诊断 (a) $[-10,10]\times[-10,10]$。</strong>比例：$\frac{b-a}{d-c}=\frac{20}{20}=1\ne\frac{94}{62}\approx1.516$，失真，$k=\frac{94\times20}{62\times20}=\frac{94}{62}\approx1.52$。漏特征：$y$ 被限制在 $[-10,10]$，而极大值 28 在上方、极小值 $-22.8$ 在下方，两个极值全部被裁掉；剩下的是被上下截断的几段近竖直线段。另外 $[-10,10]$ 也过大，函数真正有变化的部分在 $[-4,10]$ 内。</p>
+            <p><strong>第三步，诊断 (b) $[-4,4]\times[-50,10]$。</strong>先看范围。$f(-4)=-64-112+28=-148$，$f(4)=64-112+28=-20$，而 $f(0)=28$，所以 $f$ 在 $[-4,4]$ 上的最大值是 28、最小值是 $-148$。视窗的 $y$ 范围是 $[-50,10]$：峰（28）被裁掉，左端下降段（低到 $-148$）也被裁掉。比例：$\frac{8}{60}\approx0.133\ne1.516$，仍然失真。</p>
+            <p><strong>第四步，诊断 (c) $[-4,10]\times[-60,60]$。</strong>极大值 28 与极小值 $-22.8$ 都落在 $[-60,60]$ 内，$x$ 方向也覆盖了两个临界点，所以这张图能看到"上升—下降—上升"的完整走向。只有 $x$ 接近 10 时函数升到 $f(10)=1000-700+28=328$，会从视窗上方穿出，这一段的走向要另画。比例：$\frac{14}{120}\approx0.117\ne1.516$，仍不是方形视窗。这里要看清楚：<strong>"看得全"与"形状真实"是两个要求，前者管范围、后者管比例，通常不能一次同时满足。</strong></p>
+            <p><strong>第五步，给出包含全部关键特征的视窗。</strong>在 $[-4,10]$ 上 $f$ 的取值范围是 $[-148,328]$，取 $y$ 范围 $[-160,340]$ 即可把四个特征值全部包含：$f(-4)=-148$、$f(0)=28$、$f\left(\frac{14}{3}\right)\approx-22.8$、$f(10)=328$。取视窗 $[-4,10]\times[-160,340]$。</p>
+            <p><strong>第六步，若还要真实形状，就再画一张局部图。</strong>按判定 1.1，$y$ 范围 500 个单位对应的 $x$ 宽度是 $500\times\frac{94}{62}\approx758$，得到 $[-376,382]\times[-160,340]$——此时曲线在图上只剩很小一段。所以合理的做法是两张图配合：先用 $[-4,10]\times[-160,340]$ 看整体，再用一张方形视窗放大极值附近看形状。</p>
+            <p><strong>验算</strong>：$f(0)=28$ ✓；</p>
+            <p>$$f\left(\frac{14}{3}\right)=\frac{2744}{27}-\frac{1372}{9}+28=\frac{2744-4116+756}{27}=-\frac{616}{27}$$</p>
+            <p>，且 $-616/27\approx-22.81>-60$ ✓ 所以 (c) 确实包含极小值；$f(10)=328$ ✓ 所以 (c) 的右端会穿出上边界；第五步的四个值全部落在 $[-160,340]$ 内 ✓；第六步的比例检验 </p>
+            <p>$$\frac{382-(-376)}{340-(-160)}=\frac{758}{500}=1.516=\frac{94}{62}$$</p>
+            <p> ✓。</p>
+            <p><strong>本题要建立的顺序</strong>：先求导定极值与单调区间，再拿视窗与极值范围比对，最后才谈比例。缺了第一步，剩下的判断只能靠猜。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点</div>
+        <p class="zh" lang="zh"><strong>把默认视窗当成函数的样子。</strong>默认视窗由软件选定，与函数的真实范围无关。看到图先写下它的 $[a,b]\times[c,d]$，再判断哪些特征被裁掉了。</p>
+        <p class="zh" lang="zh"><strong>把等长的 $x$、$y$ 区间当成方形视窗。</strong>$[-10,10]\times[-10,10]$ 只在显示区为正方形时才是方形视窗；显示区通常为矩形（例如 $94\times62$ 像素），此时方形视窗的 $x$ 区间长度必须是 $y$ 区间的 $1.52$ 倍。</p>
+        <p class="zh" lang="zh"><strong>把软件连出来的竖线当成渐近线或间断。</strong>分母在视窗内为零时（如 $\frac{1}{x-2}$ 在 $x=2$ 处），软件会画出一条近竖直线段。那是相邻采样点的连线，不是函数的性质；$x=2$ 处函数没有定义（§1-1 定义 1.2），间断类型按 §1-8 判定。</p>
+        <p class="zh" lang="zh"><strong>在过宽的视窗里找细节。</strong>$\sin(Kx)$ 这类快振荡函数，视窗一宽，每个周期的采样点就少于 2 个，画出来的折线是混叠的假图形；先算周期 $T=\frac{2\pi}{K}$，再决定视窗宽度。</p>
+        <p class="zh" lang="zh"><strong>把隐式绘图的空白当作"无解"。</strong>按网格取样判断符号变化的算法会漏掉细窄或孤立的解集：$x^2+y^2=0$ 的解集只有原点一个点，网格几乎必然错过；$y^2=x^3$ 在原点的尖点附近也常被画成光滑的弯。空白说明网格不够细，不说明没有解。</p>
+        <p class="zh" lang="zh"><strong>用图形代替证明。</strong>图能提示 $x\to0$ 时 $\frac{\sin x}{x}$ 趋于 1，证明仍要回到 §1-3 的 $\varepsilon$-$\delta$ 定义；数值表在浮点精度以下失效，也不构成反例。</p>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <p class="zh" lang="zh"><span class="tag">高频</span>给出函数与若干视窗，判断哪个视窗最合适：先看 $y$ 区间是否包含极值，再看 $x$ 区间是否覆盖临界点，最后才看比例。</p>
+        <p class="zh" lang="zh"><span class="tag">高频</span>判断图形是否失真：算 $k=\frac{W(d-c)}{H(b-a)}$，只有 $k=1$ 时角度与形状才真实；$k\ne1$ 时斜率要除以 $k$，圆会变成椭圆。</p>
+        <p class="zh" lang="zh"><span class="tag">小题</span>"方形视窗"指两轴单位长度相同，不是显示区是正方形；等长的 $x$、$y$ 区间一般不构成方形视窗。已知 $y$ 范围求方形视窗，用 $b-a=(d-c)\frac{W}{H}$。</p>
+        <p class="zh" lang="zh"><span class="tag">易错</span>快振荡函数：由 $T=\frac{2\pi}{K}$ 算一个周期内的采样点数；平均不到 2 个点时折线没有意义，不到 4 个点时形状不可信。看到乱线先查采样，不要下结论说函数如此。</p>
+        <p class="zh" lang="zh"><span class="tag">考研</span>图形诊断与导数结合：先用 $f'$ 定极值与单调区间，再说明某个视窗漏掉了哪一个特征，最后给出覆盖全部关键特征的视窗并验算端点值。</p>
+        <p class="zh" lang="zh"><span class="tag">考研</span>数值实验的边界：知道浮点精度会让某些极限的数值表失效（如 $\frac{1-\cos x}{x^2}$ 在 $x&lt;10^{-8}$ 时坍缩为 0），结论必须由 §1-3、§1-6、§1-7 的定理给出。</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="tx1-1" data-title="1-1 数学软件绘图 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>某软件的显示区可作图为 $300\times200$ 像素（宽 $\times$ 高），视窗取 $[0,30]\times[0,10]$。下列说法正确的是（　）。</p>
+            <p class="q-stem-en" lang="en">A display is $300$ by $200$ pixels, and the window is $[0,30]\times[0,10]$. Which statement is correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">不是方形视窗；$x$ 方向 1 个单位的图上长度是 $y$ 方向的一半</span></li>
+            <li><span class="opt-body">不是方形视窗；$x$ 方向 1 个单位的图上长度是 $y$ 方向的 2 倍</span></li>
+            <li><span class="opt-body">是方形视窗；只要两轴都从 0 开始取值就是方形视窗</span></li>
+            <li><span class="opt-body">无法判断；还要知道函数 $f$ 是什么才能定</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>按定义算单位长度：$x$ 方向 1 个单位占 $\frac{300}{30}=10$ 像素，$y$ 方向 1 个单位占 $\frac{200}{10}=20$ 像素，两者不等，所以不是方形视窗，且 $x$ 单位只有 $y$ 单位的一半（$k=\frac{10}{20}=0.5$）。用判定 1.1 核对：$\frac{b-a}{d-c}=\frac{30}{10}=3$，$\frac{W}{H}=\frac{300}{200}=1.5$，$3\ne1.5$，同样判定失真 ✓。B 把方向搞反了，是套公式时把 $k$ 取了倒数；C 混淆了"从 0 开始"与"单位等长"，原点的位置与比例无关；D 错在以为判断失真需要知道函数——判定 1.1 只用到视窗与显示区。</p>
+            <p class="en" lang="en">The $x$-unit is $300/30=10$ pixels and the $y$-unit is $200/10=20$ pixels, so the window is not square and the $x$-unit is half the $y$-unit; Criterion 1.1 gives $3\ne1.5$, the same verdict. The choice of origin is irrelevant, and the function is not needed.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>"方形视窗"的意思是显示区本身是正方形。</p>
+            <p class="q-stem-en" lang="en">A "square window" means that the display area itself is a square.</p>
+          </div>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>错误。方形视窗指两轴的单位长度相同，显示区通常是矩形（例如 $94\times62$ 像素）。误读这一条会带来两个后果：一是以为矩形屏幕画不出真实形状，二是把 $[-10,10]\times[-10,10]$ 这种"区间等长"误当成方形视窗——在 $94\times62$ 的显示区上它的 $k$ 约为 $1.52$，圆会画成椭圆。</p>
+            <p class="en" lang="en">Wrong. A square window means equal unit lengths on the two axes; the display is normally rectangular. Equal intervals such as $[-10,10]\times[-10,10]$ are therefore not a square window.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于软件的采样与视窗，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about sampling and viewing windows are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">只有当 $x$ 在定义域内且 $f(x)\in[c,d]$ 时，点 $(x,f(x))$ 才会被画出</span></li>
+            <li data-correct="true"><span class="opt-body">相邻采样点之间的线段是软件的连线约定，不是算出来的函数值</span></li>
+            <li><span class="opt-body">只要把视窗取得足够大，就能看到函数的全部关键特征</span></li>
+            <li data-correct="true"><span class="opt-body">对快振荡函数，把视窗缩到几个周期以内，图形才可能反映真实振荡</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这是采样规则，同时解释了为什么定义域之外与 $y$ 区间之外的部分不出现。B 对：线段是显示约定，采样点之间的极值、间断、振荡软件并不知道。C 错：视窗越大，$y\sin(Kx)$ 的周期是 $\frac{2\pi}{K}$，视窗宽度要与周期匹配，每个周期至少 4 个采样点才算可信。</p>
+            <p>$$ 区间往往越宽，极值反而更容易被压平或被裁掉，快振荡函数的每个周期采样点也更少——例 1.3 的 (a) 就是这种情况。D 对：$$</p>
+            <p class="en" lang="en">A and B describe the sampling rule and the joining convention. C is false: a wider window often flattens or clips extrema and leaves fewer samples per period. D is correct, since the period is $2\pi/K$ and the window must match it.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>设 $f(x)=\sin(Kx)$（$K>0$）。当 $K=100$ 时，$f$ 的周期 $T=$ ______（保留三位有效数字）。</p>
+            <p class="q-stem-en" lang="en">Let $f(x)=\sin(Kx)$ with $K=100$. Its period is $T=$ ______ (three significant figures).</p>
+          </div>
+          <div class="q-answer" data-answer="0.0628|0.06283|0.063|0.0628319|2π/100|0.0628s"></div>
+          <div class="q-explain">
+            <p>$T=\frac{2\pi}{K}=\frac{2\pi}{100}=0.0628319\ldots$，保留三位有效数字得 $0.0628$。填 $0.063$ 是只保留了两位有效数字（或用了 $\pi\approx3.15$），填 $62.8$ 是把小数点的位置搞错了。这个数决定了后面每一步：周期 $0.0628$ 意味着在 $[-12,12]$ 这样的宽视窗里会塞进约 382 个周期，默认采样点数根本跟不上。</p>
+            <p class="en" lang="en">$T=2\pi/100=0.0628319\ldots\approx0.0628$. This value decides the window: $[-12,12]$ contains about 382 periods, far more than the default sampling can resolve.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>关于参数曲线 $x=x(t)$、$y=y(t)$ 的作图，下列说法正确的是（　）。</p>
+            <p class="q-stem-en" lang="en">Which statement about plotting the parametric curve $x=x(t)$, $y=y(t)$ is correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">参数区间 $[t_{\min},t_{\max}]$ 与视窗 $[a,b]\times[c,d]$ 是两个独立的选择，都要按曲线的范围来定</span></li>
+            <li><span class="opt-body">只要视窗选得对，参数区间取多大都能看清整条曲线</span></li>
+            <li><span class="opt-body">参数曲线没有解析式 $y=f(x)$，因此绘图软件无法绘制</span></li>
+            <li><span class="opt-body">视窗一旦确定，参数区间就随之唯一确定</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：软件对 $t$ 采样得到点 $(x(t),y(t))$，所以既要定 $ty=f(x)$ 并不妨碍绘制——§2-4 会给出这类曲线的求导方法。D 错：同一个视窗可以由许多不同的参数区间得到相应的曲线段，二者没有一一对应关系。</p>
+            <p>$$ 的范围，又要定显示哪一块矩形，两者互相独立。B 错：参数区间太大会把曲线的许多圈压在一起，采样点也跟不上，图形会糊成一团。C 错：参数曲线正是软件擅长的对象，没有显式 $$</p>
+            <p class="en" lang="en">A is correct: the software samples $t$, so both the parameter interval and the window must be chosen from the curve's ranges. A long parameter interval crowds many loops together, and a window does not determine the parameter interval.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $f(x)=x^3-7x^2+28$。下列视窗中，最能显示它的两个极值的是（　）。</p>
+            <p class="q-stem-en" lang="en">Let $f(x)=x^3-7x^2+28$. Which window best displays both of its extreme values?</p>
+          </div>
+          <ul class="options">
+            <li><span class="opt-body">$[-10,10]\times[-10,10]$</span></li>
+            <li data-correct="true"><span class="opt-body">$[-4,10]\times[-60,60]$</span></li>
+            <li><span class="opt-body">$[-1,1]\times[-1,1]$</span></li>
+            <li><span class="opt-body">$[-4,4]\times[-50,10]$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>先求导：$f'(x)=3x^2-14x=x(3x-14)$，临界点为 $x=0$ 与 $x=\frac{14}{3}\approx4.67$，极大值 $f(0)=28$，极小值 $f\left(\frac{14}{3}\right)=-\frac{616}{27}\approx-22.8$。要同时显示两个极值，$y$ 区间必须包含 $[-22.8,28]$，$x$ 区间必须包含 $0$ 与 $4.67$。</p>
+            <p>A 的 $y$ 区间是 $[-10,10]$：28 在上方、$-22.8$ 在下方，两个极值都被裁掉。C 只有 $[-1,1]$，连极值附近的形状都看不到。D 的 $x$ 区间 $[-4,4]$ 不含临界点 $4.67$，而且 $y$ 上界 10 把峰（28）裁掉了——它在 $[-4,4]$ 上的最小值还是 $f(-4)=-148$，下界 $-50$ 同样不够。B 的 $[-60,60]$ 包含 $-22.8$ 与 28，$[-4,10]$ 包含两个临界点，虽然 $x$ 接近 10 时 $f(10)=328$ 会穿出上边界，但两个极值这一段完整可见。</p>
+            <p class="en" lang="en">$f'=x(3x-14)$ gives critical points $0$ and $14/3$, with values $28$ and $-616/27\approx-22.8$. Only $[-4,10]\times[-60,60]$ contains both critical points in $x$ and both extreme values in $y$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <div class="q-stem">
+            <p>显示区可作图为 $94\times62$ 像素（宽 $\times$ 高）。要把视窗做成方形视窗，且 $y$ 范围取 $[-6,8]$，则 $x$ 区间的长度 $b-a$ 应取 ______（保留三位有效数字）。</p>
+            <p class="q-stem-en" lang="en">The display is $94$ by $62$ pixels. For a square window with $y$-range $[-6,8]$, the length $b-a$ of the $x$-interval should be ______ (three significant figures).</p>
+          </div>
+          <div class="q-answer" data-answer="21.2|21.23|21.226|21.2258|1316/62|21.2像素|21.2px"></div>
+          <div class="q-explain">
+            <p>由判定 1.1，方形视窗要求 $\frac{b-a}{d-c}=\frac{W}{H}$，其中 $d-c=8-(-6)=14$，$\frac{W}{H}=\frac{94}{62}$。于是 $b-a=14\times\frac{94}{62}=\frac{1316}{62}\approx21.226$，保留三位有效数字为 $21.2$。</p>
+            <p>验算：此时 $x$ 方向 1 个单位占 $\frac{94}{21.23}\approx4.43$ 像素，$y$ 方向 1 个单位占 $\frac{62}{14}\approx4.43$ 像素，两者相等 ✓。常见错误是把比例写反，得到 $14\times\frac{62}{94}\approx9.23$——那会把视窗压得更扁，比原来还失真。</p>
+            <p class="en" lang="en">Criterion 1.1 gives $b-a=(d-c)\frac{W}{H}=14\times\frac{94}{62}\approx21.2$, and then both units are about $4.43$ pixels. Inverting the ratio to $9.23$ would make the distortion worse.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷围绕一句话——软件画的只是"采样点连起来的样子"，判断一张图可不可信，看的是视窗与采样，而不是曲线好不好看。它放在"托马斯补充一"的开头，是后面所有作图内容的地基。</p>
+          <p>最常见的错法有三种。一是把"方形视窗"读成"显示区是正方形"，于是把 $[-10,10]\times[-10,10]$ 当成真实比例视窗，忘了显示区通常是矩形。二是把区间长度之比与像素之比搞反，算 $k$ 时取了倒数，方向说反。三是看到快振荡函数的乱线，以为函数本身如此，不去检查一个周期里到底有几个采样点——先算 $T=\frac{2\pi}{K}$ 是这类题的固定第一步。</p>
+          <p>知识接口有两处要记住：向前接 §1-1 的定义域与四种特性（视窗只能覆盖定义域，奇偶性与周期性可以省掉一半作图工作）以及 §2-1、§2-2 的导数（用极值定 $y$ 范围）；向后铺到 §2-4 的参数方程曲线与第 3 章的极值讨论，那时仍然先解析、后图形。另外 §1-7 的等价无穷小在解释"为什么数值表会失效"时也用得上。</p>
+          <p>下一步建议：只错前两题，把判定 1.1 的推导自己写一遍即可继续；错在第 3 至 5 题，回到方法 1.1，用手里的软件对同一个函数取三个视窗各画一次，把每次的 $[a,b]\times[c,d]$ 记在图上；错在最后两题，说明导数与视窗的结合还不熟，先重做例 1.3，再学 tx1-2。</p>
+        </div>
+
+      </div>
+
+      <details class="box app-box is-aux">
+        <summary class="box-title"><span class="ico">🔧</span>工程联系</summary>
+        <p>有限元后处理与计算流体力学的云图同样是"离散采样 + 着色"：网格太粗会把应力集中点抹平，等值线算法也会漏掉窄小的峰值区，与本节讲的采样不足是同一个问题。报告里的每张云图都写明坐标范围与网格尺度，否则读者无法判断峰值是否可信。</p>
+      </details>
+
+      <details class="map-note is-aux">
+        <summary class="mn-head"><span>🧭</span>教材映射</summary>
+        <p class="zh" lang="zh">本节对应 <strong>Thomas 14e §1.4 Graphing with Software</strong>。这一节在<strong>同济八版里没有对应内容</strong>：同济把"作图"当作中学已经掌握的工具，全章不讨论视窗与采样；托马斯特意用一节讲它，因为英文教材要求学生自己用软件作图并解释图形。</p>
+        <p class="zh" lang="zh"><strong>①</strong> §TX1-1 的两个核心概念 viewing window 与 square window 在同济体系里没有对应术语，中文说法"视窗""方形视窗"是本站在翻译时定的。</p>
+        <p class="zh" lang="zh"><strong>②</strong> §TX1-1 的三个典型例子——$x^3-7x^2+28$ 的三个视窗、$\sin 100x$ 的采样不足、$y=x^{1/3}$ 缺左支——被本节的例 1.1、例 1.2、例 1.3 与易错点引用，答案均已验算。</p>
+        <p class="zh" lang="zh"><strong>③</strong> 参数曲线与隐式曲线的作图，托马斯放在 §11.1（平面曲线的参数化）与后续章节，本节本身不讲；本节把作图原则并入方法 1.1。</p>
+        <p class="zh" lang="zh">英文对照阅读建议：托马斯原书该节只有两页，术语密度低，适合作为第一份英文精读材料；读的时候把每个 Example 的视窗都记下来，再自己复现一遍。</p>
+      </details>
+
+
+            </div>
+      <div class="sec">
+<h2 id="tx1-2" data-hours="1.5"
+          data-video-map="tx1-2"
+          data-video-title="《高等数学》全程教学视频 2.0 版（宋浩老师）">§TX1-2 作为变化率的导数<span class="en-inline"> / The Derivative as a Rate of Change</span></h2>
+
+      <!-- 视频入口（顶部）：本节为托马斯独有内容，MAP 为空数组，渲染器显示统一占位 -->
+      <div data-video-entry="tx1-2" data-video-pos="top"></div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">前置知识</span>　三样：① 导数的定义 $\displaystyle f'(x)=\lim_{\Delta x\to 0}\frac{f(x+\Delta x)-f(x)}{\Delta x}$（§2.1）；② 导数的几何含义是切线斜率（§2.1）；③ 物理里"平均速度 = 位移 / 时间"这条高中算式。除此之外不需要新东西。</p>
+        <p class="zh" lang="zh">你还要能熟练写出几个基本初等函数的导数，例如 $(t^2)'=2t$、$(t^3)'=3t^2$、$\left(\frac1t\right)'=-\frac{1}{t^2}$；它们由 §2.1 的导数公式直接给出。</p>
+        <p class="en" lang="en"><strong>Prerequisites.</strong> Three items: the definition of the derivative $\displaystyle f'(x)=\lim_{\Delta x\to 0}\frac{f(x+\Delta x)-f(x)}{\Delta x}$ (§2.1); its geometric meaning as the slope of the tangent line (§2.1); and the high-school formula "average speed = displacement / time".</p>
+        <p class="en" lang="en">You should also be able to write down derivatives of elementary functions fluently, for instance $(t^2)'=2t$, $(t^3)'=3t^2$ and $\left(\frac1t\right)'=-\frac{1}{t^2}$; these come straight from the formulas of §2.1.</p>
+      </div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">本节要解决的问题</span>　§2.1 把导数定义成"差商的极限"，这是一个纯计算的对象；本节回答它<strong>是什么量</strong>：导数是因变量对自变量的瞬时变化率。</p>
+        <p class="zh" lang="zh">同一套公式，在运动学里是瞬时速度，在热学里是温度梯度，在经济学里是边际成本。本节把这些解释统一起来，并补上两件 §2.1 没有交代的事：<strong>导数的单位</strong>（因变量单位 ÷ 自变量单位）与<strong>相关变化率</strong>（各变量都随时间变化时如何联动）。</p>
+        <p class="zh" lang="zh">单位与量纲是本节最实用的一条，物理量与工程量的核对全靠它；相关变化率则是第 4 章、第 9 章反复使用的求解格式，本节先把四步流程立住。</p>
+        <p class="en" lang="en"><strong>The problem this section solves.</strong> §2.1 defines the derivative as the limit of a difference quotient, a purely computational object; this section says <strong>which quantity it is</strong>: the instantaneous rate of change of the dependent variable with respect to the independent variable.</p>
+        <p class="en" lang="en">One formula serves as instantaneous velocity in kinematics, temperature gradient in heat transfer and marginal cost in economics. Here we unify those readings and add the two things §2.1 leaves open: the <strong>units of a derivative</strong> (units of the dependent variable divided by units of the independent variable) and <strong>related rates</strong>, the case where every variable changes with time.</p>
+        <p class="en" lang="en">Units are the most practical item here, since checking a physical or engineering quantity depends on them, while related rates supply a four-step routine reused in Chapter 4 and Chapter 9; that routine is fixed here.</p>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>从平均到瞬时：让时间间隔趋于零<span class="en-inline"> / From Average to Instantaneous: Let the Time Interval Shrink</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">跑一段 100 m，用时 12 s，平均速度是 8.33 m/s。这个数只描述整段路程，回答不了"第 6 s 那一刻跑多快"。</p>
+          <p class="zh" lang="zh">要回答后者，先取一小段时间 $[t_0,t_0+\Delta t]$ 算平均速度，再让 $\Delta t$ 缩小。$\Delta t=0.1$ 与 $\Delta t=0.01$ 给出两个略有差别的数；它们的极限就是瞬时速度。</p>
+          <p class="zh" lang="zh">几何上这一步就是<strong>割线斜率 $\to$ 切线斜率</strong>：平均速度是割线斜率，瞬时速度是切线斜率。物理与几何在这里是同一件事。</p>
+          <p class="en" lang="en">Cover 100 m in 12 s and the average speed is 8.33 m/s. That number describes the whole trip and cannot say how fast you were running at 6 s.</p>
+          <p class="en" lang="en">To answer that, compute the average speed on a short interval $[t_0,t_0+\Delta t]$ and then shrink $\Delta t$. The values at $\Delta t=0.1$ and $\Delta t=0.01$ differ slightly; their limit is the instantaneous speed.</p>
+          <p class="en" lang="en">Geometrically this is exactly <strong>secant slope $\to$ tangent slope</strong>: the average speed is the secant slope and the instantaneous speed is the tangent slope. Physics and geometry say the same thing here.</p>
+        </div>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 3.1　平均变化率与瞬时变化率<span class="en-inline"> / Average and Instantaneous Rates of Change</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">设函数 $y=f(x)$ 在包含 $x_0$ 的区间上有定义。</p>
+          <p class="zh" lang="zh">在区间 $[x_0,x_0+\Delta x]$（$\Delta x\ne 0$）上，称<strong>差商</strong></p>
+          <p class="zh" lang="zh">$$\frac{\Delta y}{\Delta x}=\frac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$$</p>
+          <p class="zh" lang="zh">为 $f$ 在<strong>该区间上</strong>的平均变化率。</p>
+          <p class="zh" lang="zh">若极限</p>
+          <p class="zh" lang="zh">$$\lim_{\Delta x\to 0}\frac{f(x_0+\Delta x)-f(x_0)}{\Delta x}=f'(x_0)$$</p>
+          <p class="zh" lang="zh">存在，则称此极限为 $f$ 在点 $x_0$ 处的瞬时变化率。</p>
+          <p class="zh" lang="zh"><strong>关键差别在两处。</strong>其一，平均变化率是<strong>区间</strong>的量，附在一个区间上；瞬时变化率是<strong>点</strong>的量，附在一个点上。其二，平均变化率就是差分，函数可以是任何函数；瞬时变化率要求极限存在，也就是 $f$ 在 $x_0$ 处可导。</p>
+          <p class="zh" lang="zh">物理意义：若 $s=s(t)$ 是位移，则 $\dfrac{\Delta s}{\Delta t}$ 是区间上的平均速度，$s'(t_0)$ 是 $t_0$ 时刻的瞬时速度；再对速度求导得加速度 $a(t)=v'(t)=s''(t)$。若 $v=v(t)$ 是速度，则 $v'(t)$ 是瞬时加速度。</p>
+          <p class="zh" lang="zh">单位：$\dfrac{\Delta y}{\Delta x}$ 与 $f'(x_0)$ 的单位都是"因变量单位 / 自变量单位"。位移以 m 计、时间以 s 计，则 $s'(t)$ 的单位是 m/s；半径为 m 的温度场对半径求导，单位是 K/m。</p>
+          <p class="en" lang="en">Let $y=f(x)$ be defined on an interval containing $x_0$.</p>
+          <p class="en" lang="en">On the interval $[x_0,x_0+\Delta x]$ with $\Delta x\ne 0$, the <strong>difference quotient</strong></p>
+          <p class="en" lang="en">$$\frac{\Delta y}{\Delta x}=\frac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$$</p>
+          <p class="en" lang="en">is the average rate of change of $f$ over that interval.</p>
+          <p class="en" lang="en">If the limit</p>
+          <p class="en" lang="en">$$\lim_{\Delta x\to 0}\frac{f(x_0+\Delta x)-f(x_0)}{\Delta x}=f'(x_0)$$</p>
+          <p class="en" lang="en">exists, it is the instantaneous rate of change of $f$ at $x_0$.</p>
+          <p class="en" lang="en"><strong>Two differences matter.</strong> First, an average rate belongs to an <em>interval</em>, while an instantaneous rate belongs to a <em>point</em>. Second, the average rate is just a difference and needs nothing of the function, whereas the instantaneous rate requires the limit to exist, that is, $f$ must be differentiable at $x_0$.</p>
+          <p class="en" lang="en">Physical meaning: if $s=s(t)$ is displacement, then $\dfrac{\Delta s}{\Delta t}$ is the average velocity on the interval and $s'(t_0)$ is the instantaneous velocity at $t_0$; differentiating velocity gives acceleration $a(t)=v'(t)=s''(t)$. If $v=v(t)$ is velocity, then $v'(t)$ is the instantaneous acceleration.</p>
+          <p class="en" lang="en">Units: both $\dfrac{\Delta y}{\Delta x}$ and $f'(x_0)$ carry the units "units of the dependent variable divided by units of the independent variable". With displacement in m and time in s, $s'(t)$ is measured in m/s; differentiating a temperature field with respect to a radius in m gives units of K/m.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 3.1　可导与连续，以及单侧变化率<span class="en-inline"> / Differentiability, Continuity and One-Sided Rates</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh"><span class="thm-name">定理 3.1</span>　若 $f$ 在 $x_0$ 处可导，则 $f$ 在 $x_0$ 处连续；逆命题不成立。</p>
+          <p class="zh" lang="zh">因此可导强于连续。反例是 $f(x)=|x|$ 在 $x_0=0$ 处：函数连续，但左右差商的极限不同，导数不存在。</p>
+          <p class="zh" lang="zh"><span class="thm-name">定理 3.1（续）</span>　$f'(x_0)$ 存在的充要条件是左右导数都存在且相等：</p>
+          <p class="zh" lang="zh">$$f'_-(x_0)=\lim_{\Delta x\to 0^-}\frac{f(x_0+\Delta x)-f(x_0)}{\Delta x},\qquad f'_+(x_0)=\lim_{\Delta x\to 0^+}\frac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$$</p>
+          <p class="zh" lang="zh">且 $f'_-(x_0)=f'_+(x_0)$。右侧若提出 $\Delta x\to+\infty$ 则是另一种极限，与本节无关。</p>
+          <p class="zh" lang="zh"><strong>直观含义：</strong>变化率是一点处的性质，可导意味着"这一点附近可以用一条直线（切线）代替曲线"，连续性只保证曲线不断开，保证不了有切线。$|x|$ 在原点是一个尖角，尖角处没有切线。</p>
+          <p class="en" lang="en"><span class="thm-name">Theorem 3.1</span> If $f$ is differentiable at $x_0$, then $f$ is continuous at $x_0$; the converse fails.</p>
+          <p class="en" lang="en">Differentiability is therefore stronger than continuity. The counterexample is $f(x)=|x|$ at $x_0=0$: the function is continuous, yet the left and right difference quotients have different limits, so no derivative exists.</p>
+          <p class="en" lang="en"><span class="thm-name">Theorem 3.1 (continued)</span> The derivative $f'(x_0)$ exists if and only if both one-sided derivatives exist and agree:</p>
+          <p class="en" lang="en">$$f'_-(x_0)=\lim_{\Delta x\to 0^-}\frac{f(x_0+\Delta x)-f(x_0)}{\Delta x},\qquad f'_+(x_0)=\lim_{\Delta x\to 0^+}\frac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$$</p>
+          <p class="en" lang="en">with $f'_-(x_0)=f'_+(x_0)$. A limit with $\Delta x\to+\infty$ is a different question and is not treated here.</p>
+          <p class="en" lang="en"><strong>Intuition:</strong> a rate of change is a property of a single point. Differentiability says the curve may be replaced near that point by a straight line, its tangent; continuity only says the curve does not break, and a break-free curve may still carry a corner where no tangent exists.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法 3.1　求相关变化率的四步<span class="en-inline"> / Four Steps for Related Rates</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">相关变化率问题的共同结构：两个或更多变量由一条方程联系，各变量都随时间变化，已知其中一个的变化率，求另一个的变化率。</p>
+          <p class="zh" lang="zh">四步照做，最后一步是检查：</p>
+          <p class="zh" lang="zh">① <strong>定变量、贴单位</strong>：为每个变化的量取字母，写出它的单位，并标出哪些量是常量。</p>
+          <p class="zh" lang="zh">② <strong>立方程</strong>：用几何或物理规律（体积公式、勾股定理、相似三角形等）把各变量连成一个等式。这一步不含任何导数。</p>
+          <p class="zh" lang="zh">③ <strong>对时间求导</strong>：把方程两边同时对 $t$ 求导，变量 $V$、$h$ 都当成 $t$ 的函数，用链式法则（§2.2）例如 $\dfrac{dV}{dt}=\dfrac{dV}{dh}\cdot\dfrac{dh}{dt}$。<strong>先把导数求出来再代入数值</strong>，常量（如固定的 $\pi$）随时可代，凡随时间变化的量不可提前代入。</p>
+          <p class="zh" lang="zh">④ <strong>代值求解并核对单位</strong>：把已知的瞬时值代入，解出要求的导数，再用"单位 = 因变量单位 / 自变量单位"检查一遍。</p>
+          <p class="en" lang="en">Every related-rates problem has the same shape: two or more variables are tied by one equation, all of them change with time, one rate is given and another is asked for.</p>
+          <p class="en" lang="en">Follow four steps, the last of which is a check:</p>
+          <p class="en" lang="en">① <strong>Name the variables and their units</strong>: give each changing quantity a letter and a unit, and mark which quantities are constant.</p>
+          <p class="en" lang="en">② <strong>Write the equation</strong>: link the variables by a geometric or physical law, such as a volume formula, the Pythagorean theorem or similar triangles. No derivative appears here.</p>
+          <p class="en" lang="en">③ <strong>Differentiate with respect to time</strong>: differentiate both sides with respect to $t$, treating $V$ and $h$ as functions of $t$, and use the Chain Rule of §2.2, for instance $\dfrac{dV}{dt}=\dfrac{dV}{dh}\cdot\dfrac{dh}{dt}$. Differentiate <em>before</em> substituting numbers; constants such as the fixed number $\pi$ may be inserted at once, but a quantity that changes with time may not be frozen early.</p>
+          <p class="en" lang="en">④ <strong>Substitute, solve and check the units</strong>: insert the instantaneous values, solve for the required derivative, and verify the units against "units of the dependent variable divided by units of the independent variable".</p>
+        </div>
+      </div>
+
+      <!-- ===== 图 1：割线斜率 → 切线斜率 =====
+           坐标映射（全文统一）：t 轴 x(v) = 240 + 80v（v ∈ [-0.2, 6]）；
+           s 轴 y(u) = 150 - 16u（u ∈ [-4.5, 6]）。曲线取 s = t^2 - 6t + 4，
+           割线过 P(2,-4) 与 Q(5,5) 斜率 3，切线切于 P 斜率 2。
+           SVG 内的 <text> 不会被 MathJax 处理，只写纯文本。 -->
+      <figure class="plot-figure">
+        <div id="fig-rate"></div>
+        <figcaption>看什么：两条直线都过点 P，但斜率不同。虚线是过 P 与 Q 的<strong>割线</strong>，斜率 3 就是该区间上的<strong>平均变化率</strong>；实线只切于 P，斜率 2 是 P 点处的<strong>瞬时变化率</strong>。把 Q 沿曲线推向 P，割线绕 P 旋转，极限位置就是切线——差商取极限的几何图景。两轴刻度每格都是 1 个单位（横轴 1 s，纵轴 1 m），所以两条直线的陡峭程度可以直接比较。</figcaption>
+      </figure>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.4</span> 位移、速度、加速度：逐次求导
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>某发动机叶片上一点的竖直位移为 $s(t)=t^2-6t+4$（$s$ 以 m 计，$t$ 以 s 计）。求：（1）$t=2$ s 时的瞬时速度；（2）$t=4$ s 时的速度与加速度，并说明叶片此刻向上还是向下运动。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，由位移求速度函数。</strong>瞬时速度是位移对时间的导数：</p>
+            <p>$$v(t)=s'(t)=2t-6\quad (\text{m/s}).$$</p>
+            <p>求导这一步用的是 §2.1 的导数公式 $(t^2)'=2t$ 与 $(t)'=1$，以及和的求导法则。</p>
+            <p><strong>第二步，代 $t=2$。</strong>$v(2)=2\times 2-6=-2$，即 $t=2$ s 时速度为 $-2$ m/s。符号为负，说明此刻叶片向下运动，速率为 2 m/s。</p>
+            <p><strong>第三步，由速度求加速度函数。</strong>$a(t)=v'(t)=s''(t)=2$，单位 m/s$^2$。加速度是常数 2 m/s$^2$，不随 $t$ 变化。</p>
+            <p><strong>第四步，代 $t=4$。</strong>$v(4)=2\times 4-6=2$ m/s，$a(4)=2$ m/s$^2$。速度为正，叶片此刻向上运动。</p>
+            <p><strong>验算</strong>：用定义直接算 $t=4$ 处的差商。$s(4)=16-24+4=-4$，</p>
+            <p>$$s(4+\Delta t)=(4+\Delta t)^2-6(4+\Delta t)+4=\Delta t^2+2\Delta t-4$$</p>
+            <p>。于是</p>
+            <p>$$\frac{s(4+\Delta t)-s(4)}{\Delta t}=\frac{\Delta t^2+2\Delta t}{\Delta t}=\Delta t+2.$$</p>
+            <p>令 $\Delta t\to 0$ 得 2，与 $v(4)=2$ 一致 ✓。另取 $t=3$：$v(3)=0$，叶片在 $t=3$ s 这一瞬间静止并反向，$t=3$ 是位移的极小值点，与抛物线的形状相符 ✓。</p>
+            <p><strong>单位核对</strong>：$s$ 的单位是 m、$t$ 的单位是 s，所以 $s'$ 的单位是 m/s、$s''$ 的单位是 m/s$^2$，与物理量一致。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.5</span> 温度梯度：导数带符号，方向也是信息
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>涡轮盘沿半径方向的温度分布近似为 $T(r)=300-40r$（$T$ 以 K 计，$r$ 为自盘心算起的半径，以 m 计，$0\le r\le 0.3$）。求 $r=0.25$ m 处的温度梯度，并解释该值的含义。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，明确求哪个变化率。</strong>"温度梯度"指温度 $T$ 对半径 $r$ 的变化率，即 $\dfrac{dT}{dr}$。</p>
+            <p><strong>第二步，求导。</strong>由 §2.1 的导数公式，常数项求导为 0，一次项求导为系数：</p>
+            <p>$$\frac{dT}{dr}=(300)'-(40r)'=0-40=-40\quad (\text{K/m}).$$</p>
+            <p><strong>第三步，代值并解释。</strong>$\left.\dfrac{dT}{dr}\right|_{r=0.25}=-40$ K/m。它表示在 $r=0.25$ m 附近，半径每增加 1 m，温度下降 40 K。梯度是常数，说明整块盘上的温度沿半径均匀下降，等温线是以盘心为圆心的同心圆。</p>
+            <p><strong>验算</strong>：用差商检验。取 $\Delta r=0.01$ m，</p>
+            <p>$$T(0.26)-T(0.25)=(300-40\times 0.26)-(300-40\times 0.25)=-40\times 0.01=-0.4$$</p>
+            <p> K，差商为 $-0.4/0.01=-40$ K/m，与导数一致 ✓。</p>
+            <p><strong>两点提醒。</strong>① 负号不能丢：负值表示温度沿半径方向<strong>向内升高</strong>，"向内升 40 K/m"与"向内降 40 K/m"在热应力分析里是两种相反的工况，符号就是方向。② 单位要跟着走：$T$ 的单位是 K、$r$ 的单位是 m，所以梯度的单位是 K/m 而不是 K；若把半径改用 mm 计，梯度变成 $-0.04$ K/mm，数值虽小，物理含义不变。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.6</span> 相关变化率：锥形水箱的液面下降速率
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>锥形水箱倒立放置，顶点朝下，深 10 m、顶部半径 5 m。水以 $2$ 立方米每分钟的速率漏出。求水深为 6 m 时水面下降的速率。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，定变量。</strong>记水面的半径为 $r$（m），水深为 $h$（m），水的体积为 $V$（m$^3$），时间 $t$（以分钟计）。已知 $\dfrac{dV}{dt}=-2$（立方米每分钟，漏出故取负），要求 $\dfrac{dh}{dt}$。</p>
+            <p><strong>第二步，立方程并消去 $r$。</strong>水的形状是与水箱相似的圆锥，由相似三角形 $\dfrac{r}{h}=\dfrac{5}{10}=\dfrac12$，得 $r=\dfrac h2$。圆锥体积</p>
+            <p>$$V=\frac13\pi r^2h=\frac13\pi\left(\frac h2\right)^2h=\frac{\pi h^3}{12}.$$</p>
+            <p>这一步把两个变量化成一个，是相关变化率题目的关键动作：$r$ 与 $h$ 的比例关系是几何常量决定的，不随时间变化。</p>
+            <p><strong>第三步，两边对 $t$ 求导。</strong>把 $h$ 看成 $t$ 的函数，用链式法则（§2.2）：</p>
+            <p>$$\frac{dV}{dt}=\frac{dV}{dh}\cdot\frac{dh}{dt}=\frac{\pi h^2}{4}\cdot\frac{dh}{dt}.$$</p>
+            <p><strong>第四步，代值求解。</strong>此题中 $h=6$ 恰好出现在导数表达式里，应当在求导<strong>之后</strong>代入：</p>
+            <p>$$-2=\frac{\pi\cdot 6^2}{4}\cdot\frac{dh}{dt}=9\pi\cdot\frac{dh}{dt}\quad\Longrightarrow\quad \frac{dh}{dt}=-\frac{2}{9\pi}\ \text{m/min}.$$</p>
+            <p>负号表示水面在下降，下降速率约为 $0.071$（米每分钟），即每分钟约 7 cm。</p>
+            <p><strong>验算</strong>：先算 $h=6$ m 时的体积 $V=\dfrac{\pi\cdot 216}{12}=18\pi\approx 56.5$ m$^3$。漏出速率 $2$（立方米每分钟），按体积相对变化率估计，$\dfrac{dh}{dt}=\dfrac{dV/dt}{dV/dh}=\dfrac{-2}{9\pi}$ ✓，与上面一致；水位越低，水面面积 $9\pi$ 越小，同样的漏出量使水面降得越快——这与 $|dh/dt|=\dfrac{2}{\pi h^2/4}$ 随 $h$ 减小而增大相符。</p>
+            <p><strong>单位核对</strong>：分子是立方米每分钟、分母是平方米，约去得米每分钟 ✓。</p>
+            <p><strong>常见错误</strong>：先代 $h=6$ 得 $V=\dfrac{\pi\cdot 216}{12}$ 再对 $t$ 求导，会得到 $\dfrac{dV}{dt}=0$，与实际漏水的条件直接矛盾。凡随时间变化的量，只能在求导完成后代入瞬时值。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.7</span> 气动阻力与轮缘功率：把 $d/dt$ 拆成 $d/dv$ 与 $dv/dt$
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>某试车台测得前缘试件的阻力 $D=0.5v^2$（$D$ 以 N 计，$v$ 为来流速度，以 m/s 计）。试车中 $v$ 由 20 m/s 起按 $\dfrac{dv}{dt}=3$ m/s$^2$ 均匀增加。求 $v=20$ m/s 时：（1）阻力随时间增加多快（以 N/s 计）；（2）来流提供给试件的功率 $P$。（功率按 $P=\dfrac{dW}{dt}$ 定义，$W$ 为做功。）</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，先求 $D$ 对 $v$ 的变化率。</strong>按 §2.1 的幂函数求导公式，</p>
+            <p>$$\frac{dD}{dv}=0.5\times 2v=v\quad (\text{N}\cdot\text{s/m}).$$</p>
+            <p>它的含义是：来流速度每增加 1 m/s，阻力增加 $v$ N。速度越大，同样的增速带来的阻力增量越大。</p>
+            <p><strong>第二步，用链式法则换成对时间的变化率。</strong>$D$ 通过 $v$ 依赖 $t$，于是</p>
+            <p>$$\frac{dD}{dt}=\frac{dD}{dv}\cdot\frac{dv}{dt}=v\cdot 3\quad (\text{N/s}).$$</p>
+            <p>代入 $v=20$：$\left.\dfrac{dD}{dt}\right|_{v=20}=20\times 3=60$ N/s。</p>
+            <p><strong>第三步，算功率。</strong>阻力的大小 $F=D$，做功的微元为 $dW=F\,ds=Fv\,dt$，两边除以 $dt$：</p>
+            <p>$$P=\frac{dW}{dt}=Fv=Dv=0.5v^3.$$</p>
+            <p>代入 $v=20$：$P=0.5\times 8000=4000$ W，即 4 kW。</p>
+            <p><strong>验算</strong>：直接对 $v=20$ 附近作数值检验。取 $\Delta t=0.01$ s，则 $\Delta v\approx 0.03$ m/s。$D(20.03)=0.5\times 20.03^2=200.60045$ N，$D(20)=200$ N，增量 $0.60045$ N，除以 $0.01$ s 得 $60.045$ N/s，与 $60$ N/s 吻合（差 $0.045$ 来自二阶项，$\Delta t\to 0$ 时消失）✓。功率方面，$P=Fv=200\times 20=4000$ W ✓。</p>
+            <p><strong>单位核对</strong>：$\dfrac{dD}{dv}$ 的单位是 N/(m/s) = N$\cdot$s/m；再乘 m/s$^2$ 得 N/s ✓。$P=Dv$ 的单位是 N$\cdot$m/s = W ✓。若第二步漏乘 $\dfrac{dv}{dt}$，就会误把 $\dfrac{dD}{dv}=20$ 当成答案，量纲上立刻暴露（N$\cdot$s/m 不是 N/s）。</p>
+            <p><strong>本题的结构与例 3.6 相同</strong>：都是 </p>
+            <p>$$\dfrac{d(\cdot)}{dt}=\dfrac{d(\cdot)}{d(\text{中间量})}\cdot\dfrac{d(\text{中间量})}{dt}$$</p>
+            <p>。识别信号是题目同时给出"某量对中间量的函数"与"中间量对时间的变化率"。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点</div>
+        <p class="zh" lang="zh"><strong>求相关变化率时先代值再求导。</strong>把瞬时值（如 $h=6$）先代入方程，$h$ 就退化成常量，对 $t$ 求导得 0，条件直接被抹掉。正确顺序是：立方程 → 两边对 $t$ 求导 → 代入瞬时值 → 解出导数。</p>
+        <p class="zh" lang="zh"><strong>单位当摆设。</strong>把 K/m 写成 K、把 m/s 写成 m，量纲对不上时看不出来。导数、积分、物理公式的检查都靠单位：导数的单位一定是"因变量单位 ÷ 自变量单位"。</p>
+        <p class="zh" lang="zh"><strong>把平均变化率当成瞬时变化率。</strong>$\dfrac{\Delta y}{\Delta x}$ 依赖区间，换一个区间就是另一个数；只有取极限之后才与区间无关。题目问"在某点的变化率"时，必须走极限。</p>
+        <p class="zh" lang="zh"><strong>相关变化率里漏掉链式法则的因子。</strong>写 $\dfrac{dV}{dt}=\dfrac{\pi h^2}{4}$ 而不乘 $\dfrac{dh}{dt}$，等于把 $h$ 当成常量。凡是对 $t$ 求导，所有随时间变化的变量都要带出自己的导数因子。</p>
+        <p class="zh" lang="zh"><strong>以为连续必有导数。</strong>$f(x)=|x|$ 在 $x=0$ 连续但不可导，差商在 $\Delta x\to 0^-$ 与 $\Delta x\to 0^+$ 时分别趋于 $-1$ 与 $1$。先用左右导数是否相等去判断，再谈变化率。</p>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <p class="zh" lang="zh"><span class="tag">高频</span><strong>平均变化率与瞬时变化率的计算。</strong>看到"在区间 $[a,b]$ 上的平均变化率"就写差商；看到"在 $x_0$ 处的变化率"就求 $f'(x_0)$。前者是除法，后者是求导，两步不要混。</p>
+        <p class="zh" lang="zh"><span class="tag">高频</span><strong>相关变化率。</strong>识别信号是题目里出现"以某速率变化"这类短语。固定动作：定变量 → 找几何关系消去多余变量 → 两边对 $t$ 求导 → 代入瞬时值。第 9 章、第 10 章会把它与多元链式法则合起来考。</p>
+        <p class="zh" lang="zh"><span class="tag">小题</span><strong>导数的单位与量纲。</strong>常见于物理应用题与选择题：给出两个量的单位，判断导数的单位。做题时逐项写出"因变量单位 / 自变量单位"，能直接排除量纲不符的选项。</p>
+        <p class="zh" lang="zh"><span class="tag">小题</span><strong>导数的物理意义。</strong>位移求导得速度、速度求导得加速度；反过来说明 $\dfrac{dv}{dt}$ 的符号含义：正为加速、负为减速。这类题只考解释，不考计算量，但符号写错就全错。</p>
+        <p class="zh" lang="zh"><span class="tag">易错</span>看到"某量对某量求导"要立刻分辨自变量是谁：对时间求导、对空间坐标求导、对另一个物理量求导，单位与含义各不相同。例 3.5 的 K/m 与例 3.7 的 N/s 就是两种。</p>
+        <p class="zh" lang="zh"><span class="tag">考研</span>把相关变化率与导数定义结合起来的综合题：先由定义求某点导数，再以此为变化率驱动另一个变量的联动，或反过来由联动关系反求参数。做法仍是先写清函数关系式，再对 $t$ 求导。</p>
+      </div>
+
+      <details class="box app-box is-aux">
+        <summary class="box-title"><span class="ico">🔧</span>工程联系</summary>
+        <p>压气机叶片沿径向的弦长 $c(r)$，它对半径的导数 $\dfrac{dc}{dr}$ 是把弦长分布输入到叶型设计程序时真正起作用的量：它决定相邻截面的型线如何过渡，取值过大就会出现几何扭折。工程上常把 $\dfrac{dc}{dr}$ 的分布画成曲线一并交付，而不是只给 $c(r)$ 本身。</p>
+        <p>同样的格式出现在别处：位移的导数给速度、速度的导数给加速度（转子动力学的动应力计算依赖后者）；温度对半径的导数给热应力估算所需的温度梯度（例 3.5）。三者的数学内容都是本节的瞬时变化率。</p>
+      </details>
+
+      <details class="map-note is-aux">
+        <summary class="mn-head"><span>🧭</span>教材映射</summary>
+        <p class="zh" lang="zh">本节是<strong>托马斯独有内容</strong>，对应 <strong>Thomas 14e §3.4 The Derivative as a Rate of Change</strong>。同济八版没有为"变化率"单列小节，只在 §2.1「导数的几何含义」末尾顺带提了一句导数的物理意义（速度、电流密度），既不展开单位与量纲，也不讲相关变化率。因此本节内容在同济教材里没有逐节对应，需要按英文教材的节次补。</p>
+        <p class="zh" lang="zh">两处衔接要记住：相关变化率的求导步骤用的是 §2.2 的链式法则，本节只补"对时间求导"这一应用场景；瞬时速度的定义在 §2.1 已经作为导数的物理背景出现过，本节把它上升为定义 3.1 的一般框架。</p>
+      </details>
+
+      <div class="quiz" data-quiz-id="tx1-2" data-title="3.4 作为变化率的导数 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>正方形面积 $S(x)=x^2$（$x$ 为边长，以 cm 计）。当边长由 3 cm 变到 3.1 cm 时，面积在<strong>该区间上</strong>的平均变化率为（　）。</p>
+            <p class="q-stem-en" lang="en">For a square of side $x$ cm, $S(x)=x^2$. When the side grows from 3 cm to 3.1 cm, the average rate of change of the area on that interval is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$6.1$ cm$^2$/cm</span></li>
+            <li><span class="opt-body">$6$ cm$^2$/cm</span></li>
+            <li><span class="opt-body">$0.61$ cm$^2$/cm</span></li>
+            <li><span class="opt-body">$0.61$ cm</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>平均变化率是差商，且必须用<strong>整个区间</strong>计算：</p>
+            <p>$$\dfrac{\Delta S}{\Delta x}=\dfrac{S(3.1)-S(3)}{3.1-3}=\dfrac{9.61-9}{0.1}=6.1$$</p>
+            <p> cm$^2$/cm。</p>
+            <p>选 B 是把瞬时变化率当成了答案：$S'(3)=2\times 3=6$ cm$^2$/cm，那是 $x=3$ 处的切线斜率，与区间上的割线斜率不同，长度越短两者才越接近。选 C 是除法时把 $\Delta x$ 写成了 $10$（把 3.1 当成 31），差商被缩小到十分之一。选 D 只算了 $\Delta S=0.61$，那是面积的增量而不是变化率，而且单位也丢了分母上的 cm。</p>
+            <p class="en" lang="en">The average rate is the difference quotient over the whole interval: $0.61/0.1=6.1$ cm$^2$/cm. Option B is the instantaneous rate $S'(3)=6$, a secant versus tangent confusion; C divides by 10; D reports the increment with a wrong unit.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>设 $y=f(x)$，其中 $y$ 的单位是 m$^2$、$x$ 的单位是 s，则 $\dfrac{dy}{dx}$ 的单位是（　）。</p>
+            <p class="q-stem-en" lang="en">Let $y=f(x)$, where $y$ is measured in m$^2$ and $x$ in s. The unit of $\dfrac{dy}{dx}$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">m$^2$/s</span></li>
+            <li><span class="opt-body">s/m$^2$</span></li>
+            <li><span class="opt-body">m$^2$</span></li>
+            <li><span class="opt-body">m/s</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>导数（以及作为其来源的差商）的单位一律是"因变量单位 ÷ 自变量单位"，即 m$^2$/s。</p>
+            <p>选 B 把分子分母颠倒了，那是 $\dfrac{dx}{dy}$ 的单位，含义是"每增加 1 m$^2$ 需要多少秒"。选 C 只写了因变量的单位，等于把导数当成增量 $\Delta y$。选 D 混进了与本题无关的长度单位，只有当因变量本身就是长度（如位移）时，导数才是 m/s。</p>
+            <p class="en" lang="en">A derivative carries the unit of the dependent variable divided by that of the independent variable, here m$^2$/s. B inverts the quotient, C drops the denominator and D uses a length unit that does not appear in $y$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>某点的运动速度为 $v(t)=10-4t$（$v$ 以 m/s 计，$t$ 以 s 计），则 $t=2$ s 时的瞬时加速度为（　）。</p>
+            <p class="q-stem-en" lang="en">A particle has velocity $v(t)=10-4t$ (m/s, with $t$ in s). Its instantaneous acceleration at $t=2$ s is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$-4$ m/s$^2$</span></li>
+            <li><span class="opt-body">$-8$ m/s$^2$</span></li>
+            <li><span class="opt-body">$2$ m/s$^2$</span></li>
+            <li><span class="opt-body">$-4$ m/s</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>加速度是速度对时间的导数：$a(t)=v'(t)=-4$ m/s$^2$，它是常数，与 $t$ 无关，所以 $t=2$ 时仍为 $-4$ m/s$^2$。负号表示速度在减小。</p>
+            <p>选 B 是把 $t=2$ 代进了速度的表达式：$v(2)=10-8=2$ m/s，那是此刻的速度而不是加速度（选 C 正是这个数，但它少了负号与正确的单位）。选 D 的数值对、单位错，$\dfrac{dv}{dt}$ 的单位是 (m/s)/s $=$ m/s$^2$。</p>
+            <p class="en" lang="en">Acceleration is $v'(t)=-4$ m/s$^2$, constant in $t$. B substitutes $t=2$ into the velocity, C is that velocity value, and D keeps the right number with the velocity unit.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于变化率与导数的说法，正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about rates of change and derivatives are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">平均变化率 $\dfrac{f(b)-f(a)}{b-a}$ 与区间 $[a,b]$ 有关，换一个区间结果一般会变</span></li>
+            <li data-correct="true"><span class="opt-body">$f$ 在 $x_0$ 可导是 $f$ 在 $x_0$ 连续的充分条件，不是必要条件</span></li>
+            <li><span class="opt-body">若 $f$ 在 $x_0$ 连续，则 $f$ 在 $x_0$ 处的瞬时变化率一定存在</span></li>
+            <li data-correct="true"><span class="opt-body">速度对时间求导得到加速度，位移对时间求导得到速度</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：平均变化率是割线斜率，随区间变化；只有取 $\Delta x\to 0$ 的极限之后，结果才与区间无关。B 对：这是定理 3.1 的方向——可导 $\Rightarrow$ 连续，反之不成立。C 错：连续保证曲线不断开，保证不了有切线，$f(x)=|x|$ 在 $x=0$ 连续而左右导数分别为 $-1$ 与 $1$，导数不存在。D 对：这正是定义 3.1 给出的物理意义链。</p>
+            <p class="en" lang="en">A: an average rate is a secant slope and depends on the interval. B: differentiability implies continuity, not conversely. C: false — continuity does not create a tangent, as $|x|$ at $x=0$ shows. D: the physical chain of Definition 3.1.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>某产品的总成本为 $C(x)=3x^2+20x+500$（元），$x$ 为产量（件）。下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">The total cost of a product is $C(x)=3x^2+20x+500$ yuan for $x$ units. Which statements are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">边际成本函数为 $C'(x)=6x+20$（元/件）</span></li>
+            <li data-correct="true"><span class="opt-body">产量为 50 件时的边际成本为 320 元/件</span></li>
+            <li data-correct="true"><span class="opt-body">产量从 50 件增到 60 件时，平均成本变化率（每件的成本增量）为 $\dfrac{C(60)-C(50)}{10}=350$ 元/件</span></li>
+            <li><span class="opt-body">边际成本就是"多生产一件实际增加的<b>总</b>成本"，精确等于 $C(x+1)-C(x)$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：边际成本是总成本对产量的导数，$C'(x)=6x+20$，单位是元/件。B 对：$C'(50)=300+20=320$ 元/件。</p>
+            <p>C 对：$C(50)=7500+1000+500=9000$，$C(60)=10800+1200+500=12500$，增量 $3500$ 元除以 10 件得 $350$ 元/件——这是区间 $[50,60]$ 上的平均变化率，数值上大于 $C'(50)$ 而小于 $C'(60)=380$，与 $C'$ 递增相符。</p>
+            <p>D 错：$C'(x)$ 是 $x$ 处的瞬时变化率，不等于有限增量。实际算一下，$C(51)-C(50)=(7803+1020+500)-9000=323$ 元，而 $C'(50)=320$ 元，两者相差 3 元 = 二阶贡献。边际成本是"多生产一件的近似增加量"，件数很大或成本函数平缓时近似得很好。</p>
+            <p class="en" lang="en">A, B and C hold: the marginal cost is $C'(x)=6x+20$ yuan per unit, $C'(50)=320$, and the average rate on $[50,60]$ is $3500/10=350$. D fails: the marginal cost is an instantaneous rate, not the exact increment $C(51)-C(50)=323$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+          <div class="q-stem">
+            <p>若 $f$ 在 $x_0$ 处连续，则 $f$ 在 $x_0$ 处必可导，因而 $f$ 在 $x_0$ 处的瞬时变化率一定存在。</p>
+            <p class="q-stem-en" lang="en">If $f$ is continuous at $x_0$, then $f$ is differentiable there, so the instantaneous rate of change at $x_0$ must exist.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+            <li><span class="opt-body">正确</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>错误，方向反了。定理 3.1 只保证"可导 $\Rightarrow$ 连续"，不保证"连续 $\Rightarrow$ 可导"。反例是 $f(x)=|x|$ 在 $x_0=0$：它在 0 处连续，但左右差商分别趋于 $-1$ 与 $1$，极限不存在，所以该点没有瞬时变化率。</p>
+            <p>另一类反例是无穷导数，例如 $f(x)=\sqrt[3]{x}$ 在 $x=0$ 连续，差商 </p>
+            <p>$$\dfrac{\sqrt[3]{\Delta x}}{\Delta x}=\dfrac{1}{(\Delta x)^{2/3}}\to+\infty$$</p>
+            <p>，切线竖直，变化率也不是有限数。</p>
+            <p class="en" lang="en">False: the implication runs the other way. $|x|$ is continuous at 0 but its one-sided difference quotients tend to $-1$ and $1$, so no rate exists there; $\sqrt[3]{x}$ at 0 is a second counterexample with an infinite quotient.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>球体半径由 $r$ cm 增大时，其表面积 $S=4\pi r^2$（cm$^2$）对半径的<strong>瞬时</strong>变化率与边长由 5 cm 变到 5.1 cm 的<strong>平均</strong>变化率分别为（　）。</p>
+            <p class="q-stem-en" lang="en">For a sphere of radius $r$ cm with surface area $S=4\pi r^2$, the instantaneous rate of change with respect to $r$ at $r=5$ and the average rate as $r$ goes from 5 cm to 5.1 cm are</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$40\pi$ cm$^2$/cm 与 $40.4\pi$ cm$^2$/cm</span></li>
+            <li><span class="opt-body">$40\pi$ cm$^2$/cm 与 $40\pi$ cm$^2$/cm</span></li>
+            <li><span class="opt-body">$20\pi$ cm$^2$/cm 与 $40.4\pi$ cm$^2$/cm</span></li>
+            <li><span class="opt-body">$40.4\pi$ cm$^2$/cm 与 $40\pi$ cm$^2$/cm</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>先算瞬时变化率：$S'(r)=8\pi r$，故 $S'(5)=40\pi$ cm$^2$/cm。再算平均变化率：$S(5.1)=4\pi(5.1)^2=104.04\pi$，$S(5)=100\pi$，差商为</p>
+            <p>$$\frac{104.04\pi-100\pi}{0.1}=\frac{4.04\pi}{0.1}=40.4\pi\ \text{cm}^2/\text{cm}.$$</p>
+            <p>选 B 是把两者混为一谈：$S'$ 在区间上不是常数（$S''(r)=8\pi&gt;0$，$S'$ 递增），所以区间上的平均值 $40.4\pi$ 严格大于左端点的瞬时值 $40\pi$。选 C 少乘了 2，是把 $S'=4\pi r$ 与 $S=4\pi r^2$ 弄混。选 D 把两个结果的位置对调了。</p>
+            <p><strong>验算</strong>：$S'$ 在 $[5,5.1]$ 上的平均值可由 $S'(5.05)=40.4\pi$ 印证——因为 $S'$ 是线性函数，其区间平均值恰好等于中点处的值 ✓，与差商 $40.4\pi$ 一致。</p>
+            <p class="en" lang="en">Differentiate for the instantaneous rate, $S'(5)=8\pi\cdot 5=40\pi$, and use the difference quotient for the average, $(104.04\pi-100\pi)/0.1=40.4\pi$. Since $S'$ increases, the average over the interval exceeds its left-endpoint value, so A is the only consistent choice.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <div class="q-stem">
+            <p>质点在抛物线 $y=x^2$ 上运动，横坐标 $x$（cm）以 $\dfrac{dx}{dt}=2$ cm/s 匀速增大。当 $x=3$ cm 时，质点上升的速率 $\dfrac{dy}{dt}=$ ______ cm/s。</p>
+            <p class="q-stem-en" lang="en">A point moves along the parabola $y=x^2$ with $\dfrac{dx}{dt}=2$ cm/s constant. When $x=3$ cm, its rate of rise $\dfrac{dy}{dt}=$ ______ cm/s.</p>
+          </div>
+          <div class="q-answer" data-answer="12|12.|12 cm/s|12cm/s"></div>
+          <div class="q-explain">
+            <p>两个变量都随时间变化，用链式法则（§2.2）联系它们：</p>
+            <p>$$\frac{dy}{dt}=\frac{dy}{dx}\cdot\frac{dx}{dt}=2x\cdot\frac{dx}{dt}.$$</p>
+            <p>代入 $x=3$、$\dfrac{dx}{dt}=2$，得 $\dfrac{dy}{dt}=2\times 3\times 2=12$ cm/s。</p>
+            <p><strong>要点一</strong>：先对 $x$ 求导再代入数值，若先把 $x=3$ 代进 $y=x^2$ 得 $y=9$，$y$ 就成了常量，求导得 0——这正是不许提前代值的典型情形。</p>
+            <p><strong>要点二</strong>：起点处近似核对。取 $\Delta t=0.01$ s，则 $\Delta x=0.02$ cm，$y$ 从 9 变到 $(3.02)^2=9.1204$，增量 $0.1204$ cm 除以 $0.01$ s 得 $12.04$ cm/s，与 12 cm/s 的差来自二阶项，$\Delta t\to 0$ 时消失 ✓。</p>
+            <p><strong>要点三</strong>：单位是 (cm/cm)$\times$(cm/s) $=$ cm/s ✓。$\dfrac{dy}{dt}$ 是竖直方向的变化率，与水平方向的变化率 $\dfrac{dx}{dt}=2$ cm/s 不同，质点沿抛物线的实际速率是 $\sqrt{2^2+12^2}=\sqrt{148}\approx 12.17$ cm/s。</p>
+            <p class="en" lang="en">Chain Rule: $\dfrac{dy}{dt}=2x\dfrac{dx}{dt}=12$ cm/s at $x=3$. Substituting $x=3$ before differentiating would kill the answer, and the actual speed along the curve is $\sqrt{2^2+12^2}\approx 12.17$ cm/s.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷围绕一条主线——<strong>变化率总是"某个量 ÷ 另一个量"，先分清是区间上的平均还是某点的瞬时，再谈计算</strong>。前六题守定义与单位，后两题把相关变化率与链式法则接起来，位置在本章的出口：从这里往后，导数不再只是一个数，而是描述联动的工具。</p>
+          <p>最常见的错法有三类。<strong>一是把平均当瞬时</strong>：题目问"在区间上"，却去求导；问"在某点"，却用差商。两者数值只差一点，判卷时是硬错。<strong>二是单位写错或省略</strong>：分子分母颠倒，或把加速度的单位写成速度的单位；量纲是这类题最快的自检手段，做完再核一遍。<strong>三是提前代值</strong>：把随时间变化的量先代成常数，求导后得 0 或丢掉因子，这是相关变化率最集中的失分点。</p>
+          <p>与前后内容的接口有两处要记牢：向前，本节的全部定义都建在 §2.1 的导数定义与 §2.2 的链式法则上，定义 3.1 只是把差商换了名字；向后，第 4 章的洛必达法则与中值定理仍以差商为基本对象（$f(b)-f(a)$ 就是 $\Delta y$），第 9 章讲多元函数的方向导数时，本节"单位 = 因变量单位 ÷ 自变量单位"和"沿某个方向的变化率"这两条会直接沿用。</p>
+          <p>下一步建议：只错在定义与单位的选择题，说明这两块还没坐稳，回读定义 3.1 的两段关键差别，再做一遍例 3.4 与例 3.5；错在相关变化率的两题，把方法 3.1 的四步抄下来，对照例 3.6 的解答逐步核对"哪一步代了什么值"。英文段信息量比中文略多，第一轮可先略读，二轮复习时再逐句看。</p>
+        </div>
+
+      </div>
+      </div>
+
+
+
+                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+      <nav class="chapter-nav">
+        <a class="prev" href="ch12.html"><span class="dir">← 上一页</span><span class="ttl">第 12 章 无穷级数</span></a>
+        <a class="next" href="../cheatsheet.html"><span class="dir">下一页 →</span><span class="ttl">公式速查表</span></a>
+      </nav>
+      <!-- /SHELL:BOTTOMNAV -->
+
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <p><strong>高等数学学习站</strong> · 同济八版骨架 + 托马斯 14 版映射 · 中英对照</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="../assets/js/plot.js"></script>
+<script src="../assets/js/videos.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/theme.js"></script>
+
+<script>
+/* 补充一图 2：平均变化率与瞬时变化率（§TX1-2；Thomas §3.4）。
+   取 s(t) = t²/4 + 1（两轴每格 1 单位，可直观比较陡峭程度）：
+   P(2, 2)；割线过 P 与 Q(4, 5)，斜率为 3，是区间上的平均变化率；
+   切线切于 P，斜率 s'(2) = 1，是 P 点的瞬时变化率。
+   把 Q 沿曲线推向 P，割线斜率就趋于切线斜率。 */
+(function () {
+  'use strict';
+  if (!window.Plot) return;
+  var el2 = document.getElementById('fig-rate');
+  if (el2) Plot.render(el2, {
+    aria: '割线（平均变化率）与切线（瞬时变化率）', width: 620, height: 340, maxWidth: 820,
+    x: [0, 5.4], y: [0, 7.6], padding: { l: 40, r: 30, t: 26, b: 36 },
+    axes: { x: { step: 1, label: 't' }, y: { step: 1, label: 's' } },
+    elements: [
+      { type: 'fn', of: 'x^2/4+1', color: 'brand' },
+      { type: 'fn', of: '3*x-4', color: 'method', dash: true, role: 'guide' },
+      { type: 'fn', of: 'x', color: 'accent', width: 2, role: 'guide' },
+      { type: 'point', at: [2, 2], color: 'brand', r: 4.5, onCurve: 'x^2/4+1', label: 'P(2, 2)' },
+      { type: 'point', at: [4, 5], color: 'method', r: 4.5, onCurve: 'x^2/4+1', label: 'Q(4, 5)' },
+      { type: 'label', at: [3.1, 0.55], text: '割线 PQ：斜率 3 = 平均变化率', color: 'method' },
+      { type: 'label', at: [3.35, 4.35], text: '切线于 P：斜率 1 = 瞬时变化率', color: 'accent' },
+      { type: 'label', at: [0.15, 6.9], text: '两轴每格均为 1 单位', color: 'soft' }
+    ]
+  });
+})();
+</script>
+
+<script>
+/* 补充一图 1：同一组曲线在两块显示比例不同的视窗下（§1.1 视窗与比例）。
+   曲线固定：圆 x²+y²=9 与两条互相垂直的直线 y=x、y=−x+3√2。
+   左：视窗 [−4,4]×[−6,8]，x 单位被拉长 → 圆变扁椭圆、直角看起来不是直角；
+   右：视窗加宽到方形视窗 → 圆是圆、两直线垂直。
+   注意引擎按"像素/单位"分别映射 x 与 y，因此比例失真会如实显现（这正是本图要讲的）。 */
+(function () {
+  'use strict';
+  if (!window.Plot) return;
+  var el1 = document.getElementById('fig-aspect');
+  if (el1) Plot.render(el1, {
+    aria: '视窗比例失真：圆变扁椭圆', width: 720, height: 360, maxWidth: 920, verify: false,
+    x: [-4, 4], y: [-6, 8],
+    panels: [
+      { x: 0,   y: 0, w: 0.5, h: 1, title: '① 视窗 [−4, 4] × [−6, 8]：圆变成扁椭圆',
+        xr: [-4, 4], yr: [-6, 8], padding: { l: 26, r: 20, t: 34, b: 26 } },
+      { x: 0.5, y: 0, w: 0.5, h: 1, title: '② 方形视窗：圆是圆，两直线垂直',
+        xr: [-7.25, 7.25], yr: [-6, 8], padding: { l: 26, r: 20, t: 34, b: 26 } }
+    ],
+    elements: [
+      { type: 'implicit', eq: 'x^2+y^2=9', color: 'brand', panel: 0 },
+      { type: 'fn', of: 'x', color: 'method', panel: 0 },
+      { type: 'fn', of: '-x+3*sqrt(2)', color: 'method', panel: 0 },
+      { type: 'label', at: [-3.6, 7.1], text: '圆看起来是扁椭圆', panel: 0, color: 'soft' },
+      { type: 'implicit', eq: 'x^2+y^2=9', color: 'brand', panel: 1 },
+      { type: 'fn', of: 'x', color: 'method', panel: 1 },
+      { type: 'fn', of: '-x+3*sqrt(2)', color: 'method', panel: 1 },
+      { type: 'label', at: [-6.8, 7.1], text: '圆是圆，夹角 90°', panel: 1, color: 'soft' }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

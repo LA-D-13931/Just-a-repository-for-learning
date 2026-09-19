@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>公式速查表 · 高等数学学习站</title>
+<meta name="description" content="第 1 期 17 节的核心公式汇总：定义域限制、极限定义与运算法则、等价无穷小表、基本导数公式表、高阶导数、参数方程求导、微分与变化率，按模块排版，供做题时查用。A one-page reference for the core formulas of Chapter 1, Chapter 2 and the Thomas supplement: domains, limits and limit laws, equivalent infinitesimals, basic derivatives, higher-order derivatives, implicit and parametric differentiation, differentials and rates of change.">
+<script>
+  /* 尽早应用主题与亮暗模式，避免刷新时"先亮后暗"闪一下。
+     theme.js 里还有一份同样的逻辑，这里是关键路径上的同步版本。 */
+  (function () {
+    try {
+      var t = localStorage.getItem('advmath.theme.v1') || 'default';
+      var m = localStorage.getItem('advmath.mode.v1') || 'auto';
+      var e = document.documentElement;
+      e.setAttribute('data-theme', t);
+      if (m !== 'auto') e.setAttribute('data-mode', m);
+      /* 语言：纯中文模式下要把英文段与行内英文整段隐藏，
+         所以必须在首屏渲染前就把 data-lang 写上去，否则会闪一下英文。 */
+      if ((localStorage.getItem('advmath.lang.v1') || 'both') === 'zh') {
+        e.setAttribute('data-lang', 'zh');
+      }
+    } catch (err) { /* 隐私模式下 localStorage 不可用，退回默认主题 */ }
+  })();
+</script>
+<link rel="stylesheet" href="assets/css/theme-tokens.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>
+  /* MathJax 配置。
+     性能与正确性的折中（2026-09-18）：
+     本站公式密集（ch1 有 7518 个），一次性排版全页会生成约 19 万 DOM 元素，
+     任何重排都要 200 ms —— 侧栏拖动会卡。
+     但如果"只为视口内排版"，未被滚到的公式会一直显示成 $\sqrt{x}$ 这样的源码，
+     这对读者是明显的文字损坏，不可接受。
+     因此改为：首屏立即排版（保证打开就是正确文字），
+     其余公式在浏览器空闲时段分片补排（不阻塞交互）。
+     两全：文字正确，且拖动期间几乎没有排版开销。 */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\(', '\)']], displayMath: [['$$', '$$'], ['\[', '\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    /* 关键（第 26 节 · 页面切换性能）：
+       默认 startup 会在 MathJax 就绪时自动同步扫描全页并排版，
+       实测这一步在主线程上连续占用 1.7 s（ch3：0 → 5484 个公式一次成型），
+       期间点击无响应——这就是"切换卡顿/点击无反应"的根因。
+       改为 typeset:false：既不自动排版，也不自动扫描；
+       排版全部由下面这段脚本按"首屏优先 + 分片"驱动。 */
+    startup: {
+      typeset: false,
+      ready: function () {
+        MathJax.startup.defaultReady();
+        window.__mjxReady = true;   /* 供下面的分片调度感知 */
+      }
+    }
+  };
+
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title';
+    var pending = [], busy = false, started = false;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) schedule();
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL));
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+</script>
+<script id="MathJax-script" async src="assets/js/vendor/tex-svg.js"></script>
+</head>
+<body data-page="cheatsheet">
+
+                                                                      <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">AM</span>
+      <span>高等数学学习站<small>同济八版骨架 · 托马斯映射 · 中英对照</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="index.html">首页</a>
+      <a href="cheatsheet.html" class="is-active">公式速查表</a>
+      <a href="exam.html">综合自测卷</a>
+    </nav>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+                                                                                                                                                                                                                  <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="chapters/ch1.html"><span class="num">1</span>函数与极限</a>
+          <a class="toc-chapter" href="chapters/ch2.html"><span class="num">2</span>导数与微分</a>
+          <a class="toc-chapter" href="chapters/ch3.html"><span class="num">3</span>微分中值定理与导数的应用</a>
+          <a class="toc-chapter" href="chapters/ch4.html"><span class="num">4</span>不定积分</a>
+          <a class="toc-chapter" href="chapters/ch5.html"><span class="num">5</span>定积分</a>
+          <a class="toc-chapter" href="chapters/ch6.html"><span class="num">6</span>定积分的应用</a>
+          <a class="toc-chapter" href="chapters/ch7.html"><span class="num">7</span>微分方程</a>
+          <a class="toc-chapter" href="chapters/ch8.html"><span class="num">8</span>向量代数与空间解析几何</a>
+          <a class="toc-chapter" href="chapters/ch9.html"><span class="num">9</span>多元函数微分法及其应用</a>
+          <a class="toc-chapter" href="chapters/ch10.html"><span class="num">10</span>重积分</a>
+          <a class="toc-chapter" href="chapters/ch11.html"><span class="num">11</span>曲线积分与曲面积分</a>
+          <a class="toc-chapter" href="chapters/ch12.html"><span class="num">12</span>无穷级数</a>
+          <a class="toc-chapter" href="chapters/supp1.html"><span class="num">TX</span>托马斯补充</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+          <a class="toc-chapter is-active" href="cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter" href="exam.html">综合自测卷</a>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div class="page-eyebrow"><span class="en-inline">TOOLS</span> · 第 1 期 17 节<span class="en-inline"> / Formula Reference</span></div>
+        <h1>公式速查表</h1>
+        <div class="bi">
+          <p class="lede" lang="zh">本页把第 1 期 17 节的核心公式按模块排开，做题时直接查：定义域的五条限制、两种极限定义、等价无穷小表、基本导数公式表、高阶导数、参数方程求导、微分与变化率。每一条都与正文的写法一致，公式的条件与适用范围逐字对应，不省略前提。</p>
+          <p class="en" lang="en">This page collects the core formulas of all 17 sections of Phase 1, module by module: the five domain restrictions, the two limit definitions, the table of equivalent infinitesimals, the basic derivative table, higher-order derivatives, parametric differentiation, differentials and rates of change. Every formula is written exactly as it appears in the lessons, hypotheses and admissible ranges included.</p>
+        </div>
+      </div>
+
+      <!-- ======== 第 1 章 函数与极限 ======== -->
+
+      <h2 id="cs-1-1">1-1 定义域与函数的四种特性<span class="en-inline"> / Domains and Function Properties</span></h2>
+      <p>求定义域就是"把使表达式有意义的全部限制取交集"；下面一张表列全五种限制。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>限制</th><th>条件</th><th>例</th></tr></thead>
+          <tbody>
+            <tr><td>分式</td><td>分母 $\ne 0$</td><td>$\dfrac{1}{x-3}$ 要求 $x \ne 3$</td></tr>
+            <tr><td>偶次根式</td><td>被开方式 $\ge 0$</td><td>$\sqrt{4-x^2}$ 要求 $4-x^2 \ge 0$</td></tr>
+            <tr><td>对数</td><td>真数 $&gt; 0$；真数落在分母上时还要 $\ne 1$（因 $\ln 1 = 0$）</td><td>$\dfrac{1}{\ln(x+1)}$ 要求 $x+1 &gt; 0$ 且 $x+1 \ne 1$</td></tr>
+            <tr><td>反三角函数</td><td>$\arcsin u$、$\arccos u$ 要求 $-1 \le u \le 1$</td><td>$\arcsin(x-1)$ 要求 $0 \le x \le 2$</td></tr>
+            <tr><td>正切</td><td>$u \ne \dfrac{\pi}{2} + k\pi$（$k \in \mathbb{Z}$）</td><td>$\tan 2x$ 要求 $x \ne \dfrac{\pi}{4} + \dfrac{k\pi}{2}$</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>把每条限制解成 $x$ 的区间后<strong>取交集</strong>；交集为空，说明该表达式不表示函数。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>特性</th><th>定义</th><th>要点</th></tr></thead>
+          <tbody>
+            <tr><td>有界性</td><td>存在 $M &gt; 0$，使对一切 $x \in D$ 都有 $|f(x)| \le M$</td><td>对区间而言：$\dfrac{1}{x}$ 在 $(0,1)$ 上无界，在 $[1,+\infty)$ 上有界</td></tr>
+            <tr><td>单调性</td><td>$x_1 &lt; x_2 \Rightarrow f(x_1) &lt; f(x_2)$ 为单调增加；不等号反向为单调减少</td><td>与有界性合起来通向 $1\!-\!6$ 的单调有界准则</td></tr>
+            <tr><td>奇偶性</td><td>$D$ 关于原点对称；$f(-x)=f(x)$ 为偶函数，$f(-x)=-f(x)$ 为奇函数</td><td>定义域不对称就谈不上奇偶</td></tr>
+            <tr><td>周期性</td><td>存在 $T &gt; 0$，使 $x+T \in D$ 且 $f(x+T)=f(x)$</td><td>常数函数是周期函数，但没有最小正周期</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-1-2">1-2 数列的极限<span class="en-inline"> / Limits of Sequences</span></h2>
+      <p>数列极限只有一条定义、三条性质与一组运算法则；查定义看这里，查运算看末行。</p>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义　数列的极限（$\varepsilon$-$N$ 定义）</div>
+        <p>对任意给定的正数 $\varepsilon$，总存在正整数 $N$，使得当 $n &gt; N$ 时不等式 $|a_n-a| &lt; \varepsilon$ 恒成立，则称 $a$ 是数列 $\{a_n\}$ 的极限，记作</p>
+        <p>$$\forall \varepsilon &gt; 0,\ \exists N \in \mathbb{N}_+,\ \forall n &gt; N:\ |a_n-a| &lt; \varepsilon$$</p>
+        <p>几何含义：$a_n$ 从第 $N+1$ 项起全部落入开区间 $(a-\varepsilon, a+\varepsilon)$，只有前有限项可能落在外面。</p>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>性质</th><th>结论</th><th>用法</th></tr></thead>
+          <tbody>
+            <tr><td>唯一性</td><td>收敛数列的极限唯一</td><td>反证：两个不同的数不可能同时被任意窄的区间套住</td></tr>
+            <tr><td>有界性</td><td>收敛数列一定有界</td><td>逆否：无界数列一定发散</td></tr>
+            <tr><td>保号性</td><td>若 $a &gt; 0$（或 $a &lt; 0$），则从某项起 $a_n &gt; 0$（或 $a_n &lt; 0$）</td><td>只管"从某项起"；由 $a_n &gt; 0$ 只能推出 $a \ge 0$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>四则运算（前提：两个极限各自存在）：</p>
+      <p>$$\lim_{n\to\infty}(a_n \pm b_n)=a \pm b,\qquad \lim_{n\to\infty}(a_n b_n)=a b,\qquad \lim_{n\to\infty}\frac{a_n}{b_n}=\frac{a}{b}\quad (b \ne 0)$$</p>
+
+      <h2 id="cs-1-3">1-3 函数的极限<span class="en-inline"> / Limits of Functions</span></h2>
+      <p>函数极限有两种过程：$x \to \infty$ 管远处，$x \to x_0$ 管近处；判存在性用左右极限。</p>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义　$x\to\infty$ 与 $x\to x_0$ 时函数的极限</div>
+        <p>$$\lim_{x\to\infty} f(x) = A \iff \forall \varepsilon &gt; 0,\ \exists X &gt; 0:\ |x| &gt; X \Rightarrow |f(x)-A| &lt; \varepsilon$$</p>
+        <p>$$\lim_{x\to x_0} f(x) = A \iff \forall \varepsilon &gt; 0,\ \exists \delta &gt; 0:\ 0 &lt; |x-x_0| &lt; \delta \Rightarrow |f(x)-A| &lt; \varepsilon$$</p>
+        <p>第二种里的 $0 &lt; |x-x_0|$ 把 $x=x_0$ 排除在外，这正是"极限与 $f(x_0)$ 无关"的写法来源；$\delta$ 一般依赖于 $\varepsilon$。</p>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>结论</th><th>内容</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr><td>左右极限判据</td><td>$\lim\limits_{x\to x_0} f(x) = A \iff \lim\limits_{x\to x_0^-} f(x) = \lim\limits_{x\to x_0^+} f(x) = A$</td><td>一侧不存在，或两侧存在但不等，则极限不存在</td></tr>
+            <tr><td>局部有界性</td><td>若 $\lim\limits_{x\to x_0} f(x) = A$，则存在 $\delta &gt; 0$ 与 $M &gt; 0$，使 $0 &lt; |x-x_0| &lt; \delta$ 时 $|f(x)| \le M$</td><td>局部性质，只保证 $x_0$ 附近有界；反向不成立</td></tr>
+            <tr><td>水平渐近线</td><td>$\lim\limits_{x\to\infty} f(x) = A$ 的几何含义是：直线 $y=A$ 是曲线的水平渐近线</td><td>曲线落在 $y=A\pm\varepsilon$ 之间，只在图形最左、最右两端要求成立</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-1-4">1-4 无穷小与无穷大<span class="en-inline"> / Infinitesimals and Infinity</span></h2>
+      <p>两者都是过程量，不是数；本节四条结论把"趋于 0"翻译成可以加减乘除的写法。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>对象</th><th>定义</th><th>要点</th></tr></thead>
+          <tbody>
+            <tr><td>无穷小</td><td>在给定过程中 $\lim f(x) = 0$</td><td>是变量不是数；$0$ 是唯一的常数无穷小；数列情形即 $\lim\limits_{n\to\infty} a_n = 0$</td></tr>
+            <tr><td>无穷大</td><td>对任意 $M &gt; 0$，总存在 $\delta &gt; 0$，使 $0 &lt; |x-x_0| &lt; \delta$ 时 $|f(x)| &gt; M$，记作 $\lim\limits_{x\to x_0} f(x) = \infty$</td><td>$\infty$ 不是数，此式表示极限不存在；要区分符号时写 $+\infty$ 或 $-\infty$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>结论</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>无穷小与无穷大的互推</td><td>同一过程中：$f$ 是无穷大 $\Rightarrow \dfrac{1}{f}$ 是无穷小；$f$ 是无穷小且 $f \ne 0$ $\Rightarrow \dfrac{1}{f}$ 是无穷大</td></tr>
+            <tr><td>极限与无穷小的关系</td><td>$\lim f(x) = A \iff f(x) = A + \alpha(x)$，其中 $\alpha(x)$ 是同一过程中的无穷小；等价写法 $f(x) \to A \iff f(x)-A \to 0$</td></tr>
+            <tr><td>无穷小 $\times$ 有界</td><td>$\alpha$ 是无穷小，$g$ 在 $x_0$ 的某去心邻域内有界 $\Rightarrow \alpha g$ 是无穷小</td></tr>
+            <tr><td>两条推论</td><td>常数 $\times$ 无穷小 $=$ 无穷小；有限个无穷小之积 $=$ 无穷小</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-1-5">1-5 极限运算法则<span class="en-inline"> / Limit Laws</span></h2>
+      <p>四则运算的前提是各极限都存在且有限，商的公式还要分母极限非零；换元法多一条"内层取不到 $u_0$"。</p>
+
+      <p>$$\lim_{x\to x_0}[f(x) \pm g(x)] = A \pm B,\qquad \lim_{x\to x_0}[f(x)\,g(x)] = A\,B,\qquad \lim_{x\to x_0}\frac{f(x)}{g(x)} = \frac{A}{B}\quad (B \ne 0)$$</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>法则</th><th>内容</th><th>前提</th></tr></thead>
+          <tbody>
+            <tr><td>和、差、积</td><td>见上式前两条</td><td>只要求两个极限都存在（有限）</td></tr>
+            <tr><td>商</td><td>见上式第三条</td><td>还要 $B \ne 0$；$B=0$ 时法则失效，须另行讨论</td></tr>
+            <tr><td>常数因子与幂</td><td>$\lim\limits_{x\to x_0}[c\,f(x)] = c\,A$；$\lim\limits_{x\to x_0}[f(x)]^n = A^n$</td><td>$c$ 为常数，$n$ 为正整数</td></tr>
+            <tr><td>幂函数</td><td>$\lim\limits_{x\to x_0} x^n = x_0^n$</td><td>代入法的起点</td></tr>
+            <tr><td>复合函数（换元）</td><td>$\lim\limits_{x\to x_0} g(x) = u_0$，存在去心邻域使 $g(x) \ne u_0$，且 $\lim\limits_{u\to u_0} f(u) = A$ $\Rightarrow$ $\lim\limits_{x\to x_0} f[g(x)] = A$</td><td>三个条件缺一不可</td></tr>
+            <tr><td>连续时退化</td><td>$f$ 在 $u_0$ 连续时，$\lim\limits_{x\to x_0} f[g(x)] = f(u_0)$</td><td>连续函数可以穿过极限号</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-1-6">1-6 极限存在准则与两个重要极限<span class="en-inline"> / Existence Criteria and Two Important Limits</span></h2>
+      <p>两个准则负责"证明极限存在"，两个重要极限负责"算出具体值"。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>准则</th><th>条件</th><th>结论</th></tr></thead>
+          <tbody>
+            <tr><td>夹逼准则（数列）</td><td>存在 $N_0 &gt; 0$，当 $n &gt; N_0$ 时 $y_n \le x_n \le z_n$；且 $\lim\limits_{n\to\infty} y_n = \lim\limits_{n\to\infty} z_n = a$</td><td>$\lim\limits_{n\to\infty} x_n = a$</td></tr>
+            <tr><td>夹逼准则（函数）</td><td>$x_0$ 的某去心邻域内 $g(x) \le f(x) \le h(x)$，且同一过程下 $\lim g(x) = \lim h(x) = A$</td><td>$\lim f(x) = A$</td></tr>
+            <tr><td>单调有界准则</td><td>单调增加且有上界；或单调减少且有下界</td><td>数列收敛（只给存在性，不给极限值）</td></tr>
+            <tr><td>等价说法</td><td>单调数列</td><td>收敛 $\iff$ 有界</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>名称</th><th>公式</th><th>通用形式</th></tr></thead>
+          <tbody>
+            <tr><td>第一重要极限（$x$ 取弧度）</td><td>$\lim\limits_{x\to0}\dfrac{\sin x}{x} = 1$</td><td>$\lim\limits_{x\to0}\dfrac{\sin \square}{\square} = 1$，分子分母的方框逐字相同，且方框本身趋于 $0$</td></tr>
+            <tr><td>第二重要极限</td><td>$\lim\limits_{x\to\infty}\left(1+\frac{1}{x}\right)^x = e$</td><td>$\lim\limits_{u\to0}(1+u)^{\frac{1}{u}} = e$；数列版 $\lim\limits_{n\to\infty}\left(1+\frac{1}{n}\right)^n = e$</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>$1^\infty$ 型速记：若 $u \to 0$、$v \to \infty$ 且 $uv \to A$，则 $(1+u)^v \to e^A$。常数 $e = 2.718281828\ldots$。识别信号是"底数趋于 $1$、指数趋于 $\infty$"，此时不能把底数与指数分开取极限。</p>
+
+      <h2 id="cs-1-7">1-7 无穷小的比较与等价无穷小表<span class="en-inline"> / Comparison of Infinitesimals</span></h2>
+      <p>比较两个无穷小趋于零的快慢；等价替换只在乘除的因子位置上可用。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>$\lim \dfrac{\beta}{\alpha}$</th><th>结论</th><th>记号</th></tr></thead>
+          <tbody>
+            <tr><td>$0$</td><td>$\beta$ 是比 $\alpha$ 高阶的无穷小，$\alpha$ 是比 $\beta$ 低阶的无穷小</td><td>$\beta = o(\alpha)$</td></tr>
+            <tr><td>$c \ne 0$</td><td>$\beta$ 与 $\alpha$ 是同阶无穷小</td><td>$\beta = O(\alpha)$</td></tr>
+            <tr><td>$1$</td><td>$\beta$ 与 $\alpha$ 是等价无穷小</td><td>$\beta \sim \alpha$</td></tr>
+            <tr><td>$\infty$</td><td>$\beta$ 是比 $\alpha$ 低阶的无穷小</td><td>$\beta = o^{-1}(\alpha)$</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>$k$ 阶无穷小：若 $\lim\limits_{x\to0}\dfrac{\beta}{x^k} = c \ne 0$（$k &gt; 0$），则 $\beta$ 是 $k$ 阶无穷小——它是拿 $x^k$ 当尺子量出来的结论。若该极限为 $0$，只能说阶数大于 $k$，不能说等于 $k$。</p>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理　等价无穷小替换（乘除可换，加减不可换）</div>
+        <p>同一过程中 $\alpha \sim \alpha'$、$\beta \sim \beta'$，且 $\lim \dfrac{\beta'}{\alpha'}$ 存在（或为 $\infty$），则</p>
+        <p>$$\lim \frac{\beta}{\alpha} = \lim \frac{\beta'}{\alpha'};\qquad \lim \beta\alpha = \lim \beta'\alpha'.$$</p>
+        <p>严格含义是 $\beta = \alpha + o(\alpha)$。乘、除、乘方、开方的因子位置可以整体替换；加减法中最高阶项可能相消，替换没有同等保证。</p>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>当 $x \to 0$ 时</th><th>等价关系</th><th>阶数</th></tr></thead>
+          <tbody>
+            <tr><td>$\sin x$</td><td>$\sin x \sim x$</td><td>1 阶</td></tr>
+            <tr><td>$\tan x$</td><td>$\tan x \sim x$</td><td>1 阶</td></tr>
+            <tr><td>$\arcsin x$</td><td>$\arcsin x \sim x$</td><td>1 阶</td></tr>
+            <tr><td>$\arctan x$</td><td>$\arctan x \sim x$</td><td>1 阶</td></tr>
+            <tr><td>$\ln(1+x)$</td><td>$\ln(1+x) \sim x$</td><td>1 阶</td></tr>
+            <tr><td>$e^x-1$</td><td>$e^x-1 \sim x$</td><td>1 阶</td></tr>
+            <tr><td>$(1+x)^a-1$</td><td>$(1+x)^a-1 \sim ax$</td><td>1 阶</td></tr>
+            <tr><td>$1-\cos x$</td><td>$1-\cos x \sim \dfrac{x^2}{2}$</td><td>2 阶</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>表中 $\arctan x \sim x$ 不在正文的等价表内，由 $\tan x \sim x$ 经反函数换元得到，此处一并列出。整张表只在 $x \to 0$ 时成立；遇 $x \to \infty$ 先令 $t = \dfrac{1}{x}$ 化到 $t \to 0$。</p>
+
+      <h2 id="cs-1-8">1-8 函数的连续性与间断点<span class="en-inline"> / Continuity and Discontinuities</span></h2>
+      <p>连续的判据只有一条：极限值等于函数值；间断点按左右极限是否存在分两类。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>表述</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>极限式</td><td>$\lim\limits_{x\to x_0} f(x) = f(x_0)$（要求极限存在，且等于函数值）</td></tr>
+            <tr><td>增量式</td><td>记 $\Delta y = f(x_0+\Delta x)-f(x_0)$，则 $\lim\limits_{\Delta x\to0} \Delta y = 0$</td></tr>
+            <tr><td>单侧式</td><td>$\lim\limits_{x\to x_0^-} f(x) = \lim\limits_{x\to x_0^+} f(x) = f(x_0)$，即既左连续又右连续</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>区间上的连续：$f$ 在 $(a,b)$ 内每一点连续，则称在 $(a,b)$ 内连续；若还有 $f$ 在 $a$ 处右连续、在 $b$ 处左连续，则称在闭区间 $[a,b]$ 上连续。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>条件</th><th>子类</th></tr></thead>
+          <tbody>
+            <tr><td>第一类间断点</td><td>$f(x_0^-)$ 与 $f(x_0^+)$ 都存在</td><td>两者相等为可去间断点；两者不等为跳跃间断点，$|f(x_0^+)-f(x_0^-)|$ 称为跳跃度</td></tr>
+            <tr><td>第二类间断点</td><td>$f(x_0^-)$ 与 $f(x_0^+)$ 中至少有一个不存在</td><td>一侧极限为无穷大：无穷间断点；函数值无限次振荡：振荡间断点</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-1-9">1-9 初等函数的连续性<span class="en-inline"> / Continuity of Elementary Functions</span></h2>
+      <p>本节的用处只有一个：把一大类极限题从"算"降级成"代"。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>结论</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>四则运算</td><td>$f$、$g$ 在 $x_0$ 连续 $\Rightarrow$ $f+g$、$f-g$、$f \cdot g$ 在 $x_0$ 连续；若又有 $g(x_0) \ne 0$，则 $\dfrac{f}{g}$ 在 $x_0$ 连续</td></tr>
+            <tr><td>复合</td><td>$u=g(x)$ 在 $x_0$ 连续、$y=f(u)$ 在 $u_0=g(x_0)$ 连续 $\Rightarrow$ $f[g(x)]$ 在 $x_0$ 连续</td></tr>
+            <tr><td>反函数</td><td>$y=f(x)$ 在区间 $I_x$ 上单调且连续 $\Rightarrow$ 反函数在对应区间 $I_y$ 上单调且连续</td></tr>
+            <tr><td>初等函数</td><td>基本初等函数在它们的定义域内连续；一切初等函数在其<strong>定义区间</strong>内连续</td></tr>
+            <tr><td>用法</td><td>定义区间内求极限即代入：$\lim\limits_{x\to x_0} f(x) = f(x_0)$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-1-10">1-10 闭区间上连续函数的性质<span class="en-inline"> / Properties on a Closed Interval</span></h2>
+      <p>四个定理都建立在"闭区间 + 连续"上，结论只保证存在。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>定理</th><th>条件</th><th>结论</th></tr></thead>
+          <tbody>
+            <tr><td>最值定理</td><td>$f$ 在闭区间 $[a,b]$ 上连续</td><td>必取到最大值 $M$ 与最小值 $m$：存在 $\xi_1,\xi_2 \in [a,b]$，使 $m = f(\xi_1) \le f(x) \le f(\xi_2) = M$</td></tr>
+            <tr><td>有界性定理</td><td>同上</td><td>存在 $K &gt; 0$，使一切 $x \in [a,b]$ 有 $|f(x)| \le K$（最值定理的推论，$K=\max\{|m|,|M|\}$）</td></tr>
+            <tr><td>介值定理</td><td>$f$ 在 $[a,b]$ 上连续，$m$、$M$ 为其最值</td><td>对任意 $\mu \in [m,M]$，至少存在一点 $\xi \in [a,b]$ 使 $f(\xi) = \mu$</td></tr>
+            <tr><td>零点定理</td><td>$f$ 在 $[a,b]$ 上连续，且 $f(a)f(b) &lt; 0$</td><td>至少存在一点 $\xi \in (a,b)$ 使 $f(\xi) = 0$，即方程 $f(x)=0$ 在 $(a,b)$ 内至少有一个实根</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>两者都不给位置与个数：要谈根的个数，必须再加上单调性之类的条件。</p>
+
+      <!-- ======== 第 2 章 导数与微分 ======== -->
+
+      <h2 id="cs-2-1">2-1 导数概念与可导性<span class="en-inline"> / The Derivative as a Limit</span></h2>
+      <p>导数是差商的极限；判分段点可导性只能靠左右导数。</p>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义　导数</div>
+        <p>设 $\Delta y = f(x_0+\Delta x)-f(x_0)$，若极限</p>
+        <p>$$f'(x_0)=\lim_{\Delta x \to 0}\frac{\Delta y}{\Delta x}=\lim_{\Delta x \to 0}\frac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$$</p>
+        <p>存在，则称 $f$ 在点 $x_0$ 可导，此极限为 $f$ 在 $x_0$ 的导数。比值 $\dfrac{\Delta y}{\Delta x}$ 称为差商。三种记法都要认得：</p>
+        <p>$$f'(x_0),\qquad y'\big|_{x=x_0},\qquad \left.\frac{\mathrm{d}y}{\mathrm{d}x}\right|_{x=x_0}$$</p>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>结论</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>单侧导数</td><td>$f'_-(x_0)=\lim\limits_{\Delta x \to 0^-}\dfrac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$，$f'_+(x_0)$ 同式取 $\Delta x \to 0^+$</td></tr>
+            <tr><td>可导的充要条件</td><td>$f'_-(x_0)$ 与 $f'_+(x_0)$ 都存在且相等，此时 $f'(x_0)=f'_-(x_0)=f'_+(x_0)$</td></tr>
+            <tr><td>可导必连续</td><td>$f$ 在 $x_0$ 可导 $\Rightarrow$ $f$ 在 $x_0$ 连续；反之不成立，$y=|x|$ 在 $x=0$ 连续但不可导</td></tr>
+            <tr><td>几何意义</td><td>$f'(x_0)$ 是曲线 $y=f(x)$ 在点 $(x_0,f(x_0))$ 处切线的斜率；可导意味着切线不垂直于 $x$ 轴</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-2-2">2-2 求导法则与基本导数公式表<span class="en-inline"> / Rules and Basic Derivative Formulas</span></h2>
+      <p>16 个基本公式全部由导数定义算出，此后直接引用；和差积商、反函数、链式三条法则再加上这张表，就是全部初等函数的求导工具。公式只在两端都有意义的区间上成立。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>函数 $f(x)$</th><th>导数 $f'(x)$</th><th>成立范围</th></tr></thead>
+          <tbody>
+            <tr><td>$C$（常数）</td><td>$0$</td><td>$x \in \mathbb{R}$</td></tr>
+            <tr><td>$x^{\mu}$</td><td>$\mu x^{\mu-1}$</td><td>$x &gt; 0$（$\mu$ 为任意实数时）</td></tr>
+            <tr><td>$a^{x}$</td><td>$a^{x}\ln a$</td><td>$a &gt; 0$ 且 $a \ne 1$</td></tr>
+            <tr><td>$e^{x}$</td><td>$e^{x}$</td><td>$x \in \mathbb{R}$</td></tr>
+            <tr><td>$\log_a x$</td><td>$\dfrac{1}{x\ln a}$</td><td>$x &gt; 0$，$a &gt; 0$ 且 $a \ne 1$</td></tr>
+            <tr><td>$\ln x$</td><td>$\dfrac{1}{x}$</td><td>$x &gt; 0$</td></tr>
+            <tr><td>$\sin x$</td><td>$\cos x$</td><td>$x \in \mathbb{R}$</td></tr>
+            <tr><td>$\cos x$</td><td>$-\sin x$</td><td>$x \in \mathbb{R}$</td></tr>
+            <tr><td>$\tan x$</td><td>$\dfrac{1}{\cos^{2}x}=\sec^{2}x$</td><td>$x \ne \dfrac{\pi}{2}+k\pi$，$k \in \mathbb{Z}$</td></tr>
+            <tr><td>$\cot x$</td><td>$-\dfrac{1}{\sin^{2}x}=-\csc^{2}x$</td><td>$x \ne k\pi$，$k \in \mathbb{Z}$</td></tr>
+            <tr><td>$\sec x$</td><td>$\sec x\tan x$</td><td>$x \ne \dfrac{\pi}{2}+k\pi$，$k \in \mathbb{Z}$</td></tr>
+            <tr><td>$\csc x$</td><td>$-\csc x\cot x$</td><td>$x \ne k\pi$，$k \in \mathbb{Z}$</td></tr>
+            <tr><td>$\arcsin x$</td><td>$\dfrac{1}{\sqrt{1-x^{2}}}$</td><td>$-1 &lt; x &lt; 1$</td></tr>
+            <tr><td>$\arccos x$</td><td>$-\dfrac{1}{\sqrt{1-x^{2}}}$</td><td>$-1 &lt; x &lt; 1$</td></tr>
+            <tr><td>$\arctan x$</td><td>$\dfrac{1}{1+x^{2}}$</td><td>$x \in \mathbb{R}$</td></tr>
+            <tr><td>$\operatorname{arccot} x$</td><td>$-\dfrac{1}{1+x^{2}}$</td><td>$x \in \mathbb{R}$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="cs-2-3">求导法则<span class="en-inline"> / Differentiation Rules</span></h3>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>法则</th><th>公式</th><th>前提</th></tr></thead>
+          <tbody>
+            <tr><td>和、差</td><td>$(u \pm v)' = u' \pm v'$</td><td>$u$、$v$ 在区间 $I$ 上可导</td></tr>
+            <tr><td>积</td><td>$(uv)' = u'v+uv'$；推广到三个因子 $(uvw)' = u'vw+uv'w+uvw'$</td><td>同上；项数等于因子个数</td></tr>
+            <tr><td>商</td><td>$\left(\dfrac{u}{v}\right)' = \dfrac{u'v-uv'}{v^{2}}$；$\left(\dfrac{1}{v}\right)' = -\dfrac{v'}{v^{2}}$</td><td>$v(x) \ne 0$</td></tr>
+            <tr><td>反函数</td><td>$[f^{-1}]'(y) = \dfrac{1}{f'(x)}$（$y=f(x)$）；莱布尼茨写法 $\dfrac{dx}{dy} = \dfrac{1}{\dfrac{dy}{dx}}$</td><td>$f$ 在区间上单调、可导，且 $f'(x) \ne 0$</td></tr>
+            <tr><td>链式法则</td><td>$[f(g(x))]' = f'(g(x)) \cdot g'(x)$；$\dfrac{dy}{dx} = \dfrac{dy}{du} \cdot \dfrac{du}{dx}$</td><td>内层在 $x$ 可导，外层在对应点可导</td></tr>
+            <tr><td>多层嵌套</td><td>$y=f(u)$、$u=g(v)$、$v=h(x)$ $\Rightarrow$ $\dfrac{dy}{dx} = f'(u)\,g'(v)\,h'(x)$</td><td>因子个数等于嵌套层数</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-2-4">2-3 高阶导数与莱布尼茨公式<span class="en-inline"> / Higher-Order Derivatives</span></h2>
+      <p>求 $n$ 阶导数有三条路线：逐次求导、用常用函数的 $n$ 阶公式、用莱布尼茨公式。</p>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义　高阶导数</div>
+        <p>$$f''(x)=\lim_{\Delta x\to0}\frac{f'(x+\Delta x)-f'(x)}{\Delta x},\qquad f^{(n)}(x)=\left[f^{(n-1)}(x)\right]'$$</p>
+        <p>约定 $f^{(0)}(x)=f(x)$、$f^{(1)}(x)=f'(x)$。括号里的 $(n)$ 是求导阶数，不是幂，$f^{(2)}(x)$ 与 $[f(x)]^2$ 是两回事。</p>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>函数</th><th>$n$ 阶导数</th></tr></thead>
+          <tbody>
+            <tr><td>$x^{\mu}$</td><td>$\mu(\mu-1)\cdots(\mu-n+1)x^{\mu-n}$</td></tr>
+            <tr><td>$x^{m}$（$m$ 为正整数）</td><td>$(x^{m})^{(n)}=\dfrac{m!}{(m-n)!}x^{m-n}$（$n \le m$）；当 $n &gt; m$ 时 $(x^{m})^{(n)}=0$</td></tr>
+            <tr><td>$e^{ax}$</td><td>$(e^{ax})^{(n)}=a^{n}e^{ax}$，取 $a=1$ 即 $(e^{x})^{(n)}=e^{x}$</td></tr>
+            <tr><td>$\sin x$</td><td>$(\sin x)^{(n)}=\sin\left(x+\dfrac{n\pi}{2}\right)$</td></tr>
+            <tr><td>$\cos x$</td><td>$(\cos x)^{(n)}=\cos\left(x+\dfrac{n\pi}{2}\right)$</td></tr>
+            <tr><td>$\ln x$</td><td>$(\ln x)^{(n)}=\dfrac{(-1)^{n-1}(n-1)!}{x^{n}}$（$x &gt; 0$，$n \ge 1$）</td></tr>
+            <tr><td>$\dfrac{1}{x}$</td><td>$\left(\dfrac{1}{x}\right)^{(n)}=\dfrac{(-1)^{n}n!}{x^{n+1}}$</td></tr>
+            <tr><td>$\dfrac{1}{ax+b}$</td><td>$\left(\dfrac{1}{ax+b}\right)^{(n)}=\dfrac{(-1)^{n}n!\,a^{n}}{(ax+b)^{n+1}}$</td></tr>
+            <tr><td>$a^{x}$</td><td>$(a^{x})^{(n)}=a^{x}(\ln a)^{n}$（$a &gt; 0$，$a \ne 1$）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>莱布尼茨公式（$u$、$v$ 都有 $n$ 阶导数，$u^{(0)}=u$、$v^{(0)}=v$）：</p>
+      <p>$$(uv)^{(n)}=\sum_{k=0}^{n}\binom{n}{k}u^{(k)}v^{(n-k)},\qquad \binom{n}{k}=\frac{n!}{k!(n-k)!}$$</p>
+      <p>展开即 $(uv)^{(n)}=u^{(n)}v+nu^{(n-1)}v'+\dfrac{n(n-1)}{2}u^{(n-2)}v''+\cdots+uv^{(n)}$。通常把多项式取作 $v$：$v$ 是 $m$ 次多项式时，和式只剩 $m+1$ 项。</p>
+
+      <h2 id="cs-2-5">2-4 隐函数、对数求导、参数方程与相关变化率<span class="en-inline"> / Implicit, Logarithmic, Parametric and Related Rates</span></h2>
+      <p>四种题型的固定做法集中在这一节；共同点是"把 $y$ 看成 $x$（或 $t$）的函数"。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>题型</th><th>公式 / 步骤</th><th>前提</th></tr></thead>
+          <tbody>
+            <tr><td>隐函数求导</td><td>$\dfrac{dy}{dx} = -\dfrac{F_x}{F_y}$；也可把 $y$ 看成 $x$ 的函数，方程 $F(x,y)=0$ 两边对 $x$ 求导，$y'$ 的系数即 $F_y$</td><td>$F_y \ne 0$（曲线在该点不竖直）</td></tr>
+            <tr><td>对数求导法</td><td>① 在 $f(x) \ne 0$ 处两边取对数（$y$ 可能取负值时写 $\ln|y|$）；② 用对数性质把右边拆成和、差与常数倍；③ 两边对 $x$ 求导，左边得 $\dfrac{y'}{y}$；④ 乘回 $y$ 并回代原式</td><td>适用于幂指函数（如 $x^{\sin x}$）与连乘连除式</td></tr>
+            <tr><td>参数方程一阶导</td><td>$\dfrac{dy}{dx} = \dfrac{\psi'(t)}{\varphi'(t)} = \dfrac{dy/dt}{dx/dt}$</td><td>$x=\varphi(t)$、$y=\psi(t)$ 可导，$\varphi'(t) \ne 0$</td></tr>
+            <tr><td>参数方程二阶导</td><td>$\dfrac{d^{2}y}{dx^{2}} = \dfrac{1}{\varphi'(t)} \cdot \dfrac{d}{dt}\left(\dfrac{\psi'(t)}{\varphi'(t)}\right)$</td><td>先把 $\dfrac{dy}{dx}$ 看成 $t$ 的函数求导，再除以 $\dfrac{dx}{dt}$</td></tr>
+            <tr><td>相关变化率</td><td>① 把随时间变化的量设成 $t$ 的函数；② 写出联系它们的方程，先把常量代入；③ 两边对 $t$ 求导，如 $\dfrac{dV}{dt} = \dfrac{dV}{dh} \cdot \dfrac{dh}{dt}$；④ 代入瞬时值求解并核对符号</td><td>先求导后代入数值；随时间变化的量不可提前代入</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-2-6">2-5 微分与近似计算<span class="en-inline"> / Differentials and Linear Approximation</span></h2>
+      <p>微分是增量的线性主部：把 $\Delta y$ 换成一个算得出来的 $f'(x_0)\Delta x$。</p>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义　可微与微分</div>
+        <p>若 $\Delta y = f(x_0+\Delta x)-f(x_0)$ 可表示为</p>
+        <p>$$\Delta y = A\,\Delta x + o(\Delta x)\qquad (\Delta x \to 0),$$</p>
+        <p>其中 $A$ 是不依赖于 $\Delta x$ 的常数，$o(\Delta x)$ 是比 $\Delta x$ 高阶的无穷小，则称 $f$ 在 $x_0$ 可微，$A\,\Delta x$ 称为微分，记作 $dy = A\,\Delta x$。规定自变量的微分 $dx = \Delta x$。</p>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>结论</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>可微 $\iff$ 可导</td><td>$f$ 在 $x_0$ 可微的充要条件是 $f$ 在 $x_0$ 可导，此时 $A$ 唯一确定且 $A=f'(x_0)$</td></tr>
+            <tr><td>微分公式</td><td>$dy = f'(x_0)\,dx$；一般点处 $dy = f'(x)\,dx$；$u$ 为中间变量时 $dy = f'(u)\,du$</td></tr>
+            <tr><td>近似计算</td><td>$|\Delta x|$ 很小时 $f(x_0+\Delta x) \approx f(x_0)+f'(x_0)\Delta x$</td></tr>
+            <tr><td>线性主部</td><td>$dy$ 是 $\Delta y$ 的线性主部；$dy \ne \Delta y$，两者相差 $o(\Delta x)$，而 $dx = \Delta x$ 只对自变量成立</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>微分法则</th><th>公式</th></tr></thead>
+          <tbody>
+            <tr><td>常数、常数倍</td><td>$d(C)=0$；$d(Cu)=C\,du$</td></tr>
+            <tr><td>和、差</td><td>$d(u \pm v)=du \pm dv$</td></tr>
+            <tr><td>积、商</td><td>$d(uv)=u\,dv+v\,du$；$d\left(\dfrac{u}{v}\right)=\dfrac{v\,du-u\,dv}{v^{2}}$（$v \ne 0$）</td></tr>
+            <tr><td>幂</td><td>$d(x^{\mu})=\mu x^{\mu-1}dx$</td></tr>
+            <tr><td>三角</td><td>$d(\sin x)=\cos x\,dx$；$d(\cos x)=-\sin x\,dx$；$d(\tan x)=\sec^{2}x\,dx$</td></tr>
+            <tr><td>指、对</td><td>$d(e^{x})=e^{x}dx$；$d(\ln x)=\dfrac{1}{x}dx$（$x &gt; 0$）</td></tr>
+            <tr><td>反三角</td><td>$d(\arcsin x)=\dfrac{1}{\sqrt{1-x^{2}}}dx$（$|x| &lt; 1$）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ======== 托马斯补充 ======== -->
+
+      <h2 id="cs-tx-1">TX1 视窗与方形视窗<span class="en-inline"> / Viewing Windows</span></h2>
+      <p>判断软件画出的图形是否与真实形状一致，只用一个比例条件。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>概念</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>视窗</td><td>作图时显示的矩形区域，记作 $[a,b] \times [c,d]$，即 $a \le x \le b$ 且 $c \le y \le d$；默认视窗由软件选定，与函数的真实范围无关</td></tr>
+            <tr><td>方形视窗</td><td>两轴单位长度相同：$x$ 轴上 1 个单位的图上长度等于 $y$ 轴上 1 个单位的图上长度。它不指显示区本身是正方形</td></tr>
+            <tr><td>真实比例条件</td><td>显示区可作图部分的像素宽为 $W$、高为 $H$ 时，视窗是方形视窗 $\iff$ $\dfrac{b-a}{d-c} = \dfrac{W}{H}$</td></tr>
+            <tr><td>失真因子</td><td>$k = \dfrac{W(d-c)}{H(b-a)}$；显示出的斜率等于真实斜率除以 $k$，长度按同一因子拉伸，$k \ne 1$ 时角度与形状都不可信</td></tr>
+            <tr><td>固定 $y$ 范围</td><td>要把 $y$ 范围固定为 $[c,d]$ 而让视窗成为方形，取 $b-a = (d-c)\dfrac{W}{H}$</td></tr>
+            <tr><td>采样</td><td>软件在 $[a,b]$ 内取等距 $x$ 值，只画落在定义域内且 $f(x) \in [c,d]$ 的点，再把相邻已画点用短线段连接</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>三条推论：视窗之外的部分被裁掉；连线是画出来的，不是算出来的；采样点之间的极值、间断与振荡软件没有数据，只能由相邻点去猜。选视窗的顺序是"先解析、后图形"。</p>
+
+      <h2 id="cs-tx-2">TX2 变化率与导数的单位<span class="en-inline"> / Rates of Change and Units</span></h2>
+      <p>导数就是瞬时变化率；单位永远是"因变量单位 / 自变量单位"。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>对象</th><th>公式</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>平均变化率</td><td>$\dfrac{\Delta y}{\Delta x} = \dfrac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$</td><td>区间上的量，就是差商，任何函数都有</td></tr>
+            <tr><td>瞬时变化率</td><td>$f'(x_0) = \lim\limits_{\Delta x\to0}\dfrac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$</td><td>点上的量，要求 $f$ 在 $x_0$ 可导</td></tr>
+            <tr><td>单位</td><td>$\dfrac{\Delta y}{\Delta x}$ 与 $f'(x_0)$ 的单位都是"因变量单位 / 自变量单位"</td><td>位移以 m 计、时间以 s 计，则 $s'(t)$ 的单位是 m/s；温度场 K 对半径 m 求导，单位是 K/m</td></tr>
+            <tr><td>物理意义</td><td>$s'(t_0)$ 是 $t_0$ 时刻的瞬时速度；$a(t) = v'(t) = s''(t)$ 是加速度</td><td>对速度再求导得加速度</td></tr>
+            <tr><td>可导与单侧变化率</td><td>$f'(x_0)$ 存在 $\iff$ $f'_-(x_0)$ 与 $f'_+(x_0)$ 都存在且相等</td><td>可导强于连续；$|x|$ 在 $x_0=0$ 处连续但左右差商极限不同</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+                                                                                                                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+      <nav class="chapter-nav">
+        <a class="prev" href="chapters/supp1.html"><span class="dir">← 上一页</span><span class="ttl">托马斯补充</span></a>
+        <a class="next" href="exam.html"><span class="dir">下一页 →</span><span class="ttl">综合自测卷</span></a>
+      </nav>
+      <!-- /SHELL:BOTTOMNAV -->
+
+    </main>
+
+</div>
+<footer class="site-footer">
+  <p><strong>高等数学学习站</strong> · 同济八版骨架 + 托马斯 14 版映射 · 中英对照</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="assets/js/quiz.js"></script>
+<script src="assets/js/course-data.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/theme.js"></script>
+</body>
+</html>

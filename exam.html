@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>综合自测卷（考研数一难度） · 高等数学学习站</title>
+<meta name="description" content="第 1 期 17 节综合自测卷：28 道客观题按基础、中等、考研三档递增，覆盖函数与极限、导数与微分、托马斯补充一，每题给出中英题干与逐项错因解析。A 28-question comprehensive test ordered by difficulty, covering functions and limits, derivatives and differentials, and the Thomas supplement, with bilingual stems and item-by-item error analysis.">
+<script>
+  /* 尽早应用主题与亮暗模式，避免刷新时"先亮后暗"闪一下。
+     theme.js 里还有一份同样的逻辑，这里是关键路径上的同步版本。 */
+  (function () {
+    try {
+      var t = localStorage.getItem('advmath.theme.v1') || 'default';
+      var m = localStorage.getItem('advmath.mode.v1') || 'auto';
+      var e = document.documentElement;
+      e.setAttribute('data-theme', t);
+      if (m !== 'auto') e.setAttribute('data-mode', m);
+      /* 语言：纯中文模式下要把英文段与行内英文整段隐藏，
+         所以必须在首屏渲染前就把 data-lang 写上去，否则会闪一下英文。 */
+      if ((localStorage.getItem('advmath.lang.v1') || 'both') === 'zh') {
+        e.setAttribute('data-lang', 'zh');
+      }
+    } catch (err) { /* 隐私模式下 localStorage 不可用，退回默认主题 */ }
+  })();
+</script>
+<link rel="stylesheet" href="assets/css/theme-tokens.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>
+  /* MathJax 配置。
+     性能与正确性的折中（2026-09-18）：
+     本站公式密集（ch1 有 7518 个），一次性排版全页会生成约 19 万 DOM 元素，
+     任何重排都要 200 ms —— 侧栏拖动会卡。
+     但如果"只为视口内排版"，未被滚到的公式会一直显示成 $\sqrt{x}$ 这样的源码，
+     这对读者是明显的文字损坏，不可接受。
+     因此改为：首屏立即排版（保证打开就是正确文字），
+     其余公式在浏览器空闲时段分片补排（不阻塞交互）。
+     两全：文字正确，且拖动期间几乎没有排版开销。 */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\(', '\)']], displayMath: [['$$', '$$'], ['\[', '\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    /* 关键（第 26 节 · 页面切换性能）：
+       默认 startup 会在 MathJax 就绪时自动同步扫描全页并排版，
+       实测这一步在主线程上连续占用 1.7 s（ch3：0 → 5484 个公式一次成型），
+       期间点击无响应——这就是"切换卡顿/点击无反应"的根因。
+       改为 typeset:false：既不自动排版，也不自动扫描；
+       排版全部由下面这段脚本按"首屏优先 + 分片"驱动。 */
+    startup: {
+      typeset: false,
+      ready: function () {
+        MathJax.startup.defaultReady();
+        window.__mjxReady = true;   /* 供下面的分片调度感知 */
+      }
+    }
+  };
+
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title';
+    var pending = [], busy = false, started = false;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) schedule();
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL));
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+</script>
+<script id="MathJax-script" async src="assets/js/vendor/tex-svg.js"></script>
+</head>
+<body data-page="exam">
+
+                                                                      <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">AM</span>
+      <span>高等数学学习站<small>同济八版骨架 · 托马斯映射 · 中英对照</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="index.html">首页</a>
+      <a href="cheatsheet.html">公式速查表</a>
+      <a href="exam.html" class="is-active">综合自测卷</a>
+    </nav>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+                                                                                                                                                                                                                  <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="chapters/ch1.html"><span class="num">1</span>函数与极限</a>
+          <a class="toc-chapter" href="chapters/ch2.html"><span class="num">2</span>导数与微分</a>
+          <a class="toc-chapter" href="chapters/ch3.html"><span class="num">3</span>微分中值定理与导数的应用</a>
+          <a class="toc-chapter" href="chapters/ch4.html"><span class="num">4</span>不定积分</a>
+          <a class="toc-chapter" href="chapters/ch5.html"><span class="num">5</span>定积分</a>
+          <a class="toc-chapter" href="chapters/ch6.html"><span class="num">6</span>定积分的应用</a>
+          <a class="toc-chapter" href="chapters/ch7.html"><span class="num">7</span>微分方程</a>
+          <a class="toc-chapter" href="chapters/ch8.html"><span class="num">8</span>向量代数与空间解析几何</a>
+          <a class="toc-chapter" href="chapters/ch9.html"><span class="num">9</span>多元函数微分法及其应用</a>
+          <a class="toc-chapter" href="chapters/ch10.html"><span class="num">10</span>重积分</a>
+          <a class="toc-chapter" href="chapters/ch11.html"><span class="num">11</span>曲线积分与曲面积分</a>
+          <a class="toc-chapter" href="chapters/ch12.html"><span class="num">12</span>无穷级数</a>
+          <a class="toc-chapter" href="chapters/supp1.html"><span class="num">TX</span>托马斯补充</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+          <a class="toc-chapter" href="cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter is-active" href="exam.html">综合自测卷</a>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div class="page-eyebrow"><span class="en-inline">COMPREHENSIVE EXAM</span> · 第 1 期 17 节<span class="en-inline"> / Math I Level</span></div>
+        <h1>综合自测卷（考研数一难度）</h1>
+        <p class="lede">这一卷把第 1 期已建成的 17 节合成一份卷子：第 1 章函数与极限 10 节、第 2 章导数与微分 5 节、托马斯补充一 2 节。28 道客观题按基础、中等、考研三档递增排列，最后几题需要跨小节调用结论。它考的不是记忆量，而是极限与导数这两套定义能否在计算与判断里用准。</p>
+        <p class="en" lang="en">This paper combines the seventeen sections built in phase one — ten on functions and limits, five on derivatives and differentials, and two Thomas supplements. Its 28 questions run from basic to postgraduate-entrance level, and the last few require combining results across sections. What is tested is not recall but whether the definitions of limit and derivative are used correctly in computation and in judgement.</p>
+      </div>
+
+      <p>这份卷子有 28 道客观题，覆盖第 1 期全部 17 节：第 1 章函数与极限（10 节）、第 2 章导数与微分（5 节）、托马斯补充一（2 节）。难度是递增的——前 7 题为基础档，中间 10 题为中等档，最后 11 题为考研档，其中若干题把两三个小节的结论串在一起用。</p>
+      <p>用法：先合上教材与笔记，一次做完再提交，中途不要翻书；建议限时 90 分钟，做不出的题直接跳过，不要停在某一题上。提交后先看讲评里的“最常见错法”，再逐题看解析——解析点明了每个干扰项错在哪，那才是这份卷子的主要部分。想查公式再去 <a href="cheatsheet.html">公式速查表</a>，想补讲解回到对应的<a href="chapters/ch1.html">章节页</a>。</p>
+
+      <h2 id="exam-objective">综合自测卷 · 28 题客观题<span class="en-inline"> / Comprehensive Self-Test</span></h2>
+
+      <div class="quiz" data-quiz-id="exam-objective" data-title="客观题自测（28 题） · Objective Self-Test" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>函数 $f(x)=\sqrt{4-x^2}+\ln(x+1)$ 的定义域是（　）。</p>
+            <p class="q-stem-en" lang="en">The domain of $f(x)=\sqrt{4-x^2}+\ln(x+1)$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$(-1,2]$</span></li>
+            <li><span class="opt-body">$[-1,2]$</span></li>
+            <li><span class="opt-body">$(-1,2)$</span></li>
+            <li><span class="opt-body">$[-2,2]$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>两条限制取交集。根式要求 $4-x^2\ge0$，得 $[-2,2]$；对数要求 $x+1&gt;0$，得 $x&gt;-1$。交集为 $(-1,2]$。选 $[-1,2]$ 是把对数真数当成可以取 $0$；选 $(-1,2)$ 漏掉了 $x=2$，而根式取等号是允许的；选 $[-2,2]$ 只算了根式，把对数条件整个丢掉。</p>
+            <p class="en" lang="en">The root needs $4-x^2\ge0$ and the logarithm needs $x+1&gt;0$; their intersection is $(-1,2]$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>若数列 $\{a_n\}$ 收敛，则它一定有界；反过来，有界的数列一定收敛。</p>
+            <p class="q-stem-en" lang="en">A convergent sequence is bounded; conversely, every bounded sequence converges.</p>
+          </div>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>前半句对：收敛数列必有界（§1-2 定理 1.1）。后半句错：有界只是收敛的必要条件。反例 $a_n=(-1)^n$ 有界，但偶数项趋于 $1$、奇数项趋于 $-1$，两个子列极限不同，故发散。要由有界推出收敛，必须再补“单调”这一条，那是 §1-6 的单调有界准则。</p>
+            <p class="en" lang="en">The first half is true, but boundedness is only necessary: $a_n=(-1)^n$ is bounded yet divergent.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>当 $x\to0$ 时，下列变量中是无穷小的是（　）。</p>
+            <p class="q-stem-en" lang="en">As $x\to0$, which of the following is an infinitesimal?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$x\sin\dfrac1x$</span></li>
+            <li><span class="opt-body">$\dfrac{\sin x}{x}$</span></li>
+            <li><span class="opt-body">$\dfrac1x\sin\dfrac1x$</span></li>
+            <li><span class="opt-body">$e^{1/x}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：$\left|\sin\frac1x\right|\le1$ 有界，而 §1-4 的结论是“有界量与无穷小之积仍是无穷小”，故 $x\sin\frac1x\to0$。B 错：由重要极限 $\lim_{x\to0}\frac{\sin x}{x}=1$，它的极限是 $1$ 而不是 $0$。C 错：$\frac1x$ 是无穷大，与有界量相乘后无界，不趋于 $0$。D 错：$x\to0^+$ 时 $e^{1/x}\to+\infty$，$x\to0^-$ 时 $e^{1/x}\to0$，左右不同，极限不存在；只有一侧趋于 $0$ 不能算无穷小。</p>
+            <p class="en" lang="en">Only $x\sin(1/x)$ tends to $0$, as a bounded factor multiplied by an infinitesimal.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="基础">
+          <div class="q-stem">
+            <p>$\lim\limits_{x\to2}\dfrac{x^2-4}{x-2}=$ ______。</p>
+            <p class="q-stem-en" lang="en">$\lim\limits_{x\to2}\dfrac{x^2-4}{x-2}=$ ______</p>
+          </div>
+          <div class="q-answer" data-answer="4|4."></div>
+          <div class="q-explain">
+            <p>这是 $\frac00$ 型。分子分解因式：$x^2-4=(x-2)(x+2)$；因为 $x\to2$ 时 $x\ne2$，约去因子 $x-2$ 合法，得 $\lim_{x\to2}(x+2)=4$。常见错法：直接把 $x=2$ 代入得 $\frac00$ 就停在那里，或者认为分子分母都趋于 $0$ 所以极限是 $0$。</p>
+            <p class="en" lang="en">Factor and cancel the nonzero factor $x-2$; the limit is $2+2=4$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>当 $x\to0$ 时，与 $x$ 等价的无穷小是（　）。</p>
+            <p class="q-stem-en" lang="en">As $x\to0$, which infinitesimal is equivalent to $x$?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\sin x$</span></li>
+            <li><span class="opt-body">$1-\cos x$</span></li>
+            <li><span class="opt-body">$\sqrt{1+x}-1$</span></li>
+            <li><span class="opt-body">$\tan x-\sin x$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>等价要求两者之比的极限为 $1$。$\frac{\sin x}{x}\to1$，故 $\sin x\sim x$。$\frac{1-\cos x}{x}=\frac{x}{2}\to0$，$1-\cos x$ 是比 $x$ 高阶的无穷小。$\frac{\sqrt{1+x}-1}{x}=\frac{1}{\sqrt{1+x}+1}\to\frac12$，与 $x$ 同阶但不等价。$\frac{\tan x-\sin x}{x}\to0$，它也是比 $x$ 高阶的无穷小。</p>
+            <p class="en" lang="en">Equivalence needs ratio $1$; $1-\cos x$ and $\tan x-\sin x$ are of higher order, and $\sqrt{1+x}-1$ has ratio $1/2$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>$x=1$ 是函数 $f(x)=\dfrac{x^2-1}{x-1}$ 的（　）。</p>
+            <p class="q-stem-en" lang="en">For $f(x)=\dfrac{x^2-1}{x-1}$, the point $x=1$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">可去间断点</span></li>
+            <li><span class="opt-body">跳跃间断点</span></li>
+            <li><span class="opt-body">无穷间断点</span></li>
+            <li><span class="opt-body">振荡间断点</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>$f$ 在 $x=1$ 处无定义；在去心邻域内 $f(x)=x+1$，故 $\lim_{x\to1}f(x)=2$，极限存在且有限，左右极限都存在且相等，属第一类可去间断点，补充定义 $f(1)=2$ 即可连续。跳跃间断点要求左右极限存在但不相等；无穷间断点要求至少一侧极限为无穷；振荡间断点要求极限不以任何方式存在——三者都不符合。</p>
+            <p class="en" lang="en">The limit at $x=1$ equals $2$, so the point is a removable discontinuity.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>函数 $f(x)=|x|$ 在 $x=0$ 处（　）。</p>
+            <p class="q-stem-en" lang="en">The function $f(x)=|x|$ at $x=0$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">连续但不可导</span></li>
+            <li><span class="opt-body">连续且可导</span></li>
+            <li><span class="opt-body">可导，且 $f'(0)=1$</span></li>
+            <li><span class="opt-body">在 $x=0$ 处不连续</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>$\lim_{x\to0}|x|=0=f(0)$，故连续。左导数 $f'_-(0)=\lim_{x\to0^-}\frac{-x}{x}=-1$，右导数 $f'_+(0)=\lim_{x\to0^+}\frac{x}{x}=1$，两者不等，故 $f'(0)$ 不存在。选“连续且可导”是把连续与可导混为一谈；选 $f'(0)=1$ 只算了右导数；选“不连续”忽略了 $|x|$ 在 $0$ 处的极限就是 $0$。</p>
+            <p class="en" lang="en">$f$ is continuous at $0$, but the one-sided derivatives are $-1$ and $1$, so $f'(0)$ does not exist.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>$\lim\limits_{x\to\infty}\left(\dfrac{x-2}{x}\right)^{3x}=$（　）。</p>
+            <p class="q-stem-en" lang="en">$\lim\limits_{x\to\infty}\left(\dfrac{x-2}{x}\right)^{3x}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$e^{-6}$</span></li>
+            <li><span class="opt-body">$e^{-2}$</span></li>
+            <li><span class="opt-body">$e^{6}$</span></li>
+            <li><span class="opt-body">$1$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>这是 $1^\infty$ 型。把底数写成 $1+\frac{-2}{x}$，令 $u=\frac{-2}{x}$，则指数 $3x=\frac{-6}{u}$，原式为 $\left[(1+u)^{1/u}\right]^{-6}$，由 $\lim_{u\to0}(1+u)^{1/u}=e$ 得 $e^{-6}$。选 $e^{-2}$ 是漏乘指数上的 $3$；选 $e^{6}$ 丢掉了底数里 $\frac{x-2}{x}&lt;1$ 带来的负号；选 $1$ 是只看到底数趋于 $1$，忽略了指数同时趋于无穷。</p>
+            <p class="en" lang="en">Write the base as $1+(-2)/x$; the exponent contributes the factor $-6$, so the limit is $e^{-6}$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>下列极限计算正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which of the following limit computations are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\lim\limits_{x\to0}\dfrac{\tan x-\sin x}{x^3}=\dfrac12$</span></li>
+            <li data-correct="true"><span class="opt-body">$\lim\limits_{x\to0}\dfrac{\sin 2x}{x}=2$</span></li>
+            <li><span class="opt-body">$\lim\limits_{x\to0}\dfrac{x-\sin x}{x^3}=0$</span></li>
+            <li><span class="opt-body">$\lim\limits_{x\to0}\dfrac{e^{2x}-1}{x}=1$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：$\tan x-\sin x=\sin x\cdot\frac{1-\cos x}{\cos x}\sim x\cdot\frac{x^2/2}{1}=\frac{x^3}{2}$，故极限为 $\frac12$。这里不能把 $\tan x$、$\sin x$ 分别换成 $x$，那会得 $x-x=0$，把三阶小量整个抹掉。B 对：$\frac{\sin2x}{x}=2\cdot\frac{\sin2x}{2x}\to2$。C 错：$x-\sin x\sim\frac{x^3}{6}$，极限是 $\frac16$；写成 $0$ 同样是把高阶项丢掉了。D 错：$e^{2x}-1\sim2x$，极限应为 $2$；写成 $1$ 是漏了指数上的 $2$。</p>
+            <p class="en" lang="en">A and B are correct. In C the limit is $1/6$ and in D it is $2$; both errors come from dropping a factor.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>设 $f$ 在闭区间 $[a,b]$ 上连续，则下列命题必成立的是（　）。</p>
+            <p class="q-stem-en" lang="en">Let $f$ be continuous on the closed interval $[a,b]$. Which statement must hold?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $f(a)f(b)&lt;0$，则在 $(a,b)$ 内至少存在一点 $\xi$ 使 $f(\xi)=0$</span></li>
+            <li><span class="opt-body">若 $f$ 在 $(a,b)$ 内连续，则 $f$ 在 $(a,b)$ 内必能取到最大值与最小值</span></li>
+            <li><span class="opt-body">若 $f$ 在 $[a,b]$ 上有界，则 $f$ 在 $[a,b]$ 上连续</span></li>
+            <li><span class="opt-body">对任意 $\xi\in(a,b)$，$f(\xi)$ 必介于 $f(a)$ 与 $f(b)$ 之间</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这是零点定理。B 错：把闭区间换成开区间结论就不成立，$f(x)=x$ 在 $(0,1)$ 上连续却取不到最大值与最小值。C 错：有界推不出连续，反例 $f(x)=1$（$x\ne0$）、$f(0)=0$ 在 $[-1,1]$ 上有界但在 $x=0$ 处间断。D 错：这是把介值定理说反了——介值定理说“介于 $f(a)$ 与 $f(b)$ 之间的数一定被取到”，不说“取到的值一定介于两者之间”；$f(x)=x^2$ 在 $[-1,2]$ 上连续，而 $f(0)=0$ 并不介于 $f(-1)=1$ 与 $f(2)=4$ 之间。</p>
+            <p class="en" lang="en">A is the zero theorem. B fails on an open interval; C and D are converses that do not hold.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+          <div class="q-stem">
+            <p>当 $x\to0$ 时，若 $\alpha$ 是比 $\beta$ 高阶的无穷小，则 $\alpha+\beta$ 与 $\beta$ 是等价无穷小。</p>
+            <p class="q-stem-en" lang="en">As $x\to0$, if $\alpha$ is an infinitesimal of higher order than $\beta$, then $\alpha+\beta$ is equivalent to $\beta$.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。$\alpha$ 比 $\beta$ 高阶就是 $\frac{\alpha}{\beta}\to0$，于是 $\frac{\alpha+\beta}{\beta}=1+\frac{\alpha}{\beta}\to1$，按定义 $\alpha+\beta\sim\beta$。这条结论说的是：和的阶由低阶项决定，高阶项在比阶时被吸收。常见错法是认为加上一项后阶会变高，或者以为 $\frac{\alpha+\beta}{\beta}$ 的极限无法确定——它确定，就是 $1$。</p>
+            <p class="en" lang="en">Correct: $(\alpha+\beta)/\beta=1+\alpha/\beta\to1$, so the sum is equivalent to the lower-order term.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>下列求导结果正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which of the following derivatives are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$(\ln\tan x)'=\dfrac{1}{\sin x\cos x}$</span></li>
+            <li><span class="opt-body">$(x^x)'=x^x\ln x$</span></li>
+            <li data-correct="true"><span class="opt-body">$(\arctan x)'=\dfrac{1}{1+x^2}$</span></li>
+            <li><span class="opt-body">$(\sin^2x)'=2\sin x$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：$(\ln\tan x)'=\frac{1}{\tan x}\cdot\sec^2x=\frac{\cos x}{\sin x}\cdot\frac{1}{\cos^2x}=\frac{1}{\sin x\cos x}$。B 错：底数与指数都含 $x$，要用对数求导法，$x^x=e^{x\ln x}$，导数为 $x^x(\ln x+1)$；漏掉的正是 $\frac{d}{dx}(x\ln x)$ 里的 $1$。C 对：基本导数公式表。D 错：$\sin^2x$ 是复合函数，$\frac{d}{dx}u^2=2u\,u'$，结果应为 $2\sin x\cos x=\sin2x$；只写 $2\sin x$ 是漏乘内层导数 $\cos x$。</p>
+            <p class="en" lang="en">A and C are correct. The derivative of $x^x$ needs logarithmic differentiation, and $\sin^2x$ needs the chain rule.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>设 $y=\sin 2x$，则 $y^{(10)}=$（　）。</p>
+            <p class="q-stem-en" lang="en">Let $y=\sin 2x$. Then $y^{(10)}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$-2^{10}\sin 2x$</span></li>
+            <li><span class="opt-body">$2^{10}\sin 2x$</span></li>
+            <li><span class="opt-body">$-2^{10}\cos 2x$</span></li>
+            <li><span class="opt-body">$-2^{9}\sin 2x$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>每求一次导数，系数乘 $2$、角加 $\frac{\pi}{2}$，故 $y^{(n)}=2^n\sin\left(2x+\frac{n\pi}{2}\right)$。$n=10$ 时加的是 $5\pi$，而 $\sin(2x+5\pi)=-\sin2x$，于是 $y^{(10)}=-2^{10}\sin2x$。选 $2^{10}\sin2x$ 是漏掉了符号变化；选 $-2^{10}\cos2x$ 是把 $5\pi$ 当成了 $\frac{\pi}{2}$ 的奇数倍；选 $-2^{9}\sin2x$ 是漏了一次导数带来的因子 $2$。</p>
+            <p class="en" lang="en">$y^{(n)}=2^n\sin(2x+n\pi/2)$; at $n=10$ the phase $5\pi$ flips the sign, giving $-2^{10}\sin2x$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>由方程 $x^2+y^2=25$ 确定的隐函数 $y=y(x)$ 在点 $(3,4)$ 处的导数 $\left.\dfrac{dy}{dx}\right|_{(3,4)}=$ ______。</p>
+            <p class="q-stem-en" lang="en">For the implicit function $y=y(x)$ given by $x^2+y^2=25$, the derivative at $(3,4)$ is ______</p>
+          </div>
+          <div class="q-answer" data-answer="-3/4|−3/4|-0.75|-.75"></div>
+          <div class="q-explain">
+            <p>两边对 $x$ 求导，注意 $y$ 是 $x$ 的函数：$2x+2y\,y'=0$，故 $y'=-\frac{x}{y}$，在 $(3,4)$ 处 $y'=-\frac34$。常见错法：把 $y^2$ 的导数写成 $2y$（漏乘 $y'$），解出 $y'=-x$，得 $-3$；或者丢掉负号，写成 $\frac34$。</p>
+            <p class="en" lang="en">Implicit differentiation gives $2x+2yy'=0$, hence $y'=-x/y=-3/4$ at $(3,4)$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>函数 $f(x)=x^3$ 在 $x=2$ 处的微分 $dy=$（　）。</p>
+            <p class="q-stem-en" lang="en">The differential of $f(x)=x^3$ at $x=2$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$12\,dx$</span></li>
+            <li><span class="opt-body">$12$</span></li>
+            <li><span class="opt-body">$3x^2\,dx$</span></li>
+            <li><span class="opt-body">$8\,dx$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>$dy=f'(x)\,dx$，而 $f'(x)=3x^2$，$f'(2)=12$，故 $dy=12\,dx$。微分是 $dx$ 的线性函数，写成 $12$ 只给了导数值，丢掉了 $dx$；$3x^2dx$ 是任一点处的微分，没有把 $x=2$ 代进去；$8dx$ 用的是 $f(2)=8$，把函数值当成了导数。</p>
+            <p class="en" lang="en">$dy=f'(2)\,dx=12\,dx$; the answer must keep the factor $dx$ and use the derivative, not the function value.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>设 $f(x)=\begin{cases}x^2,&amp;x\le1\\ 2x-1,&amp;x&gt;1\end{cases}$，则在 $x=1$ 处（　）。</p>
+            <p class="q-stem-en" lang="en">For $f(x)=\begin{cases}x^2,&amp;x\le1\\ 2x-1,&amp;x&gt;1\end{cases}$, at $x=1$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\lim\limits_{x\to1}f(x)=1$，且 $f$ 在 $x=1$ 处连续</span></li>
+            <li><span class="opt-body">左右极限存在但不相等，$x=1$ 是跳跃间断点</span></li>
+            <li><span class="opt-body">因为两侧表达式不同，$\lim\limits_{x\to1}f(x)$ 不存在</span></li>
+            <li><span class="opt-body">$\lim\limits_{x\to1}f(x)=1$，但 $f$ 在 $x=1$ 处不连续</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>左极限 $\lim_{x\to1^-}x^2=1$，右极限 $\lim_{x\to1^+}(2x-1)=1$，两者相等，故极限为 $1$；又 $f(1)=1^2=1$，极限值等于函数值，$f$ 在 $x=1$ 处连续。选跳跃是只看到两段表达式不同，没有分别算左右极限；选“极限不存在”是把“表达式不同”当成了极限不存在的理由，而极限只看去心邻域内函数值的趋势；选“不连续”是漏掉了 $f(1)$ 由左段给出、其值恰为 $1$。</p>
+            <p class="en" lang="en">Both one-sided limits equal $1$ and $f(1)=1$, so the limit exists and $f$ is continuous at $x=1$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>一球体的半径以 $2\,\text{cm/s}$ 的速率增大。当半径为 $5\,\text{cm}$ 时，其体积的增长率为（　）。</p>
+            <p class="q-stem-en" lang="en">A sphere's radius grows at $2\,\text{cm/s}$. When the radius is $5\,\text{cm}$, its volume grows at</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$200\pi\ \text{cm}^3/\text{s}$</span></li>
+            <li><span class="opt-body">$100\pi\ \text{cm}^3/\text{s}$</span></li>
+            <li><span class="opt-body">$50\pi\ \text{cm}^3/\text{s}$</span></li>
+            <li><span class="opt-body">$40\pi\ \text{cm}^3/\text{s}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>$V=\frac43\pi r^3$，两边对 $t$ 求导得 $\frac{dV}{dt}=4\pi r^2\frac{dr}{dt}$。代入 $r=5$、$\frac{dr}{dt}=2$，得 $\frac{dV}{dt}=4\pi\cdot25\cdot2=200\pi$。选 $100\pi$ 是漏乘 $\frac{dr}{dt}$；选 $50\pi$ 是把 $4\pi r^2$ 记成了 $\pi r^2$，少了系数 $4$；选 $40\pi$ 是把幂次写错，用了 $4\pi r$。</p>
+            <p class="en" lang="en">$\frac{dV}{dt}=4\pi r^2\frac{dr}{dt}=4\pi\cdot25\cdot2=200\pi$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <div class="q-stem">
+            <p>设数列 $\{a_n\}$ 满足 $\lim\limits_{n\to\infty}a_n=a$，则下列结论正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Let $\lim\limits_{n\to\infty}a_n=a$. Which conclusions are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $a&gt;0$，则存在正整数 $N$，当 $n&gt;N$ 时 $a_n&gt;0$</span></li>
+            <li data-correct="true"><span class="opt-body">$\{a_n\}$ 有界</span></li>
+            <li><span class="opt-body">若 $\{a_n\}$ 有界，则 $\{a_n\}$ 收敛</span></li>
+            <li><span class="opt-body">存在正整数 $N$，当 $n&gt;N$ 时 $a_n&gt;a$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这是保号性。取 $\varepsilon=\frac a2$，存在 $N$，当 $n&gt;N$ 时 $|a_n-a|&lt;\frac a2$，于是 $a_n&gt;a-\frac a2=\frac a2&gt;0$。B 对：收敛数列必有界（§1-2 定理 1.1）。C 错：有界只是收敛的必要条件，$a_n=(-1)^n$ 有界却发散。D 错：$|a_n-a|\to0$ 只说明 $a_n$ 无限接近 $a$，不保证从某一项起都在 $a$ 的上方；$a_n=-\frac1n$ 满足 $a=0$，但 $a_n&lt;0$ 恒成立。</p>
+            <p class="en" lang="en">A is the sign-preserving property and B the boundedness of convergent sequences; C confuses a necessary condition with a sufficient one, and D fails for $a_n=-1/n$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $f(x)=\begin{cases}\dfrac{e^{2x}-1}{x},&amp;x&lt;0\\[2pt] a+x,&amp;x\ge0\end{cases}$。若 $\lim\limits_{x\to0}f(x)$ 存在，则 $a=$（　）。</p>
+            <p class="q-stem-en" lang="en">Let $f(x)=\begin{cases}\dfrac{e^{2x}-1}{x},&amp;x&lt;0\\[2pt] a+x,&amp;x\ge0\end{cases}$. If $\lim\limits_{x\to0}f(x)$ exists, then $a=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$2$</span></li>
+            <li><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$-2$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>左极限：$x\to0^-$ 时 $e^{2x}-1\sim2x$，故 $\frac{e^{2x}-1}{x}\to2$。右极限：$\lim_{x\to0^+}(a+x)=a$。极限存在的充要条件是左右极限存在且相等（§1-3 定理 1.1），故 $a=2$。选 $1$ 是把 $e^{2x}-1$ 当成了 $\sim x$，漏掉指数上的 $2$；选 $0$ 是只算右极限就当作极限值；选 $-2$ 是符号取反。</p>
+            <p class="en" lang="en">The left limit is $2$ and the right limit is $a$; existence forces $a=2$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <div class="q-stem">
+            <p>$\lim\limits_{x\to0}\dfrac{\ln(\cos x)}{x^2}=$ ______。</p>
+            <p class="q-stem-en" lang="en">$\lim\limits_{x\to0}\dfrac{\ln(\cos x)}{x^2}=$ ______</p>
+          </div>
+          <div class="q-answer" data-answer="-1/2|−1/2|-0.5|-.5"></div>
+          <div class="q-explain">
+            <p>$x\to0$ 时 $\cos x\to1$，由 $\ln(1+t)\sim t$（取 $t=\cos x-1\to0$）得 $\ln\cos x=\ln\left(1+(\cos x-1)\right)\sim\cos x-1$；又 $1-\cos x\sim\frac{x^2}{2}$，故原式趋于 $-\frac12$。常见错法：把 $\ln\cos x$ 直接换成 $\ln1=0$，得极限 $0$——对数不能这样拆；或者漏掉负号，得 $\frac12$。</p>
+            <p class="en" lang="en">$\ln\cos x\sim\cos x-1\sim-x^2/2$, so the limit is $-1/2$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $f(x)=\begin{cases}\arctan\dfrac1x,&amp;x\ne0\\ 0,&amp;x=0\end{cases}$，则 $x=0$ 是 $f$ 的（　）。</p>
+            <p class="q-stem-en" lang="en">For $f(x)=\begin{cases}\arctan(1/x),&amp;x\ne0\\ 0,&amp;x=0\end{cases}$, the point $x=0$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">第一类跳跃间断点</span></li>
+            <li><span class="opt-body">可去间断点</span></li>
+            <li><span class="opt-body">无穷间断点</span></li>
+            <li><span class="opt-body">振荡间断点</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>$x\to0^+$ 时 $\frac1x\to+\infty$，$\arctan\frac1x\to\frac\pi2$；$x\to0^-$ 时 $\frac1x\to-\infty$，$\arctan\frac1x\to-\frac\pi2$。左右极限都存在但不相等，属第一类跳跃间断点。选可去要求左右极限相等；选无穷间断点要求至少一侧极限为无穷，而 $\arctan$ 有界，取不到无穷；选振荡间断点要求极限不以任何方式存在，这里两侧极限都存在，只是不相等。</p>
+            <p class="en" lang="en">The one-sided limits are $\pi/2$ and $-\pi/2$; both exist but differ, so this is a jump discontinuity.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <div class="q-stem">
+            <p>下列极限能直接用代入法（初等函数在其定义区间上连续）求出的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which limits can be evaluated by direct substitution, using the continuity of elementary functions?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\lim\limits_{x\to1}\dfrac{x^2+1}{\ln x+2}$</span></li>
+            <li><span class="opt-body">$\lim\limits_{x\to0}\dfrac{\sqrt{1+x}-1}{x}$</span></li>
+            <li><span class="opt-body">$\lim\limits_{x\to2}\dfrac{x-2}{\sqrt{x+2}-2}$</span></li>
+            <li data-correct="true"><span class="opt-body">$\lim\limits_{x\to0}\sin\left(x^2+\dfrac{\pi}{3}\right)$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>代入法成立的前提是函数在趋近点的某邻域内有定义。A 在 $x=1$ 处有定义且分母为 $2\ne0$，代入得 $\frac{1+1}{0+2}=1$。D 在 $x=0$ 处有定义，代入得 $\sin\frac\pi3=\frac{\sqrt3}{2}$。B、C 在趋近点处分子分母同时趋于 $0$，属 $\frac00$ 型，代入没有意义，必须先化简：B 的极限是 $\frac12$，C 有理化后为 $\lim_{x\to2}\left(\sqrt{x+2}+2\right)=4$。</p>
+            <p class="en" lang="en">Substitution needs the point to lie in the interval of definition: A and D qualify, while B and C are $0/0$ forms.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="考研">
+          <div class="q-stem">
+            <p>设 $f$ 在 $[0,1]$ 上连续，且 $f(0)=f(1)$，则存在 $\xi\in\left[0,\dfrac12\right]$，使 $f(\xi)=f\left(\xi+\dfrac12\right)$。</p>
+            <p class="q-stem-en" lang="en">If $f$ is continuous on $[0,1]$ with $f(0)=f(1)$, then $f(\xi)=f(\xi+1/2)$ for some $\xi\in[0,1/2]$.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。令 $F(x)=f(x)-f\left(x+\frac12\right)$，它在 $\left[0,\frac12\right]$ 上连续。两端相加得 $F(0)+F\left(\frac12\right)=f(0)-f(1)=0$。若 $F(0)=0$，取 $\xi=0$ 即可；否则 $F(0)$ 与 $F\left(\frac12\right)$ 异号，由零点定理存在 $\xi\in\left(0,\frac12\right)$ 使 $F(\xi)=0$。这是零点定理的标准用法：把要证的等式移项成一个新函数，再验证两端异号或有一端为零。常见错法是找不到辅助函数，或者只讨论“两端异号”而漏掉 $F(0)=0$ 这一情形。</p>
+            <p class="en" lang="en">Correct: apply the zero theorem to $F(x)=f(x)-f(x+1/2)$, whose endpoint values sum to zero.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $f(x)=\begin{cases}x^2\sin\dfrac1x,&amp;x\ne0\\ 0,&amp;x=0\end{cases}$，则 $f$ 在 $x=0$ 处（　）。</p>
+            <p class="q-stem-en" lang="en">For $f(x)=\begin{cases}x^2\sin(1/x),&amp;x\ne0\\ 0,&amp;x=0\end{cases}$, at $x=0$ the function is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">可导，且 $f'(0)=0$</span></li>
+            <li><span class="opt-body">连续但不可导</span></li>
+            <li><span class="opt-body">可导，且 $f'(0)=1$</span></li>
+            <li><span class="opt-body">在 $x=0$ 处不连续</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>先看连续：$\left|x^2\sin\frac1x\right|\le x^2\to0$，故 $f(x)\to0=f(0)$，连续。再按定义求导：$f'(0)=\lim_{x\to0}\frac{x^2\sin\frac1x-0}{x}=\lim_{x\to0}x\sin\frac1x=0$，用的是“有界量乘无穷小”。选“连续但不可导”是把 $x^2\sin\frac1x$ 与 $x\sin\frac1x$ 混淆：后者的差商是 $\sin\frac1x$，极限不存在；多乘一个因子 $x$ 后差商成为 $x\sin\frac1x$，极限为 $0$。选 $f'(0)=1$ 是把 $\sin\frac1x$ 的振幅当成了极限值；选“不连续”忽略了因子 $x^2$ 的压制作用。</p>
+            <p class="en" lang="en">$f$ is continuous and $f'(0)=\lim_{x\to0}x\sin(1/x)=0$; the extra factor $x$ makes the difference quotient an infinitesimal.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <div class="q-stem">
+            <p>设 $y=x^2e^{x}$，则 $\left.y^{(10)}\right|_{x=0}=$ ______。</p>
+            <p class="q-stem-en" lang="en">Let $y=x^2e^{x}$. Then $\left.y^{(10)}\right|_{x=0}=$ ______</p>
+          </div>
+          <div class="q-answer" data-answer="90|90."></div>
+          <div class="q-explain">
+            <p>用莱布尼茨公式：$y^{(10)}=\sum\limits_{k=0}^{10}\binom{10}{k}(x^2)^{(k)}(e^x)^{(10-k)}$。$x^2$ 的三阶及以上导数全为 $0$，只剩 $k=0,1,2$ 三项；前两项含因子 $x^2$ 或 $x$，代入 $x=0$ 后为零，故 $y^{(10)}(0)=\binom{10}{2}\cdot2\cdot e^0=45\times2=90$。常见错法：直接把 $x=0$ 代入 $y=x^2e^x$ 得 $0$；或者漏掉组合系数 $\binom{10}{2}$，只算得 $2$。</p>
+            <p class="en" lang="en">Only the $k=2$ term of Leibniz's rule survives at $x=0$: $\binom{10}{2}\cdot2=90$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <div class="q-stem">
+            <p>下列关于隐函数与参数方程求导的结论，正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which conclusions about implicit and parametric differentiation are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">由 $x^2+y^2=1$ 确定的隐函数满足 $y''=-\dfrac{1}{y^3}$</span></li>
+            <li data-correct="true"><span class="opt-body">由 $x=t^2,\ y=t^3$ 确定的函数满足 $\dfrac{d^2y}{dx^2}=\dfrac{3}{4t}$</span></li>
+            <li><span class="opt-body">由 $e^{y}+xy=e$ 确定的隐函数满足 $y'(0)=-1$</span></li>
+            <li><span class="opt-body">摆线 $x=t-\sin t,\ y=1-\cos t$ 满足 $\dfrac{dy}{dx}=\tan\dfrac t2$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：$2x+2yy'=0$ 给出 $y'=-\frac xy$，再对 $x$ 求导得 $y''=-\frac{y-xy'}{y^2}=-\frac{y+x^2/y}{y^2}=-\frac{x^2+y^2}{y^3}=-\frac{1}{y^3}$（末步用了 $x^2+y^2=1$）。B 对：$\frac{dy}{dx}=\frac{3t^2}{2t}=\frac32t$，再除以 $\frac{dx}{dt}=2t$ 得 $\frac{d^2y}{dx^2}=\frac{3}{4t}$；求二阶导数时漏除 $\frac{dx}{dt}$ 是这一题型最常见的错法。C 错：$x=0$ 时 $e^y=e$，故 $y=1$；两边求导得 $e^yy'+y+xy'=0$，在 $x=0$ 处 $ey'+1=0$，$y'(0)=-\frac1e$，不是 $-1$。D 错：$\frac{dy}{dx}=\frac{\sin t}{1-\cos t}=\frac{2\sin\frac t2\cos\frac t2}{2\sin^2\frac t2}=\cot\frac t2$，写成 $\tan\frac t2$ 是半角公式用错。</p>
+            <p class="en" lang="en">A and B are correct. In C the value is $-1/e$, and in D the derivative is $\cot(t/2)$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="考研">
+          <div class="q-stem">
+            <p>若 $f$ 在 $x_0$ 处可微，则当 $|\Delta x|$ 很小时 $f(x_0+\Delta x)\approx f(x_0)+f'(x_0)\Delta x$，其误差是比 $\Delta x$ 高阶的无穷小；把 $x$ 看作时间，$f'(x_0)$ 就是 $f$ 在 $x_0$ 处的瞬时变化率。</p>
+            <p class="q-stem-en" lang="en">If $f$ is differentiable at $x_0$, then for small $|\Delta x|$ we have $f(x_0+\Delta x)\approx f(x_0)+f'(x_0)\Delta x$ with an error of higher order than $\Delta x$; and with $x$ read as time, $f'(x_0)$ is the instantaneous rate of change.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。可微的定义就是 $\Delta y=f'(x_0)\Delta x+o(\Delta x)$，其中 $f'(x_0)\Delta x$ 是 $\Delta y$ 的线性主部，也就是微分 $dy=f'(x_0)dx$；$o(\Delta x)$ 表示误差是比 $\Delta x$ 高阶的无穷小。这正是“以直代曲”的依据，也是用 $f(x_0)+f'(x_0)\Delta x$ 做近似计算的理由。后半句是托马斯补充一第二节的结论：差商的极限就是瞬时变化率。若把误差说成“与 $\Delta x$ 同阶”，或者以为近似只在 $\Delta x\to0$ 的极限意义下成立、小增量下没有误差控制，都会判错。</p>
+            <p class="en" lang="en">Correct: differentiability means $\Delta y=f'(x_0)\Delta x+o(\Delta x)$, the basis of linear approximation; the derivative is also the instantaneous rate of change.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <div class="q-stem">
+            <p>某软件显示区可作图的像素尺寸为 $94\times62$（宽 $\times$ 高）。下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">A plotting window is $94\times62$ pixels (width $\times$ height). Which statements are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">视窗 $[-4,4]\times[-6,8]$ 显示出的斜率等于真实斜率除以失真因子 $k=\dfrac{94\times14}{62\times8}$</span></li>
+            <li data-correct="true"><span class="opt-body">固定 $y$ 范围为 $[-6,8]$ 时，方形视窗的 $x$ 范围是 $[-10.61,10.61]$（保留两位小数）</span></li>
+            <li><span class="opt-body">采样点取得足够密，软件就能画出 $y=\sin\dfrac1x$ 在 $x=0$ 附近的全部振荡</span></li>
+            <li><span class="opt-body">用双精度数值表算 $\dfrac{1-\cos x}{x^2}$，在 $x=10^{-9}$ 处得 $0$，说明该极限不存在</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：按判定 1.1 的推论，记 $k=\frac{W(d-c)}{H(b-a)}$，显示出的斜率等于真实斜率除以 $k$。此处 $W=94$、$H=62$、$b-a=8$、$d-c=14$，$k=\frac{94\times14}{62\times8}\approx2.65\ne1$，形状确实失真。B 对：方形视窗要求 $b-a=(d-c)\frac WH=14\times\frac{94}{62}\approx21.23$，以 $0$ 为中心即 $[-10.61,10.61]$。C 错：软件只在采样点上有数据，相邻采样点之间用线段连接；$x\to0$ 时 $\sin\frac1x$ 的振荡无限加密，任何有限采样都画不全。D 错：$x=10^{-9}$ 时 $\cos x$ 与 $1$ 的差约 $5\times10^{-19}$，低于双精度在 $1$ 附近的分辨率 $2.2\times10^{-16}$，$1-\cos x$ 被舍入成 $0$；这是浮点误差，真实极限是 $\frac12$，数值失效不等于极限不存在。</p>
+            <p class="en" lang="en">A and B follow from the square-window criterion. C fails because sampling carries no information between sample points, and D is a floating-point artefact, not a missing limit.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这份卷子的主线是“极限与导数这两套定义能否用准”。28 题按难度递增：前 7 题考定义域、无穷小、间断点、导数定义这些基本判断，中间 10 题放进具体计算，最后 11 题为考研档。覆盖第 1 期全部 17 节。</p>
+          <p>最常见的错法有三类。一是等价无穷小替换越界：在加减法里把 $\tan x$、$\sin x$ 各自换成 $x$，把三阶小量抹成 $0$。二是把必要条件当成充分条件：有界当成收敛、连续当成可导、有界当成连续，三个反例都在卷中。三是漏条件与漏因子：复合函数漏乘内层导数，隐函数求导漏乘 $y'$，参数方程的二阶导数漏除 $\frac{dx}{dt}$，微分漏写 $dx$。</p>
+          <p>知识联系上，第 1 章的十节是一条链：定义域（§1-1）划定讨论范围，极限定义（§1-2、§1-3）给判据，两个重要极限（§1-6）与无穷小比较（§1-7）负责计算，连续（§1-8、§1-9）把极限值接到函数值，闭区间上的性质（§1-10）给存在性结论。第 2 章把这条链搬到变化率上：导数定义（§2-1）仍是极限，求导法则（§2-2）依赖复合与反函数，后三节是它们的组合；托马斯补充一的两节把导数解释成变化率，并划清图形、数值与证明各自的分工。</p>
+          <p>下一步建议：正确率低于 60% 的，先回读 §1-7 的等价无穷小替换定理与 §2-1 的导数定义，再重做各节自测；只错在考研档的，缺的是含参数讨论与证明题的书写训练，重点固定“先数条件个数、再验端点异号”这类套路。之后按 §2-5 进入第 3 章，微分中值定理与导数应用会立刻用到本卷的结论。</p>
+        </div>
+
+      </div>
+
+    </div>
+                                                                                                                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+      <nav class="chapter-nav">
+        <a class="prev" href="cheatsheet.html"><span class="dir">← 上一页</span><span class="ttl">公式速查表</span></a>
+        <span class="next is-disabled"></span>
+      </nav>
+      <!-- /SHELL:BOTTOMNAV -->
+
+    </main>
+
+</div>
+<footer class="site-footer">
+  <p><strong>高等数学学习站</strong> · 同济八版骨架 + 托马斯 14 版映射 · 中英对照</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="assets/js/quiz.js"></script>
+<script src="assets/js/course-data.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/theme.js"></script>
+</body>
+</html>

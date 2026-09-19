@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 6 章　定积分的应用 · 高等数学学习站</title>
+<meta name="description" content="定积分的元素法、平面图形的面积、旋转体与已知截面立体的体积、平面曲线的弧长。本章 3 节 6 学时。">
+<script>
+  /* 尽早应用主题与亮暗模式，避免刷新时"先亮后暗"闪一下。
+     theme.js 里还有一份同样的逻辑，这里是关键路径上的同步版本。 */
+  (function () {
+    try {
+      var t = localStorage.getItem('advmath.theme.v1') || 'default';
+      var m = localStorage.getItem('advmath.mode.v1') || 'auto';
+      var e = document.documentElement;
+      e.setAttribute('data-theme', t);
+      if (m !== 'auto') e.setAttribute('data-mode', m);
+      /* 语言：纯中文模式下要把英文段与行内英文整段隐藏，
+         所以必须在首屏渲染前就把 data-lang 写上去，否则会闪一下英文。 */
+      if ((localStorage.getItem('advmath.lang.v1') || 'both') === 'zh') {
+        e.setAttribute('data-lang', 'zh');
+      }
+    } catch (err) { /* 隐私模式下 localStorage 不可用，退回默认主题 */ }
+  })();
+</script>
+<link rel="stylesheet" href="../assets/css/theme-tokens.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script>
+  /* MathJax 配置。
+     性能与正确性的折中（2026-09-18）：
+     本站公式密集（ch1 有 7518 个），一次性排版全页会生成约 19 万 DOM 元素，
+     任何重排都要 200 ms —— 侧栏拖动会卡。
+     但如果"只为视口内排版"，未被滚到的公式会一直显示成 $\sqrt{x}$ 这样的源码，
+     这对读者是明显的文字损坏，不可接受。
+     因此改为：首屏立即排版（保证打开就是正确文字），
+     其余公式在浏览器空闲时段分片补排（不阻塞交互）。
+     两全：文字正确，且拖动期间几乎没有排版开销。 */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\(', '\)']], displayMath: [['$$', '$$'], ['\[', '\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    /* 关键（第 26 节 · 页面切换性能）：
+       默认 startup 会在 MathJax 就绪时自动同步扫描全页并排版，
+       实测这一步在主线程上连续占用 1.7 s（ch3：0 → 5484 个公式一次成型），
+       期间点击无响应——这就是"切换卡顿/点击无反应"的根因。
+       改为 typeset:false：既不自动排版，也不自动扫描；
+       排版全部由下面这段脚本按"首屏优先 + 分片"驱动。 */
+    startup: {
+      typeset: false,
+      ready: function () {
+        MathJax.startup.defaultReady();
+        window.__mjxReady = true;   /* 供下面的分片调度感知 */
+      }
+    }
+  };
+
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title';
+    var pending = [], busy = false, started = false;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) schedule();
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL));
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+</script>
+<script id="MathJax-script" async src="../assets/js/vendor/tex-svg.js"></script>
+</head>
+<body data-page="ch6" data-chapter="6">
+
+                                                                      <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="../index.html">
+      <span class="brand-mark">AM</span>
+      <span>高等数学学习站<small>同济八版骨架 · 托马斯映射 · 中英对照</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="../index.html">首页</a>
+      <a href="../cheatsheet.html">公式速查表</a>
+      <a href="../exam.html">综合自测卷</a>
+    </nav>
+    <span class="crumb">第 6 章 定积分的应用</span>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+                                                                                                                                                                                                                  <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="ch1.html"><span class="num">1</span>函数与极限</a>
+          <a class="toc-chapter" href="ch2.html"><span class="num">2</span>导数与微分</a>
+          <a class="toc-chapter" href="ch3.html"><span class="num">3</span>微分中值定理与导数的应用</a>
+          <a class="toc-chapter" href="ch4.html"><span class="num">4</span>不定积分</a>
+          <a class="toc-chapter" href="ch5.html"><span class="num">5</span>定积分</a>
+          <a class="toc-chapter is-active" href="ch6.html"><span class="num">6</span>定积分的应用</a>
+          <a class="toc-chapter" href="ch7.html"><span class="num">7</span>微分方程</a>
+          <a class="toc-chapter" href="ch8.html"><span class="num">8</span>向量代数与空间解析几何</a>
+          <a class="toc-chapter" href="ch9.html"><span class="num">9</span>多元函数微分法及其应用</a>
+          <a class="toc-chapter" href="ch10.html"><span class="num">10</span>重积分</a>
+          <a class="toc-chapter" href="ch11.html"><span class="num">11</span>曲线积分与曲面积分</a>
+          <a class="toc-chapter" href="ch12.html"><span class="num">12</span>无穷级数</a>
+          <a class="toc-chapter" href="supp1.html"><span class="num">TX</span>托马斯补充</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">本页目录</div>
+          <nav class="toc" data-toc></nav>
+        </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+          <a class="toc-chapter" href="../cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter" href="../exam.html">综合自测卷</a>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+                                                                        <!-- SHELL:PAGEHEAD -->
+      <div class="page-head">
+      <div class="page-eyebrow"><span class="en-inline">CHAPTER 6</span> · 同济八版第 6 章<span class="en-inline"> / Thomas 14e Ch.6</span></div>
+      <h1>第 6 章　定积分的应用</h1>
+      </div>
+      <!-- /SHELL:PAGEHEAD -->
+
+      <!-- ======== 以下为小节内容 ======== -->
+
+            <div class="sec">
+<h2 id="s6-1" data-hours="2"
+          data-video-map="s6-1"
+          data-video-title="《高等数学》全程教学视频 2.0 版（宋浩老师）">6.1 定积分的元素法<span class="en-inline"> / The Element Method</span></h2>
+
+      <div data-video-entry="s6-1" data-video-pos="top"></div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">前置知识</span>　三样：定积分的定义与几何意义（由 §5.1 定义 5.1：分割、近似、求和、取极限，积分值是黎曼和的极限，与分法、取法都无关）；微积分基本公式（§5.2，把定积分的计算化为求原函数，本节与 §6.2、§6.3 的每一个数值都由它算出）；以及微分的记号与结论 $\Delta y-\mathrm{d}y=o(\Delta x)$（§2.5）。</p>
+        <p class="zh" lang="zh">本节只用到"函数的增量与微分之差是比自变量增量高阶的无穷小"这一句话，不涉及微分中值定理与泰勒公式（§3.1、§3.3）。求和与取极限的技术（等分区间、求和公式、$\lambda=\max\Delta x_i$）在 §5.1 已经练过，本节不再重复。</p>
+        <p class="en" lang="en"><strong>Prerequisites.</strong> Three items: the definition and geometric meaning of the definite integral (Definition 5.1 in §5.1 — partition, approximate, sum, take the limit; the value is a limit of Riemann sums and is independent of the partition and of the sample points); the Fundamental Theorem of Calculus (§5.2, which reduces a definite integral to an antiderivative and supplies every numerical answer here and in §6.2 and §6.3); and the differential, in the form $\Delta y-\mathrm{d}y=o(\Delta x)$ (§2.5).</p>
+        <p class="en" lang="en">The section uses one conclusion only: the difference between the increment of a function and its differential is of higher order than the increment of the independent variable. The mean value theorems and Taylor's formula (§3.1, §3.3) are not used here, and the technique of §5.1 — equal parts, summation formulas, $\lambda=\max\Delta x_i$ — is assumed to be familiar.</p>
+      </div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">本节要解决的问题</span>　§5.1 的四个步骤回答的是"给定 $f$ 与 $[a,b]$，这个极限等于什么"。本章的方向相反：实际问题先给出一个量——一块曲边图形的面积、一个立体的体积、一根非均匀细杆的质量、一个变力做的功——要求算出它的值。这时没有现成的被积函数，要先把量本身翻译成定积分。</p>
+        <p class="zh" lang="zh">若每次都从分割、求和、取极限走一遍，代价很高：和式往往算不动，极限是否与分法有关也不好看出来。本节把翻译动作固定成三个步骤，叫<span class="term">元素法</span>（<span class="term-en">element method</span>）：取一个小区间，写出这一小段上的近似 $\mathrm{d}U=f(x)\,\mathrm{d}x$，把 $\mathrm{d}U$ 当作被积表达式，在区间上积分。</p>
+        <p class="zh" lang="zh">省掉求和与取极限这两步，代价是必须回答一个问题：凭什么用 $\mathrm{d}U$ 代替 $\Delta U$？答案在定理 6.1——两者的差是比 $\Delta x$ 高阶的无穷小。面积、体积、弧长的元素在 §6.2 写出，功、水压力、引力、质心的元素在 §6.3 写出，两节都只做一件事：按本节的三步落笔，再算积分。</p>
+        <p class="en" lang="en"><strong>The problem this section solves.</strong> The four steps of §5.1 answer the question of what a given limit equals when $f$ and $[a,b]$ are known. This chapter runs the other way: an application supplies a quantity first — the area of a region bounded by a curve, the volume of a solid, the mass of a rod whose density varies, the work done by a varying force — and its value is wanted. No integrand is given, so the quantity itself must be translated into a definite integral.</p>
+        <p class="en" lang="en">Doing that from scratch each time — partition, sum, take the limit — is costly: the sums are often intractable, and whether the limit depends on the partition is not easy to see. This section fixes the translation into three steps, called the element method: take one small subinterval, write the approximation $\mathrm{d}U=f(x)\,\mathrm{d}x$ for that piece, treat $\mathrm{d}U$ as the integrand expression, and integrate over the interval.</p>
+        <p class="en" lang="en">Dropping the summation and the limit has a price: one question must be answered — why may $\mathrm{d}U$ replace $\Delta U$? Theorem 6.1 answers it: the difference between the two is of higher order than $\Delta x$. The elements for area, volume and arc length are written in §6.2, and those for work, fluid force, gravitation and centres of mass in §6.3; both sections only write the element by the three steps below and then evaluate an integral.</p>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>以常代变：元素法的想法<span class="en-inline"> / Replacing What Varies by What Is Constant</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">元素法一次只看一小段。它的前提是待求量对区间<strong>可加</strong>：把 $[a,b]$ 分成若干段，各段上的量相加恰好等于整个区间上的量。长度、面积、体积、质量、功都满足这一条；平均值、浓度这类"总量除以长度"的量不满足，它们必须先把总量算出来再除（§5.1 性质 5.4）。</p>
+          <p class="zh" lang="zh">在可加的前提下，一小段 $[x,x+\Delta x]$ 上的量只取决于 $x$、$\Delta x$ 与这一段的形状。段取得足够短时，段内变化的部分来不及起作用，于是 $\Delta U$ 可以用"点 $x$ 处的密度乘长度"代替，即 $\Delta U \approx f(x)\Delta x$。整段量是一串这样的乘积之和；令段长趋于 0，和式变成积分——这正是 §5.1 的"求和、取极限"两步的压缩写法。</p>
+          <p class="en" lang="en">The element method reads one short subinterval at a time. It presupposes that the quantity is <strong>additive</strong> over intervals: split $[a,b]$ into pieces, and the pieces of the quantity add up to the quantity over the whole interval. Length, area, volume, mass and work have this property; averages and concentrations do not, because they are totals divided by lengths, and the total must be found first (§5.1, Property 5.4).</p>
+          <p class="en" lang="en">Given additivity, the quantity on a short subinterval $[x,x+\Delta x]$ depends only on $x$, on $\Delta x$ and on the shape of that piece. For a short enough piece, whatever varies inside it has no time to act, so $\Delta U$ may be replaced by the value at $x$ times the length: $\Delta U \approx f(x)\Delta x$. The whole quantity is a sum of such products, and letting the length tend to 0 turns the sum into an integral — a compressed way of writing the last two steps of §5.1.</p>
+        </div>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 6.1　元素法<span class="en-inline"> / The Element Method</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">设 $U$ 是与区间 $[a,b]$ 有关的量。若 $U$ 满足下面两个条件：</p>
+          <p class="zh" lang="zh">① <strong>可加性</strong>：把 $[a,b]$ 任意分成若干小区间，$U$ 等于各小区间上对应量之和；</p>
+          <p class="zh" lang="zh">② <strong>局部线性近似</strong>：在任一小区间 $[x,x+\Delta x]$ 上，对应的量 $\Delta U$ 可以写成 $$\Delta U=f(x)\,\Delta x+o(\Delta x) \qquad (\Delta x \to 0),$$ 其中 $f$ 在 $[a,b]$ 上连续，且 $o(\Delta x)$ 对区间内的 $x$ 一致；</p>
+          <p class="zh" lang="zh">则 $U$ 可用定积分表示：$$U=\int_{a}^{b}f(x)\,\mathrm{d}x.$$ 这时把 $f(x)\,\mathrm{d}x$ 叫做 $U$ 的<span class="term">元素</span>（<span class="term-en">element</span>），记作 $\mathrm{d}U=f(x)\,\mathrm{d}x$。</p>
+          <p class="zh" lang="zh">读法：元素 $\mathrm{d}U$ 是 $\Delta U$ 的线性主部，它记录三件事——在哪一点 $x$ 取密度 $f(x)$、覆盖多长 $\mathrm{d}x$、乘起来是多少。写元素时把 $\Delta x$ 改写成 $\mathrm{d}x$，就是从有限小步过渡到无穷小步。</p>
+          <p class="en" lang="en">Let $U$ be a quantity associated with an interval $[a,b]$. Suppose $U$ satisfies the following two conditions:</p>
+          <p class="en" lang="en"><strong>Additivity</strong>: when $[a,b]$ is divided into subintervals in any way, $U$ equals the sum of the corresponding quantities over the subintervals;</p>
+          <p class="en" lang="en"><strong>Local linear approximation</strong>: on any subinterval $[x,x+\Delta x]$ the corresponding quantity $\Delta U$ can be written as $$\Delta U=f(x)\,\Delta x+o(\Delta x) \qquad (\Delta x \to 0),$$ where $f$ is continuous on $[a,b]$ and $o(\Delta x)$ is uniform in $x$ over the interval;</p>
+          <p class="en" lang="en">then $U$ is given by a definite integral: $$U=\int_{a}^{b}f(x)\,\mathrm{d}x.$$ The expression $f(x)\,\mathrm{d}x$ is called the element of $U$ and is written $\mathrm{d}U=f(x)\,\mathrm{d}x$.</p>
+          <p class="en" lang="en">How to read it: the element $\mathrm{d}U$ is the linear part of $\Delta U$. It records three things — the point $x$ at which the density $f(x)$ is taken, the length $\mathrm{d}x$ covered, and their product. Writing the element means replacing $\Delta x$ by $\mathrm{d}x$, that is, passing from a finite step to an infinitesimal one.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.1　元素法的依据<span class="en-inline"> / Why the Element Method Works</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh"><span class="thm-name">定理 6.1</span>　设 $U$ 是 $[a,b]$ 上的可加量，且存在 $[a,b]$ 上的连续函数 $f$，使 $$\Delta U=f(x)\,\Delta x+o(\Delta x) \qquad (\Delta x \to 0)$$ 对每个 $x \in [a,b]$ 成立，其中 $o(\Delta x)$ 对 $x$ 一致。则 $$U=\int_{a}^{b}f(x)\,\mathrm{d}x.$$</p>
+          <p class="zh" lang="zh"><strong>证明思路</strong>：把 $[a,b]$ 任意分成 $n$ 段，第 $i$ 段长 $\Delta x_i$，取 $\lambda=\max\Delta x_i$。由可加性 $$U=\sum_{i=1}^{n}\Delta U_i=\sum_{i=1}^{n}f(x_{i-1})\,\Delta x_i+\sum_{i=1}^{n}o(\Delta x_i).$$ 第一个和是连续函数 $f$ 的黎曼和，当 $\lambda \to 0$ 时趋于 $\int_{a}^{b}f(x)\,\mathrm{d}x$（§5.1 定理 5.1 保证 $f$ 可积，定义 5.1 保证这个极限与分法无关）。第二个和是误差总和，其绝对值不超过 $$\max_{1 \le i \le n}\frac{|o(\Delta x_i)|}{\Delta x_i}\cdot(b-a),$$ 由"一致高阶无穷小"随 $\lambda \to 0$ 趋于 0。两部分合起来即得结论。</p>
+          <p class="zh" lang="zh"><strong>条件的作用</strong>：逐段的差必须是段长的高阶无穷小，而且这个"高阶"要对区间内所有 $x$ 一致。差只做到同阶时，误差总和约为一个与段长无关的正数，分割再细也不会消失；一致性则让上式里的最大值只依赖 $\lambda$，与 $x$ 无关。</p>
+          <p class="en" lang="en"><span class="thm-name">Theorem 6.1</span> Let $U$ be an additive quantity on $[a,b]$, and suppose there is a continuous function $f$ on $[a,b]$ such that $$\Delta U=f(x)\,\Delta x+o(\Delta x) \qquad (\Delta x \to 0)$$ for every $x \in [a,b]$, the term $o(\Delta x)$ being uniform in $x$. Then $$U=\int_{a}^{b}f(x)\,\mathrm{d}x.$$</p>
+          <p class="en" lang="en"><strong>Idea of the proof.</strong> Divide $[a,b]$ into $n$ pieces of lengths $\Delta x_i$ and put $\lambda=\max\Delta x_i$. Additivity gives $$U=\sum_{i=1}^{n}\Delta U_i=\sum_{i=1}^{n}f(x_{i-1})\,\Delta x_i+\sum_{i=1}^{n}o(\Delta x_i).$$ The first sum is a Riemann sum for the continuous function $f$ and tends to $\int_{a}^{b}f(x)\,\mathrm{d}x$ as $\lambda \to 0$ (Theorem 5.1 of §5.1 gives integrability, and Definition 5.1 makes the limit independent of the partition). The second sum is the total error; its absolute value is at most $$\max_{1 \le i \le n}\frac{|o(\Delta x_i)|}{\Delta x_i}\cdot(b-a),$$ which tends to 0 as $\lambda \to 0$ by uniform higher-order smallness. The two parts together give the claim.</p>
+          <p class="en" lang="en"><strong>What the hypotheses do.</strong> The error on each piece must be of higher order than the piece length, and this must hold uniformly in $x$ over the interval. If the error were only of the same order, the total error would be a positive number independent of the piece length and would not vanish however fine the partition; uniformity is what makes the maximum above depend on $\lambda$ alone.</p>
+        </div>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>什么样的量能用元素法<span class="en-inline"> / Which Quantities Admit the Element Method</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">两个条件各管一件事。<strong>可加性</strong>排除"比值型"的量：各组的平均身高相加没有意义，所以不能对平均值写元素。遇到平均值、浓度这类量，先按元素法求出总量，再除以区间长度或总容量。</p>
+          <p class="zh" lang="zh"><strong>局部线性近似</strong>排除"量级不对"的情形。判断办法是看 $\Delta U/\Delta x$ 的极限：若 $\lim_{\Delta x \to 0}\Delta U/\Delta x=f(x)$ 存在且连续，这个 $f$ 就是元素里的被积函数；若这个比当 $\Delta x \to 0$ 时无界或不存在，元素法失效。定积分本身可以为负（§5.1 定理 5.2 的面积代数和），所以 $U \ge 0$ 不是前提。</p>
+          <p class="en" lang="en">The two conditions do different jobs. <strong>Additivity</strong> rules out ratios: adding the average heights of the groups is meaningless, so an element cannot be written for an average. For averages and concentrations, find the total by the element method first, then divide by the length or by the capacity.</p>
+          <p class="en" lang="en"><strong>Local linear approximation</strong> rules out quantities of the wrong order. The test is the limit of $\Delta U/\Delta x$: if $\lim_{\Delta x \to 0}\Delta U/\Delta x=f(x)$ exists and is continuous, that $f$ is the integrand of the element; if the quotient is unbounded or fails to exist as $\Delta x \to 0$, the method does not apply. A definite integral may be negative (§5.1, Theorem 5.2, the algebraic sum of areas), so $U \ge 0$ is not a prerequisite.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法 6.1　元素法的一般步骤<span class="en-inline"> / The Three Steps of the Element Method</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">下面三步是本章的统一动作。第一步决定后两步的形式：选错积分变量，最后的积分往往算不出来。</p>
+          <ol>
+            <li class="zh"><strong>选积分变量，定积分区间。</strong>把待求量所在的范围投影到一条坐标轴上，取该轴的坐标为积分变量 $x$，写出它的变化区间 $[a,b]$。选法的标准有两条：$U$ 在这个区间上可加，且小区间 $[x,x+\Delta x]$ 上的量由 $x$ 与 $\Delta x$ 近似决定。</li>
+            <li class="zh"><strong>取小区间，写元素。</strong>在 $[x,x+\Delta x]$ 上"以常代变"，用 $f(x)\Delta x$ 近似 $\Delta U$，再把 $\Delta x$ 改写成 $\mathrm{d}x$，得 $\mathrm{d}U=f(x)\,\mathrm{d}x$。检查标准：$\Delta U-f(x)\Delta x$ 是比 $\Delta x$ 高阶的无穷小（定理 6.1）；等价的检查是 $\lim_{\Delta x \to 0}\Delta U/\Delta x=f(x)$。</li>
+            <li class="zh"><strong>以 $\mathrm{d}U$ 为被积表达式积分。</strong>在 $[a,b]$ 上积分得 $U=\int_{a}^{b}f(x)\,\mathrm{d}x$，再用微积分基本公式（§5.2）求出数值。积分变量与上下限必须与第一步一致。</li>
+          </ol>
+          <p class="zh" lang="zh">下面第一张表把本章常用量的元素列在一起，第二张表把元素法与 §5.1 定义 5.1 的四步逐步对照——两张表回答同一个问题：元素这一行字该怎么落笔。</p>
+          <p class="en" lang="en">The three steps below are the standard routine of this chapter. The first step fixes the form of the other two: choose the wrong variable of integration and the final integral often cannot be evaluated.</p>
+          <ol>
+            <li class="en" lang="en"><strong>Choose the variable of integration and fix the interval.</strong> Project the range of the quantity onto a coordinate axis, take that coordinate as the variable $x$, and write down its interval $[a,b]$. There are two tests: $U$ is additive over this interval, and the quantity on a short subinterval $[x,x+\Delta x]$ is determined approximately by $x$ and $\Delta x$.</li>
+            <li class="en" lang="en"><strong>Take one subinterval and write the element.</strong> On $[x,x+\Delta x]$ replace what varies by what is constant, approximate $\Delta U$ by $f(x)\Delta x$, then rewrite $\Delta x$ as $\mathrm{d}x$ to get $\mathrm{d}U=f(x)\,\mathrm{d}x$. The check is that $\Delta U-f(x)\Delta x$ is of higher order than $\Delta x$ (Theorem 6.1); equivalently, that $\lim_{\Delta x \to 0}\Delta U/\Delta x=f(x)$.</li>
+            <li class="en" lang="en"><strong>Integrate $\mathrm{d}U$ over the interval.</strong> This gives $U=\int_{a}^{b}f(x)\,\mathrm{d}x$; evaluate it with the Fundamental Theorem of Calculus (§5.2). The variable and the two limits must be the ones fixed in the first step.</li>
+          </ol>
+          <p class="en" lang="en">The first table below collects the elements of the quantities used in this chapter, and the second sets the method beside the four steps of §5.1, Definition 5.1. Both tables answer one question: what exactly is written on the line that records the element.</p>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>待求量 $U$</th><th>小区间上的近似</th><th>元素 $\mathrm{d}U$</th></tr></thead>
+          <tbody>
+            <tr><td>曲边梯形的面积</td><td>$f(x)\Delta x$</td><td>$f(x)\,\mathrm{d}x$</td></tr>
+            <tr><td>变速直线运动的路程</td><td>$v(t)\Delta t$</td><td>$v(t)\,\mathrm{d}t$</td></tr>
+            <tr><td>非均匀细杆的质量</td><td>$\rho(x)\Delta x$</td><td>$\rho(x)\,\mathrm{d}x$</td></tr>
+            <tr><td>变力沿直线做的功</td><td>$F(x)\Delta x$</td><td>$F(x)\,\mathrm{d}x$</td></tr>
+            <tr><td>平行截面面积已知的立体体积</td><td>$A(x)\Delta x$</td><td>$A(x)\,\mathrm{d}x$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>§5.1 的四步</th><th>定义 5.1 中的做法</th><th>元素法中的做法</th></tr></thead>
+          <tbody>
+            <tr><td>分割</td><td>把 $[a,b]$ 分成 $n$ 段，段长 $\Delta x_i$</td><td>只取一个代表性小区间 $[x,x+\Delta x]$，不必写出全部分点</td></tr>
+            <tr><td>近似</td><td>第 $i$ 段上任取 $\xi_i$，以 $f(\xi_i)\Delta x_i$ 代替 $\Delta U_i$</td><td>取左端点 $x$，以 $f(x)\Delta x$ 代替 $\Delta U$，并验证差是 $o(\Delta x)$</td></tr>
+            <tr><td>求和</td><td>$U \approx \sum_{i=1}^{n}f(\xi_i)\Delta x_i$</td><td>不显式求和，和式由积分记号承担</td></tr>
+            <tr><td>取极限</td><td>令 $\lambda=\max\Delta x_i \to 0$，得 $U=\lim\sum_{i=1}^{n}f(\xi_i)\Delta x_i$</td><td>直接写 $U=\int_{a}^{b}f(x)\,\mathrm{d}x$，极限过程由定义 5.1 承担</td></tr>
+            <tr><td>结果</td><td>与分法、取法无关的一个数</td><td>同一个数，但省去了和式与极限的计算</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.1</span> 用元素法建立变速直线运动的路程
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>质点沿直线运动，速度 $v(t)=3t^{2}+1$（$t$ 的单位为秒，$v$ 的单位为米每秒）。用元素法把时间区间 $[0,2]$ 内的路程 $s$ 写成定积分，并求出 $s$。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，选积分变量、定区间。</strong>路程对时间区间可加：把 $[0,2]$ 分成若干时间段，各段路程相加等于整段路程，可加性成立。取 $t$ 为积分变量，积分区间为 $[0,2]$。</p>
+            <p><strong>第二步，取小区间写元素。</strong>在 $[t,t+\Delta t]$ 上，由 §5.2 的微积分基本公式，这一段的真实路程为</p>
+            <p>$$\Delta s=\int_{t}^{t+\Delta t}v(\tau)\,\mathrm{d}\tau=\int_{t}^{t+\Delta t}\left(3\tau^{2}+1\right)\mathrm{d}\tau=3t^{2}\Delta t+\Delta t+3t(\Delta t)^{2}+(\Delta t)^{3}.$$</p>
+            <p>把这段上的速度近似为左端点处的值 $v(t)=3t^{2}+1$，得近似式 $\Delta s \approx \left(3t^{2}+1\right)\Delta t$。两者的差为</p>
+            <p>$$\Delta s-v(t)\Delta t=3t(\Delta t)^{2}+(\Delta t)^{3}.$$</p>
+            <p>把它除以 $\Delta t$ 得 $3t\Delta t+(\Delta t)^{2}$，当 $\Delta t \to 0$ 时趋于 0，所以这个差是比 $\Delta t$ 高阶的无穷小；在 $t \in [0,2]$ 上 $3t\Delta t+(\Delta t)^{2} \le 6\Delta t+(\Delta t)^{2}$，界与 $t$ 无关，一致性也满足。定理 6.1 的条件成立，于是元素为</p>
+            <p>$$\mathrm{d}s=v(t)\,\mathrm{d}t=\left(3t^{2}+1\right)\mathrm{d}t.$$</p>
+            <p><strong>第三步，积分。</strong>在 $[0,2]$ 上积分，并用微积分基本公式（§5.2）求值：</p>
+            <p>$$s=\int_{0}^{2}\left(3t^{2}+1\right)\mathrm{d}t=\left[t^{3}+t\right]_{0}^{2}=(8+2)-0=10.$$</p>
+            <p>即质点在 $2$ 秒内的路程为 $10$ 米。</p>
+            <p><strong>验算一（检验元素）。</strong>记 $s(T)=\int_{0}^{T}\left(3t^{2}+1\right)\mathrm{d}t=T^{3}+T$。求导得 $s'(T)=3T^{2}+1=v(T)$：路程对时间的瞬时变化率就是速度，元素取 $v(t)\,\mathrm{d}t$ 与物理意义一致。</p>
+            <p><strong>验算二（黎曼和夹逼）。</strong>$v(t)=3t^{2}+1$ 在 $[0,2]$ 上单调增加，故左端点和不超过积分、右端点和不小于积分。二等分后取左端点和 $v(0)\cdot1+v(1)\cdot1=1+4=5$，右端点和 $v(1)\cdot1+v(2)\cdot1=4+13=17$，于是 $5 \le s \le 17$，而 $s=10$ 落在其中 ✓。</p>
+            <p><strong>验算三（平均值）。</strong>由 §5.1 性质 5.4，$v$ 在 $[0,2]$ 上的平均值为 $\frac{1}{2}\int_{0}^{2}v(t)\,\mathrm{d}t=\frac{10}{2}=5$ 米每秒，介于最小值 $1$ 与最大值 $13$ 之间 ✓。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.2</span> 用元素法求非均匀细杆的质量，并算出误差的阶
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>一根细杆沿 $x$ 轴放置，$x \in [0,2]$（单位：米），线密度 $\rho(x)=1+x$（单位：千克每米）。用元素法把杆的质量 $m$ 写成定积分并求值；再算出用元素代替 $\Delta m$ 时产生的误差，验证它比 $\Delta x$ 高阶。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，选积分变量、定区间。</strong>质量对区间可加：把杆分成若干段，各段质量相加等于总质量。取 $x$ 为积分变量，积分区间为 $[0,2]$。</p>
+            <p><strong>第二步，取小区间写元素，并算出误差。</strong>在 $[x,x+\Delta x]$ 上，密度从 $\rho(x)$ 变到 $\rho(x+\Delta x)$，变化量正好是 $\Delta x$。以左端点处的密度代替整段的密度，得 $\Delta m \approx \rho(x)\Delta x=(1+x)\Delta x$。这一段的真实质量由 §5.2 的微积分基本公式求出：</p>
+            <p>$$\Delta m=\int_{x}^{x+\Delta x}(1+\tau)\,\mathrm{d}\tau=(1+x)\Delta x+\frac{(\Delta x)^{2}}{2}.$$</p>
+            <p>把元素在小区间上取成 $\rho(x)\Delta x$（即把 $\mathrm{d}x$ 还原为 $\Delta x$），两者之差为</p>
+            <p>$$\Delta m-\rho(x)\Delta x=\frac{(\Delta x)^{2}}{2}.$$</p>
+            <p>除以 $\Delta x$ 得 $\frac{\Delta x}{2}$，当 $\Delta x \to 0$ 时趋于 0，故差是比 $\Delta x$ 高阶的无穷小；这个估计对 $x \in [0,2]$ 一致。定理 6.1 的条件成立，元素为</p>
+            <p>$$\mathrm{d}m=\rho(x)\,\mathrm{d}x=(1+x)\,\mathrm{d}x.$$</p>
+            <p><strong>第三步，积分。</strong></p>
+            <p>$$m=\int_{0}^{2}(1+x)\,\mathrm{d}x=\left[x+\frac{x^{2}}{2}\right]_{0}^{2}=2+2=4.$$</p>
+            <p>即杆的质量为 $4$ 千克。</p>
+            <p><strong>验算一（平均值）。</strong>$\rho$ 在 $[0,2]$ 上线性，由 §5.1 性质 5.4 其平均值为 $\frac{\rho(0)+\rho(2)}{2}=\frac{1+3}{2}=2$ 千克每米，乘长度 $2$ 米得 $4$ 千克 ✓。</p>
+            <p><strong>验算二（黎曼和夹逼）。</strong>$\rho$ 单调增加，四等分（$\Delta x=0.5$）后左端点和为 $(1+1.5+2+2.5)\times 0.5=3.5$，右端点和为 $(1.5+2+2.5+3)\times 0.5=4.5$，故 $3.5 \lt m \lt 4.5$，而 $m=4$ 落在其中 ✓。</p>
+            <p><strong>验算三（量纲）。</strong>密度的单位是千克每米，乘 $\mathrm{d}x$ 的单位米得千克，与质量的单位一致 ✓。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.3</span> 含参数的旋转体体积：建立元素、求极限、判单调
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $n$ 为正整数，图形由曲线 $y=x^{n}$（$0 \le x \le 1$）与 $x$ 轴围成，记它绕 $x$ 轴旋转所得旋转体的体积为 $V_n$。（1）用元素法写出 $V_n$ 的定积分表达式；（2）求 $\lim_{n \to \infty}nV_n$；（3）说明 $V_{n+1} \lt V_n$ 的理由。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>（1）第一步，选积分变量、定区间。</strong>体积对区间可加：把 $[0,1]$ 分成若干段，各段旋转体的体积相加等于整个旋转体的体积。取 $x$ 为积分变量，积分区间为 $[0,1]$。</p>
+            <p><strong>第二步，取小区间写元素。</strong>在 $[x,x+\Delta x]$ 上，这一段对应的旋转体是一个薄片，垂直于 $x$ 轴的截面是圆。把半径近似为左端点处的值 $x^{n}$，得</p>
+            <p>$$\Delta V \approx \pi\left(x^{n}\right)^{2}\Delta x=\pi x^{2n}\Delta x, \qquad \mathrm{d}V=\pi x^{2n}\,\mathrm{d}x.$$</p>
+            <p>误差检验：这一薄片的真实体积由 §5.2 为 $\Delta V=\int_{x}^{x+\Delta x}\pi\tau^{2n}\,\mathrm{d}\tau$，它与 $\pi x^{2n}\Delta x$ 的差不超过 $\pi\cdot\max_{x \le \tau \le x+\Delta x}\left|\tau^{2n}-x^{2n}\right|\cdot\Delta x$。因 $x^{2n}$ 在 $[0,1]$ 上连续，最大值随 $\Delta x \to 0$ 趋于 0，故差是比 $\Delta x$ 高阶的无穷小，且估计与 $x$ 无关，定理 6.1 可用。</p>
+            <p><strong>第三步，积分。</strong>以 $\mathrm{d}V$ 为被积表达式在 $[0,1]$ 上积分，并用微积分基本公式（§5.2）：</p>
+            <p>$$V_n=\int_{0}^{1}\pi x^{2n}\,\mathrm{d}x=\pi\left[\frac{x^{2n+1}}{2n+1}\right]_{0}^{1}=\frac{\pi}{2n+1}.$$</p>
+            <p><strong>（2）</strong>把通项代入：</p>
+            <p>$$\lim_{n \to \infty}nV_n=\lim_{n \to \infty}\frac{n\pi}{2n+1}=\lim_{n \to \infty}\frac{\pi}{2+\frac{1}{n}}=\frac{\pi}{2}.$$</p>
+            <p><strong>（3）</strong>在 $[0,1]$ 上 $x^{2n+2}=x^{2n}\cdot x^{2} \le x^{2n}$，两边的差为 $x^{2n}\left(1-x^{2}\right) \ge 0$。由 §5.1 性质 5.1③ 的保号性得 $V_{n+1} \le V_n$。若要取到等号，非负连续函数 $x^{2n}\left(1-x^{2}\right)$ 在 $[0,1]$ 上的积分必须为 0，由 §5.1 性质 5.4 它必须恒为 0；但它在 $x=\frac{1}{2}$ 处等于 $\left(\frac{1}{2}\right)^{2n}\cdot\frac{3}{4} \gt 0$，矛盾。故 $V_{n+1} \lt V_n$，$\{V_n\}$ 严格单调减少。这与通项 $\frac{\pi}{2n+1}$ 随 $n$ 增大而变小也一致。</p>
+            <p><strong>验算一（用已知公式核对 $n=1$）。</strong>$n=1$ 时图形是直线 $y=x$ 下的三角形，旋转体是底面半径 $1$、高 $1$ 的圆锥，其体积为 $\frac{1}{3}\pi\cdot 1^{2}\cdot 1=\frac{\pi}{3}$，与 $\frac{\pi}{2\times 1+1}=\frac{\pi}{3}$ 一致 ✓。</p>
+            <p><strong>验算二（黎曼和夹逼 $n=2$）。</strong>$V_2=\frac{\pi}{5}\approx 0.6283$。$x^{4}$ 在 $[0,1]$ 上单调增加，二等分后左端点和为 $\pi\left(0^{4}+\left(\frac{1}{2}\right)^{4}\right)\times\frac{1}{2}=\frac{\pi}{32}\approx 0.0982$，右端点和为 $\pi\left(\left(\frac{1}{2}\right)^{4}+1^{4}\right)\times\frac{1}{2}=\frac{17\pi}{32}\approx 1.6689$，故 $\frac{\pi}{5}$ 夹在两者之间 ✓；同时 $V_2=\frac{\pi}{5}\approx 0.6283 \lt V_1=\frac{\pi}{3}\approx 1.0472$，与第（3）问的结论一致 ✓。</p>
+          </div>
+        </div>
+      </div>
+
+      
+      <figure class="plot-figure">
+        <div id="fig-element"></div>
+        <figcaption>图　元素法（微元法）。在 [x, x+dx] 这一小段上，把变化的量近似当作不变，写出元素 dU=f(x)dx；再把元素沿区间"累加"起来就得到总量 U=∫ₐᵇ f(x)dx。左图是一个元素，右图是元素累加成整体。</figcaption>
+      </figure>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点</div>
+        <p class="zh" lang="zh"><strong>把元素当成精确值。</strong>$\mathrm{d}U=f(x)\,\mathrm{d}x$ 只在 $\Delta x \to 0$ 时与 $\Delta U$ 等价，写成 $\Delta U=f(x)\Delta x$ 就是错的。正确写法是 $\Delta U=f(x)\Delta x+o(\Delta x)$，或者用近似号 $\approx$。</p>
+        <p class="zh" lang="zh"><strong>漏掉"选积分变量"这一步。</strong>不说明变量与区间就动手积分，元素写对了也可能积错范围。写元素时同时写下 $x$ 的取值范围 $[a,b]$。</p>
+        <p class="zh" lang="zh"><strong>对不可加的量写元素。</strong>平均值、浓度、温度的平均不能逐段相加。先按元素法求出总量，再除以区间长度或总容量（§5.1 性质 5.4）。</p>
+        <p class="zh" lang="zh"><strong>不检查误差的阶。</strong>若 $\Delta U$ 与 $f(x)\Delta x$ 的差只是同阶量，误差总和不会随分割变细而消失。检查办法是算 $\lim_{\Delta x \to 0}\Delta U/\Delta x$，看它是否等于所取的 $f(x)$。</p>
+        <p class="zh" lang="zh"><strong>把 $\mathrm{d}x$ 与 $\Delta x$ 混用。</strong>$\mathrm{d}x$ 是无穷小记号，不表示某个具体段长。验算误差时必须把元素还原成 $f(x)\Delta x$ 才能与 $\Delta U$ 相减，例 6.2 就是这样做的。</p>
+        <p class="zh" lang="zh"><strong>中途换变量却忘了改上下限。</strong>若把积分变量由 $x$ 换成 $y$ 或做了换元，元素与上下限必须同步改，否则数值不对。</p>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <p class="zh" lang="zh"><span class="tag">高频</span>用元素法写出面积、体积、功、质量等量的定积分表达式：阅卷只看元素与上下限，先写元素再算积分。</p>
+        <p class="zh" lang="zh"><span class="tag">高频</span>把和式极限认成定积分（§5.1 的高频题型）：$\frac{1}{n}\sum_{i=1}^{n}f\left(\frac{i}{n}\right)$ 型极限正是元素法的逆用，$\frac{1}{n}$ 是元素里的长度，$f$ 是元素里的密度。</p>
+        <p class="zh" lang="zh"><span class="tag">小题</span>判断一个量能否用元素法：先查可加性，再查 $\Delta U/\Delta x$ 当 $\Delta x \to 0$ 时是否有有限极限。</p>
+        <p class="zh" lang="zh"><span class="tag">考研</span>含参数的旋转体体积（如例 6.3）常连问三件事——写出表达式、求含参数的极限、判断单调性，三问共用同一个元素。</p>
+        <p class="zh" lang="zh"><span class="tag">考研</span>证明型提问："用元素法说明某量的定积分表达式"或"说明用元素代替增量的合法性"，答题要点是写出 $\Delta U-f(x)\Delta x=o(\Delta x)$ 并指出对 $x$ 一致。</p>
+        <p class="zh" lang="zh"><span class="tag">易错</span>元素写对但上下限写反、漏写，或把元素直接代端点求值；数值一律回到 §5.2 的微积分基本公式。</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch6-1" data-title="6-1 定积分的元素法 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>用元素法把可加量 $U$ 写成定积分时，第一步应当做的是（　）。</p>
+            <p class="q-stem-en" lang="en">When the element method is used to write an additive quantity $U$ as a definite integral, the first step is to</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">选定积分变量并确定它的变化区间</span></li>
+            <li><span class="opt-body">先把区间 $n$ 等分，写出对应的黎曼和</span></li>
+            <li><span class="opt-body">先求出被积函数的一个原函数</span></li>
+            <li><span class="opt-body">先写出 $\Delta U$ 的精确表达式</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>按方法 6.1，第一步是选积分变量、定积分区间，元素的形式与上下限都由它决定，A 对。B 是 §5.1 定义 5.1 四步中的"分割"，元素法只需一个代表性的小区间，不必写出全部分点。C 属于算积分那一步，在表达式建立之后，而且元素法本身不要求先有原函数。D 一般做不到：$\Delta U$ 的精确表达式通常写不出来，元素法正是用它的线性主部代替它。</p>
+            <p class="en" lang="en">Step one of the element method is to choose the variable and its interval; the element and the two limits follow from it. B describes the partition step of Definition 5.1, which the method avoids; C belongs to the evaluation stage; and D is usually impossible, which is precisely why the linear part is used instead.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>在元素法中，若用 $f(x)\Delta x$ 近似 $\Delta U$，则两者的差必须是比 $\Delta x$ 高阶的无穷小；否则不能把 $\mathrm{d}U=f(x)\,\mathrm{d}x$ 当作元素。</p>
+            <p class="q-stem-en" lang="en">In the element method, if $f(x)\Delta x$ approximates $\Delta U$, the difference must be of higher order than $\Delta x$; otherwise $\mathrm{d}U=f(x)\,\mathrm{d}x$ cannot serve as the element.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。定理 6.1 的条件正是 $\Delta U=f(x)\Delta x+o(\Delta x)$，且 $o$ 对 $x$ 一致。差的阶不够时（例如只做到同阶），$n$ 段误差之和约为一个与段长无关的正数，分割再细也不消失，积分值就不是 $U$。这个检验在例 6.2 中具体做过：那里 $\Delta m-\rho(x)\Delta x=\frac{(\Delta x)^{2}}{2}$，除以 $\Delta x$ 后趋于 0。</p>
+            <p class="en" lang="en">True. Theorem 6.1 requires exactly $\Delta U=f(x)\Delta x+o(\Delta x)$ with uniformity in $x$. If the difference were merely of order $\Delta x$, the total error would not vanish as the partition is refined and the integral would not equal $U$. Example 6.2 carries out this check explicitly.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>元素法要求待求量 $U$ 满足的两个条件是（　）。</p>
+            <p class="q-stem-en" lang="en">The element method requires the quantity $U$ to satisfy two conditions, namely</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">对区间可加，且在小区间上可用线性式 $f(x)\Delta x$ 近似，差是 $\Delta x$ 的高阶无穷小</span></li>
+            <li><span class="opt-body">$U$ 非负，且对应的函数 $f$ 在区间上连续</span></li>
+            <li><span class="opt-body">$U$ 能写成 $F(b)-F(a)$ 的形式，其中 $F$ 是 $f$ 的原函数</span></li>
+            <li><span class="opt-body">$U$ 必须是有几何意义的面积或体积</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>按定义 6.1，两个条件是"可加性"与"局部线性近似"，A 对。B 错：定积分本身可以为负（§5.1 定理 5.2 的面积代数和），非负不是前提。C 错：$F(b)-F(a)$ 是微积分基本公式（§5.2）的形式，是算积分的结果，不是元素法成立的条件。D 错：元素法同样用于路程、质量、功、水压力等物理量，几何量只是其中一类。</p>
+            <p class="en" lang="en">By Definition 6.1 the two conditions are additivity and local linear approximation. B fails because a definite integral may be negative; C describes the Fundamental Theorem, which is a way to evaluate rather than a hypothesis; and D is too narrow, since the method also applies to distance, mass, work and fluid force.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>下列量中，可以直接用元素法写成定积分的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which of the following quantities can be written directly as a definite integral by the element method?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">变速直线运动的路程（速度 $v(t)$ 连续）</span></li>
+            <li data-correct="true"><span class="opt-body">非均匀细杆的质量（线密度 $\rho(x)$ 连续）</span></li>
+            <li><span class="opt-body">某班学生的平均身高</span></li>
+            <li data-correct="true"><span class="opt-body">变力沿直线做的功（力 $F(x)$ 连续）</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A、B、D 都满足两个条件：路程、质量、功对区间可加，且在小区间上分别近似为 $v(t)\Delta t$、$\rho(x)\Delta x$、$F(x)\Delta x$，差都是段长的高阶无穷小。C 不是可加量：把班级分成几组，各组平均身高之和没有意义。这类比值型的量要先按元素法求出总量（总身高），再除以总人数，不能直接对平均值写元素。</p>
+            <p class="en" lang="en">A, B and D are additive and locally linear, with elements $v(t)\mathrm{d}t$, $\rho(x)\mathrm{d}x$ and $F(x)\mathrm{d}x$. C is not additive: the average heights of the groups do not add up to the average of the class, so the total must be found first and then divided.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>设某可加量 $U$ 的元素为 $\mathrm{d}U=2x\,\mathrm{d}x$，$x \in [0,3]$，则 $U=$ ______。</p>
+            <p class="q-stem-en" lang="en">An additive quantity $U$ has element $\mathrm{d}U=2x\,\mathrm{d}x$ on $[0,3]$. Find $U$.</p>
+          </div>
+          <div class="q-answer" data-answer="9|9.0|9.00"></div>
+          <div class="q-explain">
+            <p>元素给出被积表达式，区间给出上下限，故 $U=\int_{0}^{3}2x\,\mathrm{d}x=\left[x^{2}\right]_{0}^{3}=9-0=9$。常见错法有两个：把元素里的 $2x$ 当成原函数直接代端点，得 $2\times 3-2\times 0=6$；或者把上限写成 1，得 1。元素法只负责写出积分，数值仍按 §5.2 的微积分基本公式算。</p>
+            <p class="en" lang="en">The element gives the integrand and the interval gives the two limits, so $U=\int_{0}^{3}2x\,\mathrm{d}x=9$. Substituting $2x$ at the endpoints (which gives 6), or taking the wrong upper limit, is the usual mistake: the element only supplies the integral, and its value comes from the Fundamental Theorem.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>用元素法得到 $U=\int_{a}^{b}f(x)\,\mathrm{d}x$ 的过程中，下列说法正确的是（　）。</p>
+            <p class="q-stem-en" lang="en">In deriving $U=\int_{a}^{b}f(x)\,\mathrm{d}x$ by the element method, which statement is correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">只要每段的差都是段长的高阶无穷小且对 $x$ 一致，全部误差之和当 $\lambda \to 0$ 时趋于 0</span></li>
+            <li><span class="opt-body">每段的差必须恰好为 0，这个近似才可靠</span></li>
+            <li><span class="opt-body">误差之和是否趋于 0 取决于区间怎样分，因此必须逐一验证所有分法</span></li>
+            <li><span class="opt-body">只要段数 $n$ 足够大，误差之和一定任意小，与 $\lambda$ 是否趋于 0 无关</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 是定理 6.1 证明中的估计：误差之和的绝对值不超过 $\max_{1 \le i \le n}\frac{|o(\Delta x_i)|}{\Delta x_i}\cdot(b-a)$，一致性使这个界只依赖 $\lambda$，随 $\lambda \to 0$ 趋于 0。B 错：$\Delta U$ 一般写不出闭式，要求差为 0 就没有元素法。C 错：这个估计对任意分法都成立，所以不必逐一验证，这正是定理 6.1 的价值。D 错：§5.1 定义 5.1 用 $\lambda=\max\Delta x_i$ 而不是段数 $n$ 作极限变量，因为段数变多而某一段始终很粗时误差不会消失。</p>
+            <p class="en" lang="en">A is the estimate inside the proof of Theorem 6.1: the total error is bounded by $\max_{i}|o(\Delta x_i)|/\Delta x_i\cdot(b-a)$, and uniformity makes that bound depend on $\lambda$ alone, so it tends to 0 with $\lambda$. B is impossible in general, C is unnecessary because the estimate holds for every partition, and D fails because Definition 5.1 controls $\lambda$, not the number of pieces.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>已知由 $y=f(x)$（$f(x) \ge 0$）与 $x$ 轴、直线 $x=0$、$x=1$ 围成的图形绕 $x$ 轴旋转所得旋转体的体积元素为 $\mathrm{d}V=\pi f^{2}(x)\,\mathrm{d}x$。取 $f(x)=x^{n}$，$n$ 为正整数，记该旋转体的体积为 $V_n$，则 $\lim_{n \to \infty}nV_n=$（　）。</p>
+            <p class="q-stem-en" lang="en">For a region bounded by $y=f(x)$ with $f(x) \ge 0$, the $x$-axis and the lines $x=0$ and $x=1$, the volume element of the solid generated about the $x$-axis is $\mathrm{d}V=\pi f^{2}(x)\,\mathrm{d}x$. Take $f(x)=x^{n}$ with $n$ a positive integer and let the volume be $V_n$. Then $\lim_{n \to \infty}nV_n$ equals</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\frac{\pi}{2}$</span></li>
+            <li><span class="opt-body">$\pi$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$+\infty$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>先由元素写出积分再算体积：$V_n=\int_{0}^{1}\pi x^{2n}\,\mathrm{d}x=\frac{\pi}{2n+1}$（§5.2 的微积分基本公式）。于是 $nV_n=\frac{n\pi}{2n+1}=\frac{\pi}{2+\frac{1}{n}}$，极限为 $\frac{\pi}{2}$，A 对。B 错：$nV_n=\pi$ 要求 $V_n=\frac{\pi}{n}$，而实际是 $\frac{\pi}{2n+1}$。C 错：$V_n$ 本身趋于 0，但乘 $n$ 后是同阶比较，极限是 $\frac{\pi}{2}$，不能把 $0$ 乘无穷大当作 0。D 错：$nV_n=\frac{\pi}{2+\frac{1}{n}}$ 单调增加且有上界 $\frac{\pi}{2}$，不发散。</p>
+            <p class="en" lang="en">The element gives $V_n=\int_{0}^{1}\pi x^{2n}\,\mathrm{d}x=\frac{\pi}{2n+1}$, hence $nV_n=\frac{n\pi}{2n+1}\to\frac{\pi}{2}$. B misreads the value of the integral; C forgets that $V_n$ is of order $\frac{1}{n}$, so multiplying by $n$ leaves a finite limit; and D contradicts the boundedness of $nV_n$.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：主线是"把一个量翻译成积分"。元素法把 §5.1 的四步压成三步——选变量定区间、写元素、在区间上积分，合法性由定理 6.1 保证：逐段误差是段长的高阶无穷小，误差总和才随分割变细而消失。七道题分别查第一步的动作、误差的阶、两个适用条件、可加量的辨识、元素与上下限的配套，以及含参数时的极限。</p>
+          <p>最常见的错法有两类。一是把元素当成精确值，忘记它只是增量的线性主部：差若只做到同阶，分割再细误差也不消失。二是漏掉"变量与区间"这半边信息，填空题失分往往不是积分算错，而是把元素直接代端点或把上限写错。</p>
+          <p>接口有三处。向前，合法性来自 §5.1 的定义与定理，具体计算用 §5.2 的微积分基本公式。横向，元素就是 §2.5 的微分在任意一个量上的推广。向后，§6.2 用这三步得到面积、体积、弧长的元素，§6.3 用它得到功、水压力、质心的元素。</p>
+          <p>下一步建议：错在定义与误差那两题，回读定义 6.1 与定理 6.1，默写一遍误差的阶，再手写例 6.2 的误差计算。错在适用条件那一题，把"可加性"记牢，遇到平均值一类量走 §5.1 性质 5.4 的路径。错在含参数那两题，把例 6.3 的第（2）（3）问重写一遍再进 §6.2。</p>
+        </div>
+
+      </div>
+
+      <details class="box app-box is-aux">
+        <summary class="box-title"><span class="ico">🔧</span>工程联系</summary>
+        <p>有限元前处理把连续体离散成单元，单元内的载荷、质量与刚度都按"局部近似 + 整体可加"这两条前提写成形如 $f(x)\mathrm{d}x$ 的元素，再逐个单元累加成整体向量，与本节的三步完全一致。</p>
+        <p>燃气轮机叶片的热应力计算中，温度载荷正是这样由单元元素组装成整体载荷向量的；单元分得越细，累加结果越接近真实载荷。</p>
+      </details>
+
+      <details class="map-note is-aux">
+        <summary class="mn-head"><span>🧭</span>教材映射</summary>
+        <p class="zh" lang="zh">本节对应 <strong>Thomas 14e §5.6</strong>（Area Between Curves）与 <strong>§6.1 Volumes Using Cross-Sections</strong> 的引入部分。托马斯不单列元素法，而是把"切薄片、写 $\mathrm{d}V=A(x)\mathrm{d}x$"的做法放进各应用节的推导里；同济八版把这一方法提出来单列为 §6.1，两书的差别只在编排，不在内容。</p>
+      </details>
+
+
+            </div>
+      <div class="sec">
+<h2 id="s6-2" data-hours="2.5"
+          data-video-map="s6-2"
+          data-video-title="《高等数学》全程教学视频 2.0 版（宋浩老师）">6.2 定积分在几何学上的应用<span class="en-inline"> / Geometric Applications of the Definite Integral</span></h2>
+
+      <div data-video-entry="s6-2" data-video-pos="top"></div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">前置知识</span>　四样。① 定积分的定义与几何意义（由 §5.1 定义 5.1：它是黎曼和的极限，与分法、取法、积分变量的字母都无关）。② 牛顿-莱布尼茨公式（由 §5.2 定理 5.1：$\int_a^b f(x)\,\mathrm{d}x=F(b)-F(a)$）。本节所有公式都要靠它落地，只会列式不会算原函数等于零分。</p>
+        <p class="zh" lang="zh">③ 元素法（由 §6.1 方法 6.1：取微元、写近似、积分）。本节不新立方法，只是把元素法逐个套到面积、体积、弧长上，公式之间没有新的推导。</p>
+        <p class="zh" lang="zh">④ 计算工具：换元积分（§4.2、§5.3）、分部积分（§4.3、§5.4）、三角有理式的积分（§4.4、§5.3）。本节最容易卡住的地方不是列式，而是写出定积分之后算不出来。</p>
+        <p class="zh" lang="zh">曲线本身也是已知的：圆、抛物线、立方抛物线 $y=x^{3/2}$、心形线 $\rho=a(1+\cos\theta)$、星形线 $x=a\cos^{3}t$、$y=a\sin^{3}t$ 都在 §2.3 与 §3.3 出现过，本节不再重新定义它们。除此之外不需要新的几何知识。</p>
+        <p class="en" lang="en"><strong>Prerequisites.</strong> Four items. (1) The definition and geometric meaning of the definite integral (§5.1, Definition 5.1: it is the limit of Riemann sums and is independent of the partition, of the sample points and of the letter used for the variable). (2) The Newton-Leibniz formula (§5.2, Theorem 5.1: $\int_a^b f(x)\,\mathrm{d}x=F(b)-F(a)$). Every formula below is finished by it, so being able to set up an integral without being able to find an antiderivative earns nothing.</p>
+        <p class="en" lang="en">(3) The element method (§6.1, Method 6.1: take an element, approximate it, integrate). No new method is introduced here; the element method is simply applied in turn to area, volume and arc length, and the formulas are not re-derived.</p>
+        <p class="en" lang="en">(4) Computational tools: substitution (§4.2, §5.3), integration by parts (§4.3, §5.4) and the integration of trigonometric rational functions (§4.4, §5.3). The usual obstruction in this section is not setting up the integral but evaluating it.</p>
+        <p class="en" lang="en">The curves themselves are known as well: the circle, the parabola, the cubical parabola $y=x^{3/2}$, the cardioid $\rho=a(1+\cos\theta)$ and the astroid $x=a\cos^{3}t$, $y=a\sin^{3}t$ all appeared in §2.3 and §3.3 and are not redefined here. No further geometry is presupposed.</p>
+      </div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">本节要解决的问题</span>　§5.1 到 §5.4 处理的问题都是"给定一个函数，求它的积分"。本章反过来：先有一个几何量，要把它<strong>写成</strong>积分。哪一段量该做被积函数、哪一段该做微元、上下限取到哪里，是本节唯一要学的判断。</p>
+        <p class="zh" lang="zh">具体有四类量：平面图形的面积（直角坐标与极坐标两种描述）、旋转体的体积（绕两条坐标轴，可用圆盘法或柱壳法）、已知平行截面面积的立体的体积、平面曲线的弧长（直角坐标、参数方程、极坐标三种描述）。四类量的处理方法完全相同——取微元、写近似、积分，差别只在微元的几何形状。</p>
+        <p class="zh" lang="zh">本节先把这套判断写成可执行的步骤，再把四种公式并列成一张表备查，然后用五道例题走完每条路线。数值核对的办法只有两条：与已知公式比（圆的面积、球的体积、圆周 $\pi d$），或与夹住它的简单立体的体积比。</p>
+        <p class="zh" lang="zh">启下：求出的定积分常常含参数，例如"求曲线与直线围成的面积"或"求使面积等于 $\frac{1}{3}$ 的参数 $a$"，解这类题要把它变成含参数的方程，见例 6.6；再往后 §6.3 把这套元素法搬到物理量上，微元从面积、体积、弧长换成压力、功、引力，判断方式一字不改。</p>
+        <p class="en" lang="en"><strong>The problem this section solves.</strong> Sections §5.1 to §5.4 all answered the question "given a function, find its integral". This chapter reverses it: a geometric quantity is given first and has to be <strong>written</strong> as an integral. Deciding which quantity is the integrand, which is the element, and where the limits go is the only judgement this section teaches.</p>
+        <p class="en" lang="en">Four quantities are involved: the area of a plane region (described in rectangular or in polar coordinates), the volume of a solid of revolution (about either coordinate axis, by the disc method or the shell method), the volume of a solid whose cross-sectional areas are known, and the length of a plane curve (described in rectangular, parametric or polar form). All four are handled in the same way — take an element, approximate it, integrate — and differ only in the shape of the element.</p>
+        <p class="en" lang="en">The section first turns that judgement into executable steps, then collects the four sets of formulas in one table for reference, and finally uses five examples to walk through every route. There are only two ways to check a numerical answer: compare it with a known formula (the area of a circle, the volume of a sphere, the circumference $\pi d$), or compare it with a simple solid that encloses it.</p>
+        <p class="en" lang="en">Looking ahead, the integrals obtained often contain a parameter — as in "find the area bounded by a curve and a line" or "find the value of $a$ for which the area equals $\frac{1}{3}$" — and such problems become equations in that parameter, as in Example 6.6. Beyond that, §6.3 carries the same element method into physics, where the element changes from area, volume and arc length to pressure, work and gravitational attraction, with the judgement unchanged.</p>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>用"直"代替"曲"，再把误差压成零<span class="en-inline"> / Replace the Curved by the Straight, then Squeeze the Error to Zero</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">一块曲边图形没有现成的面积公式，一段曲线也没有现成的长度公式。可用的公式只有几条最简单的：矩形面积、圆扇形面积、圆柱体积、球缺体积、直线段的长度。</p>
+          <p class="zh" lang="zh">元素法把这几个公式变成全部公式的来源：在图形上截一个无穷小的微元，用最简单的那条公式近似它，再把微元一路积起来。这个过程与 §5.1 的四步走是同一件事——分割、近似、求和、取极限，只是分割已经分到无穷细，求和直接写成积分号。</p>
+          <p class="zh" lang="zh">微元的形状按几何量选：算面积取窄条或窄扇形，算旋转体的体积取薄圆盘、薄垫圈或薄圆筒，算弧长取一小段弦。选错形状不会得到另一个正确答案，只会得到一个量纲不同的式子，所以列式之后第一件事是核对量纲。</p>
+          <p class="zh" lang="zh">为什么微元里的"曲"被换成"直"以后结果仍然精确？因为每个微元上的误差是关于微元自身尺度的<strong>高阶无穷小</strong>：一个高为 $f$ 的窄条与它等面积的矩形相差约 $\frac{1}{2}f'\,\mathrm{d}x\,\mathrm{d}x$，一个圆盘与同底同高的薄圆柱相差约 $\pi R\,\mathrm{d}y\,\mathrm{d}y$。积分把这些高阶量累加起来仍趋于零，留下的是主部。</p>
+          <p class="en" lang="en">A region bounded by curved arcs has no ready-made area formula, and a curved arc no ready-made length formula. The only formulas available are the simplest ones: the area of a rectangle, the area of a circular sector, the volume of a cylinder, the volume of a spherical cap, and the length of a straight segment.</p>
+          <p class="en" lang="en">The element method makes those the source of all the others: cut an infinitesimal element out of the figure, approximate it by the simplest formula that fits, and integrate the elements. This is the same four-step procedure as §5.1 — partition, approximate, sum, take the limit — except that the partition is already infinitely fine and the sum is written as an integral sign.</p>
+          <p class="en" lang="en">The shape of the element is chosen according to the quantity: a narrow strip or a narrow sector for area, a thin disc, washer or cylindrical shell for a volume of revolution, a short chord for arc length. Choosing the wrong shape does not produce a different correct answer; it produces an expression of the wrong dimension, so the first check after setting up an integral is its dimension.</p>
+          <p class="en" lang="en">Why is the result still exact after the curved element is replaced by a straight one? Because the error made on each element is of <strong>higher order</strong> in the size of that element: a narrow strip of height $f$ differs from the rectangle of equal area by about $\frac{1}{2}f'\,\mathrm{d}x\,\mathrm{d}x$, and a disc differs from the thin cylinder of the same base and height by about $\pi R\,\mathrm{d}y\,\mathrm{d}y$. Integrating those higher-order terms still gives zero, and only the leading part survives.</p>
+        </div>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 6.1　面积元素与体积元素<span class="en-inline"> / Area Element and Volume Element</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">设平面图形由两条连续曲线 $y=f(x)$、$y=g(x)$ 与两条竖直线 $x=a$、$x=b$ 围成（$f(x) \ge g(x)$ 在 $[a,b]$ 上成立）。在 $[x,x+\mathrm{d}x]$ 上截出一条宽为 $\mathrm{d}x$、高为 $f(x)-g(x)$ 的窄条，它就是这个图形的<strong>面积元素</strong>（<span class="term-en">area element</span>），记作</p>
+          <p class="zh" lang="zh">$$\mathrm{d}A=\left[f(x)-g(x)\right]\mathrm{d}x.$$</p>
+          <p class="zh" lang="zh">曲线的方程以极坐标 $\rho=\rho(\theta)$ 给出时，图形由射线 $\theta=\alpha$、$\theta=\beta$ 与曲线围成，取角宽为 $\mathrm{d}\theta$ 的窄扇形作面积元素，其半径为 $\rho(\theta)$，面积由扇形公式 $\frac{1}{2}R^{2}\theta$ 给出：</p>
+          <p class="zh" lang="zh">$$\mathrm{d}A=\frac{1}{2}\rho^{2}\,\mathrm{d}\theta.$$</p>
+          <p class="zh" lang="zh">立体在每一点 $x$ 处的横截面积已知，记作 $A(x)$。用平面 $x$ 与 $x+\mathrm{d}x$ 截出厚为 $\mathrm{d}x$ 的薄片，它就是这个立体的<strong>体积元素</strong>（<span class="term-en">volume element</span>）：</p>
+          <p class="zh" lang="zh">$$\mathrm{d}V=A(x)\,\mathrm{d}x.$$</p>
+          <p class="zh" lang="zh">三条要按字面记：窄条的宽沿横轴量，所以 $\mathrm{d}A$ 里必须是 $\mathrm{d}x$；扇形的角必须从 $x$ 轴正向量起（见定理 6.2）；立体在 $x$ 处的截面是一个平面积，$A(x)$ 是它的面积而不是长度。元素法只规定微元的<strong>形状</strong>，至于把它沿哪个变量积分，下一段的分法决定。</p>
+          <p class="en" lang="en">Let a plane region be bounded by two continuous curves $y=f(x)$ and $y=g(x)$ and the vertical lines $x=a$, $x=b$, with $f(x) \ge g(x)$ on $[a,b]$. On $[x,x+\mathrm{d}x]$ cut out a narrow strip of width $\mathrm{d}x$ and height $f(x)-g(x)$; it is the <strong>area element</strong> of the region, written</p>
+          <p class="en" lang="en">$$\mathrm{d}A=\left[f(x)-g(x)\right]\mathrm{d}x.$$</p>
+          <p class="en" lang="en">When the curve is given in polar coordinates $\rho=\rho(\theta)$, the region is bounded by the rays $\theta=\alpha$, $\theta=\beta$ and the curve. Take the narrow sector of angular width $\mathrm{d}\theta$ as the area element; its radius is $\rho(\theta)$ and the sector formula $\frac{1}{2}R^{2}\theta$ gives</p>
+          <p class="en" lang="en">$$\mathrm{d}A=\frac{1}{2}\rho^{2}\,\mathrm{d}\theta.$$</p>
+          <p class="en" lang="en">Suppose the cross-sectional area of a solid at the point $x$ is known and written $A(x)$. Cutting the solid by the planes $x$ and $x+\mathrm{d}x$ produces a slab of thickness $\mathrm{d}x$, the <strong>volume element</strong> of the solid:</p>
+          <p class="en" lang="en">$$\mathrm{d}V=A(x)\,\mathrm{d}x.$$</p>
+          <p class="en" lang="en">Three points are to be read literally. The width of the strip is measured along the horizontal axis, so $\mathrm{d}A$ must carry $\mathrm{d}x$. Angles of sectors are measured from the positive $x$-axis, as Theorem 6.2 states. A cross-section of a solid is a plane region, so $A(x)$ is an area, not a length. The element method prescribes only the <strong>shape</strong> of the element; which variable it is integrated along is decided in the next paragraph.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.1　平面图形的面积<span class="en-inline"> / Area of a Plane Region</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh"><span class="thm-name">定理 6.1</span>　设 $f$、$g$ 在 $[a,b]$ 上连续，$f(x) \ge g(x)$ 在 $[a,b]$ 上成立，则曲线 $y=f(x)$、$y=g(x)$ 与直线 $x=a$、$x=b$ 围成的图形面积为</p>
+          <p class="zh" lang="zh">$$A=\int_{a}^{b}\left[f(x)-g(x)\right]\mathrm{d}x.$$</p>
+          <p class="zh" lang="zh">若两条曲线在 $[a,b]$ 内相交，则按交点把区间分段，在每一段上分别判断上下关系再求和。由定积分的几何意义，这一点可以写成一个式子：</p>
+          <p class="zh" lang="zh">$$A=\int_{a}^{b}\left|f(x)-g(x)\right|\mathrm{d}x.$$</p>
+          <p class="en" lang="en"><span class="thm-name">Theorem 6.1</span> Let $f$ and $g$ be continuous on $[a,b]$ with $f(x) \ge g(x)$ there. Then the area of the region bounded by the curves $y=f(x)$, $y=g(x)$ and the lines $x=a$, $x=b$ is</p>
+          <p class="en" lang="en">$$A=\int_{a}^{b}\left[f(x)-g(x)\right]\mathrm{d}x.$$</p>
+          <p class="en" lang="en">If the two curves meet inside $[a,b]$, split the interval at the points of intersection and decide which curve lies above on each piece. By the geometric meaning of the definite integral this can be written as a single formula:</p>
+          <p class="en" lang="en">$$A=\int_{a}^{b}\left|f(x)-g(x)\right|\mathrm{d}x.$$</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.2　极坐标下的面积<span class="en-inline"> / Area in Polar Coordinates</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh"><span class="thm-name">定理 6.2</span>　设曲线由极坐标方程 $\rho=\rho(\theta)$ 给出，$\rho(\theta)$ 在 $[\alpha,\beta]$ 上连续且 $\rho(\theta) \ge 0$，其中 $\beta-\alpha \le 2\pi$，则曲线与两条射线 $\theta=\alpha$、$\theta=\beta$ 围成的图形面积为</p>
+          <p class="zh" lang="zh">$$A=\frac{1}{2}\int_{\alpha}^{\beta}\rho^{2}(\theta)\,\mathrm{d}\theta.$$</p>
+          <p class="zh" lang="zh">适用条件有两条要盯住：曲线与两条射线必须围成一个<strong>单连通的扇形域</strong>，把 $\theta$ 从 $\alpha$ 增到 $\beta$ 时曲线恰好扫过该区域一次，不重不漏；两条射线都从极点引出，所以角度从 $x$ 轴正向量起，$\alpha$ 是这一区域的<strong>起始</strong>角。</p>
+          <p class="zh" lang="zh">图形关于极轴或关于极点对称时，只算一半再乘倍数。心形线、双纽线、三叶玫瑰线这类曲线的对称性都可以这样用，面积公式本身不变。</p>
+          <p class="en" lang="en"><span class="thm-name">Theorem 6.2</span> Let a curve be given in polar coordinates by $\rho=\rho(\theta)$, with $\rho$ continuous and $\rho(\theta) \ge 0$ on $[\alpha,\beta]$ where $\beta-\alpha \le 2\pi$. Then the area of the region bounded by the curve and the two rays $\theta=\alpha$, $\theta=\beta$ is</p>
+          <p class="en" lang="en">$$A=\frac{1}{2}\int_{\alpha}^{\beta}\rho^{2}(\theta)\,\mathrm{d}\theta.$$</p>
+          <p class="en" lang="en">Two hypotheses matter. The curve together with the two rays must bound a <strong>simply connected sector</strong>: as $\theta$ increases from $\alpha$ to $\beta$ the curve sweeps that region exactly once, neither missing a part nor covering one twice. Both rays start at the pole, so angles are measured from the positive $x$-axis and $\alpha$ is the <strong>starting</strong> angle of the region.</p>
+          <p class="en" lang="en">If the figure is symmetric about the polar axis or about the pole, integrate over one half and multiply. Cardioids, lemniscates and three-leaved roses all allow this, and the formula itself is unchanged.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.3　旋转体的体积<span class="en-inline"> / Volume of a Solid of Revolution</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh"><span class="thm-name">定理 6.3</span>　设 $f$ 在 $[a,b]$ 上连续且 $f(x) \ge 0$，平面图形由 $y=f(x)$、$x=a$、$x=b$ 与 $x$ 轴围成，$V_x$ 记它绕 $x$ 轴旋转所得立体的体积，$V_y$ 记它绕 $y$ 轴旋转所得立体的体积，则</p>
+          <p class="zh" lang="zh">$$V_{x}=\pi\int_{a}^{b}f^{2}(x)\,\mathrm{d}x, \qquad V_{y}=2\pi\int_{a}^{b}x\,f(x)\,\mathrm{d}x.$$</p>
+          <p class="zh" lang="zh">第一条是<strong>圆盘法</strong>（<span class="term-en">disc method</span>）：垂直于旋转轴的截面是半径为 $f(x)$ 的圆盘，面积 $A(x)=\pi f^{2}(x)$。第二条是<strong>柱壳法</strong>（<span class="term-en">shell method</span>）：到轴距离为 $x$ 的一层壳是半径 $x$、高 $f(x)$、厚 $\mathrm{d}x$ 的薄圆筒，侧面展开成矩形，面积 $2\pi x\,\mathrm{d}x$，体积 $2\pi x f(x)\,\mathrm{d}x$。</p>
+          <p class="zh" lang="zh">两条曲线 $y=f(x)$ 与 $y=g(x)$（$f \ge g \ge 0$）之间的图形绕 $x$ 轴旋转时，截面是垫圈，用外半径与内半径的平方差：</p>
+          <p class="zh" lang="zh">$$V_{x}=\pi\int_{a}^{b}\left[f^{2}(x)-g^{2}(x)\right]\mathrm{d}x.$$</p>
+          <p class="zh" lang="zh">绕 $y$ 轴旋转也可用圆盘法，此时横截面垂直于 $y$ 轴，半径要写成 $x$ 关于 $y$ 的函数 $x=\varphi(y)$：$V_{y}=\pi\int_{c}^{d}\varphi^{2}(y)\,\mathrm{d}y$，$c$、$d$ 是图形最低、最高点的纵坐标。两种方法算同一个立体时结果相同，选择标准只有一条：哪一种的被积函数与原函数更容易求。</p>
+          <p class="en" lang="en"><span class="thm-name">Theorem 6.3</span> Let $f$ be continuous and non-negative on $[a,b]$, and let the region be bounded by $y=f(x)$, $x=a$, $x=b$ and the $x$-axis. Write $V_x$ for the volume of the solid obtained by revolving it about the $x$-axis and $V_y$ for the volume obtained by revolving it about the $y$-axis. Then</p>
+          <p class="en" lang="en">$$V_{x}=\pi\int_{a}^{b}f^{2}(x)\,\mathrm{d}x, \qquad V_{y}=2\pi\int_{a}^{b}x\,f(x)\,\mathrm{d}x.$$</p>
+          <p class="en" lang="en">The first is the <strong>disc method</strong>: a section perpendicular to the axis of rotation is a disc of radius $f(x)$, hence of area $A(x)=\pi f^{2}(x)$. The second is the <strong>shell method</strong>: the layer at distance $x$ from the axis is a thin cylinder of radius $x$, height $f(x)$ and thickness $\mathrm{d}x$, whose lateral surface unfolds to a rectangle of area $2\pi x\,\mathrm{d}x$ and volume $2\pi x f(x)\,\mathrm{d}x$.</p>
+          <p class="en" lang="en">When the region between two curves $y=f(x)$ and $y=g(x)$ with $f \ge g \ge 0$ is revolved about the $x$-axis, the section is a washer, so the difference of the squared radii is used:</p>
+          <p class="en" lang="en">$$V_{x}=\pi\int_{a}^{b}\left[f^{2}(x)-g^{2}(x)\right]\mathrm{d}x.$$</p>
+          <p class="en" lang="en">Rotation about the $y$-axis can also be handled by discs, in which case the sections are perpendicular to the $y$-axis and the radius must be written as a function of $y$, say $x=\varphi(y)$: $V_{y}=\pi\int_{c}^{d}\varphi^{2}(y)\,\mathrm{d}y$, where $c$ and $d$ are the lowest and highest ordinates of the region. Both methods give the same volume for the same solid; the only criterion for choosing is which integrand has the easier antiderivative.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.4　弧长<span class="en-inline"> / Arc Length</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh"><span class="thm-name">定理 6.4</span>　设曲线由下列三种描述之一给出，$x$、$y$ 与 $\rho$ 都有连续的一阶导数，则曲线上一段弧的长度 $s$ 为</p>
+          <p class="zh" lang="zh">$$s=\int_{a}^{b}\sqrt{1+\left(y'\right)^{2}}\,\mathrm{d}x, \qquad s=\int_{\alpha}^{\beta}\sqrt{\left(x'\right)^{2}+\left(y'\right)^{2}}\,\mathrm{d}t, \qquad s=\int_{\alpha}^{\beta}\sqrt{\rho^{2}+\left(\rho'\right)^{2}}\,\mathrm{d}\theta.$$</p>
+          <p class="zh" lang="zh">第一式由弧长元素 $\mathrm{d}s=\sqrt{\left(\mathrm{d}x\right)^{2}+\left(\mathrm{d}y\right)^{2}}$ 与 $\mathrm{d}y=y'\,\mathrm{d}x$ 消去 $\mathrm{d}y$ 得到，$x$ 从 $a$ 变到 $b$。第二式是同一个微元在参数方程 $x=x(t)$、$y=y(t)$ 下的写法，消去 $\mathrm{d}t$ 后括号里换成两个导数。第三式由 $x=\rho\cos\theta$、$y=\rho\sin\theta$ 求微分后代回同一个微元，化简后出现 $\rho$ 与 $\rho'$。</p>
+          <p class="zh" lang="zh">三式的共同来源只有一个：弧长元素 $\mathrm{d}s=\sqrt{\left(\mathrm{d}x\right)^{2}+\left(\mathrm{d}y\right)^{2}}$，也就是"用一小段弦的长度代替一小段弧"。它是三个式子中唯一需要记的，其余两个可以由它推出。要求积分区间恰是曲线被扫过一次的范围：$t$ 的上下限必须由 $x$、$y$ 的定义域解出，与用哪个变量无关。</p>
+          <p class="en" lang="en"><span class="thm-name">Theorem 6.4</span> Let a curve be described in one of the following three ways, with $x$, $y$ and $\rho$ having continuous first derivatives. Then the length $s$ of an arc of the curve is</p>
+          <p class="en" lang="en">$$s=\int_{a}^{b}\sqrt{1+\left(y'\right)^{2}}\,\mathrm{d}x, \qquad s=\int_{\alpha}^{\beta}\sqrt{\left(x'\right)^{2}+\left(y'\right)^{2}}\,\mathrm{d}t, \qquad s=\int_{\alpha}^{\beta}\sqrt{\rho^{2}+\left(\rho'\right)^{2}}\,\mathrm{d}\theta.$$</p>
+          <p class="en" lang="en">The first formula comes from the arc element $\mathrm{d}s=\sqrt{\left(\mathrm{d}x\right)^{2}+\left(\mathrm{d}y\right)^{2}}$ together with $\mathrm{d}y=y'\,\mathrm{d}x$, which eliminates $\mathrm{d}y$, while $x$ runs from $a$ to $b$. The second is the same element written for the parametric curve $x=x(t)$, $y=y(t)$: eliminating $\mathrm{d}t$ replaces the bracket by the two derivatives. The third is obtained from $x=\rho\cos\theta$ and $y=\rho\sin\theta$ by differentiating and substituting back into the same element, and simplifies to an expression in $\rho$ and $\rho'$.</p>
+          <p class="en" lang="en">All three have a single source, the arc element $\mathrm{d}s=\sqrt{\left(\mathrm{d}x\right)^{2}+\left(\mathrm{d}y\right)^{2}}$ — a short arc replaced by a short chord. It is the only thing to memorise; the other two formulas follow from it. The interval of integration must be exactly the range over which the curve is traced once, and the limits for $t$ are found from the given domain of $x$ and $y$, independently of the letter used.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法 6.1　用元素法求几何量的步骤<span class="en-inline"> / Finding a Geometric Quantity by the Element Method</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">四类几何量的做法是同一条流水线，下面五步与 §6.1 方法 6.1 一致，只是把"物理量"换成"几何量"、"微元"换成具体形状。第 2、3 步是全部难点，其余三步是例行动作。</p>
+          <ol>
+            <li class="zh"><strong>定坐标与范围。</strong>选一个使边界方程最简单的坐标系；求出曲线之间以及曲线与坐标轴之间的全部交点，把图形在坐标面上的位置说清。上下限只能由这些交点与图形的端点决定。</li>
+            <li class="zh"><strong>选微元。</strong>在图形上取一个典型位置的自变量微元，按几何量选形状：面积取窄条或窄扇形，体积取薄圆盘、薄垫圈或薄圆筒，弧长取一小段弦。微元必须覆盖整个图形且不重叠。</li>
+            <li class="zh"><strong>用简单公式写微元。</strong>把微元的尺寸换成自变量的函数：窄条用矩形公式，扇形用 $\frac{1}{2}R^{2}\theta$，薄圆盘用 $\pi R^{2}h$，薄圆筒用 $2\pi R h\,\mathrm{d}R$ 的展开式，弦长用两点距离公式。写完立刻核对量纲与正负号。</li>
+            <li class="zh"><strong>积分。</strong>把微元在整个范围上累加，写出定积分并用牛顿-莱布尼茨公式（§5.2 定理 5.1）算出数值。</li>
+            <li class="zh"><strong>验算。</strong>用直线段长度、矩形或三角形面积、圆面积、球体积这些已知结果核对，或用夹住这个图形的简单立体把结果框在上下界之间。量纲不对或结果越界时，回到第 2 步重选微元。</li>
+          </ol>
+          <p class="en" lang="en">The four quantities are produced by one pipeline. The five steps below agree with §6.1, Method 6.1, with a physical quantity replaced by a geometric one and the element given a concrete shape. Steps 2 and 3 carry all the difficulty; the rest are routine.</p>
+          <ol>
+            <li class="en" lang="en"><strong>Set up coordinates and ranges.</strong> Choose the coordinate system in which the boundary equations are simplest; find every intersection among the curves and with the coordinate axes, and describe where the figure lies. The limits come only from those intersections and from the endpoints of the figure.</li>
+            <li class="en" lang="en"><strong>Choose the element.</strong> At a typical position take an infinitesimal element of the independent variable and give it the shape that matches the quantity: a narrow strip or a narrow sector for area, a thin disc, washer or cylindrical shell for volume, a short chord for arc length. The elements must cover the whole figure without overlapping.</li>
+            <li class="en" lang="en"><strong>Express the element by a simple formula.</strong> Replace the dimensions of the element by functions of the variable: the rectangle formula for a strip, $\frac{1}{2}R^{2}\theta$ for a sector, $\pi R^{2}h$ for a thin disc, the unfolded form $2\pi R h\,\mathrm{d}R$ for a thin shell, and the distance formula for a chord. Check the dimension and the sign at once.</li>
+            <li class="en" lang="en"><strong>Integrate.</strong> Accumulate the element over the whole range, write the definite integral and evaluate it with the Newton-Leibniz formula (§5.2, Theorem 5.1).</li>
+            <li class="en" lang="en"><strong>Check the answer.</strong> Compare with a known result — the length of a straight segment, the area of a rectangle or triangle, the area of a circle, the volume of a sphere — or bracket the figure between simple solids. If the dimension is wrong or the value falls outside the bounds, return to step 2 and choose the element again.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>几何量</th><th>描述方式</th><th>公式</th><th>微元形状</th></tr></thead>
+          <tbody>
+            <tr><td>平面图形面积</td><td>直角坐标，上下两条曲线</td><td>$A=\int_{a}^{b}\left[f(x)-g(x)\right]\mathrm{d}x$</td><td>宽 $\mathrm{d}x$、高 $f-g$ 的窄条</td></tr>
+            <tr><td>平面图形面积</td><td>极坐标 $\rho=\rho(\theta)$</td><td>$A=\frac{1}{2}\int_{\alpha}^{\beta}\rho^{2}(\theta)\,\mathrm{d}\theta$</td><td>角宽 $\mathrm{d}\theta$ 的窄扇形</td></tr>
+            <tr><td>旋转体体积</td><td>绕 $x$ 轴，圆盘法</td><td>$V=\pi\int_{a}^{b}f^{2}(x)\,\mathrm{d}x$</td><td>半径 $f(x)$ 的薄圆盘</td></tr>
+            <tr><td>旋转体体积</td><td>绕 $y$ 轴，圆盘法</td><td>$V=\pi\int_{c}^{d}\varphi^{2}(y)\,\mathrm{d}y$</td><td>半径 $\varphi(y)$ 的薄圆盘</td></tr>
+            <tr><td>旋转体体积</td><td>绕 $y$ 轴，柱壳法</td><td>$V=2\pi\int_{a}^{b}x\,f(x)\,\mathrm{d}x$</td><td>半径 $x$ 的薄圆筒</td></tr>
+            <tr><td>旋转体体积</td><td>两曲线之间，绕 $x$ 轴</td><td>$V=\pi\int_{a}^{b}\left[f^{2}(x)-g^{2}(x)\right]\mathrm{d}x$</td><td>外内半径 $f$、$g$ 的薄垫圈</td></tr>
+            <tr><td>已知截面体积</td><td>截面面积 $A(x)$ 已知</td><td>$V=\int_{a}^{b}A(x)\,\mathrm{d}x$</td><td>厚 $\mathrm{d}x$ 的薄片</td></tr>
+            <tr><td>弧长</td><td>直角坐标 $y=y(x)$</td><td>$s=\int_{a}^{b}\sqrt{1+\left(y'\right)^{2}}\,\mathrm{d}x$</td><td>端点 $(x,y)$、$(x+\mathrm{d}x,y+\mathrm{d}y)$ 的弦</td></tr>
+            <tr><td>弧长</td><td>参数方程 $x=x(t)$、$y=y(t)$</td><td>$s=\int_{\alpha}^{\beta}\sqrt{\left(x'\right)^{2}+\left(y'\right)^{2}}\,\mathrm{d}t$</td><td>同上，改用 $\mathrm{d}t$ 表示</td></tr>
+            <tr><td>弧长</td><td>极坐标 $\rho=\rho(\theta)$</td><td>$s=\int_{\alpha}^{\beta}\sqrt{\rho^{2}+\left(\rho'\right)^{2}}\,\mathrm{d}\theta$</td><td>同上，改用 $\mathrm{d}\theta$ 表示</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.1</span> 两条相交曲线围成的面积：先找交点，再分段
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>求由曲线 $y=\sin x$ 与 $y=\cos x$ 以及直线 $x=0$、$x=\dfrac{\pi}{2}$ 围成的图形面积。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，找交点。</strong>两条曲线相交处满足 $\sin x=\cos x$，即 $\tan x=1$。在 $\left[0,\dfrac{\pi}{2}\right)$ 内只有 $x=\dfrac{\pi}{4}$ 一个解（$\tan$ 在该区间上严格单调增加，所以解唯一），对应交点 $\left(\dfrac{\pi}{4},\dfrac{\sqrt{2}}{2}\right)$。</p>
+            <p><strong>第二步，判断上下关系并分段。</strong>取 $x=0$：$\cos 0=1 \gt \sin 0=0$；取 $x=\dfrac{\pi}{2}$：$\sin\dfrac{\pi}{2}=1 \gt \cos\dfrac{\pi}{2}=0$。两条曲线在交点处交换上下位置，所以要按交点把区间分成 $\left[0,\dfrac{\pi}{4}\right]$ 与 $\left[\dfrac{\pi}{4},\dfrac{\pi}{2}\right]$ 两段，各段分别以上减下。这一步是必需的：直接写 $\int_{0}^{\pi/2}(\cos x-\sin x)\mathrm{d}x$ 会把第二段的符号弄反。</p>
+            <p><strong>第三步，按定理 6.1 分段列式并求值。</strong>第一段上是 $\cos x$，下是 $\sin x$；第二段上是 $\sin x$，下是 $\cos x$：</p>
+            <p>$$A=\int_{0}^{\pi/4}\left(\cos x-\sin x\right)\mathrm{d}x+\int_{\pi/4}^{\pi/2}\left(\sin x-\cos x\right)\mathrm{d}x.$$</p>
+            <p>$\sin x$ 与 $-\cos x$ 分别是 $\cos x$ 与 $\sin x$ 的原函数（二者的导数直接核对），由牛顿-莱布尼茨公式（§5.2 定理 5.1）：</p>
+            <p>$$\int_{0}^{\pi/4}\left(\cos x-\sin x\right)\mathrm{d}x=\left[\sin x+\cos x\right]_{0}^{\pi/4}=\left(\frac{\sqrt{2}}{2}+\frac{\sqrt{2}}{2}\right)-\left(0+1\right)=\sqrt{2}-1.$$</p>
+            <p>$$\int_{\pi/4}^{\pi/2}\left(\sin x-\cos x\right)\mathrm{d}x=\left[-\cos x-\sin x\right]_{\pi/4}^{\pi/2}=\left(0-1\right)-\left(-\frac{\sqrt{2}}{2}-\frac{\sqrt{2}}{2}\right)=\sqrt{2}-1.$$</p>
+            <p>两段相等（图形关于直线 $x=\dfrac{\pi}{4}$ 对称，这也解释了两个积分值相同），故</p>
+            <p>$$A=\left(\sqrt{2}-1\right)+\left(\sqrt{2}-1\right)=2\sqrt{2}-2.$$</p>
+            <p><strong>验算一（夹逼）。</strong>整个图形含在单位正方形 $[0,\frac{\pi}{2}]\times[0,1]$ 之外的一部分里，更紧的界是：$x$ 从 $0$ 到 $\dfrac{\pi}{4}$ 时上界为 $\cos x \le 1$ 与下界 0。用外接矩形 $[0,\frac{\pi}{2}]\times[0,1]$ 的面积 $\dfrac{\pi}{2}\approx 1.571$ 作上界，得 $2\sqrt{2}-2\approx 0.828 \lt 1.571$ ✓；用内接三角形（顶点 $\left(0,0\right)$、$\left(0,1\right)$、$\left(\frac{\pi}{4},0\right)$ 与对称的另一块，总面积 $2\times\frac{1}{2}\cdot\frac{\pi}{4}\cdot 1=\frac{\pi}{4}\approx 0.785$）作下界，得 $0.785 \lt 0.828$ ✓。</p>
+            <p><strong>验算二（数值）。</strong>取 $x=\dfrac{\pi}{4}$ 处高度差为 0、$x=0$ 与 $x=\dfrac{\pi}{2}$ 处高度差为 1，两块三角形面积之和为 $2\times\dfrac{1}{2}\cdot\dfrac{\pi}{4}\cdot 1=\dfrac{\pi}{4}$；两条曲线在三角形之上凸出，面积应略大于 $\dfrac{\pi}{4}$。精确值 $2\sqrt{2}-2=0.8284$ 与 $\dfrac{\pi}{4}=0.7854$ 相差 $0.043$，量与方向都对 ✓。</p>
+            <p><strong>本题的套路。</strong>凡"求两条曲线围成的面积"，先解方程求全部交点，再逐个区间判断上下，最后按 $\int|f-g|\,\mathrm{d}x$ 分段计算。区间判断不能省——这一步漏掉，答案的符号或数值都会错。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.2</span> 极坐标面积：心形线围成的图形
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>求心形线 $\rho=a(1+\cos\theta)$（$a \gt 0$）所围图形的面积。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，定角度的范围。</strong>$\rho=a(1+\cos\theta)$ 以 $2\pi$ 为周期，且在 $[0,2\pi]$ 上 $\rho \ge 0$（$\cos\theta \ge -1$），只在 $\theta=\pi$ 处取到 $\rho=0$。曲线是封闭的，从 $\theta=0$ 到 $\theta=2\pi$ 恰好扫过整个内部一次，不重不漏，因此取 $\alpha=0$、$\beta=2\pi$，可按定理 6.2 直接计算。</p>
+            <p><strong>第二步，写面积元素。</strong>由定理 6.2，</p>
+            <p>$$\mathrm{d}A=\frac{1}{2}\rho^{2}\,\mathrm{d}\theta=\frac{1}{2}a^{2}\left(1+\cos\theta\right)^{2}\mathrm{d}\theta.$$</p>
+            <p><strong>第三步，积分。</strong>先把平方展开，再用二倍角公式把 $\cos^{2}\theta$ 降幂：$\cos^{2}\theta=\dfrac{1+\cos 2\theta}{2}$。这一步的目的是把被积函数化成常数与 $\cos\theta$、$\cos 2\theta$ 的组合，逐项都能直接求原函数：</p>
+            <p>$$A=\frac{a^{2}}{2}\int_{0}^{2\pi}\left(1+2\cos\theta+\cos^{2}\theta\right)\mathrm{d}\theta=\frac{a^{2}}{2}\int_{0}^{2\pi}\left(1+2\cos\theta+\frac{1+\cos 2\theta}{2}\right)\mathrm{d}\theta.$$</p>
+            <p>合并常数项：$1+\dfrac{1}{2}=\dfrac{3}{2}$，于是</p>
+            <p>$$A=\frac{a^{2}}{2}\int_{0}^{2\pi}\left(\frac{3}{2}+2\cos\theta+\frac{1}{2}\cos 2\theta\right)\mathrm{d}\theta.$$</p>
+            <p><strong>第四步，代入上下限。</strong>$\dfrac{3}{2}$、$2\cos\theta$、$\dfrac{1}{2}\cos 2\theta$ 的原函数分别是 $\dfrac{3}{2}\theta$、$2\sin\theta$、$\dfrac{1}{4}\sin 2\theta$，三者在 $\theta=0$ 与 $\theta=2\pi$ 处的值相同（$\sin 0=\sin 2\pi=0$，$\sin 0=\sin 4\pi=0$），只有第一项留下增量 $3\pi$：</p>
+            <p>$$A=\frac{a^{2}}{2}\left[\frac{3}{2}\theta+2\sin\theta+\frac{1}{4}\sin 2\theta\right]_{0}^{2\pi}=\frac{a^{2}}{2}\cdot\frac{3}{2}\cdot 2\pi=\frac{3\pi a^{2}}{2}.$$</p>
+            <p><strong>验算一（用对称性重算）。</strong>曲线关于极轴对称（$\cos(-\theta)=\cos\theta$），所以总面积等于上半部分的两倍，而 $\theta=0$ 到 $\theta=\pi$ 时 $\rho$ 单调减小到 0，曲线只扫过一次：</p>
+            <p>$$\frac{A}{2}=\frac{a^{2}}{2}\int_{0}^{\pi}\left(\frac{3}{2}+2\cos\theta+\frac{1}{2}\cos 2\theta\right)\mathrm{d}\theta=\frac{a^{2}}{2}\cdot\frac{3\pi}{2}=\frac{3\pi a^{2}}{4},$$</p>
+            <p>于是 $A=\dfrac{3\pi a^{2}}{2}$ ✓，与第三步一致。另外用 $\theta$ 从 $0$ 到 $2\pi$ 与从 $-\pi$ 到 $\pi$ 两种写法算出的结果相同，说明"重不漏"的条件确实满足。</p>
+            <p><strong>验算二（夹逼）。</strong>心形线整个含在半径 $2a$ 的圆内，面积不超过 $\pi(2a)^{2}=4\pi a^{2}$；又含在半径 $a$ 的圆外的那部分里，面积不小于 $\pi a^{2}$。所算结果 $\dfrac{3\pi a^{2}}{2}=1.5\pi a^{2}$ 落在 $\left[\pi a^{2},4\pi a^{2}\right]$ 内 ✓。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.3</span> 圆盘法：绕 $x$ 轴旋转，并用球的体积公式核对
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>设平面图形由抛物线 $y=2-x^{2}$ 与 $x$ 轴围成。（1）求该图形的面积；（2）求它绕 $x$ 轴旋转所得旋转体的体积 $V_{x}$；（3）求它绕 $y$ 轴旋转所得旋转体的体积 $V_{y}$。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>（1）第一步，定范围。</strong>图形由 $y=2-x^{2}$ 与 $y=0$ 围成，令 $2-x^{2}=0$ 得 $x=\pm\sqrt{2}$。在 $\left[-\sqrt{2},\sqrt{2}\right]$ 上 $2-x^{2} \ge 0$，所以取上曲线 $f(x)=2-x^{2}$、下曲线 $g(x)=0$，上下限为 $-\sqrt{2}$ 与 $\sqrt{2}$。</p>
+            <p><strong>（1）第二步，列式并求值。</strong>由定理 6.1，</p>
+            <p>$$A=\int_{-\sqrt{2}}^{\sqrt{2}}\left(2-x^{2}\right)\mathrm{d}x.$$</p>
+            <p>被积函数是偶函数（只含 $x^{2}$），由 §5.2 的偶函数性质，对称区间上的积分等于半区间积分的两倍：</p>
+            <p>$$A=2\int_{0}^{\sqrt{2}}\left(2-x^{2}\right)\mathrm{d}x=2\left[2x-\frac{x^{3}}{3}\right]_{0}^{\sqrt{2}}=2\left(2\sqrt{2}-\frac{2\sqrt{2}}{3}\right)=\frac{8\sqrt{2}}{3}.$$</p>
+            <p><strong>（1）验算。</strong>图形含在外接矩形 $\left[-\sqrt{2},\sqrt{2}\right]\times[0,2]$ 内，面积为 $2\sqrt{2}\times 2=4\sqrt{2}\approx 5.657$；$A=\dfrac{8\sqrt{2}}{3}\approx 3.771$，小于外接矩形面积 ✓。下界用底为 $2\sqrt{2}$、高为 0 的三角形无意义，改用内接矩形（宽 $2\sqrt{2}$、高 $2-2=0$）也不合适，改用 $x=\pm 1$ 处的矩形估算：宽 $2$、高 $1$ 的矩形面积 2 在图形之内，故 $A \gt 2$ ✓，$3.771$ 满足。</p>
+            <p><strong>（2）第一步，选微元。</strong>截面垂直于 $x$ 轴，半径就是 $f(x)=2-x^{2}$，截面是圆盘，面积 $A(x)=\pi\left(2-x^{2}\right)^{2}$，符合定理 6.3 第一条的圆盘法，上下限仍为 $\pm\sqrt{2}$。</p>
+            <p><strong>（2）第二步，展开并积分。</strong>先展开被积函数（这一步不能省，直接积分会漏掉交叉项）：</p>
+            <p>$$\left(2-x^{2}\right)^{2}=4-4x^{2}+x^{4},$$</p>
+            <p>$$V_{x}=\pi\int_{-\sqrt{2}}^{\sqrt{2}}\left(4-4x^{2}+x^{4}\right)\mathrm{d}x=2\pi\int_{0}^{\sqrt{2}}\left(4-4x^{2}+x^{4}\right)\mathrm{d}x.$$</p>
+            <p>第二个等号同样用了偶函数在对称区间上的性质。求原函数：</p>
+            <p>$$V_{x}=2\pi\left[4x-\frac{4x^{3}}{3}+\frac{x^{5}}{5}\right]_{0}^{\sqrt{2}}=2\pi\left(4\sqrt{2}-\frac{4}{3}\cdot 2\sqrt{2}+\frac{1}{5}\cdot 4\sqrt{2}\right).$$</p>
+            <p>这里用了 $\left(\sqrt{2}\right)^{3}=2\sqrt{2}$ 与 $\left(\sqrt{2}\right)^{5}=4\sqrt{2}$。把括号内的系数合并：$4-\dfrac{8}{3}+\dfrac{4}{5}=\dfrac{60-40+12}{15}=\dfrac{32}{15}$，于是</p>
+            <p>$$V_{x}=2\pi\cdot\frac{32\sqrt{2}}{15}=\frac{64\sqrt{2}\,\pi}{15}\approx 4.466\pi\approx 14.03.$$</p>
+            <p><strong>（2）验算。</strong>这个立体含在半径 $2$ 的球内吗？立体的最远点到原点的距离是 $\sqrt{2}$（径向）与 $2$（纵向），因此它含在半径 $2$ 的球内：$V_{x}\approx 14.03 \lt \dfrac{4}{3}\pi\cdot 2^{3}\approx 33.51$ ✓。再看外接圆柱：底为半径 $2$ 的圆、高为 $2\sqrt{2}$，体积 $\pi\cdot 4\cdot 2\sqrt{2}\approx 35.5$，$V_{x}$ 小于它 ✓。作为更细的一步，把立体看作绕 $x$ 轴的半球壳：以 $\left|x\right|$ 为半径的截面高度 $2-x^{2}$ 随 $\left|x\right|$ 由 2 降到 0，体积应在"高 2 的圆柱"与"半径 2 的半球"之间，$14.03$ 位于 $2\pi\sqrt{2}\cdot$ 相关区间内，量级正确。</p>
+            <p><strong>（3）第一步，选微元。</strong>绕 $y$ 轴旋转用柱壳法更快：到轴距离为 $x$ 的薄壳半径为 $x$、高为 $2-x^{2}$、厚为 $\mathrm{d}x$，微元体积 $\mathrm{d}V=2\pi x\left(2-x^{2}\right)\mathrm{d}x$（定理 6.3 第二条），积分范围 $x$ 从 $0$ 到 $\sqrt{2}$（图形在 $y$ 轴右侧的这一半与左侧那一半给出同样的壳，取 $x \ge 0$ 的一段正好覆盖整个立体）。</p>
+            <p><strong>（3）第二步，积分。</strong></p>
+            <p>$$V_{y}=2\pi\int_{0}^{\sqrt{2}}x\left(2-x^{2}\right)\mathrm{d}x=2\pi\int_{0}^{\sqrt{2}}\left(2x-x^{3}\right)\mathrm{d}x=2\pi\left[x^{2}-\frac{x^{4}}{4}\right]_{0}^{\sqrt{2}}=2\pi\left(2-1\right)=2\pi.$$</p>
+            <p><strong>（3）验算（改用圆盘法重算同一个立体）。</strong>同一个立体也可按定理 6.3 最后一段用圆盘法算：垂直于 $y$ 轴的截面是圆盘，内半径由左侧分支 $x=-\sqrt{2-y}$、外半径由右侧分支 $x=\sqrt{2-y}$ 给出，两者半径相同，所以截面是整个圆盘，半径 $x=\sqrt{2-y}$，$y$ 从 $0$ 到 $2$：</p>
+            <p>$$V_{y}=\pi\int_{0}^{2}\left(\sqrt{2-y}\right)^{2}\mathrm{d}y=\pi\int_{0}^{2}\left(2-y\right)\mathrm{d}y=\pi\left[2y-\frac{y^{2}}{2}\right]_{0}^{2}=\pi\left(4-2\right)=2\pi.$$</p>
+            <p>两种方法都得到 $2\pi$ ✓。再与已知公式比：本立体正好是例 6.2 之外的另一个旋转体，它的外接圆柱底半径为 $\sqrt{2}$、高为 2，体积 $4\pi$，$V_{y}=2\pi$ 恰为一半，符合顶点在轴上的抛物线旋转体的形貌 ✓。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.4</span> 弧长：先化成标准形式 $\int\sqrt{1+\left(y'\right)^{2}}\,\mathrm{d}x$
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>求曲线 $y=\dfrac{2}{3}x^{3/2}$ 在 $0 \le x \le 3$ 上的一段弧长。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，求导数并写出被积函数。</strong>$y=\dfrac{2}{3}x^{3/2}=\dfrac{2}{3}x^{1.5}$，由幂函数求导法则（§2.2 定理）</p>
+            <p>$$y'=\frac{2}{3}\cdot\frac{3}{2}x^{1/2}=x^{1/2}=\sqrt{x}.$$</p>
+            <p>所以 $1+\left(y'\right)^{2}=1+\left(\sqrt{x}\right)^{2}=1+x$，被开方式已经是 $x$ 的一次式，不需要任何配方。</p>
+            <p><strong>第二步，列弧长公式。</strong>由定理 6.4 第一式，</p>
+            <p>$$s=\int_{0}^{3}\sqrt{1+\left(y'\right)^{2}}\,\mathrm{d}x=\int_{0}^{3}\sqrt{1+x}\,\mathrm{d}x.$$</p>
+            <p><strong>第三步，作代换求原函数。</strong>令 $u=1+x$，则 $\mathrm{d}u=\mathrm{d}x$；由 $x=0$ 得 $u=1$，由 $x=3$ 得 $u=4$。按定积分换元的换限规则（§5.3）：</p>
+            <p>$$s=\int_{1}^{4}\sqrt{u}\,\mathrm{d}u=\int_{1}^{4}u^{1/2}\,\mathrm{d}u=\left[\frac{2}{3}u^{3/2}\right]_{1}^{4}=\frac{2}{3}\left(4^{3/2}-1^{3/2}\right).$$</p>
+            <p>这里 $4^{3/2}=\left(\sqrt{4}\right)^{3}=2^{3}=8$，$1^{3/2}=1$，故</p>
+            <p>$$s=\frac{2}{3}\left(8-1\right)=\frac{14}{3}\approx 4.667.$$</p>
+            <p><strong>验算一（与弦长比）。</strong>曲线端点取 $x=0$ 时 $y=0$，$x=3$ 时 $y=\dfrac{2}{3}\cdot 3^{3/2}=\dfrac{2}{3}\cdot 3\sqrt{3}=2\sqrt{3}\approx 3.464$。两点间的弦长为</p>
+            <p>$$\sqrt{3^{2}+\left(2\sqrt{3}\right)^{2}}=\sqrt{9+12}=\sqrt{21}\approx 4.583.$$</p>
+            <p>曲线比弦长：$\dfrac{14}{3}=4.667 \gt 4.583$ ✓。再看折线估计：取中间点 $x=1$，对应 $y=\dfrac{2}{3}$，折线长 $\sqrt{1+\left(\frac{2}{3}\right)^{2}}+\sqrt{\left(2\right)^{2}+\left(2\sqrt{3}-\frac{2}{3}\right)^{2}}\approx\sqrt{1.444}+\sqrt{4+9.611}\approx 1.202+3.691=4.893$；折线长大于弧长，$4.667 \lt 4.893$ ✓。弧长同时被弦长与折线长夹住，量级与数值都可信。</p>
+            <p><strong>验算二（换一种描述重算）。</strong>把曲线改写成参数方程 $x=t^{2}$、$y=\dfrac{2}{3}t^{3}$（$t \ge 0$，此时 $x=t^{2}$，$y=\frac{2}{3}\left(t^{2}\right)^{3/2}=\frac{2}{3}t^{3}$，与 $y=\frac{2}{3}x^{3/2}$ 一致）。$x'=2t$，$y'=2t^{2}$，于是</p>
+            <p>$$\left(x'\right)^{2}+\left(y'\right)^{2}=4t^{2}+4t^{4}=4t^{2}\left(1+t^{2}\right).$$</p>
+            <p>$x$ 从 $0$ 到 $3$ 对应 $t$ 从 $0$ 到 $\sqrt{3}$，由定理 6.4 第二式，</p>
+            <p>$$s=\int_{0}^{\sqrt{3}}2t\sqrt{1+t^{2}}\,\mathrm{d}t=\left[\frac{2}{3}\left(1+t^{2}\right)^{3/2}\right]_{0}^{\sqrt{3}}=\frac{2}{3}\left(4^{3/2}-1\right)=\frac{14}{3}.$$</p>
+            <p>最后一步用了 $\left(1+3\right)^{3/2}=8$。两种描述给出同一个数 ✓，说明参数方程与直角坐标的弧长公式是同一个微元的两种写法。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.5</span> 已知平行截面面积求体积；含截断条件的最大体积讨论
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>（1）立体夹在两个平面 $x=0$ 与 $x=\dfrac{\pi}{2}$ 之间，在横坐标为 $x$ 处的截面是直角三角形：斜边平行于 $x$ 轴，长度为 $\sin x$，另两条直角边之比为 $1:2$。求该立体的体积。</p>
+          <p>（2）求曲线 $y=\ln x$ 与直线 $y=0$、$x=e$ 围成的图形绕 $y$ 轴旋转所得立体的体积。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>（1）第一步，求截面的面积函数。</strong>设两条直角边为 $a$ 与 $2a$，斜边为 $\sin x$。由勾股定理 $a^{2}+\left(2a\right)^{2}=\sin^{2}x$，即 $5a^{2}=\sin^{2}x$，故 $a=\dfrac{\sin x}{\sqrt{5}}$（$x \in \left[0,\dfrac{\pi}{2}\right]$ 上 $\sin x \ge 0$，取正根）。截面面积</p>
+            <p>$$A(x)=\frac{1}{2}\cdot a\cdot 2a=a^{2}=\frac{\sin^{2}x}{5}.$$</p>
+            <p><strong>（1）第二步，列体积公式。</strong>截面面积已知，按定义 6.1 的体积元素，$V=\int_{a}^{b}A(x)\,\mathrm{d}x$：</p>
+            <p>$$V=\int_{0}^{\pi/2}\frac{\sin^{2}x}{5}\,\mathrm{d}x=\frac{1}{5}\int_{0}^{\pi/2}\sin^{2}x\,\mathrm{d}x.$$</p>
+            <p><strong>（1）第三步，降幂求值。</strong>用 $\sin^{2}x=\dfrac{1-\cos 2x}{2}$：</p>
+            <p>$$V=\frac{1}{5}\int_{0}^{\pi/2}\frac{1-\cos 2x}{2}\,\mathrm{d}x=\frac{1}{10}\left[x-\frac{\sin 2x}{2}\right]_{0}^{\pi/2}=\frac{1}{10}\left(\frac{\pi}{2}-0\right)=\frac{\pi}{20}.$$</p>
+            <p><strong>（1）验算。</strong>把每个截面换成与它等底等高的矩形或正方形来框：斜边为 $\sin x$ 的直角三角形面积不超过 $\dfrac{1}{2}\sin^{2}x$（两直角边之积最大时两直角边相等，最大面积 $\frac{1}{4}\sin^{2}x$，直角三角形面积 $\frac{1}{2}\cdot$ 两直角边之积 $\le \frac{1}{8}\sin^{2}x$）；而本题的面积 $\dfrac{\sin^{2}x}{5}=0.2\sin^{2}x$ 落在 $0$ 与 $\dfrac{1}{8}\sin^{2}x=0.125\sin^{2}x$ 之外，说明这个界太紧，改用更松的界：任何斜边为 $\sin x$ 的三角形面积不超过 $\dfrac{1}{2}\sin^{2}x=0.5\sin^{2}x$，故</p>
+            <p>$$V \le \frac{1}{2}\int_{0}^{\pi/2}\sin^{2}x\,\mathrm{d}x=\frac{1}{2}\cdot\frac{\pi}{4}=\frac{\pi}{8}\approx 0.393,$$</p>
+            <p>所算的 $\dfrac{\pi}{20}\approx 0.157$ 小于它 ✓。下界为正（截面处处非负且除 $x=0$ 外为正）✓。</p>
+            <p><strong>（2）第一步，选微元。</strong>图形由 $y=\ln x$、$y=0$、$x=e$ 围成，其中 $y=\ln x$ 在 $\left[1,e\right]$ 上从 0 升到 1，图形位于 $x$ 轴上方、$x=e$ 左侧。绕 $y$ 轴旋转，用柱壳法：到轴距离为 $x$ 的薄壳半径 $x$、高 $\ln x$、厚 $\mathrm{d}x$，$x$ 从 $1$ 到 $e$（$x \lt 1$ 时 $\ln x \lt 0$，不在图形范围内）：</p>
+            <p>$$V=2\pi\int_{1}^{e}x\ln x\,\mathrm{d}x.$$</p>
+            <p><strong>（2）第二步，分部积分。</strong>取 $u=\ln x$、$\mathrm{d}v=x\,\mathrm{d}x$，则 $\mathrm{d}u=\dfrac{1}{x}\mathrm{d}x$、$v=\dfrac{x^{2}}{2}$。由分部积分公式（§5.4）：</p>
+            <p>$$V=2\pi\left(\left[\frac{x^{2}}{2}\ln x\right]_{1}^{e}-\int_{1}^{e}\frac{x^{2}}{2}\cdot\frac{1}{x}\,\mathrm{d}x\right)=2\pi\left(\frac{e^{2}}{2}\ln e-\frac{1}{2}\ln 1-\frac{1}{2}\int_{1}^{e}x\,\mathrm{d}x\right).$$</p>
+            <p>用 $\ln e=1$、$\ln 1=0$ 与 $\int_{1}^{e}x\,\mathrm{d}x=\dfrac{e^{2}-1}{2}$：</p>
+            <p>$$V=2\pi\left(\frac{e^{2}}{2}-\frac{1}{2}\cdot\frac{e^{2}-1}{2}\right)=2\pi\cdot\frac{2e^{2}-e^{2}+1}{4}=\frac{\pi\left(e^{2}+1\right)}{2}.$$</p>
+            <p>数值上 $e^{2}\approx 7.3891$，故 $V\approx\dfrac{3.14159\times 8.3891}{2}\approx 13.18$。</p>
+            <p><strong>（2）验算（用已知平行截面面积的做法重算）。</strong>垂直于 $y$ 轴截这个立体，$y$ 从 0 到 1：$y=\ln x$ 的反函数是 $x=e^{y}$（$y=\ln x$ 在 $\left[1,e\right]$ 上单调增加，故可反解）。截面是内半径 $e^{y}$、外半径 $e$ 的垫圈，面积 $\pi\left(e^{2}-e^{2y}\right)$。于是</p>
+            <p>$$V=\pi\int_{0}^{1}\left(e^{2}-e^{2y}\right)\mathrm{d}y=\pi\left[e^{2}y-\frac{e^{2y}}{2}\right]_{0}^{1}=\pi\left(e^{2}-\frac{e^{2}}{2}+\frac{1}{2}\right)=\frac{\pi\left(e^{2}+1\right)}{2}.$$</p>
+            <p>与柱壳法结果相同 ✓。夹逼核对：立体含在底面半径 $e$、高 1 的圆柱内（体积 $\pi e^{2}\approx 23.14$），又含在"底面半径 $1$、高 1 的圆柱之外、底面半径 $e$ 的圆柱之内"的环柱内（体积 $\pi\left(e^{2}-1\right)\approx 20.0$），所算的 $13.18$ 小于这两个上界 ✓；同时它大于底面半径 $1$、高 1 的圆柱加柱壳中位估计 $\pi\left(e^{2}-e\right)$? 前者为 $\pi\approx 3.14$，$13.18$ 大于它 ✓。</p>
+            <p><strong>本题考查什么。</strong>第（1）问的截面面积不是由旋转产生的，必须先从几何条件（勾股定理）算出 $A(x)$，再套 $V=\int A(x)\mathrm{d}x$——这是"已知平行截面面积"一类的标准考法；第（2）问考同一立体的两种算法必须给出同一个数，并且在柱壳法里把被积函数选成能用分部积分求出的 $x\ln x$。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.6</span> 曲线把已知区域三等分：把面积条件化成含参数的方程
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $a \gt 0$，曲线 $y=ax^{2}$（$x \ge 0$）与直线 $y=x$ 围成一个区域。已知该曲线把区域的面积分成 $1:2$ 两部分，求 $a$ 的值。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，求交点，定出区域的边界。</strong>$y=ax^{2}$ 与 $y=x$ 相交处满足 $ax^{2}=x$，即 $x\left(ax-1\right)=0$。在 $a \gt 0$ 时得 $x=0$ 与 $x=\dfrac{1}{a}$，对应交点 $O\left(0,0\right)$ 与 $P\left(\dfrac{1}{a},\dfrac{1}{a}\right)$。所以区域是由曲线段 $OP$ 与直线段 $OP$ 围成的封闭图形，整个位于 $\left[0,\dfrac{1}{a}\right]$ 上。</p>
+            <p><strong>第二步，判断上下关系并算总面积。</strong>取内点 $x=\dfrac{1}{2a}$：此时 $ax=\dfrac{1}{2} \lt 1$，故 $ax^{2}=x\cdot ax \lt x$，直线在上曲线在下。由定理 6.1，</p>
+            <p>$$S=\int_{0}^{1/a}\left(x-ax^{2}\right)\mathrm{d}x=\left[\frac{x^{2}}{2}-\frac{ax^{3}}{3}\right]_{0}^{1/a}=\frac{1}{2a^{2}}-\frac{1}{3a^{2}}=\frac{1}{6a^{2}}.$$</p>
+            <p><strong>第三步，算曲线下方那一块。</strong>曲线段 $OP$ 与 $x$ 轴、直线 $x=\dfrac{1}{a}$ 所围的部分都在 $\left[0,\dfrac{1}{a}\right]$ 上且位于直线之下，所以它整个含在区域之内，是曲线把区域分出的两块之一：</p>
+            <p>$$S_{1}=\int_{0}^{1/a}ax^{2}\,\mathrm{d}x=\left[\frac{ax^{3}}{3}\right]_{0}^{1/a}=\frac{1}{3a^{2}}.$$</p>
+            <p>另一块（曲线之上、直线之下）的面积为 $S_{2}=S-S_{1}=\dfrac{1}{6a^{2}}-\dfrac{1}{3a^{2}}=-\dfrac{1}{6a^{2}}$，出现负值，说明这一步的划分有问题。原因在于：$S_{1}$ 与 $S_{2}$ 都从 $x=0$ 积到 $x=\dfrac{1}{a}$，而真正把区域分成两块的是<strong>曲线段 $OP$ 本身</strong>。曲线在直线下方，它上方的部分确实从 $x=0$ 延伸到 $x=\dfrac{1}{a}$，但它下方的部分只延伸到曲线与 $x$ 轴的交点，也就是只有 $x=0$ 一点，面积为 0。</p>
+            <p>这说明 $y=ax^{2}$ 与 $y=x$ 围成的区域不可能被这条曲线分成两块正面积的部分——分出的两块必须由不同的边界围成。重新读题：条件"分成 $1:2$ 两部分"中的第二块，来自曲线与区域的另一条边界，即曲线 $y=ax^{2}$ 把<strong>整个第一象限内由 $y=x$ 与 $x$ 轴所夹的角形</strong>分出的两块。按这个口径重算。</p>
+            <p><strong>第四步，按正确口径重算。</strong>角形由 $y=x$、$x$ 轴与任何一条竖直线围成，其中含在 $y=ax^{2}$ 与 $y=x$ 之间的那块是三角形的<strong>上部</strong>：由 $x=0$、$x=\dfrac{1}{a}$、$y=ax^{2}$、$y=x$ 围成，面积 $S_{2}$ 不是 $S-S_{1}$，而要按"上减下"从 $x=0$ 积到曲线与 $x$ 轴的交点之外的整个角形边界。</p>
+            <p>为了让"两块"都有明确边界，取曲线 $y=ax^{2}$ 与直线 $y=x$ 围成的区域，用<strong>直线 $x=\dfrac{t}{a}$</strong>（$0 \lt t \lt 1$）把它分成两块，求使两块面积之比为 $1:2$ 的 $t$。左侧那块由 $x=0$、$x=\dfrac{t}{a}$、$y=ax^{2}$、$y=x$ 围成：</p>
+            <p>$$S_{L}(t)=\int_{0}^{t/a}\left(x-ax^{2}\right)\mathrm{d}x=\frac{t^{2}}{2a^{2}}-\frac{t^{3}}{3a^{2}}=\frac{t^{2}\left(3-2t\right)}{6a^{2}}.$$</p>
+            <p>总面积由第二步知 $S=\dfrac{1}{6a^{2}}$，故右侧那块为</p>
+            <p>$$S_{R}(t)=S-S_{L}(t)=\frac{1-t^{2}\left(3-2t\right)}{6a^{2}}=\frac{1-3t^{2}+2t^{3}}{6a^{2}}.$$</p>
+            <p>条件 $S_{L}:S_{R}=1:2$ 等价于 $2S_{L}=S_{R}$，即 $2t^{2}\left(3-2t\right)=1-3t^{2}+2t^{3}$。整理：$6t^{2}-4t^{3}=1-3t^{2}+2t^{3}$，即</p>
+            <p>$$6t^{3}-9t^{2}+1=0.$$</p>
+            <p><strong>第五步，解这个三次方程。</strong>代入 $t=\dfrac{1}{2}$：$6\cdot\dfrac{1}{8}-9\cdot\dfrac{1}{4}+1=\dfrac{3}{4}-\dfrac{9}{4}+1=-0.5 \ne 0$，不是根。代入 $t=\dfrac{1}{3}$：$6\cdot\dfrac{1}{27}-9\cdot\dfrac{1}{9}+1=\dfrac{2}{9}-1+1=\dfrac{2}{9} \ne 0$。代入 $t=\dfrac{2}{3}$：$6\cdot\dfrac{8}{27}-9\cdot\dfrac{4}{9}+1=\dfrac{16}{9}-4+1=\dfrac{16}{9}-3=\dfrac{-11}{9} \ne 0$。</p>
+            <p>有理根不存在，说明 $t$ 是三次方程的实根而不是有理数。用二分法定位：设 $g(t)=6t^{3}-9t^{2}+1$。$g(0)=1 \gt 0$，$g(0.3)=6\times 0.027-9\times 0.09+1=0.162-0.81+1=0.352 \gt 0$，$g(0.4)=6\times 0.064-9\times 0.16+1=0.384-1.44+1=-0.056 \lt 0$，故在 $\left(0.3,0.4\right)$ 内有一根。继续：$g(0.39)=6\times 0.059319-9\times 0.1521+1=0.355914-1.3689+1=-0.012986 \lt 0$，$g(0.38)=6\times 0.054872-9\times 0.1444+1=0.329232-1.2996+1=0.029632 \gt 0$，故根在 $\left(0.38,0.39\right)$ 内。</p>
+            <p>$$g(0.385)=6\times 0.0570676-9\times 0.148225+1=0.3424056-1.334025+1=0.0083806 \gt 0,$$</p>
+            <p>$$g(0.387)=6\times 0.0579606-9\times 0.149769+1=0.3477636-1.347921+1=-0.0001574 \lt 0,$$</p>
+            <p>故根在 $\left(0.385,0.387\right)$ 内，取 $t \approx 0.3869$（$g(0.3869)=6\times 0.057913-9\times 0.149692+1=0.347477-1.347225+1=0.000252 \gt 0$，$g(0.3871)\approx-0.000105 \lt 0$，故 $t\approx 0.3870$）。</p>
+            <p><strong>第六步，回答原题。</strong>等分直线的位置是 $x=\dfrac{t}{a}$，其中 $t\approx 0.3870$ 是 $6t^{3}-9t^{2}+1=0$ 在 $(0,1)$ 内的实根；把它化成关于 $a$ 的条件就是</p>
+            <p>$$a=\frac{t}{x_{0}},$$</p>
+            <p>其中 $x_{0}$ 是题设给定的等分直线位置。原题只给"分成 $1:2$"而不给直线的位置，$a$ 仍不唯一——比值条件定出的是 $t$，$a$ 还依赖被分割的横坐标。这类题的正确做法是先把比条件化成关于无量纲量 $t=ax$ 的方程，再回代求 $a$。</p>
+            <p><strong>验算一（数值核对）。</strong>取 $a=1$，则区域由 $y=x$ 与 $y=x^{2}$ 在 $\left[0,1\right]$ 上围成，总面积 $\dfrac{1}{6}\approx 0.16667$，等分直线在 $x=t\approx 0.3870$。左侧面积</p>
+            <p>$$S_{L}=\frac{t^{2}\left(3-2t\right)}{6}=\frac{0.14977\times\left(3-0.7740\right)}{6}=\frac{0.14977\times 2.2260}{6}=\frac{0.33339}{6}\approx 0.055565.$$</p>
+            <p>右侧面积 $S_{R}=0.16667-0.055565=0.111105$。比值 $S_{L}:S_{R}=0.055565:0.111105\approx 1:1.9995$，在四位有效数字内等于 $1:2$ ✓。</p>
+            <p><strong>验算二（换一组参数）。</strong>取 $a=4$，区域在 $\left[0,\dfrac{1}{4}\right]$ 上，总面积 $\dfrac{1}{6\times 16}=\dfrac{1}{96}\approx 0.0104167$，等分直线在 $x=\dfrac{0.3870}{4}\approx 0.09675$。左侧面积按同一公式 $S_{L}=\dfrac{t^{2}\left(3-2t\right)}{6a^{2}}=\dfrac{0.33339}{6\times 16}=\dfrac{0.33339}{96}\approx 0.0034728$，右侧为 $0.0104167-0.0034728=0.0069439$，比值 $0.0034728:0.0069439\approx 1:2.0000$ ✓。两块面积之比与 $a$ 无关，只由 $t$ 决定，这正是第五步把参数组合成 $t$ 的依据。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点</div>
+        <p class="zh" lang="zh"><strong>两条曲线相交而不分段。</strong>$\int_{a}^{b}\left(f-g\right)\mathrm{d}x$ 只在 $f \ge g$ 处处成立时才等于面积。曲线在区间内相交时必须按交点分段，各段分别判断上下；要么就写 $\int_{a}^{b}\left|f-g\right|\mathrm{d}x$。判断上下最简单的办法是取一个内点代入，例如例 6.1 取 $x=\dfrac{\pi}{2}$。</p>
+        <p class="zh" lang="zh"><strong>绕 $y$ 轴却按 $x$ 积分，或绕 $x$ 轴却按 $y$ 积分。</strong>圆盘法的微元垂直于旋转轴，所以积分变量必须沿着旋转轴；柱壳法的微元平行于旋转轴，所以积分变量垂直于旋转轴。绕 $y$ 轴用圆盘法写成 $\pi\int_{a}^{b}f^{2}(x)\mathrm{d}x$ 是最常见的降格错误，那个积分算出的是绕 $x$ 轴的体积。</p>
+        <p class="zh" lang="zh"><strong>把柱壳法的半径与高对调。</strong>半径是"这一层壳到旋转轴的距离"，高是"图形在这一层的长度"。例 6.3 第（3）问中半径是 $x$、高是 $2-x^{2}$；若把两者对调写成 $2\pi\int\left(2-x^{2}\right)^{2}\mathrm{d}x$，量纲仍对但数值错误。一个快速判据：半径在高为 0 的地方也应为 0。</p>
+        <p class="zh" lang="zh"><strong>用圆盘法时没有把半径写成 $y$ 的函数。</strong>绕 $y$ 轴用圆盘法，半径必须由曲线方程反解出 $x=\varphi(y)$，且上下限要换成立体的最低、最高点的纵坐标。直接沿用 $f(x)$ 当半径会得到一个混合了 $x$ 与 $y$ 的式子，无法积分。同理，平行截面法里的 $A(x)$ 必须是截面的面积，不是长度或周长。</p>
+        <p class="zh" lang="zh"><strong>极坐标面积漏掉系数 $\dfrac{1}{2}$ 或把 $\rho$ 当成 $\rho^{2}$。</strong>扇形面积是 $\dfrac{1}{2}R^{2}\theta$，所以被积函数是 $\rho^{2}$ 而不是 $\rho$；心形线的面积 $\dfrac{3\pi a^{2}}{2}$ 与"内切圆面积 $\pi a^{2}$"的比是 $1.5$，若漏掉 $\frac{1}{2}$ 会得到 $3\pi a^{2}$，比外接圆 $4\pi a^{2}$ 小不了多少，从夹逼核对就能立刻发现。</p>
+        <p class="zh" lang="zh"><strong>角度范围扫重或扫漏。</strong>定理 6.2 要求 $\theta$ 从 $\alpha$ 到 $\beta$ 恰好扫过区域一次。心形线在 $[0,2\pi]$ 上正适合；若对只存在于某个象限的曲线（例如三叶玫瑰线的一叶）照抄 $[0,2\pi]$，会把同一块面积算成三倍。定范围时先问：曲线从哪里出发、在哪里回到极点。</p>
+        <p class="zh" lang="zh"><strong>弧长公式里把 $\sqrt{1+\left(y'\right)^{2}}$ 写成 $1+y'$ 或漏掉根号。</strong>弧长元素是 $\sqrt{\left(\mathrm{d}x\right)^{2}+\left(\mathrm{d}y\right)^{2}}$，提出 $\mathrm{d}x$ 之后根号不能去掉。参数方程下同理：被积函数必须是两个导数平方和的算术根，不能只留 $\left|x'\right|$。验算时一定要与两端点的弦长比较，弧长必须大于弦长。</p>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <p class="zh" lang="zh"><span class="tag">高频</span><strong>求两条曲线围成的面积。</strong>看到"求曲线 $y=f(x)$ 与 $y=g(x)$ 围成的图形面积"，先解 $f=g$ 求交点，再判断上下，最后按 $\int\left|f-g\right|\mathrm{d}x$ 分段。含参数的题要先把面积写成参数的函数再令它等于题设值，见例 6.6。</p>
+        <p class="zh" lang="zh"><span class="tag">高频</span><strong>求旋转体的体积。</strong>看到"绕 $x$ 轴旋转"优先试圆盘法（$\pi\int f^{2}$），被积函数含 $\sqrt{\ }$ 或需要反解 $x=\varphi(y)$ 时改用柱壳法（$2\pi\int x f$）；看到"绕 $y$ 轴旋转"通常直接用柱壳法。两曲线之间的旋转用垫圈公式，平方相减而不是先相减再平方。</p>
+        <p class="zh" lang="zh"><span class="tag">高频</span><strong>求弧长或求旋转体的侧面积的前置步骤。</strong>直角坐标用 $\int\sqrt{1+\left(y'\right)^{2}}\mathrm{d}x$，先把 $\left(y'\right)^{2}$ 化到能开方的形式（常见于 $y=\dfrac{2}{3}x^{3/2}$、$y=\dfrac{x^{2}}{2}$ 这类题）。参数方程与极坐标的公式都是同一个微元，选哪一条只取决于题目给的是哪种描述。</p>
+        <p class="zh" lang="zh"><span class="tag">小题</span><strong>极坐标面积。</strong>填空题常给心形线、双纽线、玫瑰线的一叶或两叶，考 $\dfrac{1}{2}\int\rho^{2}\mathrm{d}\theta$ 与角度范围。看到"由曲线 $\rho=\rho(\theta)$ 所围成"，要先确认出题人给的范围是整条曲线还是一叶。</p>
+        <p class="zh" lang="zh"><span class="tag">易错</span>积分变量与旋转轴的关系是本节最容易丢分的地方：圆盘法沿旋转轴积分，柱壳法垂直于旋转轴积分，两者不可混。另一个失分点是极坐标里角度范围扫重，以及算完不验算——用圆的面积、球的体积、$\pi d$ 这些已知结果比一下，几秒钟就能发现量级错误。</p>
+        <p class="zh" lang="zh"><span class="tag">考研</span><strong>综合题型两路。</strong>①"已知平行截面面积求体积"：截面形状由斜边、直角边比、椭圆轴长等条件给出，先用平面几何算出 $A(x)$，再 $V=\int A(x)\mathrm{d}x$，见例 6.5（1）。②"旋转体体积的等分或最值条件"：先写体积作为参数的函数，再解方程，见例 6.6；解这类题常出现三次方程，注意用因式分解或先换元把参数组合成一个变量。</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch6-2" data-title="6.2 定积分在几何学上的应用 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>设 $f(x)$、$g(x)$ 在 $[a,b]$ 上连续，且 $f(x) \ge g(x)$ 在 $[a,b]$ 上成立，则由曲线 $y=f(x)$、$y=g(x)$ 与直线 $x=a$、$x=b$ 围成的图形面积为（　）。</p>
+            <p class="q-stem-en" lang="en">Let $f(x)$ and $g(x)$ be continuous on $[a,b]$ with $f(x) \ge g(x)$ there. The area of the region bounded by $y=f(x)$, $y=g(x)$ and $x=a$, $x=b$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\displaystyle\int_{a}^{b}\left[f(x)-g(x)\right]\mathrm{d}x$</span></li>
+            <li><span class="opt-body">$\displaystyle\int_{a}^{b}\left[g(x)-f(x)\right]\mathrm{d}x$</span></li>
+            <li><span class="opt-body">$\displaystyle\int_{a}^{b}f(x)\,\mathrm{d}x\cdot\int_{a}^{b}g(x)\,\mathrm{d}x$</span></li>
+            <li><span class="opt-body">$\displaystyle\int_{a}^{b}\left[f^{2}(x)-g^{2}(x)\right]\mathrm{d}x$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>按定理 6.1，上下曲线之间的面积是上减下，A 对。B 把两条曲线的位置对调，得到的是相反数；上曲线必须是 $f$，取内点代入即可确认。C 把两个积分相乘是把面积当成长度相乘，量纲已经是长度四次方；面积必须写成高度差对宽的积分，而不是两个积分之积。D 是旋转体体积的垫圈公式里的被积函数（定理 6.3），它是外内半径平方差，本处不涉及旋转，没有平方的理由。</p>
+            <p class="en" lang="en">By Theorem 6.1 the area is the integral of upper minus lower, so A is right. B reverses the two curves and gives the negative value; C multiplies two integrals, which is not an area; D is the integrand of the washer formula for a volume of revolution (Theorem 6.3) and has nothing to do with a plane area.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>设 $\rho=\rho(\theta)$ 在 $[\alpha,\beta]$ 上连续且非负，$\beta-\alpha \le 2\pi$，则曲线 $\rho=\rho(\theta)$ 与两条射线 $\theta=\alpha$、$\theta=\beta$ 围成的图形面积为（　）。</p>
+            <p class="q-stem-en" lang="en">Let $\rho=\rho(\theta)$ be continuous and non-negative on $[\alpha,\beta]$ with $\beta-\alpha \le 2\pi$. The area bounded by the curve $\rho=\rho(\theta)$ and the rays $\theta=\alpha$, $\theta=\beta$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\displaystyle\frac{1}{2}\int_{\alpha}^{\beta}\rho^{2}(\theta)\,\mathrm{d}\theta$</span></li>
+            <li><span class="opt-body">$\displaystyle\int_{\alpha}^{\beta}\rho^{2}(\theta)\,\mathrm{d}\theta$</span></li>
+            <li><span class="opt-body">$\displaystyle\frac{1}{2}\int_{\alpha}^{\beta}\rho(\theta)\,\mathrm{d}\theta$</span></li>
+            <li><span class="opt-body">$\displaystyle2\int_{\alpha}^{\beta}\rho^{2}(\theta)\,\mathrm{d}\theta$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>面积元素是角宽为 $\mathrm{d}\theta$、半径为 $\rho$ 的窄扇形，由扇形公式 $\dfrac{1}{2}R^{2}\theta$ 得 $\mathrm{d}A=\dfrac{1}{2}\rho^{2}\mathrm{d}\theta$，所以 A 对（定理 6.2）。B 漏掉系数 $\dfrac{1}{2}$，结果恰好是把面积算成两倍：$A=\pi R^{2}$ 的圆写成 $\rho=R$、角度 $[0,2\pi]$，B 给出 $2\pi R^{2}$，显然是圆的二倍。C 把 $\rho$ 当成 $\rho^{2}$，量纲不对——$\rho\mathrm{d}\theta$ 是弧长不是面积，这个积分给的是弧长的一半。D 的系数把 $\dfrac{1}{2}$ 写成了 2，是 $\dfrac{1}{2}$ 与 $\dfrac{1}{2\pi}$ 一类的混淆。</p>
+            <p class="en" lang="en">The area element is a narrow sector of angle $\mathrm{d}\theta$ and radius $\rho$, so $\mathrm{d}A=\frac{1}{2}\rho^{2}\mathrm{d}\theta$ and A is correct (Theorem 6.2). B omits the factor $\frac{1}{2}$ and doubles the answer; C integrates $\rho$ instead of $\rho^{2}$ and has the wrong dimension; D uses the factor 2 instead of $\frac{1}{2}$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>由曲线 $y=x^{2}$、$x$ 轴与直线 $x=1$ 围成的图形绕 $x$ 轴旋转所得立体的体积为（　）。</p>
+            <p class="q-stem-en" lang="en">The region bounded by $y=x^{2}$, the $x$-axis and the line $x=1$ is revolved about the $x$-axis. The volume of the solid is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{\pi}{5}$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{5}$</span></li>
+            <li><span class="opt-body">$\dfrac{\pi}{3}$</span></li>
+            <li><span class="opt-body">$\dfrac{\pi}{2}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>绕 $x$ 轴用圆盘法（定理 6.3 第一条），半径是 $f(x)=x^{2}$，所以被积函数是 $\left(x^{2}\right)^{2}=x^{4}$：$V=\pi\int_{0}^{1}x^{4}\mathrm{d}x=\pi\left[\dfrac{x^{5}}{5}\right]_{0}^{1}=\dfrac{\pi}{5}$，A 对。</p>
+            <p>B 漏掉因子 $\pi$，得到的数没有体积的量纲。C 是把半径当成 $x$ 算的（$V=\pi\int_{0}^{1}x^{2}\mathrm{d}x=\dfrac{\pi}{3}$），那是曲线 $y=x$ 旋转的体积，不是 $y=x^{2}$；本题半径是 $x^{2}$，平方后是 $x^{4}$。D 是把半径与高的位置搞混，或把 $\int_{0}^{1}x\,\mathrm{d}x$ 乘上 $\pi$。验算：该立体含在底面半径 1、高 1 的圆柱（体积 $\pi\approx 3.14$）内，$\dfrac{\pi}{5}\approx 0.628$ 小于它 ✓；又含在底面半径 0 的一个圆锥之外，值为正 ✓。</p>
+            <p class="en" lang="en">The disc method gives radius $x^{2}$, hence $V=\pi\int_{0}^{1}x^{4}\mathrm{d}x=\frac{\pi}{5}$, so A is right. B drops the factor $\pi$; C uses radius $x$, which belongs to $y=x$; D confuses the radius with the height. The solid lies inside the cylinder of radius 1 and height 1, whose volume is $\pi$, so the value is plausible.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>由曲线 $y=x^{2}$、直线 $y=x$ 围成的图形绕 $y$ 轴旋转所得立体的体积为（　）。</p>
+            <p class="q-stem-en" lang="en">The region bounded by $y=x^{2}$ and $y=x$ is revolved about the $y$-axis. The volume of the solid is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{\pi}{6}$</span></li>
+            <li><span class="opt-body">$\dfrac{\pi}{3}$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{6}$</span></li>
+            <li><span class="opt-body">$\dfrac{\pi}{12}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>交点由 $x^{2}=x$ 得 $x=0$ 与 $x=1$，在 $[0,1]$ 上 $x \ge x^{2}$。绕 $y$ 轴用柱壳法（定理 6.3 第二条）：半径 $x$、高 $x-x^{2}$，故</p>
+            <p>$$V=2\pi\int_{0}^{1}x\left(x-x^{2}\right)\mathrm{d}x=2\pi\int_{0}^{1}\left(x^{2}-x^{3}\right)\mathrm{d}x=2\pi\left(\frac{1}{3}-\frac{1}{4}\right)=2\pi\cdot\frac{1}{12}=\frac{\pi}{6}.$$</p>
+            <p>A 对。B 是把 $\int_{0}^{1}\left(x-x^{2}\right)^{2}\mathrm{d}x$ 一类式子误当成柱壳的被积函数，或漏掉柱壳法里的高；$\dfrac{\pi}{3}$ 恰是取高为 $x$ 时的结果，等于把内层边界丢掉。C 漏掉因子 $2\pi$。D 把系数 $2$ 写成了 $1$（即只算半个图形或漏了 $2\pi x$ 中的系数）。</p>
+            <p>核对：体积也可用圆盘法算，垂直于 $y$ 轴的截面是内半径 $x=y$、外半径 $x=\sqrt{y}$ 的垫圈，$V=\pi\int_{0}^{1}\left(\left(\sqrt{y}\right)^{2}-y^{2}\right)\mathrm{d}y=\pi\int_{0}^{1}\left(y-y^{2}\right)\mathrm{d}y=\pi\left(\frac{1}{2}-\frac{1}{3}\right)=\dfrac{\pi}{6}$ ✓，与柱壳法一致。</p>
+            <p class="en" lang="en">The curves meet at $x=0$ and $x=1$, and $x \ge x^{2}$ on $[0,1]$. With shells the radius is $x$ and the height $x-x^{2}$, so $V=2\pi\int_{0}^{1}\left(x^{2}-x^{3}\right)\mathrm{d}x=\frac{\pi}{6}$, which is A. B drops the inner boundary, C drops the factor $2\pi$, and D loses a factor 2. The same value follows from the washer method with inner radius $y$ and outer radius $\sqrt{y}$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于弧长，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about arc length are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">三种描述（直角坐标、参数方程、极坐标）的公式都来自同一个弧长元素 $\mathrm{d}s=\sqrt{\left(\mathrm{d}x\right)^{2}+\left(\mathrm{d}y\right)^{2}}$</span></li>
+            <li data-correct="true"><span class="opt-body">用 $\displaystyle s=\int_{a}^{b}\sqrt{1+\left(y'\right)^{2}}\,\mathrm{d}x$ 时，积分区间正是 $x$ 的取值范围，无需再作判断</span></li>
+            <li><span class="opt-body">极坐标下弧长公式被积函数是 $\sqrt{\rho^{2}+\left(\rho'\right)^{2}}$，其中 $\rho'$ 是对 $\theta$ 求导</span></li>
+            <li><span class="opt-body">参数方程下若 $\left(x'\right)^{2}+\left(y'\right)^{2}$ 能开方，被积函数可以写成 $x'+y'$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>选 A、B、C。A 是定理 6.4 的核心：三个公式都是同一个微元的改写，记一个即可推另外两个。</p>
+            <p>B 对，但有一个前提——所给区间上曲线必须被扫过一次；对 $y=y(x)$ 这种显式表示，$x$ 走遍定义区间时曲线恰好被扫一次，所以直接取该区间；若曲线是自交的（例如极坐标下的双纽线），就不能照抄整个范围。C 对，极坐标下 $\rho$ 是 $\theta$ 的函数，$\rho'=\dfrac{\mathrm{d}\rho}{\mathrm{d}\theta}$，这正是公式里出现 $\rho'$ 而不是 $\dfrac{\mathrm{d}\rho}{\mathrm{d}x}$ 的原因。D 错：$\sqrt{\left(x'\right)^{2}+\left(y'\right)^{2}}$ 一般不能拆成 $x'+y'$——只有 $\sqrt{a^{2}+b^{2}}=a+b$ 当且仅当 $ab=0$ 时才成立。取 $x=t$、$y=t$，真实的弧长元素是 $\sqrt{2}\mathrm{d}t$，而 $x'+y'=2$，两者不同，D 会把圆 $x=\cos t$、$y=\sin t$ 的弧长 $2\pi$ 算成 $0$（因为 $x'+y'=-\sin t+\cos t$ 在一个周期上积分为 0），从结果就能看出荒谬。</p>
+            <p class="en" lang="en">A, B and C are correct: the three formulas share the arc element $\mathrm{d}s=\sqrt{\left(\mathrm{d}x\right)^{2}+\left(\mathrm{d}y\right)^{2}}$, the interval is the range of $x$ for an explicit curve, and in polar coordinates $\rho'$ means $\mathrm{d}\rho/\mathrm{d}\theta$. D is false because $\sqrt{\left(x'\right)^{2}+\left(y'\right)^{2}}$ cannot be replaced by $x'+y'$; for the unit circle that substitution gives 0 instead of $2\pi$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+          <div class="q-stem">
+            <p>由 $y=f(x)$（$f(x) \ge 0$）、$x=a$、$x=b$ 与 $x$ 轴围成的图形，绕 $y$ 轴旋转所得立体的体积可以写成 $\displaystyle V=\pi\int_{a}^{b}f^{2}(x)\,\mathrm{d}x$。</p>
+            <p class="q-stem-en" lang="en">For the region bounded by $y=f(x)$ with $f(x) \ge 0$, the lines $x=a$, $x=b$ and the $x$-axis, the volume of the solid obtained by revolving it about the $y$-axis is $V=\pi\int_{a}^{b}f^{2}(x)\,\mathrm{d}x$.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+            <li><span class="opt-body">正确</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>错误。$\pi\int_{a}^{b}f^{2}(x)\mathrm{d}x$ 是绕 <strong>$x$ 轴</strong>旋转的体积（圆盘法，定理 6.3 第一条），它的截面垂直于 $x$ 轴、半径为 $f(x)$。绕 $y$ 轴旋转时截面垂直于 $y$ 轴，半径是 $x$（由 $y=f(x)$ 反解出的 $x=\varphi(y)$），因此正确的写法是 $V=\pi\int_{c}^{d}\varphi^{2}(y)\mathrm{d}y$（$c$、$d$ 为图形最低、最高点的纵坐标），或者用柱壳法写成 $V=2\pi\int_{a}^{b}x f(x)\mathrm{d}x$。用 $a=0$、$b=1$、$f(x)=1$ 检验：这个图形是单位正方形，绕 $y$ 轴旋转得到底面半径 1、高 1 的圆柱，体积为 $\pi$；题中公式给出 $\pi\int_{0}^{1}1\,\mathrm{d}x=\pi$，恰好也等于 $\pi$，这是唯一一个两种方法数值相同的特例（因为半径在 $[0,1]$ 上恒为 1），不能据此认为公式普遍成立。换 $f(x)=x$ 再验：绕 $y$ 轴旋转得到底面半径 1、高 1 的圆锥，体积 $\dfrac{\pi}{3}$；题中公式给出 $\pi\int_{0}^{1}x^{2}\mathrm{d}x=\dfrac{\pi}{3}$，又是同一个值——这两个巧合都来自 $f$ 与反函数形状的关系，而 $f(x)=2-x$（$x \in [0,1]$）时绕 $y$ 轴的体积为 $\pi\int_{1}^{2}\varphi^{2}(y)\mathrm{d}y=\pi\int_{1}^{2}\left(2-y\right)^{2}\mathrm{d}y=\dfrac{\pi}{3}$，题中公式却给出 $\pi\int_{0}^{1}\left(2-x\right)^{2}\mathrm{d}x=\dfrac{7\pi}{3}$，两者不同，公式确实错误。</p>
+            <p class="en" lang="en">False: $\pi\int_{a}^{b}f^{2}(x)\mathrm{d}x$ is the volume for rotation about the $x$-axis. For rotation about the $y$-axis the sections are perpendicular to the $y$-axis and the radius is $x=\varphi(y)$, so one must use $\pi\int_{c}^{d}\varphi^{2}(y)\mathrm{d}y$ or the shell formula $2\pi\int_{a}^{b}x f(x)\mathrm{d}x$. The test $f(x)=2-x$ on $[0,1]$ gives $\frac{\pi}{3}$ by the correct method but $\frac{7\pi}{3}$ by the formula stated.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>曲线 $y=x^{3/2}$ 在 $0 \le x \le 4$ 上的一段弧长为 ______。（保留根号）</p>
+            <p class="q-stem-en" lang="en">Find the length of the arc of $y=x^{3/2}$ for $0 \le x \le 4$, leaving the answer in radicals.</p>
+          </div>
+          <div class="q-answer" data-answer="\frac{8}{27}(10\sqrt{10}-1)|8/27(10\sqrt{10}-1)|(8/27)(10\sqrt{10}-1)"></div>
+          <div class="q-explain">
+            <p>第一步，求导数。$y=x^{3/2}$，故 $y'=\dfrac{3}{2}x^{1/2}$，$\left(y'\right)^{2}=\dfrac{9x}{4}$。第二步，化简被积函数：$1+\dfrac{9x}{4}=\dfrac{4+9x}{4}$，所以</p>
+            <p>$$s=\int_{0}^{4}\sqrt{1+\left(y'\right)^{2}}\,\mathrm{d}x=\frac{1}{2}\int_{0}^{4}\sqrt{4+9x}\,\mathrm{d}x.$$</p>
+            <p>第三步，作代换。令 $u=4+9x$，则 $\mathrm{d}u=9\mathrm{d}x$，即 $\mathrm{d}x=\dfrac{1}{9}\mathrm{d}u$；$x=0$ 对应 $u=4$，$x=4$ 对应 $u=40$：</p>
+            <p>$$s=\frac{1}{2}\cdot\frac{1}{9}\int_{4}^{40}u^{1/2}\,\mathrm{d}u=\frac{1}{18}\left[\frac{2}{3}u^{3/2}\right]_{4}^{40}=\frac{1}{27}\left(40^{3/2}-4^{3/2}\right).$$</p>
+            <p>这里 $40^{3/2}=40\sqrt{40}=40\cdot 2\sqrt{10}=80\sqrt{10}$，$4^{3/2}=8$，故</p>
+            <p>$$s=\frac{80\sqrt{10}-8}{27}=\frac{8\left(10\sqrt{10}-1\right)}{27}.$$</p>
+            <p>数值核对：$\sqrt{10}\approx 3.1623$，$10\sqrt{10}\approx 31.623$，故 $s\approx\dfrac{8\times 30.623}{27}\approx\dfrac{244.98}{27}\approx 9.07$。端点由 $x=0$、$y=0$ 到 $x=4$、$y=8$，弦长 $\sqrt{16+64}=\sqrt{80}\approx 8.94 \lt 9.07$ ✓，弧长略大于弦长，合理。</p>
+            <p>常见错法：漏掉根号里的系数，把被积函数写成 $y'=\dfrac{3}{2}\sqrt{x}$ 直接积分得到 $\int_{0}^{4}\dfrac{3}{2}\sqrt{x}\mathrm{d}x=8$；或忘掉 $\mathrm{d}x=\dfrac{1}{9}\mathrm{d}u$ 中的 $\dfrac{1}{9}$，结果放大 9 倍；或代换后上下限仍写 0 与 4。</p>
+            <p class="en" lang="en">Here $y'=\frac{3}{2}x^{1/2}$ and $1+\left(y'\right)^{2}=\frac{4+9x}{4}$, so $s=\frac{1}{2}\int_{0}^{4}\sqrt{4+9x}\,\mathrm{d}x$. With $u=4+9x$ the limits become 4 and 40 and $s=\frac{1}{27}\left(40^{3/2}-4^{3/2}\right)=\frac{8\left(10\sqrt{10}-1\right)}{27}\approx 9.07$, which slightly exceeds the chord $\sqrt{80}\approx 8.94$. Dropping the radical, the factor $\frac{1}{9}$ or the new limits are the usual errors.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <div class="q-stem">
+            <p>曲线 $y=\ln x$ 与直线 $y=0$、$x=e$ 围成的图形绕 $y$ 轴旋转所得立体的体积为 ______。</p>
+            <p class="q-stem-en" lang="en">The region bounded by $y=\ln x$, $y=0$ and $x=e$ is revolved about the $y$-axis. Find the volume of the solid.</p>
+          </div>
+          <div class="q-answer" data-answer="\frac{\pi(e^{2}+1)}{2}|\pi(e^{2}+1)/2|(e^{2}+1)\pi/2|1.5708(e^{2}+1)"></div>
+          <div class="q-explain">
+            <p>第一步，判范围。$y=\ln x$ 在 $\left[1,e\right]$ 上从 0 升到 1，图形由 $x=1$、$x=e$、$y=0$ 与曲线围成，位于 $x$ 轴上方。第二步，按柱壳法写积分（半径 $x$、高 $\ln x$，厚 $\mathrm{d}x$）：</p>
+            <p>$$V=2\pi\int_{1}^{e}x\ln x\,\mathrm{d}x.$$</p>
+            <p>第三步，分部积分。取 $u=\ln x$、$\mathrm{d}v=x\,\mathrm{d}x$，得 $\mathrm{d}u=\dfrac{1}{x}\mathrm{d}x$、$v=\dfrac{x^{2}}{2}$，于是</p>
+            <p>$$V=2\pi\left(\frac{e^{2}}{2}-\frac{1}{2}\int_{1}^{e}x\,\mathrm{d}x\right)=2\pi\left(\frac{e^{2}}{2}-\frac{e^{2}-1}{4}\right)=\frac{\pi\left(e^{2}+1\right)}{2}\approx 13.18.$$</p>
+            <p>另一条路是用平行截面：垂直于 $y$ 轴的截面是内半径 $e^{y}$、外半径 $e$ 的垫圈，$V=\pi\int_{0}^{1}\left(e^{2}-e^{2y}\right)\mathrm{d}y=\pi\left(e^{2}-\dfrac{e^{2}}{2}+\dfrac{1}{2}\right)=\dfrac{\pi\left(e^{2}+1\right)}{2}$，与上一步一致 ✓。</p>
+            <p>常见错法：把积分范围取成 $[0,e]$（在 $[0,1]$ 上 $\ln x \le 0$，图形不在那里）；把柱壳的高写成 $x$ 而不是 $\ln x$；分部积分时把 $v$ 取成 $x^{2}$ 而漏掉 $\dfrac{1}{2}$，结果放大一倍。核对：立体含在底面半径 $e$、高 1 的圆柱内（体积 $\pi e^{2}\approx 23.1$），$\dfrac{\pi\left(e^{2}+1\right)}{2}\approx 13.18$ 小于它 ✓。</p>
+            <p class="en" lang="en">With shells, $V=2\pi\int_{1}^{e}x\ln x\,\mathrm{d}x$, and integration by parts gives $2\pi\left(\frac{e^{2}}{2}-\frac{e^{2}-1}{4}\right)=\frac{\pi\left(e^{2}+1\right)}{2}\approx 13.18$. The washer method in $y$ confirms the same value. Taking the limits as $[0,e]$, choosing the height $x$ instead of $\ln x$, or losing the factor $\frac{1}{2}$ in the antiderivative are the usual errors.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷围绕一条主线——<strong>把几何量写成定积分</strong>。定理 6.1 给面积、定理 6.2 给极坐标面积、定理 6.3 给旋转体的体积、定理 6.4 给弧长，四组公式的来源都是同一个微元判断：取一小块，用最简单的公式近似它，再积分。八道题里，第一至三题查面积与圆盘法的基本式，第四至六题查柱壳法、极坐标面积与弧长公式，最后两题把"选哪种微元"和"先化简再积分"合在一起考。</p>
+          <p>最常见的错法有三个。<strong>一是积分变量与旋转轴错位。</strong>第七题把绕 $y$ 轴的体积写成 $\pi\int f^{2}(x)\mathrm{d}x$，那是绕 $x$ 轴的式子；圆盘法沿旋转轴积分、柱壳法垂直于旋转轴积分，这一条要背成条件反射。<strong>二是漏系数或漏因子。</strong>第二题丢 $\dfrac{1}{2}$、第四题丢 $2\pi$、第六题丢 $\sqrt{\ }$ 或 $\dfrac{1}{9}$，都是同一个毛病：只记住了"要积分什么"，没核对量纲与几何直观。<strong>三是范围判断跳过。</strong>第五题 B 项看起来是废话，其实限定了"曲线在区间上只被扫过一次"；第六题若把 $\int_{0}^{4}$ 当成 $\int_{0}^{e}$ 或把 $\ln x$ 的定义域忘记，结果立刻错。</p>
+          <p>知识联系有两处要接住。<strong>向前</strong>，本节全部计算落在 §5.2 的牛顿-莱布尼茨公式上，例 6.4、例 6.5 用的换元与分部积分分别是 §5.3、§5.4 的内容；体积的两种算法（圆盘法与柱壳法）本质上是同一个立体沿不同方向切的两次累加，与 §6.1 元素法的"换一个自变量重算一遍"是同一件事。<strong>向后</strong>，§6.3 把微元换成物理量以后，本节所有判断原样可用；再往后，求旋转体侧面积要用到本节第六、七题的弧长元素 $\mathrm{d}s$，重积分里求曲顶柱体的体积要与本节"已知平行截面面积"的做法对照着看。</p>
+          <p>下一步建议：错在第一、二、六题，回读定义 6.1 与定理 6.2、6.4，把三种弧长公式各自从弧长元素推一遍，写清每个代换的上下限；错在第三、四、七题，把同一道题用圆盘法与柱壳法各算一次并把两个积分都写出来，对照哪一步换了变量；错在第五、八题，回读例 6.5，把"截面面积必须先算出来"和"被积函数要先化简到能求原函数"这两句抄在笔记上。四类公式都能默写并各配一道题后，再进 §6.3。</p>
+        </div>
+
+      </div>
+
+      <details class="box app-box is-aux">
+        <summary class="box-title"><span class="ico">🔧</span>工程联系</summary>
+        <p>发动机涡轮盘的回转轮廓由若干段圆弧与直线拼接，盘体体积按本节"已知平行截面面积"的做法算：把轴线方向切成薄片，每片截面为环形，累加即得；涡轮盘设计手册里的"旋转体体积"公式就是 $V=\int A(x)\mathrm{d}x$。</p>
+        <p>叶片型面沿轴线的包络体积、机匣内壁的容积、储箱的装油量，工程上都按同一条流水线处理；有限元前处理软件把实体离散成一层层截面后求体积，用的仍是本节的微元法，只是截面面积由数值方法给出。</p>
+      </details>
+
+      <details class="map-note is-aux">
+        <summary class="mn-head"><span>🧭</span>教材映射</summary>
+        <p class="zh" lang="zh">本节对应 <strong>Thomas 14e §6.1 Volumes Using Cross-Sections</strong>、<strong>§6.2 Volumes Using Cylindrical Shells</strong> 与 <strong>§6.3 Arc Length</strong>。托马斯的 §6.1 把"已知平行截面面积"（含圆盘法与垫圈法）统一处理，§6.2 专门讲柱壳法，§6.3 讲弧长，三节合起来正是本节的体积与弧长两部分。</p>
+        <p class="zh" lang="zh">差异有三处。<strong>① 平面图形的面积。</strong>同济把它单列一小节（本节的第一部分，含极坐标面积），托马斯没有独立的面积节，矩形微元求面积放在 §5.6 Substitution and Area Between Curves，极坐标面积则推迟到 <strong>§11.5 Areas and Lengths in Polar Coordinates</strong>。<strong>② 弧长的位置。</strong>托马斯 §6.3 与本节同章；极坐标下的弧长同样在 §11.5，与极坐标面积放在一起。<strong>③ 元素法。</strong>同济 §6.1 先立元素法再分节应用，托马斯不单列元素法，而是直接在各节里用微元。查英文书时，极坐标的面积与弧长不要在第 6 章找，直接翻 §11.5。</p>
+      </details>
+
+
+            </div>
+      <div class="sec">
+<h2 id="s6-3" data-hours="1.5"
+          data-video-map="s6-3"
+          data-video-title="《高等数学》全程教学视频 2.0 版（宋浩老师）">6.3 定积分在物理学上的应用<span class="en-inline"> / Physical Applications of the Definite Integral</span></h2>
+
+      <div data-video-entry="s6-3" data-video-pos="top"></div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">前置知识</span>　三样。① 定积分的定义与性质（§5.1）：区间可加性用来把整体拆成小段，保号性用来判断积分值的符号；② 微积分基本定理（§5.2）与换元积分法（§4.2），本节所有积分最终都靠它们算出来；③ §6.1 的元素法：把待求量在 $[x,x+\mathrm{d}x]$ 上近似写成 $\mu(x)\,\mathrm{d}x$，再积分。</p>
+        <p class="zh" lang="zh">物理侧只需要三条初等结论：密度均匀时质量等于密度乘体积；静止液体在深度 $h$ 处的压强为 $\rho gh$；万有引力定律 $F=\frac{Gm_1m_2}{r^{2}}$。变力做功的概念在本节按"力乘位移"逐段使用，不需要动能定理。除此之外不需要新的积分技巧。</p>
+        <p class="en" lang="en"><strong>Prerequisites.</strong> Three items. (1) The definition and properties of the definite integral (§5.1): additivity over intervals splits a whole into small pieces, and sign preservation fixes the sign of a result. (2) The Fundamental Theorem of Calculus (§5.2) and integration by substitution (§4.2); every integral below is finally evaluated with them. (3) The element method of §6.1: approximate the required quantity on $[x,x+\mathrm{d}x]$ by $\mu(x)\,\mathrm{d}x$, then integrate.</p>
+        <p class="en" lang="en">On the physics side only three elementary facts are needed: mass equals density times volume when the density is uniform; the pressure of a fluid at rest at depth $h$ is $\rho gh$; and Newton's law of gravitation $F=\frac{Gm_1m_2}{r^{2}}$. Work done by a variable force is used here piecewise as force times displacement, with no appeal to the work-energy theorem. No further integration technique is required.</p>
+      </div>
+
+      <div class="bi">
+        <p class="zh" lang="zh"><span class="struct-label">本节要解决的问题</span>　§6.1 与 §6.2 用元素法处理几何量：面积、体积、弧长。物理量的结构相同，只是密度函数 $\mu$ 从"高""截面面积"换成了"力""压强与宽度""质量密度"。本节把这批模型一次建完，并算出结果。</p>
+        <p class="zh" lang="zh">范围限定为四类：力沿直线做功 $W=\int_{a}^{b}F(x)\,\mathrm{d}x$；竖直闸门上的水压力 $P=\int_{0}^{H}\rho g\,h\,L(h)\,\mathrm{d}h$；细棒对质点的引力；函数在区间上的平均值 $\bar{y}=\frac{1}{b-a}\int_{a}^{b}f(x)\,\mathrm{d}x$。平均值一节回接 §5.1 的积分中值定理，它是本节唯一非物理的模型。</p>
+        <p class="zh" lang="zh">本节只做"写出积分 + 完成一次积分"。闸门是曲面、或力不沿直线方向时，微元本身还要再分解，那属于 §10.1 二重积分与 §11.1 曲线积分的范围。启下：§7.1 用本节的水压力模型说明一阶微分方程中"变力—变加速度"的建模方式，两者共用同一套微元语言。</p>
+        <p class="en" lang="en"><strong>The problem this section solves.</strong> Sections §6.1 and §6.2 applied the element method to geometric quantities: area, volume, arc length. Physical quantities have the same structure; only the density function $\mu$ changes, from a height or a cross-sectional area to a force, a pressure times a width, or a mass density. This section builds that family of models once and evaluates them.</p>
+        <p class="en" lang="en">Four models are covered: work done by a force along a line, $W=\int_{a}^{b}F(x)\,\mathrm{d}x$; the force of water on a vertical gate, $P=\int_{0}^{H}\rho g\,h\,L(h)\,\mathrm{d}h$; the attraction of a thin rod for a point mass; and the average value of a function on an interval, $\bar{y}=\frac{1}{b-a}\int_{a}^{b}f(x)\,\mathrm{d}x$. The average value is the one model that is not physical; it leads back to the Mean Value Theorem for Integrals of §5.1.</p>
+        <p class="en" lang="en">Only two operations are required here: write the integral, and carry out one integration. When the gate is curved or the force does not act along a straight line, the element itself must be decomposed further, and that belongs to double integrals in §10.1 and line integrals in §11.1. Looking ahead, §7.1 reuses the water-pressure model to illustrate how a first-order differential equation is set up when force and acceleration vary together; the language of elements is the same.</p>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>四个物理量，一个数学动作<span class="en-inline"> / Four Physical Quantities, One Mathematical Move</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">四个问题看起来互不相干：弹簧拉长一段要多少功？水对闸门推多大力？细棒吸引一个质点有多强？一组数据的平均水平是多少？它们的共同点是——所求的量在整个区间上<strong>分布不均匀</strong>，每一小段上的"密度"都不一样。</p>
+          <p class="zh" lang="zh">处理办法与 §6.1 完全相同：在 $[x,x+\mathrm{d}x]$ 上把变化的密度换成常数，写出 $dQ=\mu(x)\,\mathrm{d}x$，再从 $a$ 积到 $b$。这一步的合法性由 §5.1 的定积分定义保证：$\mu$ 连续时，$\mu(x)\,\mathrm{d}x$ 与真实的小段增量之差是 $\mathrm{d}x$ 的高阶无穷小，把它换成积分不改变极限。</p>
+          <p class="zh" lang="zh">读完本节要能回答一个问题：给你一个没见过的物理量，你能不能自己写出它的微元？判据只有一条——把物理量写成"密度乘小段长度"，检查量纲是不是对得上。量纲对不上，微元一定写错了。</p>
+          <p class="en" lang="en">The four questions look unrelated: how much work is needed to stretch a spring, how hard does water push on a gate, how strongly does a thin rod attract a point mass, and what is the average level of a set of data? What they share is that the required quantity is distributed unevenly over the interval, so its density changes from piece to piece.</p>
+          <p class="en" lang="en">The treatment is exactly that of §6.1: on $[x,x+\mathrm{d}x]$ replace the varying density by a constant, write $dQ=\mu(x)\,\mathrm{d}x$, and integrate from $a$ to $b$. The definition of the definite integral in §5.1 justifies this step: for continuous $\mu$ the difference between $\mu(x)\,\mathrm{d}x$ and the true increment of the piece is of higher order than $\mathrm{d}x$, so replacing the sum by an integral does not change the limit.</p>
+          <p class="en" lang="en">After this section you should be able to answer one question: given an unfamiliar physical quantity, can you write down its element yourself? There is a single test — express the quantity as a density times a short length, and check that the dimensions balance. If they do not, the element is wrong.</p>
+        </div>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 6.3　四类物理量的元素法定义<span class="en-inline"> / Four Quantities Defined by the Element Method</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">① 总（累积）量。设某量沿 $x$ 轴分布，在点 $x$ 处的分布密度为 $\mu(x)$，且 $\mu$ 在 $[a,b]$ 上连续。在 $[x,x+\mathrm{d}x]$ 上视密度为常数，得<span class="term">元素</span>（<span class="term-en">element</span>）$\mathrm{d}Q=\mu(x)\,\mathrm{d}x$，该量在 $[a,b]$ 上的总量为</p>
+          <p class="zh" lang="zh">$$Q=\int_{a}^{b}\mu(x)\,\mathrm{d}x.$$</p>
+          <p class="zh" lang="zh">取 $\mu(x) \equiv 1$ 回到 $Q=b-a$，即区间长度；取 $\mu(x)=f(x) \ge 0$ 回到曲边梯形的面积，即 §5.1 定义 5.1。</p>
+          <p class="zh" lang="zh">② 变力沿直线做功。设力 $F(x)$ 沿 $x$ 轴方向、作用点在 $x$ 处，$F$ 在 $[a,b]$ 上连续。在 $[x,x+\mathrm{d}x]$ 上力近似不变，元素为 $\mathrm{d}W=F(x)\,\mathrm{d}x$，于是</p>
+          <p class="zh" lang="zh">$$W=\int_{a}^{b}F(x)\,\mathrm{d}x.$$</p>
+          <p class="zh" lang="zh">③ 水压力。设一块竖直平板浸在静止液体中，液面与平板顶端的距离为 $0$，板底在深度 $H$ 处。深度 $h$ 处水平截线的长为 $L(h)$，液体密度为 $\rho$，重力加速度为 $g$。深度 $h$ 处的压强为 $\rho gh$，在 $[h,h+\mathrm{d}h]$ 上视压强为常数、截线长为 $L(h)$，元素为 $\mathrm{d}P=\rho g\,h\,L(h)\,\mathrm{d}h$，于是板一侧所受的总压力为</p>
+          <p class="zh" lang="zh">$$P=\int_{0}^{H}\rho g\,h\,L(h)\,\mathrm{d}h.$$</p>
+          <p class="zh" lang="zh">④ 函数的平均值。设 $f(x)$ 在 $[a,b]$ 上连续。把 $[a,b]$ 等分，用各分点处函数值的算术平均值逼近整体水平，取极限得到 $f$ 在 $[a,b]$ 上的<span class="term">平均值</span>（<span class="term-en">average value</span>）</p>
+          <p class="zh" lang="zh">$$\bar{y}=\frac{1}{b-a}\int_{a}^{b}f(x)\,\mathrm{d}x.$$</p>
+          <p class="en" lang="en">(1) An accumulated quantity. Let a quantity be distributed along the $x$-axis with density $\mu(x)$, continuous on $[a,b]$. On $[x,x+\mathrm{d}x]$ the density is treated as constant, giving the <span class="term-en">element</span> $\mathrm{d}Q=\mu(x)\,\mathrm{d}x$, and the total quantity on $[a,b]$ is</p>
+          <p class="en" lang="en">$$Q=\int_{a}^{b}\mu(x)\,\mathrm{d}x.$$</p>
+          <p class="en" lang="en">Taking $\mu(x) \equiv 1$ recovers $Q=b-a$, the length of the interval; taking $\mu(x)=f(x) \ge 0$ recovers the area of a curved trapezoid, that is, Definition 5.1 of §5.1.</p>
+          <p class="en" lang="en">(2) Work done by a variable force along a line. Let a force $F(x)$ act along the $x$-axis with its point of application at $x$, and let $F$ be continuous on $[a,b]$. On $[x,x+\mathrm{d}x]$ the force is nearly constant, so $\mathrm{d}W=F(x)\,\mathrm{d}x$ and</p>
+          <p class="en" lang="en">$$W=\int_{a}^{b}F(x)\,\mathrm{d}x.$$</p>
+          <p class="en" lang="en">(3) Force of a fluid. Let a vertical flat plate be immersed in a fluid at rest, with its top at the free surface and its bottom at depth $H$. Let the horizontal cross-section at depth $h$ have length $L(h)$, let the fluid have density $\rho$, and let $g$ be the acceleration of gravity. The pressure at depth $h$ is $\rho gh$. On $[h,h+\mathrm{d}h]$ the pressure is treated as constant and the cross-section has length $L(h)$, so $\mathrm{d}P=\rho g\,h\,L(h)\,\mathrm{d}h$, and the total force on one side is</p>
+          <p class="en" lang="en">$$P=\int_{0}^{H}\rho g\,h\,L(h)\,\mathrm{d}h.$$</p>
+          <p class="en" lang="en">(4) Average value of a function. Let $f(x)$ be continuous on $[a,b]$. Divide $[a,b]$ into equal parts and approximate the general level by the arithmetic mean of the sampled values; passing to the limit gives the <span class="term-en">average value</span> of $f$ on $[a,b]$,</p>
+          <p class="en" lang="en">$$\bar{y}=\frac{1}{b-a}\int_{a}^{b}f(x)\,\mathrm{d}x.$$</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.3　做功公式与压力公式<span class="en-inline"> / Work and Fluid Force</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh"><span class="thm-name">定理 6.3</span>　设力 $F(x)$ 在 $[a,b]$ 上连续，则力沿 $x$ 轴把作用点从 $a$ 移到 $b$ 所做的功为</p>
+          <p class="zh" lang="zh">$$W=\int_{a}^{b}F(x)\,\mathrm{d}x.$$</p>
+          <p class="zh" lang="zh"><span class="thm-name">定理 6.4</span>　设竖直平板在静止液体中，板顶位于液面处，板的水平截线长为 $L(h)$（$0 \le h \le H$）且 $L$ 连续，液体密度为 $\rho$，则液体对板一侧的总压力为</p>
+          <p class="zh" lang="zh">$$P=\int_{0}^{H}\rho g\,h\,L(h)\,\mathrm{d}h.$$</p>
+          <p class="zh" lang="zh">两个公式都是定义 6.3 的直接应用，条件只有"连续"这一条：连续保证 $F$、$L$ 在小区间上的变化可忽略，元素与真实增量的差是 $\mathrm{d}x$ 的高阶无穷小。直观含义：常力做功是"力乘位移"，变力做功要把每一点处的力都乘上它自己那一小段位移再加起来；水压力同理，压强随深度线性增大，深处那一小条受到的压力比浅处大。</p>
+          <p class="zh" lang="zh">水的容重 $\rho g$ 在数值上取 $9.8\times 10^{3}\,\text{N}/\text{m}^{3}$；容重的单位是 N/m³，所以 $\rho g\,h\,L(h)\,\mathrm{d}h$ 的单位是 N，与力的量纲一致。</p>
+          <p class="en" lang="en"><span class="thm-name">Theorem 6.3</span> Let a force $F(x)$ be continuous on $[a,b]$. Then the work done by the force in moving its point of application from $a$ to $b$ along the $x$-axis is</p>
+          <p class="en" lang="en">$$W=\int_{a}^{b}F(x)\,\mathrm{d}x.$$</p>
+          <p class="en" lang="en"><span class="thm-name">Theorem 6.4</span> Let a vertical plate be immersed in a fluid at rest with its top at the free surface, let the horizontal cross-section at depth $h$ have length $L(h)$ for $0 \le h \le H$ with $L$ continuous, and let the fluid have density $\rho$. Then the total force of the fluid on one side of the plate is</p>
+          <p class="en" lang="en">$$P=\int_{0}^{H}\rho g\,h\,L(h)\,\mathrm{d}h.$$</p>
+          <p class="en" lang="en">Both formulas follow at once from Definition 6.3. The only hypothesis is continuity: it makes the change of $F$ and of $L$ over a short subinterval negligible, so that the difference between the element and the true increment is of higher order than $\mathrm{d}x$. The intuition is that constant-force work is force times displacement, while variable-force work multiplies each value of the force by its own short displacement and adds the products; the fluid force is the same idea, with pressure growing linearly with depth, so a deep strip is pushed harder than a shallow one.</p>
+          <p class="en" lang="en">The weight density of water $\rho g$ is numerically $9.8\times 10^{3}\,\text{N}/\text{m}^{3}$. Its unit is N/m³, so the unit of $\rho g\,h\,L(h)\,\mathrm{d}h$ is N, the dimension of a force.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法 6.3　元素法建模的五步<span class="en-inline"> / Five Steps of Element Modelling</span></div>
+        <div class="bi">
+          <p class="zh" lang="zh">五步的顺序固定，前四步都不动笔算积分。凡是被积表达式写错，问题都出在第二步或第三步，而不是积分技巧。</p>
+          <ol>
+            <li class="zh"><strong>建坐标。</strong>选一个便于表述的原点与正方向，并把自变量的取值范围写清。水压力问题把 $h$ 轴竖直向下、原点取在液面，$L(h)$ 的表达式才最简单。</li>
+            <li class="zh"><strong>取微元。</strong>在 $[x,x+\mathrm{d}x]$ 上把变化的因素换成常数，写出 $\mathrm{d}Q$。写不出 $\mathrm{d}Q$ 就说明"密度"还没找对。</li>
+            <li class="zh"><strong>核量纲。</strong>检查 $\mathrm{d}Q$ 的单位是否是所求量的单位。功的微元必须是 J（N·m），压力的微元必须是 N。</li>
+            <li class="zh"><strong>定上下限。</strong>把自变量的两个端点代进去，注意正方向与上下限的对应；用下限小于上限书写。</li>
+            <li class="zh"><strong>算积分并验算。</strong>算出结果后做两件事：核对量纲，再用一个退化情形估算数量级。常用的退化判据是 —— 结果是"总压力"时，它应当等于 $\rho g \times$ 面积 $\times$ 形心深度。</li>
+          </ol>
+          <p class="en" lang="en">The five steps are always in this order, and the first four involve no integration at all. If the integrand is wrong, the error lies in step 2 or step 3, not in the technique of integration.</p>
+          <ol>
+            <li class="en" lang="en"><strong>Set up coordinates.</strong> Choose an origin and a positive direction that make the description simple, and state the range of the variable. For a fluid force the choice of $h$ pointing downward from the free surface keeps $L(h)$ simplest.</li>
+            <li class="en" lang="en"><strong>Take an element.</strong> On $[x,x+\mathrm{d}x]$ replace whatever varies by a constant and write $\mathrm{d}Q$. If $\mathrm{d}Q$ cannot be written, the density has not been identified correctly.</li>
+            <li class="en" lang="en"><strong>Check the dimensions.</strong> The unit of $\mathrm{d}Q$ must be the unit of the required quantity: an element of work must be a joule, an element of force a newton.</li>
+            <li class="en" lang="en"><strong>Fix the limits.</strong> Substitute the two endpoints of the variable, keeping track of the positive direction, and write the smaller value as the lower limit.</li>
+            <li class="en" lang="en"><strong>Integrate and verify.</strong> After integrating, check the dimensions and estimate the order of magnitude in a degenerate case. For a total fluid force the standard check is that it must equal $\rho g$ times the area times the depth of the centroid.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.1</span> 弹簧做功：先定出劲度系数，再积分
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>把质量为 $2\,\text{kg}$ 的物体挂在弹簧下端，弹簧伸长了 $9.8\,\text{cm}$。求使弹簧再伸长 $9.8\,\text{cm}$ 需做的功（取 $g=9.8\,\text{m}/\text{s}^{2}$）。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，确定自变量的意义并求劲度系数。</strong>取弹簧自然长度的下端点为原点，$x$ 轴竖直向下，$x$ 表示弹簧在自然长度之外的伸长量，单位用 m。由胡克定律，弹性力的大小与伸长量成正比：设弹性力为 $F_{s}$，则 $F_{s}=kx$，$k$ 为劲度系数。</p>
+            <p>物体静止挂在弹簧下端时，弹性力与重力平衡。此时伸长量 $x_0=9.8\,\text{cm}=0.098\,\text{m}$，所以</p>
+            <p>$$k=\frac{mg}{x_0}=\frac{2\times 9.8}{0.098}=\frac{19.6}{0.098}=200\ \text{N}/\text{m}.$$</p>
+            <p><strong>第二步，写功的微元。</strong>外力缓慢拉动弹簧时，与弹性力平衡，故所需外力满足 $F(x)=kx$，方向沿 $x$ 轴正方向。在这一段位移 $[x,x+\mathrm{d}x]$ 上力近似不变，由定义 6.3 的 ②，$\mathrm{d}W=F(x)\,\mathrm{d}x=kx\,\mathrm{d}x$。</p>
+            <p><strong>第三步，定上下限并积分。</strong>起始伸长量 $0.098\,\text{m}$，终止伸长量 $0.098+0.098=0.196\,\text{m}$，故</p>
+            <p>$$W=\int_{0.098}^{0.196}200x\,\mathrm{d}x=\left[100x^{2}\right]_{0.098}^{0.196}=100\left(0.196^{2}-0.098^{2}\right).$$</p>
+            <p>计算括号内的两项：$0.196^{2}=0.038416$，$0.098^{2}=0.009604$，两者之差为 $0.028812$。于是</p>
+            <p>$$W=100\times 0.028812=2.8812\approx 2.88\ \text{J}.$$</p>
+            <p><strong>验算一（量纲）。</strong>$k$ 的单位是 N/m，$x^{2}$ 的单位是 $\text{m}^{2}$，乘积 $kx^{2}$ 的单位是 N·m，即 J，与功的单位一致 ✓。</p>
+            <p><strong>验算二（改用弹性势能差）。</strong>本段的功等于弹性势能的增量。把全伸长量 $0.196\,\text{m}$ 时的势能减去 $0.098\,\text{m}$ 时的势能：$\frac{1}{2}\times 200\times 0.196^{2}-\frac{1}{2}\times 200\times 0.098^{2}=3.8416-0.9604=2.8812\,\text{J}$ ✓，与积分结果逐位一致。两种算法的差别只在常数 $\frac{1}{2}$ 是否并入，说明积分结果可靠。</p>
+            <p><strong>验算三（数值估算）。</strong>这一段位移中力的取值范围是 $200\times 0.098=19.6\,\text{N}$ 到 $200\times 0.196=39.2\,\text{N}$。若把力按最小值当常数，功为 $19.6\times 0.098=1.92\,\text{J}$；按最大值当常数，功为 $39.2\times 0.098=3.84\,\text{J}$。真值 $2.88\,\text{J}$ 落在两者之间 ✓；又因为力随位移线性增大，真值应等于两端估计的算术平均 $\frac{1.92+3.84}{2}=2.88\,\text{J}$ ✓，与积分结果一致。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.2</span> 矩形闸门与三角形闸门上的水压力
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>取水的密度 $\rho=1000\,\text{kg}/\text{m}^{3}$，重力加速度 $g=9.8\,\text{m}/\text{s}^{2}$。（1）一块宽 $4\,\text{m}$、高 $5\,\text{m}$ 的矩形闸门竖直放置，上边缘与水面平行且距水面 $2\,\text{m}$，求水对闸门一侧的总压力。（2）一块等腰三角形闸门竖直放置，顶点朝下，底边与水面齐平，底边长 $3\,\text{m}$、高 $3\,\text{m}$，求水对闸门一侧的总压力。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>（1）第一步，建坐标并写出宽度函数。</strong>取 $h$ 轴竖直向下，原点在液面上，$h$ 为水深，单位用 m。由题设闸门占的深度范围是 $2 \le h \le 7$。矩形闸门在任意深度处的水平截线长恒为宽度</p>
+            <p>$$L(h)=4 \quad (2 \le h \le 7).$$</p>
+            <p><strong>第二步，写压力的微元。</strong>深度 $h$ 处的压强为 $\rho gh$，在这一薄条上压强近似不变，条的面积是 $L(h)\,\mathrm{d}h=4\,\mathrm{d}h$，故</p>
+            <p>$$\mathrm{d}P=\rho g\,h\,L(h)\,\mathrm{d}h=4\rho g\,h\,\mathrm{d}h.$$</p>
+            <p><strong>第三步，定上下限并积分。</strong>这是对定义 6.3 的 ③ 中区间 $[0,H]$ 的一个变形：本闸门上方还有 $2\,\text{m}$ 的水，压力从 $h=2$ 才开始作用，下限因此取 $2$ 而不是 $0$。</p>
+            <p>$$P=\int_{2}^{7}4\rho g\,h\,\mathrm{d}h=4\rho g\left[\frac{h^{2}}{2}\right]_{2}^{7}=2\rho g\left(7^{2}-2^{2}\right)=2\rho g(49-4)=90\rho g.$$</p>
+            <p>代入数值：$P=90\times 1000\times 9.8=882000\,\text{N}=882\,\text{kN}$。</p>
+            <p><strong>验算一（用形心深度核对）。</strong>矩形板的面积为 $A=4\times 5=20\,\text{m}^{2}$，形心即几何中心，位于上边缘下方 $2.5\,\text{m}$ 处，故形心深度 $\bar{h}=2+2.5=4.5\,\text{m}$。均匀压强的结果应是 $\rho g\bar{h}A=1000\times 9.8\times 4.5\times 20=882000\,\text{N}$ ✓，与积分结果完全一致。这不是巧合：$\int h\,\mathrm{d}A$ 就是面积对液面的静矩，等于 $\bar{h}A$。</p>
+            <p><strong>验算二（量纲与数量级）。</strong>$\rho$ 的单位是 kg/m³，$g$ 的单位是 m/s²，$\rho gh$ 的单位是 Pa，即 N/m²；再乘面积 $20\,\text{m}^{2}$ 得 N ✓。数量级上，$882\,\text{kN}$ 相当于约 $90\,\text{t}$ 物体所受的重力，对 $20\,\text{m}^{2}$ 的闸门是合理值。</p>
+            <p><strong>（2）第一步，把宽度写成深度的函数。</strong>同样取 $h$ 轴竖直向下、原点在液面。闸门占的深度范围是 $0 \le h \le 3$；底边在水面上，顶点在 $h=3$ 处，故三角形在深度 $h$ 处的水平截线长随深度线性减小。由相似三角形，</p>
+            <p>$$\frac{L(h)}{3}=\frac{3-h}{3}, \qquad L(h)=3-h \quad (0 \le h \le 3).$$</p>
+            <p>两端核对：$h=0$ 时 $L=3$，与底边长一致；$h=3$ 时 $L=0$，与顶点一致 ✓。这一步是本题的关键——宽度是深度的函数，写成 $L(h)$ 后一切都与定义 6.3 的 ③ 对齐。</p>
+            <p><strong>第二步，写微元并积分。</strong></p>
+            <p>$$\mathrm{d}P=\rho g\,h\,L(h)\,\mathrm{d}h=\rho g\,h(3-h)\,\mathrm{d}h,$$</p>
+            <p>$$P=\int_{0}^{3}\rho g\,h(3-h)\,\mathrm{d}h=\rho g\int_{0}^{3}\left(3h-h^{2}\right)\mathrm{d}h=\rho g\left[\frac{3h^{2}}{2}-\frac{h^{3}}{3}\right]_{0}^{3}.$$</p>
+            <p>代入上限 $h=3$：$\frac{3\times 9}{2}-\frac{27}{3}=13.5-9=4.5$；下限 $h=0$ 处被积函数为 $0$。故</p>
+            <p>$$P=4.5\rho g=4.5\times 1000\times 9.8=44100\,\text{N}=44.1\,\text{kN}.$$</p>
+            <p><strong>验算（形心深度）。</strong>三角形面积 $A=\frac{1}{2}\times 3\times 3=4.5\,\text{m}^{2}$。顶点在液面、底边在水面，形心到液面的距离为高的 $\frac{2}{3}$，即 $\bar{h}=\frac{2}{3}\times 3=2\,\text{m}$。于是 $\rho g\bar{h}A=1000\times 9.8\times 2\times 4.5=88200\,\text{N}=88.2\,\text{kN}$，与积分的 $44.1\,\text{kN}$ <strong>不符</strong>。</p>
+            <p>检查这个不一致：本题中底边（长边）在<strong>水面</strong>、顶点在<strong>水下 3 m</strong>，所以面积集中在浅处，形心深度应当小于 $\frac{H}{2}=1.5\,\text{m}$，即静矩小于 $1.5\times 4.5=6.75$。而 $\rho g\int_{0}^{3}h(3-h)\,\mathrm{d}h=4.5\rho g$ 对应的静矩是 $4.5$，确实小于 $6.75$ ✓，所以积分的 $44.1\,\text{kN}$ 是对的；把形心深度当成 $\frac{2}{3}\times 3$ 是我在验算这一步取错了方向 —— $\frac{2}{3}$ 是"顶点在水下、底边在水面"的三角形的形心距，方向应从底边量起。正确的形心深度为 $\bar{h}=\frac{4.5}{4.5}=1\,\text{m}$，于是 $\rho g\bar{h}A=1000\times 9.8\times 1\times 4.5=44100\,\text{N}$ ✓，与积分一致。</p>
+            <p><strong>量纲核对：</strong>被积函数 $\rho g\,h(3-h)$ 的单位是 $\text{N}/\text{m}^{3}\times\text{m}^{2}=\text{N}/\text{m}$，再乘 $\mathrm{d}h$（单位 m）得 N ✓，与力的单位一致。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.3</span> 半圆闸门的水压力、细棒对质点的引力、函数的平均值
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>（1）一半径为 $1\,\text{m}$ 的半圆形闸门竖直放置，直径边与水面齐平，弧朝下，求水对闸门一侧的总压力（$\rho=1000\,\text{kg}/\text{m}^{3}$，$g=9.8\,\text{m}/\text{s}^{2}$）。</p>
+          <p>（2）一细棒长 $2\,\text{m}$，线密度为常数 $2\,\text{kg}/\text{m}$，在棒的延长线上、距棒较近一端 $2\,\text{m}$ 处放一质量 $1\,\text{kg}$ 的质点，求棒对该质点的引力（$G=6.674\times 10^{-11}\,\text{N}\cdot\text{m}^{2}/\text{kg}^{2}$）。</p>
+          <p>（3）求 $f(x)=x^{2}$ 在 $[0,3]$ 上的平均值 $\bar{y}$，并求一点 $\xi \in [0,3]$ 使 $f(\xi)=\bar{y}$。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>（1）第一步，建坐标并写出宽度函数。</strong>取 $h$ 轴竖直向下，原点在液面（即直径的中点），$h$ 为水深。闸门是下半圆周与直径围成的区域，圆的方程为 $h^{2}+y^{2}=1$，弧上的点满足 $h^{2}+y^{2}=1$，故在深度 $h$ 处水平截线长为 $2\sqrt{1-h^{2}}$，即</p>
+            <p>$$L(h)=2\sqrt{1-h^{2}} \quad (0 \le h \le 1).$$</p>
+            <p>两端核对：$h=0$ 时 $L=2$，等于直径 ✓；$h \to 1$ 时 $L \to 0$，弧收拢到最低点 ✓。</p>
+            <p><strong>第二步，写微元并积分。</strong></p>
+            <p>$$\mathrm{d}P=2\rho g\,h\sqrt{1-h^{2}}\,\mathrm{d}h, \qquad P=\int_{0}^{1}2\rho g\,h\sqrt{1-h^{2}}\,\mathrm{d}h.$$</p>
+            <p><strong>第三步，换元算积分。</strong>令 $h=\sin t$，则 $\mathrm{d}h=\cos t\,\mathrm{d}t$，$\sqrt{1-h^{2}}=\cos t$（$t \in \left[0,\frac{\pi}{2}\right]$ 时 $\cos t \ge 0$）；上下限相应变为 $h=0 \Rightarrow t=0$，$h=1 \Rightarrow t=\frac{\pi}{2}$。由 §4.2 的换元法，</p>
+            <p>$$P=2\rho g\int_{0}^{\pi/2}\sin t\cos^{2}t\,\mathrm{d}t=2\rho g\left[-\frac{\cos^{3}t}{3}\right]_{0}^{\pi/2}=\frac{2\rho g}{3}\left(\cos^{3}0-\cos^{3}\frac{\pi}{2}\right)=\frac{2\rho g}{3}.$$</p>
+            <p>代入数值：$P=\frac{2}{3}\times 1000\times 9.8=\frac{19600}{3}\approx 6533\,\text{N}$。</p>
+            <p><strong>验算一（形心深度）。</strong>半圆面积为 $A=\frac{\pi r^{2}}{2}=\frac{\pi}{2}\times 1^{2}\approx 1.5708\,\text{m}^{2}$。半径为 $r$ 的半圆，其形心到直径的距离为 $\frac{4r}{3\pi}=\frac{4}{3\pi}\approx 0.4244\,\text{m}$，弧朝下时形心深度就是这个距离，故 $\bar{h}=\frac{4}{3\pi}$。于是 $\rho g\bar{h}A=1000\times 9.8\times\frac{4}{3\pi}\times\frac{\pi}{2}=\frac{2\times 1000\times 9.8}{3}\approx 6533\,\text{N}$ ✓，与积分结果逐项一致（$\pi$ 恰好约掉）。</p>
+            <p><strong>验算二（量纲与数量级）。</strong>$\rho g\,h\,L(h)\,\mathrm{d}h$ 的单位是 N，积分后仍是 N ✓。数量级：$6533\,\text{N}$ 约为 $0.67\,\text{t}$ 物体的重力，落在 $1.57\,\text{m}^{2}$ 的板、形心深 $0.42\,\text{m}$ 上，合理。</p>
+            <p><strong>（2）第一步，建坐标并把棒切成微元。</strong>把细棒放在 $x$ 轴上，占 $[0,2]$，取棒上靠近质点的一端为原点；质点在 $x=2+2=4$ 处（单位 m）。在 $[x,x+\mathrm{d}x]$ 这一小段上，质量微元为 $\mathrm{d}m=\lambda\,\mathrm{d}x=2\,\mathrm{d}x$，把它当作位于 $x$ 处的质点。</p>
+            <p><strong>第二步，写引力的微元。</strong>由万有引力定律，该质量微元对质点 $M$ 的引力大小为</p>
+            <p>$$\mathrm{d}F=\frac{G\,M\,\mathrm{d}m}{(4-x)^{2}}=\frac{2GM}{(4-x)^{2}}\,\mathrm{d}x.$$</p>
+            <p>所有微元的引力方向相同（都指向棒），因此可以直接把大小相加，不必分解成向量分量。这一点是本题能化为一元积分的前提，也是"细棒沿延长线方向放置"这个条件的用处。</p>
+            <p><strong>第三步，积分。</strong>令 $u=4-x$，则 $\mathrm{d}u=-\mathrm{d}x$；$x=0 \Rightarrow u=4$，$x=2 \Rightarrow u=2$，于是</p>
+            <p>$$F=\int_{0}^{2}\frac{2GM}{(4-x)^{2}}\,\mathrm{d}x=2GM\int_{2}^{4}\frac{\mathrm{d}u}{u^{2}}=2GM\left[-\frac{1}{u}\right]_{2}^{4}=2GM\left(\frac{1}{2}-\frac{1}{4}\right)=\frac{GM}{2}.$$</p>
+            <p>代入数值：$F=\frac{6.674\times 10^{-11}\times 1}{2}=3.337\times 10^{-11}\,\text{N}$。</p>
+            <p><strong>验算一（退化估算）。</strong>棒的总质量 $m=\lambda L=2\times 2=4\,\text{kg}$。若把全部质量集中在棒的近端（$x=0$，距质点 $4\,\text{m}$），引力为 $\frac{GMm}{4^{2}}=\frac{6.674\times 10^{-11}\times 1\times 4}{16}=1.669\times 10^{-11}\,\text{N}$；若集中在远端（$x=2$，距质点 $2\,\text{m}$），引力为 $\frac{6.674\times 10^{-11}\times 4}{4}=6.674\times 10^{-11}\,\text{N}$。棒上质量连续分布，真值应落在两者之间：$1.669\times 10^{-11} \lt 3.337\times 10^{-11} \lt 6.674\times 10^{-11}$ ✓。这同时说明一个事实：<strong>把细棒当质点算（用质心距离 3 m）会偏小</strong>，$\frac{GMm}{3^{2}}=\frac{6.674\times 10^{-11}\times 4}{9}=2.966\times 10^{-11}\,\text{N}$，小于精确值，因为靠近质点的那一段质量贡献被低估了。</p>
+            <p><strong>验算二（量纲）。</strong>$G$ 的单位是 $\text{N}\cdot\text{m}^{2}/\text{kg}^{2}$，$\mathrm{d}m$ 的单位是 kg，分母是 $\text{m}^{2}$，故 $\mathrm{d}F$ 的单位是 N ✓。另外 $\frac{GM}{2}$ 中"$M$"的量纲被 $\lambda$ 带来的 kg 与长度带来的 m 抵消了一部分，用 $\lambda=\frac{m}{L}$ 改写可得 $F=\frac{GMm}{2L}$，两边量纲同为 N ✓。</p>
+            <p><strong>（3）第一步，用定义 6.3 的 ④。</strong>区间长度为 $b-a=3-0=3$，</p>
+            <p>$$\bar{y}=\frac{1}{3}\int_{0}^{3}x^{2}\,\mathrm{d}x=\frac{1}{3}\left[\frac{x^{3}}{3}\right]_{0}^{3}=\frac{1}{3}\times\frac{27}{3}=\frac{1}{3}\times 9=3.$$</p>
+            <p><strong>第二步，解 $\xi$。</strong>要求 $\xi \in [0,3]$ 使 $f(\xi)=\bar{y}$，即 $\xi^{2}=3$，故 $\xi=\sqrt{3}\approx 1.732$（负根 $-1.732$ 不在区间内，舍去）。</p>
+            <p><strong>验算一（存在性）。</strong>$f(x)=x^{2}$ 在 $[0,3]$ 上连续，由 §5.1 性质 5.4 的积分中值定理，这样的 $\xi$ 一定存在，且 $\sqrt{3}\in[0,3]$ ✓。</p>
+            <p><strong>验算二（与算术平均对照）。</strong>端点值的算术平均是 $\frac{0^{2}+3^{2}}{2}=4.5$，而积分平均值是 $3$，两者不相等。原因是 $x^{2}$ 增长得越来越快，大值所占的区间比例小，所以平均值被拉低。这个对照说明平均值不是端点值的算术平均，必须按定义 6.3 的 ④ 积分。</p>
+            <p><strong>验算三（几何）。</strong>曲边梯形面积为 $\int_{0}^{3}x^{2}\,\mathrm{d}x=9$，与它等面积、宽为 $3$ 的矩形高为 $\frac{9}{3}=3$ ✓，与 $\bar{y}$ 一致。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点</div>
+        <p class="zh" lang="zh"><strong>把水的压强公式当成压力公式。</strong>$\rho gh$ 是压强（单位 Pa），不是压力（单位 N）。求总压力必须再乘面积，即 $\mathrm{d}P=\rho g\,h\,L(h)\,\mathrm{d}h$。只写 $P=\rho gh$ 是把两个量混为一谈。</p>
+        <p class="zh" lang="zh"><strong>在 $L(h)$ 里用错变量。</strong>宽度必须写成<strong>深度</strong>的函数，不是写成深度的函数之后再反解。三角形闸门若把宽度写成 $h$、把深度写成 $L$，积分就整段错位；正确做法是先用相似三角形把 $L$ 表成 $h$ 的表达式，再核对两个端点是否与题设吻合。</p>
+        <p class="zh" lang="zh"><strong>上下限不随坐标系走。</strong>若把原点取在闸门顶端而不是液面，则压强是 $\rho g(h+2)$ 而不是 $\rho gh$，上下限也随之变成 $[0,5]$。两种取法都对，但不能混用：改了原点却仍把下限写成 $0$ 而压强里不含偏移量，结果必然偏小。</p>
+        <p class="zh" lang="zh"><strong>忘记惯性系下的符号与方向。</strong>定义 6.3 的 ② 假设力沿 $x$ 轴正向、且力与位移同向。若力与位移反向（如压缩弹簧、阻力做功），$W$ 是负的，要按 $\int_{a}^{b}F(x)\,\mathrm{d}x$ 原样代入，不能先取绝对值再积分。</p>
+        <p class="zh" lang="zh"><strong>把引力题当成质点题。</strong>细棒对质点的引力不能直接用 $\frac{GMm}{r^{2}}$（$m$ 为棒的总质量）代入质心距离，只有当棒长远小于距离时才近似成立。正确做法是把棒切成质量微元逐个求引力再积分，如例 6.3 的（2）。</p>
+        <p class="zh" lang="zh"><strong>平均值忘记除以区间长度。</strong>$\bar{y}$ 的定义里 $\frac{1}{b-a}$ 不能省，它与 §5.1 性质 5.4 的 $f(\xi)=\frac{1}{b-a}\int_{a}^{b}f\,\mathrm{d}x$ 是同一个量。漏掉因子会得到一个量纲错误的数。</p>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <p class="zh" lang="zh"><span class="tag">高频</span><strong>水压力的大题。</strong>看到"闸门""水压力""总压力"就按方法 6.3 的五步走，关键是写出 $L(h)$。矩形、三角形、梯形、半圆是四种常考形状，后三种都要用相似三角形或圆的方程把宽度表成 $h$ 的函数。</p>
+        <p class="zh" lang="zh"><span class="tag">高频</span><strong>变力做功。</strong>常见三种模型：弹簧（力与伸长量成正比）、按规律变化的拉力（题目直接给 $F(x)$）、抽水或提升物体（力等于重力，但位移范围随高度变化）。第三种模型要先把"水或被提升物的质量随位置变化"写成微元。</p>
+        <p class="zh" lang="zh"><span class="tag">小题</span><strong>平均值与积分中值定理。</strong>填空题常要求 $\bar{y}$，或反过来给出 $\bar{y}$ 求 $\xi$。判据：$\xi$ 一定存在（$f$ 连续），且可解出。与 §5.1 性质 5.4 是同一件事。</p>
+        <p class="zh" lang="zh"><span class="tag">考研</span><strong>与物理模型结合的建模题。</strong>题目给出一个密度函数（线密度 $\lambda(x)$、面密度、压强分布），要求总质量、质心、转动惯量或总压力。路线固定：写元素、定上下限、积分。变量替换后上下限必须同步改写，否则量纲对不上。</p>
+        <p class="zh" lang="zh"><span class="tag">易错</span>凡是水压力题，都要用"$\rho g\times$面积$\times$形心深度"复核一次。若两者不符，先检查 $L(h)$ 的表达式，再检查上下限；不要先去怀疑积分。</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch6-3" data-title="6-3 定积分在物理学上的应用 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>一弹簧在 $1\,\text{N}$ 的拉力下伸长 $0.01\,\text{m}$，则使弹簧从自然长度伸长 $0.05\,\text{m}$ 需做的功为（　）。</p>
+            <p class="q-stem-en" lang="en">A spring stretches by $0.01\,\text{m}$ under a pull of $1\,\text{N}$. How much work is needed to stretch it from its natural length by $0.05\,\text{m}$?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$0.125\,\text{J}$</span></li>
+            <li><span class="opt-body">$0.05\,\text{J}$</span></li>
+            <li><span class="opt-body">$0.25\,\text{J}$</span></li>
+            <li><span class="opt-body">$2.5\,\text{J}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>由胡克定律 $F=kx$ 与题给数据得 $k=\frac{1}{0.01}=100\,\text{N}/\text{m}$。力随伸长量线性变化，由定义 6.3 的 ② 得 $W=\int_{0}^{0.05}100x\,\mathrm{d}x=\left[50x^{2}\right]_{0}^{0.05}=50\times 0.0025=0.125\,\text{J}$，A 对。B 是把力按末态的 $F=100\times 0.05=5\,\text{N}$ 与"位移 $\times$ 某个错误因子"凑出的数，实际用常力 $5\,\text{N}$ 会得 $0.25\,\text{J}$（即 C 的错法）——它把终点处才有的力当成了全过程不变的力。D 是把 $k$ 当成 $1$ 或把伸长量按 cm 计未换算的结果，量纲上便不成立：$100\times 0.05^{2}$ 的量纲是 N·m，而 $2.5$ 不对应任何正确的组合。</p>
+            <p class="en" lang="en">Hooke's law gives $k=100\,\text{N}/\text{m}$, and the force varies linearly, so $W=\int_{0}^{0.05}100x\,\mathrm{d}x=50\times 0.0025=0.125\,\text{J}$. Option B treats the force as constant, and option C uses the final force $5\,\text{N}$ throughout the motion, which overestimates the work.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>求水对竖直闸门的总压力时，若闸门上边缘不在液面处，则公式 $P=\int_{0}^{H}\rho g\,h\,L(h)\,\mathrm{d}h$ 中的下限应改为闸门上边缘所在的深度。</p>
+            <p class="q-stem-en" lang="en">When computing the total force of water on a vertical gate whose top edge is not at the free surface, the lower limit in $P=\int_{0}^{H}\rho g\,h\,L(h)\,\mathrm{d}h$ should be changed to the depth of the top edge.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。定义 6.3 的 ③ 假设板顶位于液面，所以下限是 $0$；这个假设只影响积分区间，不影响压强表达式 $\rho gh$，只要 $h$ 从液面起量。闸门上边缘在深度 $a$ 处、下边缘在深度 $b$ 处时，积分应为 $\int_{a}^{b}\rho g\,h\,L(h)\,\mathrm{d}h$，其中被积函数形式不变。例 6.2 的（1）就是这种情形：$a=2$、$b=7$。若把下限仍写成 $0$，相当于凭空多算了闸门上方那 $2\,\text{m}$ 水柱的压力，结果必然偏大。</p>
+            <p class="en" lang="en">True. The hypothesis that the top lies at the free surface only fixes the limits of integration; the pressure is still $\rho gh$ as long as $h$ is measured from the free surface. For a gate spanning depths $a$ to $b$ the integral becomes $\int_{a}^{b}\rho g\,h\,L(h)\,\mathrm{d}h$. Keeping the lower limit at $0$ would add the force on the water column above the gate and make the answer too large.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>一竖直矩形闸门宽 $3\,\text{m}$、高 $4\,\text{m}$，上边缘与水面齐平。水对闸门一侧的总压力为（$\rho=1000\,\text{kg}/\text{m}^{3}$，$g=9.8\,\text{m}/\text{s}^{2}$）（　）。</p>
+            <p class="q-stem-en" lang="en">A vertical rectangular gate $3\,\text{m}$ wide and $4\,\text{m}$ high has its top edge at the free surface. Find the total force of water on one side.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$235.2\,\text{kN}$</span></li>
+            <li><span class="opt-body">$117.6\,\text{kN}$</span></li>
+            <li><span class="opt-body">$470.4\,\text{kN}$</span></li>
+            <li><span class="opt-body">$39.2\,\text{kN}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>由 $L(h)=3$，$P=\int_{0}^{4}3\rho g\,h\,\mathrm{d}h=3\rho g\cdot\frac{4^{2}}{2}=24\rho g=24\times 1000\times 9.8=235200\,\text{N}=235.2\,\text{kN}$，A 对。用形心深度复核：面积 $A=12\,\text{m}^{2}$，形心深度 $\bar{h}=2\,\text{m}$，$\rho g\bar{h}A=1000\times 9.8\times 2\times 12=235200\,\text{N}$ ✓。B 是把形心深度当成 $1\,\text{m}$ 的结果，错误地按最大深度的一半而非高度的中点取值。C 是把形心深度取成 $4\,\text{m}$（最大深度）的结果，等于把全板都当成最深处的压强。D 是只算了 $\rho g\times A$ 而漏掉深度因子 $\bar{h}=2$ 的结果。</p>
+            <p class="en" lang="en">With $L(h)=3$, $P=\int_{0}^{4}3\rho g\,h\,\mathrm{d}h=24\rho g=235.2\,\text{kN}$. The centroid check gives the same value: area $12\,\text{m}^{2}$, centroid depth $2\,\text{m}$, so $\rho g\bar{h}A=235.2\,\text{kN}$. Option B uses the wrong centroid depth, C uses the maximum depth, and D omits the depth factor altogether.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>一质量为 $1\,\text{kg}$ 的物体从地面竖直提升到高 $10\,\text{m}$ 处（取 $g=9.8\,\text{m}/\text{s}^{2}$），提升过程中力的大小始终等于物体的重力，则提升力做的功为（　）。</p>
+            <p class="q-stem-en" lang="en">A mass of $1\,\text{kg}$ is lifted vertically from the ground to a height of $10\,\text{m}$ by a force equal in magnitude to its weight. Find the work done by the lifting force.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$98\,\text{J}$</span></li>
+            <li><span class="opt-body">$9.8\,\text{J}$</span></li>
+            <li><span class="opt-body">$490\,\text{J}$</span></li>
+            <li><span class="opt-body">$0\,\text{J}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>力的大小 $F=mg=9.8\,\text{N}$ 恒定且与位移方向一致，故 $W=\int_{0}^{10}9.8\,\mathrm{d}x=9.8\times 10=98\,\text{J}$，A 对。B 是把位移当成 $1\,\text{m}$ 的结果。C 是把质量当成 $5\,\text{kg}$ 或把 $g$ 误取 $49\,\text{m}/\text{s}^{2}$ 之类的算术错误。D 是把重力做的功 $-mg\cdot h$ 与提升力做的功混为一谈：重力做负功 $-98\,\text{J}$，提升力做正功 $98\,\text{J}$，两者之和为零，这正是"匀速提升动能不增"的体现，但题目问的是提升力，不是合力的功。</p>
+            <p class="en" lang="en">Here $F=mg=9.8\,\text{N}$ is constant and parallel to the displacement, so $W=9.8\times 10=98\,\text{J}$. Option D confuses the work of the lifting force with the work of gravity, which is $-98\,\text{J}$; their sum is zero because the kinetic energy does not change.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>下列结论正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which of the following statements are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">函数 $f(x)=x^{2}$ 在 $[0,3]$ 上的平均值等于 $3$</span></li>
+            <li data-correct="true"><span class="opt-body">水压力公式 $P=\int_{0}^{H}\rho g\,h\,L(h)\,\mathrm{d}h$ 的推导依据是"在深度 $h$ 处压强为 $\rho gh$"</span></li>
+            <li data-correct="true"><span class="opt-body">细棒对质点的引力必须把棒分成质量微元再积分，不能直接用质心距离代入万有引力定律</span></li>
+            <li><span class="opt-body">$f(x)=x^{2}$ 在 $[0,3]$ 上的平均值等于 $f(0)$ 与 $f(3)$ 的算术平均</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：$\bar{y}=\frac{1}{3-0}\int_{0}^{3}x^{2}\,\mathrm{d}x=\frac{1}{3}\cdot\frac{27}{3}=3$。B 对：$L(h)\,\mathrm{d}h$ 是薄条的面积，乘压强得该薄条上的压力，再对深度积分，依据就是压强随深度线性变化这条物理结论。C 对：引力与距离平方成反比，棒上各微元到质点的距离不同，只有把棒的尺寸与距离相比很小时，才能把总质量集中在质心近似计算。D 错：$f(3)=9$、$f(0)=0$，算术平均为 $4.5$，与 A 的 $3$ 不等；$x^{2}$ 增长越来越快，大值所占区间比例小，因此积分平均值小于端点算术平均。平均值必须按定义 6.3 的 ④ 用积分算。</p>
+            <p class="en" lang="en">A holds by direct integration, $\bar{y}=\frac{1}{3}\cdot 9=3$; B holds because the pressure at depth $h$ is $\rho gh$ and $L(h)\,\mathrm{d}h$ is the area of the strip; C holds because gravitational attraction depends on the square of the distance, so mass elements at different distances contribute differently. D fails: the arithmetic mean of the endpoint values is $4.5$, and for a convex increasing function the integral average is smaller.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+          <div class="q-stem">
+            <p>把一细棒对质点的引力用"总质量集中在质心、距离取质心到质点的距离"来算，结果一定偏大。</p>
+            <p class="q-stem-en" lang="en">Replacing a thin rod by a point mass at its centroid, at the distance from the centroid to the given particle, always overestimates the gravitational attraction.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+            <li><span class="opt-body">正确</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>错误。以例 6.3 的（2）为例：棒长 $2\,\text{m}$、线密度 $2\,\text{kg}/\text{m}$、总质量 $4\,\text{kg}$，质心到质点的距离为 $3\,\text{m}$，质点质量 $1\,\text{kg}$。按质心代替得 $\frac{GMm}{3^{2}}=\frac{6.674\times 10^{-11}\times 4}{9}\approx 2.97\times 10^{-11}\,\text{N}$，而精确积分的值为 $\frac{GMm}{2L}=\frac{6.674\times 10^{-11}\times 4}{4}\approx 6.67\times 10^{-11}\,\text{N}$，质心代替的结果<strong>偏小</strong>（约小一半）。原因在方向：棒上离质点较近的那一端距离小于质心距离，引力的贡献按 $\frac{1}{r^{2}}$ 放大得更厉害，$r^{-2}$ 是凸函数，单独一端的增益压不过另一端的损失。"质心代替"既不保证偏大也不保证偏小，只有棒的尺寸远小于距离时才是好的近似；正确做法一律是分微元积分。</p>
+            <p class="en" lang="en">False. With the data of Example 6.3(2) the centroid replacement gives about $2.97\times 10^{-11}\,\text{N}$ while the exact integral gives $6.67\times 10^{-11}\,\text{N}$, so the replacement is too small, not too large. Because the attraction varies as $r^{-2}$, the near end of the rod contributes more than the far end loses. Replacing a distributed mass by its centroid is neither an upper nor a lower bound in general.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <div class="q-stem">
+            <p>一物体在力 $F(x)=x^{2}+1$（单位：N，$x$ 单位：m）作用下沿 $x$ 轴由 $x=0$ 运动到 $x=3$，该力所做的功为 ______ J。</p>
+            <p class="q-stem-en" lang="en">An object moves along the $x$-axis from $x=0$ to $x=3$ under a force $F(x)=x^{2}+1$ (newtons). Find the work done by the force, in joules.</p>
+          </div>
+          <div class="q-answer" data-answer="12|12.0|12.00"></div>
+          <div class="q-explain">
+            <p>由定义 6.3 的 ②，$W=\int_{0}^{3}\left(x^{2}+1\right)\mathrm{d}x=\left[\frac{x^{3}}{3}+x\right]_{0}^{3}=9+3=12\,\text{J}$。常见错法有三种。① 用初值 $F(0)=1\,\text{N}$ 当常力，得 $1\times 3=3\,\text{J}$；用末值 $F(3)=10\,\text{N}$ 当常力，得 $30\,\text{J}$，真值 $12$ 应落在两者之间 ✓。② 忘记加 $1$ 这一项，只算 $\int_{0}^{3}x^{2}\,\mathrm{d}x=9$。③ 把上限 $3$ 代入后忘记减下限处的值 $0$。量纲核对：$F$ 的单位是 N，$\mathrm{d}x$ 的单位是 m，积分结果的单位是 N·m 即 J ✓。</p>
+            <p class="en" lang="en">By Definition 6.3(2), $W=\int_{0}^{3}(x^{2}+1)\,\mathrm{d}x=\left[\frac{x^{3}}{3}+x\right]_{0}^{3}=9+3=12\,\text{J}$. Treating the initial or the final force as constant gives 3 J or 30 J, and the true value lies between them; omitting the constant term gives 9 J.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <div class="q-stem">
+            <p>函数 $f(x)=\sin x$ 在 $\left[0,\dfrac{\pi}{2}\right]$ 上的平均值 $\bar{y}=$ ______。</p>
+            <p class="q-stem-en" lang="en">Find the average value of $f(x)=\sin x$ on $\left[0,\dfrac{\pi}{2}\right]$.</p>
+          </div>
+          <div class="q-answer" data-answer="2/pi|2/π|0.637|0.64"></div>
+          <div class="q-explain">
+            <p>由定义 6.3 的 ④，$\bar{y}=\frac{1}{\pi/2-0}\int_{0}^{\pi/2}\sin x\,\mathrm{d}x=\frac{2}{\pi}\left[-\cos x\right]_{0}^{\pi/2}=\frac{2}{\pi}\left(0+1\right)=\frac{2}{\pi}\approx 0.6366$。常见错法是漏掉因子 $\frac{1}{b-a}$，直接答 $\int_{0}^{\pi/2}\sin x\,\mathrm{d}x=1$；或把区间长度当成长度 $1$（把 $\frac{\pi}{2}$ 记成 $\frac{\pi}{4}$ 等）。量纲核对：$\sin x$ 无量纲，除以区间长度后仍无量纲 ✓。存在性核对：$\sin x$ 在区间上单调增加，取值范围是 $[0,1]$，而 $\frac{2}{\pi}\approx 0.6366$ 落在其中 ✓，与 §5.1 性质 5.4 一致。</p>
+            <p class="en" lang="en">By Definition 6.3(4), $\bar{y}=\frac{2}{\pi}\int_{0}^{\pi/2}\sin x\,\mathrm{d}x=\frac{2}{\pi}\approx 0.6366$. Forgetting the factor $\frac{1}{b-a}$ gives 1, which is the integral rather than the average.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <div class="q-stem">
+            <p>一半径为 $2\,\text{m}$ 的半圆形闸门竖直放置，直径边与水面齐平、弧朝下。水的容重取 $\rho g=9.8\times 10^{3}\,\text{N}/\text{m}^{3}$，则水对闸门一侧的总压力为 ______ kN（结果保留三位有效数字，可用 $\pi$ 表示）。</p>
+            <p class="q-stem-en" lang="en">A semicircular gate of radius $2\,\text{m}$ is vertical, with its diameter at the free surface and its arc below. With $\rho g=9.8\times 10^{3}\,\text{N}/\text{m}^{3}$, find the total force of water on one side, in kN.</p>
+          </div>
+          <div class="q-answer" data-answer="52.3|52.27|52.3kN|52.27kN|52.3 kN|52.27 kN"></div>
+          <div class="q-explain">
+            <p>取 $h$ 轴竖直向下、原点在液面，闸门占 $0 \le h \le 2$。深度 $h$ 处水平截线长为 $L(h)=2\sqrt{4-h^{2}}$，故 $\mathrm{d}P=2\rho g\,h\sqrt{4-h^{2}}\,\mathrm{d}h$，</p>
+            <p>$$P=\int_{0}^{2}2\rho g\,h\sqrt{4-h^{2}}\,\mathrm{d}h=2\rho g\left[-\frac{\left(4-h^{2}\right)^{3/2}}{3}\right]_{0}^{2}=\frac{2\rho g}{3}\times 8=\frac{16\rho g}{3}.$$</p>
+            <p>代入 $\rho g=9.8\times 10^{3}$：$P=\frac{16\times 9.8\times 10^{3}}{3}=\frac{156800}{3}\approx 52267\,\text{N}\approx 52.3\,\text{kN}$。用形心深度核对：$A=\frac{\pi\times 2^{2}}{2}=2\pi\approx 6.283\,\text{m}^{2}$，$\bar{h}=\frac{4r}{3\pi}=\frac{8}{3\pi}\approx 0.849\,\text{m}$，$\rho g\bar{h}A=9.8\times 10^{3}\times\frac{8}{3\pi}\times 2\pi=\frac{16\times 9.8\times 10^{3}}{3}$ ✓，两者一致。常见错法：把 $L(h)$ 写成 $2\sqrt{4-h^{2}}$ 时把 $h$ 当成从弧顶量起；或忘记保留因子 $2$；或把 $\bar{h}$ 取成 $\frac{2}{3}r$。</p>
+            <p class="en" lang="en">Take $h$ downward from the free surface and note $L(h)=2\sqrt{4-h^{2}}$, so $P=2\rho g\int_{0}^{2}h\sqrt{4-h^{2}}\,\mathrm{d}h=\frac{16\rho g}{3}\approx 52.3\,\text{kN}$. The centroid check with area $2\pi$ and centroid depth $\frac{8}{3\pi}$ gives the same value.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：主线是<strong>把物理量写成"密度乘小段长度"再积分</strong>。定义 6.3 给出四类模型，定理 6.3、6.4 给出做功与压力的积分式，方法 6.3 把建模固定成五步。前两题查弹簧做功与积分区间，第三至六题查宽度函数、常力做功与平均值，最后三题到考研档。</p>
+          <p>最常见的错法有三个。<strong>一是把压强当压力</strong>：$\rho gh$ 的单位是 Pa，必须再乘面积，漏掉深度因子或取错形心深度，结果会差一倍甚至一个数量级。<strong>二是宽度函数写错</strong>：三角形、半圆闸门都要先把宽度表成深度的函数，写完核对两个端点。<strong>三是漏掉区间长度</strong>：平均值定义里 $\frac{1}{b-a}$ 不能省。</p>
+          <p>接口有两处要记住。<strong>向前</strong>，积分靠 §5.2 的微积分基本定理完成，半圆闸门的换元与 §4.2 同源，平均值的合法性来自 §5.1 性质 5.4 的积分中值定理。<strong>向后</strong>，曲面压力与不沿直线方向的力要分解分量，属于 §10.1 二重积分。</p>
+          <p>下一步建议：错在前六题，回读定义 6.3 与方法 6.3，把例 6.1、例 6.2 各手写一遍。错在后三题，重做例 6.3，补全"换元后上下限同步改写"与"形心深度复核"，再做两道细棒引力的变式。三处过关即可进 §6.4。</p>
+        </div>
+
+      </div>
+
+      <details class="box app-box is-aux">
+        <summary class="box-title"><span class="ico">🔧</span>工程联系</summary>
+        <p>航空发动机的压气机机匣、燃烧室外壁与涡轮盘腔都要按内外压差做强度计算，靠的就是把压力沿高度积分成合力，再分配到法兰与螺栓上；机翼整体油箱的箱壁同样按这一模型校核。</p>
+        <p>有限元后处理里，面上的分布压力被逐单元积分为节点等效力，算法与本节的水压力模型同源：先在每个单元内取积分点算压强，再乘面积权重求和，区别只在积分点与权重的取法由高斯求积给定，而不是等分。</p>
+      </details>
+
+      <details class="map-note is-aux">
+        <summary class="mn-head"><span>🧭</span>教材映射</summary>
+        <p class="zh" lang="zh">本节对应 <strong>Thomas 14e §6.5 Work and Fluid Forces</strong>（做功与流体压力）与 <strong>§6.6 Moments and Centers of Mass</strong>（矩与质心），函数的平均值对应 <strong>§5.4 The Fundamental Theorem of Calculus</strong> 中的 Average Value 一段。同济八版把本节内容编在 §6.3。</p>
+        <p class="zh" lang="zh">差异有三处。<strong>① 编排顺序。</strong>同济把元素法放在 §6.1 并立刻用于几何量，物理应用集中在 §6.3；托马斯把做功与流体压力合为一节 §6.5，放在体积（§6.1）与弧长（§6.3）之后。<strong>② 流体压力的表述。</strong>托马斯用"压强 $\times$ 条带面积"写成 $\int\rho g\,h\,L(h)\,\mathrm{d}h$，并把非矩形闸门作为重点例题；同济同样处理，但更强调先用相似三角形把宽度表成深度的函数。<strong>③ 平均值的位置。</strong>同济在 §5.1 的性质中给出平均值与积分中值定理，本节只作为元素法的一个模型复述；托马斯在 §5.4 用"函数的平均"引出微积分基本定理，逻辑顺序相反。查英文书时，"average value"要到 §5.4 找，§6.5 里没有。</p>
+      </details>
+      </div>
+
+
+
+                                                                                                                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+      <nav class="chapter-nav">
+        <a class="prev" href="ch5.html"><span class="dir">← 上一页</span><span class="ttl">第 5 章 定积分</span></a>
+        <a class="next" href="ch7.html"><span class="dir">下一页 →</span><span class="ttl">第 7 章 微分方程</span></a>
+      </nav>
+      <!-- /SHELL:BOTTOMNAV -->
+
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <p><strong>高等数学学习站</strong> · 同济八版骨架 + 托马斯 14 版映射 · 中英对照</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="../assets/js/plot.js"></script>
+<script src="../assets/js/videos.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/course-data.js"></script>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/theme.js"></script>
+
+<script>
+/* 第 6 章图：元素法。以曲边梯形为例，在 [x, x+dx] 上以直代曲，
+   元素 dA = f(x)dx，累加得 A = ∫ₐᵇ f(x)dx。 */
+(function () {
+  'use strict';
+  if (!window.Plot) return;
+  var e3 = document.getElementById('fig-element');
+  if (e3) Plot.render(e3, {
+    aria: '元素法：以直代曲再累加', width: 700, height: 320, maxWidth: 880, verify: false,
+    x: [-0.2, 2.6], y: [-0.2, 4.6],
+    panels: [
+      { x: 0,   y: 0, w: 0.5, h: 1, title: '① 一个元素：dA = f(x)dx', xr: [-0.2, 2.6], yr: [-0.2, 4.6] },
+      { x: 0.5, y: 0, w: 0.5, h: 1, title: '② 累加所有元素：A = ∫ₐᵇ f(x)dx', xr: [-0.2, 2.6], yr: [-0.2, 4.6] }
+    ],
+    elements: [
+      { type: 'fn', of: 'x^2', color: 'brand', panel: 0 },
+      { type: 'bars', of: 'x^2', from: 1, to: 1.5, n: 1, color: 'method', panel: 0, opacity: 0.35 },
+      { type: 'label', at: [0.05, 3.9], text: 'dA ≈ f(x)·dx', panel: 0, color: 'method' },
+      { type: 'fn', of: 'x^2', color: 'brand', panel: 1 },
+      { type: 'bars', of: 'x^2', from: 0, to: 2, n: 10, color: 'method', panel: 1, opacity: 0.28 },
+      { type: 'label', at: [0.05, 3.9], text: 'A = 8/3 ≈ 2.667', panel: 1, color: 'method' }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
