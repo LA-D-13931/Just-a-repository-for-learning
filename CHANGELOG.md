@@ -10,6 +10,59 @@
 
 ---
 
+## v0.8.0 — 2026-09-19
+
+### 修 1-1 与 2.1 的「已掌握」按钮消失
+
+#### 根因：三个章节页漏引入数据源脚本
+
+`chapters/ch1.html`、`chapters/ch2.html`、`chapters/supp1.html` 缺少：
+
+```html
+<script src="../assets/js/course-data.js"></script>
+```
+
+导致 `window.COURSE_DATA` 为 `undefined` → `site.js` 的 `currentChapter()` 返回 `null`
+→ `setupSectionChecks()` 在 `if (!ch) return;` 处**直接退出**，一个勾选框都没注入。
+而「学时徽章」来自 HTML 里的 `data-hours` 属性、不依赖 COURSE_DATA，
+所以表现为**只有时长、没有「已掌握」**。
+
+#### 为何 happy-dom 测试没抓到
+
+`tests/site.test.js` 的 `loadPage()` 用 `new Function(...)` **手动注入** `course-data.js`，
+绕过了「页面是否真的用 `<script>` 引入」这一环——所以单测一直是绿的，
+而真实浏览器里 COURSE_DATA 根本没加载。**这是测试盲区，不是误报。**
+
+#### 排查依据（实测，非推断）
+
+用 Edge 无头浏览器插桩 `appendChild` / `removeChild`：
+
+| 章节 | COURSE_DATA | appendChild(sec-check) | 最终 .sec-check |
+|---|---|---|---|
+| ch1 | **false** | **0 次** | 0 |
+| ch2 | **false** | **0 次** | 0 |
+| ch3 | true | 8 次 | 8 |
+
+修复后几何位置（Edge 1440px 实测）：四章勾选框**全部** x=1232 w=73 display=flex。
+
+#### 顺带修好的其他问题
+
+这三页此前还缺：侧栏统计、顶栏进度条、跨章导航状态
+（凡依赖 COURSE_DATA 的功能都受影响）。
+
+#### 验证
+
+| 项 | 结果 |
+|---|---|
+| ch1 勾选框 | 10 / 10 ✓ |
+| ch2 勾选框 | 5 / 5 ✓ |
+| supp1 勾选框 | 2 / 2 ✓ |
+| ch3（对照） | 8 / 8 ✓ 未受影响 |
+| 点击 + 刷新持久化 | ✓ 状态保留 |
+| 站点 19 项校验 | 全绿 |
+| JS 单测（6 套 203 项） | 全绿 |
+
+
 ## v0.7.99 — 2026-09-18
 
 ### 修 Windows 图标不显示 + 启动慢（第 29 节）
