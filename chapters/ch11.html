@@ -981,7 +981,7 @@
 
       <figure class="plot-figure">
         <div id="fig-oriented-arc"></div>
-        <figcaption>图　有向曲线与它的反向曲线。两幅子图的几何形状完全相同，都是圆 $x^2+y^2=1$ 从点 $A(-1,0)$ 到点 $B(1,0)$ 的上半圆弧；左图沿 $A\to B$ 走，右图沿 $B\to A$ 走。曲线上的箭头画在各点<strong>沿切线</strong>的方向（由相邻点的差分定出），因此左图在最高点 $(0,1)$ 处指向右、右图指向左。方向相反时，$\displaystyle\int_L P\,dx+Q\,dy$ 的每一项都反号，这就是定义 11.1 的性质①。</figcaption>
+        <figcaption class="has-cols"><p class="fc-lead">图　有向曲线与它的反向曲线。两幅子图的几何形状完全相同，都是圆 $x^2+y^2=1$ 从点 $A(-1,0)$ 到点 $B(1,0)$ 的上半圆弧；</p><div class="fig-cols" style="grid-template-columns:repeat(2,1fr)"><div class="fc">左图沿 $A\to B$ 走，</div><div class="fc">右图沿 $B\to A$ 走。曲线上的箭头画在各点<strong>沿切线</strong>的方向（由相邻点的差分定出），因此左图在最高点 $(0,1)$ 处指向右、右图指向左。方向相反时，$\displaystyle\int_L P\,dx+Q\,dy$ 的每一项都反号，这就是定义 11.1 的性质①。</div></div></figcaption>
       </figure>
 
       <script>
@@ -1035,7 +1035,7 @@
     Plot.render(host, {
       aria: '同一段圆弧的两个方向',
       width: 640, height: 330, maxWidth: 860, verify: false,
-      axes: false, padding: { l: 12, r: 12, t: 12, b: 12 },
+      axes: false, padding: { l: 22, r: 22, t: 22, b: 22 },
       panels: [
         { x: 0, y: 0, w: 0.5, h: 1, title: '定向一：沿 A 到 B', xr: [-1.42, 1.42], yr: [-0.42, 1.46] },
         { x: 0.5, y: 0, w: 0.5, h: 1, title: '定向二：沿 B 到 A', xr: [-1.42, 1.42], yr: [-0.42, 1.46] }
@@ -1430,7 +1430,7 @@
 
       <figure class="plot-figure">
         <div id="fig-green"></div>
-        <figcaption>图　格林公式中的闭曲线与区域。左图为单连通区域 $D$ 及其正向边界 $L$：箭头沿边界切线方向（逆时针），沿箭头走时区域 $D$ 始终在左侧。右图为复连通区域（中间挖去一个小圆）：外边界 $L_1$ 取逆时针、内边界 $L_2$ 取顺时针，两条边界上沿箭头走时区域（环形部分）都留在左侧。格林公式对两者都成立，右图左端的曲线积分是沿两条边界的积分之和——例 11.5 的挖洞法用的正是这种定向。</figcaption>
+        <figcaption class="has-cols"><p class="fc-lead">图　格林公式中的闭曲线与区域。</p><div class="fig-cols" style="grid-template-columns:repeat(2,1fr)"><div class="fc">左图为单连通区域 $D$ 及其正向边界 $L$：箭头沿边界切线方向（逆时针），沿箭头走时区域 $D$ 始终在左侧。</div><div class="fc">右图为复连通区域（中间挖去一个小圆）：外边界 $L_1$ 取逆时针、内边界 $L_2$ 取顺时针，两条边界上沿箭头走时区域（环形部分）都留在左侧。格林公式对两者都成立，右图左端的曲线积分是沿两条边界的积分之和——例 11.5 的挖洞法用的正是这种定向。</div></div></figcaption>
       </figure>
 
       <script>
@@ -1488,7 +1488,7 @@
     Plot.render(host, {
       aria: '格林公式的区域与边界定向',
       width: 660, height: 340, maxWidth: 880, verify: false,
-      axes: false, padding: { l: 12, r: 12, t: 12, b: 12 },
+      axes: false, padding: { l: 22, r: 22, t: 22, b: 22 },
       panels: [
         { x: 0, y: 0, w: 0.5, h: 1, title: '单连通区域：边界逆时针', xr: [-1.23, 1.23], yr: [-1.15, 1.45] },
         { x: 0.5, y: 0, w: 0.5, h: 1, title: '复连通区域：外逆内顺', xr: [-1.23, 1.23], yr: [-1.15, 1.45] }
@@ -2762,7 +2762,7 @@
     Plot.render(host, {
       aria: '闭曲面、外法向与内部散度源',
       width: 620, height: 380, maxWidth: 820, verify: false,
-      axes: false, padding: { l: 16, r: 16, t: 16, b: 16 },
+      axes: false, padding: { l: 22, r: 22, t: 22, b: 22 },
       x: [-2.15, 2.15], y: [-1.6, 1.6],
       legend: [
         { c: 'brand', t: '闭曲面 Σ 及其外法向' },

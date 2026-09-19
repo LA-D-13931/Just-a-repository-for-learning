@@ -1084,7 +1084,7 @@
 
       <figure class="plot-figure">
         <div id="fig-dotcross"></div>
-        <figcaption>图　数量积与向量积的几何含义（三维投影）。左：数量积——$\vec b$ 在 $\vec a$ 方向上的投影是 $|\vec b|\cos\theta$，数量积等于 $|\vec a|$ 乘这个投影；当夹角为直角时投影为零，数量积为零。右：向量积——$\vec a\times\vec b$ 垂直于 $\vec a$、$\vec b$ 所在平面（由右手定则定向），其模等于两者张成的平行四边形面积。</figcaption>
+        <figcaption class="has-cols"><p class="fc-lead">图　数量积与向量积的几何含义（三维投影）。</p><div class="fig-cols" style="grid-template-columns:repeat(2,1fr)"><div class="fc">左：数量积——$\vec b$ 在 $\vec a$ 方向上的投影是 $|\vec b|\cos\theta$，数量积等于 $|\vec a|$ 乘这个投影；当夹角为直角时投影为零，数量积为零。</div><div class="fc">右：向量积——$\vec a\times\vec b$ 垂直于 $\vec a$、$\vec b$ 所在平面（由右手定则定向），其模等于两者张成的平行四边形面积。</div></div></figcaption>
       </figure>
 
       
@@ -1110,12 +1110,12 @@
        a 严格沿 x 轴、b 在 x 轴上方、b 到 a 的垂足用竖直虚线连出。 */
     Plot.render(host, {
       aria: '数量积与向量积的几何含义', width: 780, height: 400, maxWidth: 920, verify: false,
-      x: [-0.8, 3.9], y: [-1.6, 3.7],
+      x: [-0.8, 5.3], y: [-1.6, 3.7],
       panels: [
         { x: 0, y: 0, w: 0.5, h: 1, title: '① 数量积：b 在 a 上的投影',
-          xr: [-0.8, 3.9], yr: [-1.6, 3.7], padding: { l: 30, r: 16, t: 34, b: 14 } },
+          xr: [-0.8, 5.3], yr: [-1.6, 3.7], padding: { l: 22, r: 22, t: 30, b: 22 } },
         { x: 0.5, y: 0, w: 0.5, h: 1, title: '② 向量积：模＝平行四边形面积',
-          xr: [-0.8, 3.9], yr: [-1.6, 3.7], padding: { l: 30, r: 16, t: 34, b: 14 } }
+          xr: [-0.8, 5.3], yr: [-1.6, 3.7], padding: { l: 22, r: 22, t: 30, b: 22 } }
       ],
       elements: [
         /* ---- 左：数量积 ----
