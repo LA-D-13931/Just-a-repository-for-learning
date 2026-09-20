@@ -10,6 +10,44 @@
 
 ---
 
+## v0.9.5 — 2026-09-20
+
+### 修：线代页点「首页」跳到高数主页；高数主页顶错品牌名
+
+#### 两个独立缺陷
+
+**a. 线代页的「首页」链接硬编码为高数主页**
+`build-shell.py` 的顶栏首页链接用 `home(depth)`，它恒为 `index.html`（高数主页）。
+线代各页因此都指向 `index.html`——用户在截图里点的就是它。
+
+**b. 高数主页显示「线性代数」品牌名**
+`setupSubjectSwitcher` 用 `getSubject()` 取名，而它读的是 localStorage 偏好键
+`advmath.subject.v1`。用户切到线代后再回高数主页，品牌就被改写成「线性代数」，
+于是出现「线性代数」配高数内容（正是截图现象）。
+
+#### 修法
+
+| 文件 | 改动 |
+|---|---|
+| 线代 9 个页面 | 「首页」链接改指 `linear-algebra.html`（`build-shell` 的 `home()` 无法按科目区分，故按科目后处理） |
+| `assets/js/site.js` | 新增 `pageSubject()`：按**页面**（`data-page` / `data-subject`）判定所属科目，优先级 data-subject → 章节表 → 工具表 → 首页文件 → index 视为高数 → 偏好；品牌名与菜单高亮改用它 |
+| `index.html` / `cheatsheet.html` / `exam.html` | 补 `data-subject="calculus"`，使存储键与科目判定显式化 |
+
+`pageSubject()` 只用 `data-page` / `data-subject`，**不依赖 `location`**
+（自检脚本的桩里没有它，此前踩过这个坑）。
+
+#### 验证
+
+| 项 | 结果 |
+|---|---|
+| 高数主页品牌 | ✓ localStorage 故意设为 linearAlgebra 时，仍显示「高等数学」（h1 与 `0 / 82` 统计正确） |
+| la1 点「首页」 | ✓ 链接 `../linear-algebra.html` → 落到线代主页（h1 线性代数…） |
+| 线代速查表点「首页」 | ✓ 链接 `linear-algebra.html` → 线代主页 |
+| 站点校验 11 项 | ✓ 全绿 |
+| JS 单测 6 套（203 项） | ✓ 全绿 |
+| 图表视觉自检 | ✓ 通过 |
+
+
 ## v0.9.4 — 2026-09-20
 
 ### 高数工具页标题补科目名

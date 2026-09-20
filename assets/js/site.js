@@ -542,6 +542,37 @@
     }
     return null;
   }
+  /* 当前**页面**所属科目（不是 localStorage 里的偏好）。
+     为什么需要：高数主页 index.html 若按偏好取名，用户在切到线代后回到高数主页，
+     会看到「线性代数」品牌名配高数内容（用户反馈）。按页面判定即可根治。
+     只用 data-page + data-subject，不依赖 location（自检脚本的桩里没有）。
+     优先级：data-subject → 章节表 → 工具表 → 首页文件 → index 视为高数 → 偏好。 */
+  function pageSubject() {
+    var key = document.body.getAttribute('data-page') || '';
+    var i, j;
+    if (PAGE_SUBJECT) {
+      for (i = 0; i < SUBJECTS.length; i++) if (SUBJECTS[i].id === PAGE_SUBJECT) return SUBJECTS[i];
+    }
+    if (key) {
+      for (i = 0; i < SUBJECTS.length; i++) {
+        var chs = SUBJECTS[i].chapters || [];
+        for (j = 0; j < chs.length; j++) if (chs[j].file.split('/').pop() === key + '.html') return SUBJECTS[i];
+      }
+      for (i = 0; i < SUBJECTS.length; i++) {
+        var tls = SUBJECTS[i].tools || [];
+        for (j = 0; j < tls.length; j++) if (tls[j].file.split('/').pop() === key + '.html') return SUBJECTS[i];
+      }
+      for (i = 0; i < SUBJECTS.length; i++) {
+        var hf = (SUBJECTS[i].home && SUBJECTS[i].home.file) || '';
+        if (hf && hf.split('/').pop() === key + '.html') return SUBJECTS[i];
+      }
+      if (key === 'index') {
+        for (i = 0; i < SUBJECTS.length; i++) if (SUBJECTS[i].id === 'calculus') return SUBJECTS[i];
+      }
+    }
+    return getSubject();
+  }
+
   function getSubject() {
     var id = readJSON(SUBJ_KEY, null);
     for (var i = 0; i < SUBJECTS.length; i++) if (SUBJECTS[i].id === id) return SUBJECTS[i];
@@ -633,7 +664,7 @@
   function setupSubjectSwitcher() {
     var brand = document.querySelector('.site-header .brand');
     if (!brand) return;
-    var cur = getSubject();
+    var cur = pageSubject();   /* 按页面判定，保证品牌名与页面内容一致 */
     // 品牌文字换成当前科目名（语言切换由 theme.js 负责全局文案，这里只动科目名）
     var nameEl = brand.querySelector('span:not(.brand-mark)');
     if (nameEl && cur) {
