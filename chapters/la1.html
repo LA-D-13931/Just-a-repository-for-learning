@@ -371,7 +371,41 @@
         </div>
       </div>
 
-      <div class="viz" data-viz="det2-area" data-a="3,1" data-b="1,2"></div>
+      <figure class="plot-figure">
+        <div id="fig-det2-area"></div>
+        <figcaption>图 2　两列向量张成的面积。取 $D=\begin{vmatrix}3&1\\ 1&2\end{vmatrix}$，两列 $(3,1)$、$(1,2)$ 张成灰色平行四边形，面积 $=3\times2-1\times1=5$，正好等于 $|D|$。这就是"行列式的绝对值是面积"最直接的验证：把两列当作两条边，行列式就是这两条边夹出的面积。</figcaption>
+      </figure>
+      <script>
+/* 第 1 章图（填充分区）：两列张成的面积 = 行列式 */
+(function () {
+  'use strict';
+  var tries = 0;
+  function ready(fn) { if (window.Plot) { fn(); return; } if (++tries > 80) return; setTimeout(function () { ready(fn); }, 50); }
+  ready(function () {
+    var host = document.getElementById('fig-det2-area');
+    if (!host) return;
+    Plot.render(host, {
+      aria: '两列向量张成的平行四边形',
+      width: 560, height: 400, maxWidth: 700,
+      x: [-0.6, 4.2], y: [-0.6, 3.0],
+      axes: { x: { step: 1, label: 'x' }, y: { step: 1, label: 'y' } },
+      padding: { l: 46, r: 30, t: 26, b: 44 },
+      legend: [ { c: 'brand', t: '两列张成的平行四边形' }, { c: 'method', t: '两条边（列向量）' } ],
+      legendOutside: 'bottom',
+      elements: [
+        { type: 'polygon', at: [[0,0],[3,1],[4,3],[1,2]], color: 'brand', opacity: 0.20, stroke: true },
+        { type: 'vector', from: [0,0], to: [3,1], color: 'method', width: 2.4 },
+        { type: 'vector', from: [0,0], to: [1,2], color: 'method', width: 2.4 },
+        { type: 'label', at: [3.05, 0.92], text: 'c1 = (3, 1)', color: 'method' },
+        { type: 'label', at: [0.20, 2.06], text: 'c2 = (1, 2)', color: 'method' },
+        { type: 'label', at: [1.85, 1.62], text: '面积 = |D| = 5', color: 'brand' },
+        { type: 'point', at: [3,1], color: 'method', r: 3.5 },
+        { type: 'point', at: [1,2], color: 'method', r: 3.5 }
+      ]
+    });
+  });
+})();
+</script>
 
       <div class="box method-box">
         <div class="box-title"><span class="ico">⚙️</span>方法：用行列式解二元线性方程组（克拉默法则的雏形）</div>
@@ -1599,7 +1633,33 @@
 
       </div>
 
-      <div class="viz" data-viz="det-shear" data-a="2,0.6" data-b="0.4,2.2"></div>
+      <figure class="plot-figure">
+        <div id="fig-det-shear"></div>
+        <figcaption>图 3　错切与伸缩对面积的影响。取 $D=\begin{vmatrix}2&0.4\\ 0.6&2.2\end{vmatrix}$，两列 $(2,0.6)$、$(0.4,2.2)$ 张成的平行四边形面积为 $2\times2.2-0.6\times0.4=4.16$。与图 1、图 2 对照可以看出：只要两列不共线，面积就不为零；当两列成比例（共线）时面积塌成 $0$，这正是 $D=0$ 的几何含义。</figcaption>
+      </figure>
+      <script>
+/* 第 1 章图（填充分区）：错切后的面积仍等于行列式 */
+(function () {
+  'use strict';
+  var tries = 0;
+  function ready(fn) { if (window.Plot) { fn(); return; } if (++tries > 80) return; setTimeout(function () { ready(fn); }, 50); }
+  ready(function () {
+    var host = document.getElementById('fig-det-shear');
+    if (!host) return;
+    Plot.render(host, {
+      aria: '错切与伸缩后的平行四边形面积',
+      width: 560, height: 400, maxWidth: 700,
+      x: [-0.5, 3.1], y: [-0.5, 3.4],
+      axes: { x: { step: 1, label: 'x' }, y: { step: 1, label: 'y' } },
+      padding: { l: 46, r: 30, t: 26, b: 44 },
+      legend: [{ c: 'brand', t: '两列张成的平行四边形' }, { c: 'method', t: '两条边（列向量）' }],
+      legendOutside: 'bottom',
+      elements: [{ type: 'polygon', at: [[0,0],[2,0.6],[2.4,2.8],[0.4,2.2]], color: 'brand', opacity: 0.20, stroke: true }, { type: 'vector', from: [0,0], to: [2,0.6], color: 'method', width: 2.4 }, { type: 'vector', from: [0,0], to: [0.4,2.2], color: 'method', width: 2.4 }, { type: 'label', at: [2.05, 0.50], text: 'c1 = (2, 0.6)', color: 'method' }, { type: 'label', at: [0.10, 2.26], text: 'c2 = (0.4, 2.2)', color: 'method' }, { type: 'label', at: [1.05, 1.62], text: '面积 = |D| = 4.16', color: 'brand' }],
+      verify: function () { var P = [[0,0],[2,0.6],[2.4,2.8],[0.4,2.2]], s2 = 0; for (var i = 0; i < P.length; i++) { var j = (i+1) % P.length; s2 += P[i][0]*P[j][1] - P[j][0]*P[i][1]; } var area = Math.abs(s2)/2, det = Math.abs(2*2.2 - 0.6*0.4); if (Math.abs(area - det) > 1e-9) throw new Error('面积不等于行列式'); }
+    });
+  });
+})();
+</script>
 
       <div class="box method-box">
         <div class="box-title"><span class="ico">⚙️</span>方法：化三角形法（用性质 6 造零）</div>

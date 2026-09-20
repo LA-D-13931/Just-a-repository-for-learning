@@ -1078,7 +1078,33 @@
         <p>那么问题是：什么样的矩阵能享受这种待遇？答案是<strong>实对称矩阵</strong>，而且只有它（在实数范围内可正交对角化的矩阵恰好就是实对称矩阵）。本节的路线是：先把"垂直"这件事用代数语言（内积）写清楚，再给出施密特正交化的操作流程，最后给出三个核心定理。</p>
       </div>
 
-      <div class="viz" data-viz="eigen-ellipse" data-matrix="3,1;1,3"></div>
+      <figure class="plot-figure">
+        <div id="fig-eigen-ellipse"></div>
+        <figcaption>图 2　单位圆经 $A=\begin{pmatrix}3&1\\ 1&3\end{pmatrix}$ 映成的椭圆。原来的单位圆（虚线）被拉成椭圆，它的两条半轴方向正是两个特征方向 $(1,1)$、$(1,-1)$，半轴长分别等于特征值 $4$、$2$。这说明：实对称矩阵的作用是"沿一组互相垂直的特征方向各自伸缩"，而不会把特征方向拧歪——这正是它能被正交对角化的几何含义。</figcaption>
+      </figure>
+      <script>
+/* 第 5 章图（填充分区）：单位圆映成椭圆，半轴 = 特征值 */
+(function () {
+  'use strict';
+  var tries = 0;
+  function ready(fn) { if (window.Plot) { fn(); return; } if (++tries > 80) return; setTimeout(function () { ready(fn); }, 50); }
+  ready(function () {
+    var host = document.getElementById('fig-eigen-ellipse');
+    if (!host) return;
+    Plot.render(host, {
+      aria: '单位圆经实对称矩阵映成的椭圆，半轴为特征值',
+      width: 560, height: 400, maxWidth: 700,
+      x: [-7.0, 8.6], y: [-6.8, 6.8],
+      axes: { x: { step: 1, label: 'x' }, y: { step: 1, label: 'y' } },
+      padding: { l: 46, r: 30, t: 26, b: 44 },
+      legend: [{ c: 'soft', t: '单位圆（原像）', dash: true }, { c: 'brand', t: '像：椭圆' }],
+      legendOutside: 'bottom',
+      elements: [{ type: 'param', x: 'cos(t)', y: 'sin(t)', t: [0, 6.2832], color: 'soft', dash: true, width: 1.6 }, { type: 'param', x: '3*cos(t)+sin(t)', y: 'cos(t)+3*sin(t)', t: [0, 6.2832], color: 'brand', width: 2.4 }, { type: 'vector', from: [0,0], to: [4,4], color: 'brand', width: 2.0, dash: true }, { type: 'vector', from: [0,0], to: [2,-2], color: 'brand', width: 2.0, dash: true }, { type: 'label', at: [4.15, 4.10], text: '半轴 4√2（方向 (1,1)）', color: 'brand' }, { type: 'label', at: [2.1, -2.0], text: '半轴 2√2（方向 (1,-1)）', color: 'brand' }],
+      verify: function () { var A = function (v) { return [3*v[0] + v[1], v[0] + 3*v[1]]; }; var a = A([1,1]), b = A([1,-1]); if (Math.abs(a[0]-4) > 1e-9 || Math.abs(a[1]-4) > 1e-9) throw new Error('半轴 (1,1) 校验失败'); if (Math.abs(b[0]-2) > 1e-9 || Math.abs(b[1]+2) > 1e-9) throw new Error('半轴 (1,-1) 校验失败'); }
+    });
+  });
+})();
+</script>
 
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 5.7　内积、长度、正交</div>
