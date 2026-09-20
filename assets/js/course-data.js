@@ -1104,7 +1104,8 @@ window.COURSE_DATA = {
       "storageKeys": {
         "progress": "advmath.progress.v1",
         "quiz": "advmath.quiz.v1"
-      }
+      },
+      "ready": true
     },
     {
       "_comment": "线性代数科目数据。由 _migration-linalg/build-subject.py 从线代项目 site.js 的 COURSE 数组迁移而来，内容未作改动。",
@@ -1424,6 +1425,11 @@ window.COURSE_DATA = {
       "storageKeys": {
         "progress": "linalg.progress.v1",
         "quiz": "linalg.quiz.v1"
+      },
+      "ready": false,
+      "readyNote": {
+        "zh": "本科目页面尚未并入本应用，将在下一阶段完成。",
+        "en": "This subject has not been merged into the app yet."
       }
     }
   ]

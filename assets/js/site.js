@@ -52,6 +52,7 @@
   }, REVIEW_HOURS);
 
   var PROG_KEY = 'advmath.progress.v1';
+  var SUBJ_KEY = 'advmath.subject.v1';   // 当前科目（第 36 节）
   var QUIZ_KEY = 'advmath.quiz.v1';
 
   /* ---------------- 存储 ---------------- */
@@ -491,6 +492,163 @@
 
   /* ---------------- 启动 ---------------- */
 
+  /* ---------------- 科目切换（第 36 节） ----------------
+     顶部品牌区可点击，弹出科目菜单。数据来自 COURSE_DATA.subjects，不硬编码。
+     · 只有一个科目时不弹菜单，给出提示
+     · 科目标 ready:false 的（页面尚未并入）给出说明，不做无效跳转
+     · 选择后写 localStorage，并跳到该科目"上次访问的章节"，无记录则第一章
+     · 语言 / 侧栏宽度 / 收起状态等全局状态不重置（它们各有独立的存储键）
+     ---------------------------------------------------------- */
+  var SUBJECTS = (CD.subjects || []).slice().sort(function (a, b) {
+    var o = (CD.meta && CD.meta.subjectsOrder) || [];
+    return o.indexOf(a.id) - o.indexOf(b.id);
+  });
+
+  function subjectOf(rel) {
+    for (var i = 0; i < SUBJECTS.length; i++) {
+      var list = SUBJECTS[i].chapters || [];
+      for (var j = 0; j < list.length; j++) {
+        if (rel.indexOf(list[j].file) !== -1) return SUBJECTS[i];
+      }
+    }
+    return null;
+  }
+  function getSubject() {
+    var id = readJSON(SUBJ_KEY, null);
+    for (var i = 0; i < SUBJECTS.length; i++) if (SUBJECTS[i].id === id) return SUBJECTS[i];
+    var dep = SUBJECTS.filter(function (x) { return x.id === ((CD.meta && CD.meta.defaultSubject) || 'calculus'); })[0];
+    return dep || SUBJECTS[0] || null;
+  }
+  /* 科目里"上次访问的章节"：从 progress 的键反查（键形如 ch7#s7-1） */
+  function lastChapterOf(sub) {
+    if (!sub) return null;
+    var list = sub.chapters || [];
+    var p = getProgress();
+    var files = {};
+    Object.keys(p).forEach(function (k) {
+      var pageKey = k.split('#')[0];
+      files[pageKey] = 1;
+    });
+    var hit = list.filter(function (c) {
+      var key = c.file.replace('chapters/', '').replace('.html', '');
+      return files[key];
+    });
+    return (hit.length ? hit[hit.length - 1] : list[0]) || null;
+  }
+  function gotoChapter(ch) {
+    if (!ch) return;
+    var here = document.body.getAttribute('data-page') || '';
+    var key = ch.file.replace('chapters/', '').replace('.html', '');
+    if (here !== key) location.href = prefix(ch.file);
+  }
+  /* 相对本站根的前缀：章节页在 chapters/ 下，需要上一级 */
+  function prefix(file) {
+    var inChapters = (document.body.getAttribute('data-page') || '') !== 'index' &&
+                     !!document.querySelector('link[href^="../"]');
+    return inChapters ? ('../' + file) : file;
+  }
+
+  function setupSubjectSwitcher() {
+    var brand = document.querySelector('.site-header .brand');
+    if (!brand) return;
+    var cur = getSubject();
+    // 品牌文字换成当前科目名（语言切换由 theme.js 负责全局文案，这里只动科目名）
+    var nameEl = brand.querySelector('span:not(.brand-mark)');
+    if (nameEl && cur) {
+      var label = (cur.title && (cur.title.zh || cur.title)) || '';
+      var small = nameEl.querySelector('small');
+      var smallHTML = small ? small.outerHTML : '';
+      nameEl.innerHTML = label + smallHTML;
+    }
+    if (SUBJECTS.length <= 1) {
+      brand.addEventListener('click', function (e) {
+        e.preventDefault();
+        alert('暂无其他科目。');
+      });
+      return;
+    }
+
+    var menu = null, items = [], idx = 0, opener = brand;
+
+    function close() {
+      if (!menu) return;
+      menu.parentNode.removeChild(menu);
+      menu = null; items = [];
+      brand.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('click', onDoc, true);
+    }
+    function choose(sub) {
+      var note = sub.readyNote && sub.readyNote.zh;
+      if (sub.ready === false) {
+        if (note) alert(note);
+        close();
+        return;
+      }
+      writeJSON(SUBJ_KEY, sub.id);
+      close();
+      gotoChapter(lastChapterOf(sub));
+    }
+    function highlight() {
+      items.forEach(function (el, i) { el.classList.toggle('is-active', i === idx); });
+      if (items[idx] && items[idx].scrollIntoView) {
+        items[idx].scrollIntoView({ block: 'nearest' });
+      }
+    }
+    function onKey(e) {
+      if (!menu) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); idx = (idx + 1) % items.length; highlight(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); idx = (idx - 1 + items.length) % items.length; highlight(); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (items[idx]) items[idx].click(); }
+      else if (e.key === 'Escape') { e.preventDefault(); close(); brand.focus(); }
+    }
+    function onDoc(e) {
+      if (menu && !menu.contains(e.target) && e.target !== brand && !brand.contains(e.target)) close();
+    }
+    function open() {
+      menu = document.createElement('div');
+      menu.className = 'subject-menu';
+      menu.setAttribute('role', 'menu');
+      menu.setAttribute('aria-label', '切换科目');
+      idx = 0;
+      SUBJECTS.forEach(function (sub, i) {
+        var a = document.createElement('button');
+        a.type = 'button';
+        a.className = 'subject-item' + (cur && sub.id === cur.id ? ' is-active' : '');
+        a.setAttribute('role', 'menuitem');
+        a.setAttribute('data-subject', sub.id);
+        var t = (sub.title && (sub.title.zh || sub.title)) || sub.id;
+        var n = (sub.chapters || []).length;
+        a.innerHTML = '<span class="subject-name"></span><span class="subject-meta"></span>';
+        a.querySelector('.subject-name').textContent = t;
+        a.querySelector('.subject-meta').textContent =
+          (sub.ready === false) ? '待并入' : (n + ' 章');
+        if (sub.ready === false) a.classList.add('is-pending');
+        if (cur && sub.id === cur.id) idx = i;
+        a.addEventListener('click', function (ev) { ev.stopPropagation(); choose(sub); });
+        menu.appendChild(a);
+        items.push(a);
+      });
+      brand.parentNode.appendChild(menu);
+      brand.setAttribute('aria-expanded', 'true');
+      highlight();
+      document.addEventListener('keydown', onKey, true);
+      document.addEventListener('click', onDoc, true);
+    }
+    brand.setAttribute('role', 'button');
+    brand.setAttribute('tabindex', '0');
+    brand.setAttribute('aria-haspopup', 'menu');
+    brand.setAttribute('aria-expanded', 'false');
+    brand.setAttribute('title', '点击切换科目');
+    brand.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (menu) { close(); } else { open(); }
+    });
+    brand.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (menu) close(); else open(); }
+    });
+  }
+
   function boot() {
     buildTOC();
     scrollSpy();
@@ -498,6 +656,7 @@
     setupHoursBadges();     // 再注入学时徽章，保证它排在勾选框左侧
     setupMobileNav();
     setupTopButton();
+    setupSubjectSwitcher();   // 品牌区可点击切换科目（第 36 节）
     refreshProgressUI();
     setupMathFallback();
     schedulePunctBind();     // 公式渲染完后，把紧跟公式的标点绑成不可换行单元

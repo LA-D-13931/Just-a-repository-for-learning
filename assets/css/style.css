@@ -1779,3 +1779,56 @@ body.is-resizing .sidebar-grip::after { opacity: 1; background: var(--brand); }
 
 /* 窄屏（≤1000px）：侧栏是抽屉，不再需要"内容居中"的 grid 容器，
    还原为块级，避免 grid 子项不收缩造成横向溢出（check-layout 会抓）。 */
+
+/* ---------- 科目切换（第 36 节） ----------
+   顶部品牌区可点击，弹出科目菜单。只新增规则，不改动上面任何既有样式。 */
+.site-header .brand {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: .22rem .5rem .22rem .3rem;
+  margin-left: -.3rem;
+  transition: background .15s;
+}
+.site-header .brand:hover { background: var(--bg-sunken); }
+.site-header .brand:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+/* 菜单：定位于品牌区下方，圆角与阴影沿用全局变量 */
+.subject-menu {
+  position: absolute;
+  z-index: 60;
+  min-width: 13rem;
+  padding: .3rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+.subject-menu .subject-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  width: 100%; padding: .45rem .6rem;
+  border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--ink);
+  font: inherit; font-size: .9rem; text-align: left; cursor: pointer;
+}
+.subject-menu .subject-item:hover { background: var(--bg-sunken); }
+.subject-menu .subject-item:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+/* 当前科目高亮 */
+.subject-menu .subject-item.is-active {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 700;
+}
+.subject-menu .subject-meta {
+  font-size: .76rem; color: var(--ink-faint); font-weight: 500;
+}
+.subject-menu .subject-item.is-pending .subject-meta { color: var(--ink-faint); }
+
+/* 窄屏：菜单自适应，避免超出视口 */
+@media (max-width: 560px) {
+  .subject-menu { min-width: 0; width: calc(100vw - 2rem); max-width: 20rem; }
+}
