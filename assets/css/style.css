@@ -91,7 +91,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 2.4rem 0; }
 }
 
 .brand {
-  display: flex; align-items: center; gap: .6rem;
+  display: flex; align-items: center; justify-content: center; gap: .6rem;
   font-weight: 700; font-size: 1.02rem; color: var(--ink);
   white-space: nowrap;
 }
@@ -1794,6 +1794,14 @@ body.is-resizing .sidebar-grip::after { opacity: 1; background: var(--brand); }
   margin-left: -.3rem;
   transition: background .15s;
 }
+/* 品牌区的定位锚点（由 site.js 包裹）：菜单以它为基准定位，
+   避免以 sticky header 为基准而顶到窗口最上端、与系统菜单栏重叠。 */
+.brand-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
 .site-header .brand:hover { background: var(--bg-sunken); }
 .site-header .brand:focus-visible {
   outline: 2px solid var(--brand);
@@ -1802,7 +1810,12 @@ body.is-resizing .sidebar-grip::after { opacity: 1; background: var(--brand); }
 /* 菜单：定位于品牌区下方，圆角与阴影沿用全局变量 */
 .subject-menu {
   position: absolute;
-  z-index: 60;
+  /* 向下展开：以品牌锚点为基准，保证完整落在窗口内容区内，
+     不会向上溢出到 macOS 系统菜单栏（用户反馈图一）。 */
+  top: calc(100% + 16px);   /* 品牌锚点高约 30px、顶栏 60px，偏移 16px 后菜单完整落在顶栏之下 */
+  left: 0;
+  /* 层叠：高于顶栏(50)、侧栏(20) 等所有界面元素 */
+  z-index: 9999;
   min-width: 13rem;
   padding: .3rem;
   background: var(--bg-elev);

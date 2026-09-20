@@ -571,10 +571,18 @@
     var nameEl = brand.querySelector('span:not(.brand-mark)');
     if (nameEl && cur) {
       var label = (cur.title && (cur.title.zh || cur.title)) || '';
-      var small = nameEl.querySelector('small');
-      var smallHTML = small ? small.outerHTML : '';
-      nameEl.innerHTML = label + smallHTML;
+      /* 只保留主标题：不再拼回 <small> 副标题（用户反馈品牌区只留「高等数学」/「线性代数」）。
+         数据源里的 tagline 字段保留不动，仅在此渲染层屏蔽。 */
+      nameEl.textContent = label;
     }
+
+    /* 顶栏是 position:sticky(top:0)，若把下拉菜单直接挂进 header，
+       绝对定位会以 header 为基准、跑到窗口最顶端，与 macOS 系统菜单栏打架。
+       这里给品牌套一层 position:relative 的定位锚点，菜单以它为基准向下展开。 */
+    var anchor = document.createElement('span');
+    anchor.className = 'brand-anchor';
+    brand.parentNode.insertBefore(anchor, brand);
+    anchor.appendChild(brand);
     if (SUBJECTS.length <= 1) {
       brand.addEventListener('click', function (e) {
         e.preventDefault();
@@ -644,7 +652,7 @@
         menu.appendChild(a);
         items.push(a);
       });
-      brand.parentNode.appendChild(menu);
+      anchor.appendChild(menu);   /* 挂在定位锚点内，而不是 header 上 */
       brand.setAttribute('aria-expanded', 'true');
       highlight();
       document.addEventListener('keydown', onKey, true);
