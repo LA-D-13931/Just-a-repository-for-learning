@@ -1850,3 +1850,47 @@ body.is-resizing .sidebar-grip::after { opacity: 1; background: var(--brand); }
 @media (max-width: 560px) {
   .subject-menu { min-width: 0; width: calc(100vw - 2rem); max-width: 20rem; }
 }
+
+
+/* ---------- 科目切换：顶部平行标签（第 40 节） ----------
+   由侧栏品牌区的下拉菜单迁移而来。样式与 .header-nav a 对齐
+   （同尺寸、同变量、同悬停与高亮），只新增规则，不改既有样式。 */
+.subject-tabs {
+  display: inline-flex; align-items: center; gap: .1rem;
+  flex: 0 0 auto; white-space: nowrap;
+  margin-right: .45rem; padding-right: .55rem;
+  border-right: 1px solid var(--line);
+}
+.subject-tab {
+  border: 0; cursor: pointer; font: inherit;
+  padding: .34rem .5rem; border-radius: var(--radius-sm);
+  font-size: .85rem; font-weight: 500;
+  color: var(--ink-soft); background: transparent;
+  transition: background .15s, color .15s;
+}
+.subject-tab:hover { background: var(--bg-sunken); color: var(--ink); }
+.subject-tab.is-active { background: var(--brand-soft); color: var(--brand-deep); font-weight: 700; }
+.subject-tab:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* 科目切换的滑动过渡：静态站页与页之间是真实跳转，
+   跳转前把方向写进 sessionStorage，新页据此播一次 transform 动画。
+   只用 transform + opacity，不触发重排，避免布局抖动。 */
+@keyframes slideFromRight {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes slideFromLeft {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: none; }
+}
+.is-slide-from-right { animation: slideFromRight .28s ease-out both; }
+.is-slide-from-left  { animation: slideFromLeft  .28s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .is-slide-from-right, .is-slide-from-left { animation: none; }
+}
+
+/* 窄屏：科目标签允许横向滚动，不挤压「首页 / 公式速查表 / 综合自测卷」 */
+@media (max-width: 1100px) {
+  .subject-tabs { max-width: 40vw; overflow-x: auto; scrollbar-width: none; }
+  .subject-tabs::-webkit-scrollbar { display: none; }
+}

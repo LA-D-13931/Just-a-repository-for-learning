@@ -10,6 +10,44 @@
 
 ---
 
+## v0.9.6 — 2026-09-20
+
+### 科目切换迁到顶部导航栏，改为平行标签 + 滑动过渡（第 40 节）
+
+#### 改动
+
+| 项 | 原 | 现 |
+|---|---|---|
+| 入口位置 | 品牌区（图标 + 科目名）点击弹出下拉菜单 | **顶部导航栏内的平行标签**，插在品牌之后、「首页」之前 |
+| 品牌区职责 | 可点击切换科目 | **静态展示**当前科目名与图标（移除下拉菜单 DOM 与全部事件绑定） |
+| 切换交互 | 立即跳转 | 先写方向到 `sessionStorage`，新页 `transform` 滑入 |
+
+#### 实现要点
+
+- `assets/js/site.js`：删除 `setupSubjectSwitcher()`（含 open/close/键盘/点外部关闭），
+  改为 `setupBrandStatic()` + `setupSubjectTabs()` + `applySlideIn()`
+- 科目列表仍来自 `COURSE_DATA.subjects`，**不硬编码**；当前科目高亮用 `pageSubject()` 判定
+- 切换写 `advmath.subject.v1` 后走 `gotoHomeOrChapter()`（有未读章节回章节，否则回科目首页）
+- **滑动过渡**：静态站页与页之间是真实跳转，无 SPA 路由，故在跳转前把方向
+  写进 `sessionStorage`，新页启动读出来播一次 `transform` 动画（方向与点击顺序一致）
+- `assets/css/style.css`：`.subject-tabs` / `.subject-tab` 与 `.header-nav a` 同尺寸同变量；
+  `@keyframes slideFromRight|slideFromLeft`；尊重 `prefers-reduced-motion`；
+  窄屏标签可横向滚动，不挤压「首页 / 公式速查表 / 综合自测卷」
+
+#### 验证
+
+| 项 | 结果 |
+|---|---|
+| 侧栏/品牌下拉菜单已移除 | ✓ `role` 与 `tabindex` 均为 null，`.subject-menu` 不存在 |
+| 顶部平行标签 | ✓ `[高等数学★, 线性代数]`，位于 header-nav 首位、首页之前 |
+| 点击切换 | ✓ 点「线性代数」→ `linear-algebra.html`，品牌与 h1 同步 |
+| 当前科目高亮 | ✓ 切换后标签高亮随之移到「线性代数」 |
+| 持久化 | ✓ `advmath.subject.v1 = "linearAlgebra"` |
+| 滑动动画 | ✓ 动画类播完自动清除（`.layout` 无残留 transform） |
+| 全局状态 | ✓ 语言/侧栏宽度/收起状态各有独立键，不受切换影响 |
+| 站点校验 11 项 + 布局 + 203 项单测 + 图表自检 | ✓ 全绿 |
+
+
 ## v0.9.5 — 2026-09-20
 
 ### 修：线代页点「首页」跳到高数主页；高数主页顶错品牌名

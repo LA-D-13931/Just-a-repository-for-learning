@@ -661,113 +661,81 @@
     }
   }
 
-  function setupSubjectSwitcher() {
+  /* ---------------- 科目切换：顶部平行标签 + 滑动过渡（第 40 节） ----------------
+     由侧栏品牌区的下拉菜单迁移而来：
+       · 品牌区改为**静态**展示当前科目名与图标，不再承担切换职责
+       · 顶部导航栏内平行列出全部科目（数据来自 COURSE_DATA.subjects，不硬编码）
+       · 点击标签切换科目，用 transform 播一次滑动过渡，方向与点击顺序一致
+       · 语言 / 侧栏宽度 / 收起状态各有独立存储键，切换不受影响
+     -------------------------------------------------------------------------- */
+
+  var SLIDE_KEY = 'advmath.slide.v1';   // sessionStorage：本次切换的滑动方向
+
+  /* 品牌区：只做静态展示（科目名 + 图标），不再弹出菜单 */
+  function setupBrandStatic() {
     var brand = document.querySelector('.site-header .brand');
     if (!brand) return;
-    var cur = pageSubject();   /* 按页面判定，保证品牌名与页面内容一致 */
-    // 品牌文字换成当前科目名（语言切换由 theme.js 负责全局文案，这里只动科目名）
+    var cur = pageSubject();
     var nameEl = brand.querySelector('span:not(.brand-mark)');
-    if (nameEl && cur) {
-      var label = (cur.title && (cur.title.zh || cur.title)) || '';
-      /* 只保留主标题：不再拼回 <small> 副标题（用户反馈品牌区只留「高等数学」/「线性代数」）。
-         数据源里的 tagline 字段保留不动，仅在此渲染层屏蔽。 */
-      nameEl.textContent = label;
-    }
+    if (nameEl && cur) nameEl.textContent = (cur.title && (cur.title.zh || cur.title)) || '';
+    /* 清掉上一版遗留的"可点击"语义，避免读屏与光标误导 */
+    brand.removeAttribute('role');
+    brand.removeAttribute('tabindex');
+    brand.removeAttribute('aria-haspopup');
+    brand.removeAttribute('aria-expanded');
+    brand.removeAttribute('title');
+  }
 
-    /* 顶栏是 position:sticky(top:0)，若把下拉菜单直接挂进 header，
-       绝对定位会以 header 为基准、跑到窗口最顶端，与 macOS 系统菜单栏打架。
-       这里给品牌套一层 position:relative 的定位锚点，菜单以它为基准向下展开。 */
-    var anchor = document.createElement('span');
-    anchor.className = 'brand-anchor';
-    brand.parentNode.insertBefore(anchor, brand);
-    anchor.appendChild(brand);
-    if (SUBJECTS.length <= 1) {
-      brand.addEventListener('click', function (e) {
-        e.preventDefault();
-        alert('暂无其他科目。');
+  /* 内容区滑入：静态站没有 SPA 路由，页与页之间是真实跳转，
+     所以在跳转前把方向写进 sessionStorage，新页启动时读出来播一次动画。 */
+  function applySlideIn() {
+    var dir = null;
+    try { dir = sessionStorage.getItem(SLIDE_KEY); sessionStorage.removeItem(SLIDE_KEY); } catch (e) {}
+    if (dir !== 'left' && dir !== 'right') return;
+    var host = document.querySelector('.layout') || document.querySelector('.content');
+    if (!host) return;
+    var cls = dir === 'right' ? 'is-slide-from-right' : 'is-slide-from-left';
+    host.classList.add(cls);
+    var done = function () {
+      host.classList.remove(cls);
+      host.removeEventListener('animationend', done);
+    };
+    host.addEventListener('animationend', done);
+    setTimeout(done, 600);   // 兜底：动画未触发也清掉类，不留残留 transform
+  }
+
+  /* 顶部平行科目标签：插在 header-nav 最前（品牌之后、「首页」之前） */
+  function setupSubjectTabs() {
+    var nav = document.querySelector('.site-header .header-nav');
+    if (!nav || SUBJECTS.length <= 1) return;
+    var cur = pageSubject();
+    var ids = SUBJECTS.map(function (x) { return x.id; });
+    var curIdx = cur ? ids.indexOf(cur.id) : -1;
+
+    var box = document.createElement('div');
+    box.className = 'subject-tabs';
+    box.setAttribute('role', 'tablist');
+    box.setAttribute('aria-label', '切换科目');
+
+    SUBJECTS.forEach(function (sub) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      var on = (cur && sub.id === cur.id);
+      b.className = 'subject-tab' + (on ? ' is-active' : '');
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.setAttribute('data-subject', sub.id);
+      b.textContent = (sub.title && (sub.title.zh || sub.title)) || sub.id;
+      b.addEventListener('click', function () {
+        if (on) return;                                  // 已是当前科目
+        var to = ids.indexOf(sub.id);
+        try { sessionStorage.setItem(SLIDE_KEY, to > curIdx ? 'right' : 'left'); } catch (e) {}
+        writeJSON(SUBJ_KEY, sub.id);
+        gotoHomeOrChapter(sub);
       });
-      return;
-    }
-
-    var menu = null, items = [], idx = 0, opener = brand;
-
-    function close() {
-      if (!menu) return;
-      menu.parentNode.removeChild(menu);
-      menu = null; items = [];
-      brand.setAttribute('aria-expanded', 'false');
-      document.removeEventListener('keydown', onKey, true);
-      document.removeEventListener('click', onDoc, true);
-    }
-    function choose(sub) {
-      var note = sub.readyNote && sub.readyNote.zh;
-      if (sub.ready === false) {
-        if (note) alert(note);
-        close();
-        return;
-      }
-      writeJSON(SUBJ_KEY, sub.id);
-      close();
-      gotoHomeOrChapter(sub);
-    }
-    function highlight() {
-      items.forEach(function (el, i) { el.classList.toggle('is-active', i === idx); });
-      if (items[idx] && items[idx].scrollIntoView) {
-        items[idx].scrollIntoView({ block: 'nearest' });
-      }
-    }
-    function onKey(e) {
-      if (!menu) return;
-      if (e.key === 'ArrowDown') { e.preventDefault(); idx = (idx + 1) % items.length; highlight(); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); idx = (idx - 1 + items.length) % items.length; highlight(); }
-      else if (e.key === 'Enter') { e.preventDefault(); if (items[idx]) items[idx].click(); }
-      else if (e.key === 'Escape') { e.preventDefault(); close(); brand.focus(); }
-    }
-    function onDoc(e) {
-      if (menu && !menu.contains(e.target) && e.target !== brand && !brand.contains(e.target)) close();
-    }
-    function open() {
-      menu = document.createElement('div');
-      menu.className = 'subject-menu';
-      menu.setAttribute('role', 'menu');
-      menu.setAttribute('aria-label', '切换科目');
-      idx = 0;
-      SUBJECTS.forEach(function (sub, i) {
-        var a = document.createElement('button');
-        a.type = 'button';
-        a.className = 'subject-item' + (cur && sub.id === cur.id ? ' is-active' : '');
-        a.setAttribute('role', 'menuitem');
-        a.setAttribute('data-subject', sub.id);
-        var t = (sub.title && (sub.title.zh || sub.title)) || sub.id;
-        var n = (sub.chapters || []).length;
-        a.innerHTML = '<span class="subject-name"></span><span class="subject-meta"></span>';
-        a.querySelector('.subject-name').textContent = t;
-        a.querySelector('.subject-meta').textContent =
-          (sub.ready === false) ? '待并入' : (n + ' 章');
-        if (sub.ready === false) a.classList.add('is-pending');
-        if (cur && sub.id === cur.id) idx = i;
-        a.addEventListener('click', function (ev) { ev.stopPropagation(); choose(sub); });
-        menu.appendChild(a);
-        items.push(a);
-      });
-      anchor.appendChild(menu);   /* 挂在定位锚点内，而不是 header 上 */
-      brand.setAttribute('aria-expanded', 'true');
-      highlight();
-      document.addEventListener('keydown', onKey, true);
-      document.addEventListener('click', onDoc, true);
-    }
-    brand.setAttribute('role', 'button');
-    brand.setAttribute('tabindex', '0');
-    brand.setAttribute('aria-haspopup', 'menu');
-    brand.setAttribute('aria-expanded', 'false');
-    brand.setAttribute('title', '点击切换科目');
-    brand.addEventListener('click', function (e) {
-      e.preventDefault();
-      if (menu) { close(); } else { open(); }
+      box.appendChild(b);
     });
-    brand.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (menu) close(); else open(); }
-    });
+    nav.insertBefore(box, nav.firstChild);
   }
 
   function boot() {
@@ -778,7 +746,9 @@
     setupMobileNav();
     setupTopButton();
     setupHomeHero();          // 首页 hero 按科目填充（第 38 节）
-    setupSubjectSwitcher();   // 品牌区可点击切换科目（第 36 节）
+    setupBrandStatic();       // 品牌区静态展示科目名（第 40 节：不再切换）
+    setupSubjectTabs();       // 顶部平行科目标签
+    applySlideIn();           // 若本次是科目切换，播一次滑动过渡
     refreshProgressUI();
     setupMathFallback();
     schedulePunctBind();     // 公式渲染完后，把紧跟公式的标点绑成不可换行单元
