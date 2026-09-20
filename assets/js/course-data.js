@@ -1125,7 +1125,7 @@ window.COURSE_DATA = {
         {
           "id": "la1",
           "num": 1,
-          "file": "chapters/ch1.html",
+          "file": "chapters/la1.html",
           "status": "built",
           "hours": 11.5,
           "title": {
@@ -1189,7 +1189,7 @@ window.COURSE_DATA = {
         {
           "id": "la2",
           "num": 2,
-          "file": "chapters/ch2.html",
+          "file": "chapters/la2.html",
           "status": "built",
           "hours": 10.6,
           "title": {
@@ -1239,7 +1239,7 @@ window.COURSE_DATA = {
         {
           "id": "la3",
           "num": 3,
-          "file": "chapters/ch3.html",
+          "file": "chapters/la3.html",
           "status": "built",
           "hours": 9.3,
           "title": {
@@ -1282,7 +1282,7 @@ window.COURSE_DATA = {
         {
           "id": "la4",
           "num": 4,
-          "file": "chapters/ch4.html",
+          "file": "chapters/la4.html",
           "status": "built",
           "hours": 10.4,
           "title": {
@@ -1325,7 +1325,7 @@ window.COURSE_DATA = {
         {
           "id": "la5",
           "num": 5,
-          "file": "chapters/ch5.html",
+          "file": "chapters/la5.html",
           "status": "built",
           "hours": 9.0,
           "title": {
@@ -1361,7 +1361,7 @@ window.COURSE_DATA = {
         {
           "id": "la6",
           "num": 6,
-          "file": "chapters/ch6.html",
+          "file": "chapters/la6.html",
           "status": "built",
           "hours": 6.2,
           "title": {
@@ -1426,11 +1426,7 @@ window.COURSE_DATA = {
         "progress": "linalg.progress.v1",
         "quiz": "linalg.quiz.v1"
       },
-      "ready": false,
-      "readyNote": {
-        "zh": "本科目页面尚未并入本应用，将在下一阶段完成。",
-        "en": "This subject has not been merged into the app yet."
-      }
+      "ready": true
     }
   ]
 };

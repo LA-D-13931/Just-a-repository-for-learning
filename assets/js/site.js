@@ -29,7 +29,22 @@
     ch12: '常数项级数、幂级数、傅里叶级数。',
     supp1: '同济体系未单列、而托马斯 14 版独立成节的内容：软件绘图与作为变化率的导数。'
   };
-  var COURSE = CD.chapters.map(function (c) {
+  /* 科目感知（第 37 节）：页面上若标了 data-subject，就用该科目的章节表；
+     否则回退顶层 chapters（= 高等数学）。这样 site.js 的其余部分（进度统计、
+     侧栏、当前章判定）**无需再改**，自动跟随科目。
+     ⚠️ 顶层 chapters 与 subjects[calculus].chapters 是同一份数据。 */
+  function courseOf(sel) {
+    var subs = CD.subjects || [];
+    if (sel) {
+      for (var i = 0; i < subs.length; i++) if (subs[i].id === sel) return subs[i].chapters || [];
+    }
+    return CD.chapters || [];
+  }
+  var PAGE_SUBJECT = (typeof document !== 'undefined' && document.body)
+    ? document.body.getAttribute('data-subject') : null;
+  var COURSE_SRC = courseOf(PAGE_SUBJECT);
+
+  var COURSE = COURSE_SRC.map(function (c) {
     var n = (c.num === 101) ? 101 : c.num;
     return {
       n: n,

@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第6章 二次型 · 线性代数学习站</title>
+<meta name="description" content="二次型的矩阵表示、合同与惯性定理、正交变换法与配方法化标准形、正定二次型的判定。">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script>
+  /* MathJax 配置：与高数各章一致（本地引擎 + 关闭自动全量排版，由脚本分片驱动） */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    startup: { typeset: false, ready: function () { MathJax.startup.defaultReady(); window.__mjxReady = true; } }
+  };
+</script>
+<script id="MathJax-script" async src="../assets/js/vendor/tex-svg.js"></script>
+<script>
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head';
+    var pending = [], busy = false, started = false, sweepDone = false;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) { schedule(); return; }
+          /* 兜底补排（第 32 节）：例题标题 .example-head 里的公式此前从不进入队列，
+             导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
+             凡是仍含 `$` 且未被 MathJax 处理的 .example-head，补排一次。
+             只处理这一类元素，不影响其他已排好的内容。 */
+          if (!sweepDone) {
+            sweepDone = true;
+            var left = Array.prototype.slice.call(document.querySelectorAll(SEL))
+              .filter(function (el) {
+                return !el.querySelector('mjx-container') &&
+                  Array.from(el.childNodes).some(function (n) {
+                    return n.nodeType === 3 && /\$[^$]{1,200}\$/.test(n.nodeValue || '');
+                  });
+              });
+            if (left.length) { pending = pending.concat(left); schedule(); }
+          }
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL));
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+
+</script>
+</head>
+<body data-page="la6" data-chapter="6" data-subject="linearAlgebra">
+
+  <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="../index.html">
+      <span class="brand-mark">LA</span>
+      <span>线性代数<small>行列式 · 矩阵 · 方程组 · 特征值 · 二次型</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="../index.html">首页</a>
+      <a href="../cheatsheet.html">公式速查表</a>
+      <a href="../exam.html">综合自测卷</a>
+    </nav>
+    <span class="crumb">第 6 章 二次型</span>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+        <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="la1.html"><span class="num">1</span>行列式</a>
+          <a class="toc-chapter" href="la2.html"><span class="num">2</span>矩阵</a>
+          <a class="toc-chapter" href="la3.html"><span class="num">3</span>线性方程组与初等变换</a>
+          <a class="toc-chapter" href="la4.html"><span class="num">4</span>向量组与解的结构</a>
+          <a class="toc-chapter" href="la5.html"><span class="num">5</span>特征值与矩阵对角化</a>
+          <a class="toc-chapter is-active" href="la6.html"><span class="num">6</span>二次型</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">本页目录</div>
+          <nav class="toc" data-toc></nav>
+        </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div class="page-eyebrow">CHAPTER 6 · 对应「一高数」第 6 章</div>
+        <h1>第 6 章　二次型</h1>
+        <p class="lede">这一章是整门课的<strong>汇聚点</strong>：行列式、矩阵、秩、特征值、正交变换，前五章的工具在这里全部合流。目标是回答三个问题——二次型怎么用矩阵表示（$f=x^TAx$）、怎么通过换元把交叉项消掉（标准形与规范形）、什么情况下它恒为正（正定）。全章只有 5 学时，篇幅最紧，但考研数一的大题几乎年年从这里出。</p>
+      </div>
+
+      <!-- ======== 以下为小节内容 ======== -->
+
+      <h2 id="s6-1" data-hours="2.4">6-1 二次型及其标准形</h2>
+
+      <p>走到这里，前五章的工具已经全部就位，但它们此前各自解决一类问题：第 1 章的行列式算数值，第 2 章的矩阵管运算与逆，第 3 章的秩刻画方程组解的情况，第 4 章的向量组理论说清线性相关与基础解系，第 5 章的特征值与正交变换揭示变换中不变的东西。本节提出的问题看起来是全新的：<strong>$n$ 个变量的二次齐次多项式能不能化简？</strong>答案是能，而且化简它所需的工具恰好就是前面全部五章——写矩阵要用实对称矩阵，判定要用行列式与秩，算标准形要用特征值和正交变换。本节先把"二次型"翻译成矩阵语言，再引入<strong>合同</strong>这个概念来描述"换元"这个动作，最后用<strong>惯性定理</strong>回答"化简过程中什么东西不会变"。这个不变量是后面两节所有判定的基础。</p>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>为什么需要二次型</div>
+        <p>中学里判断方程 $ax^2+bxy+cy^2=1$ 表示椭圆还是双曲线，靠的是判别式 $b^2-4ac$ 的符号。现在把它写成矩阵：</p>
+        <p>$$ax^2+bxy+cy^2=\begin{pmatrix}x&amp;y\end{pmatrix}\begin{pmatrix}a&amp;b/2\\b/2&amp;c\end{pmatrix}\begin{pmatrix}x\\y\end{pmatrix}$$</p>
+        <p>你会发现 $b^2-4ac=-4\begin{vmatrix}a&amp;b/2\\b/2&amp;c\end{vmatrix}$——判别式本质上就是对称矩阵的行列式。</p>
+        <p>更关键的是"化简"。$x^2+2xy+y^2=(x+y)^2$，换元 $u=x+y$ 就把交叉项消掉了，几何上相当于<strong>旋转坐标轴，让新坐标轴落在曲线的对称轴上</strong>。本章要回答：交叉项能不能总消掉（能）；消掉之后哪些量是换元也改不掉的本质量（正负项的<em>个数</em>）；什么时候所有平方项系数都是正的（正定）。换元 $x=Cy$ 代进去得到 $y^T(C^TAC)y$，所以"换元"在矩阵层面的动作就是 $A\mapsto C^TAC$。</p>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 6.1　二次型、二次型的矩阵与秩</div>
+        <p>含有 $n$ 个变量 $x_1,\dots,x_n$ 的二次齐次多项式</p>
+        <p>$$f(x_1,\dots,x_n)=\sum_{i=1}^{n}\sum_{j=1}^{n}a_{ij}x_ix_j\qquad(a_{ij}=a_{ji})$$</p>
+        <p>称为 <span class="term">n 元二次型</span>，简称二次型。展开式里每一项都是 2 次，<strong>没有一次项也没有常数项</strong>，这就是"齐次"的含义。</p>
+        <p>取 $A=(a_{ij})_{n\times n}$（强制 $a_{ij}=a_{ji}$，即 $A$ 为<strong>实对称矩阵</strong>），$x=(x_1,\dots,x_n)^T$，则</p>
+        <p>$$f(x_1,\dots,x_n)=x^TAx$$</p>
+        <p>$A$ 称为该<span class="term">二次型的矩阵</span>，$A$ 的秩称为<span class="term">二次型的秩</span>，记作 $R(f)=R(A)$。给定的实对称矩阵与二次型<strong>一一对应</strong>。</p>
+        <p>由于 $A$ 对称，交叉项的贡献是 $a_{ij}x_ix_j+a_{ji}x_jx_i=2a_{ij}x_ix_j$，这就是展开式里交叉项系数前有个 $2$ 的原因。反向写二次型用公式 $f=\sum a_{ii}x_i^2+2\sum_{i&lt;j}a_{ij}x_ix_j$。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 6.1</span>
+             <strong>Quadratic Form, Its Matrix, and Its Rank.</strong>
+             A homogeneous polynomial of degree two in the $n$ variables $x_1,\dots,x_n$,</p>
+          <p>$$f(x_1,\dots,x_n)=\sum_{i=1}^{n}\sum_{j=1}^{n}a_{ij}x_ix_j\qquad(a_{ij}=a_{ji})$$</p>
+          <p>is called a <span class="en-term">quadratic form</span> in $n$ variables (for short, a quadratic form).
+             Every term in the expansion has degree $2$: there is no linear term and no constant term,
+             and that is what "homogeneous" means.</p>
+          <p>Take $A=(a_{ij})_{n\times n}$ with $a_{ij}=a_{ji}$ forced, so that $A$ is a
+             <strong>real symmetric matrix</strong>, and let $x=(x_1,\dots,x_n)^T$. Then</p>
+          <p>$$f(x_1,\dots,x_n)=x^TAx$$</p>
+          <p>$A$ is called the <span class="en-term">matrix of the quadratic form</span>, and the rank of $A$ is called
+             the <span class="en-term">rank of the quadratic form</span>, written $R(f)=R(A)$. A given real symmetric
+             matrix and a given quadratic form correspond to each other one-to-one.</p>
+          <p>Because $A$ is symmetric, the two cross terms in $x_ix_j$ together contribute
+             $a_{ij}x_ix_j+a_{ji}x_jx_i=2a_{ij}x_ix_j$; this is where the factor $2$ in front of every cross-term
+             coefficient comes from. To go the other way, use $f=\sum a_{ii}x_i^2+2\sum_{i&lt;j}a_{ij}x_ix_j$.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：写出二次型的矩阵</div>
+        <ol>
+          <li>数清变量个数，矩阵就是 $n\times n$ 的方阵。</li>
+          <li><strong>平方项</strong> $x_i^2$ 的系数 $k$：直接写在主对角线上，$a_{ii}=k$。</li>
+          <li><strong>交叉项</strong> $x_ix_j\ (i\ne j)$ 的系数 $k$：<strong>平分成两份</strong>，$a_{ij}=a_{ji}=\dfrac{k}{2}$。这一步是全部错误的来源。</li>
+          <li>没有出现的项写 0。</li>
+          <li><strong>自检</strong>：$a_{ij}$ 与 $a_{ji}$ 必须相等。只花 3 秒，却能拦住绝大多数错误。</li>
+        </ol>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD 6.1</span>
+             <strong>Writing Down the Matrix of a Quadratic Form.</strong></p>
+          <ol>
+            <li>Count the variables: the matrix is $n\times n$.</li>
+            <li>A square $x_i^2$ with coefficient $k$ goes straight onto the main diagonal: $a_{ii}=k$.</li>
+            <li>A cross term $x_ix_j\ (i\ne j)$ with coefficient $k$ is <strong>split into two equal halves</strong>:
+                $a_{ij}=a_{ji}=\dfrac{k}{2}$. This single step is the source of almost every mistake.</li>
+            <li>A term that does not appear is $0$.</li>
+            <li><strong>Check yourself</strong>: $a_{ij}$ must equal $a_{ji}$. It takes three seconds and it catches
+                the great majority of errors.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点：交叉项系数必须平分</div>
+        <p>二次型 $f=2x_1^2+3x_1x_2+x_2^2$ 的矩阵是</p>
+        <p>$$A=\begin{pmatrix}2&amp;\dfrac32\\[4pt]\dfrac32&amp;1\end{pmatrix}\qquad\text{而不是}\qquad\begin{pmatrix}2&amp;3\\0&amp;1\end{pmatrix}\ \text{或}\ \begin{pmatrix}2&amp;3\\3&amp;1\end{pmatrix}$$</p>
+        <p>因为 $x^TAx$ 中 $x_1x_2$ 的总系数是 $a_{12}+a_{21}=2a_{12}$，只有取 $a_{12}=\dfrac32$ 才能得到 $3$。写成 $\begin{pmatrix}2&amp;3\\0&amp;1\end{pmatrix}$ 是既没平分又不对称（不对称的矩阵一眼就能排除）；写成 $\begin{pmatrix}2&amp;3\\3&amp;1\end{pmatrix}$ 是对称了但没平分，它对应的二次型是 $2x_1^2+6x_1x_2+x_2^2$，交叉项翻倍。含参数的题同理：出现 $tx_ix_j$，矩阵里必须写 $t/2$。</p>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 6.2　合同、标准形与规范形</div>
+        <p>设 $A,B$ 为 $n$ 阶方阵，若存在<strong>可逆矩阵</strong> $C$ 使 $B=C^TAC$，则称 $A$ 与 $B$ <span class="term">合同</span>（相合），记作 $A\simeq B$。合同关系具有<strong>反身性、对称性、传递性</strong>，并且必然保持秩与对称性。</p>
+        <p>只含平方项、不含交叉项的二次型 $d_1y_1^2+\cdots+d_ny_n^2$ 称为<span class="term">标准形</span>，其矩阵是对角矩阵。若进一步要求系数只取 $1,-1,0$，得到</p>
+        <p>$$y_1^2+\cdots+y_p^2-y_{p+1}^2-\cdots-y_{p+q}^2$$</p>
+        <p>称为<span class="term">规范形</span>，其中 $p$ 叫<span class="term">正惯性指数</span>，$q$ 叫<span class="term">负惯性指数</span>。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 6.2</span>
+             <strong>Congruence, Standard Form and Canonical Form.</strong>
+             Let $A$ and $B$ be $n\times n$ matrices. If there is an <strong>invertible matrix</strong> $C$ such that
+             $B=C^TAC$, then $A$ and $B$ are said to be <span class="en-term">congruent</span>, written $A\simeq B$.
+             Congruence is reflexive, symmetric and transitive, and it always preserves rank and symmetry.</p>
+          <p>A quadratic form that contains only squares and no cross terms, $d_1y_1^2+\cdots+d_ny_n^2$, is called a
+             <span class="en-term">standard form</span> (Strang also writes <span class="en-term">diagonal form</span>);
+             its matrix is a diagonal matrix. If in addition the coefficients are required to be only $1,-1,0$, we get</p>
+          <p>$$y_1^2+\cdots+y_p^2-y_{p+1}^2-\cdots-y_{p+q}^2$$</p>
+          <p>which is called the <span class="en-term">canonical form</span>. Here $p$ is the number of positive
+             squares, called the positive inertia index, and $q$ is the number of negative squares, called the
+             negative inertia index.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.1　惯性定理与合同的判定</div>
+        <p><span class="thm-name">惯性定理</span>　二次型化为标准形后，正平方项的个数 $p$ 与负平方项的个数 $q$ 由二次型本身唯一确定，与所用的可逆线性变换<strong>无关</strong>。并且</p>
+        <p>$$p+q=R(A),\qquad p=\text{正特征值的个数},\qquad q=\text{负特征值的个数}$$</p>
+        <p>解读：标准形<strong>不唯一</strong>（换成不同的变换可得到 $2y_1^2-3y_2^2$ 或 $5y_1^2-y_2^2$），但规范形<strong>唯一</strong>（都是 $y_1^2-y_2^2$）。系数会变，正负项的<em>个数</em>不会变。</p>
+        <p><span class="thm-name">推论（合同判定）</span>　两个 $n$ 元二次型合同 $\iff$ 它们的正、负惯性指数分别相等（即规范形相同）。这条推论把"是否存在可逆 $C$"的抽象问题，变成了数平方项个数的具体问题，是考试选择题的主力考点。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 6.1</span>
+             <strong>The Law of Inertia and the Test for Congruence.</strong></p>
+          <p><span class="thm-name">The <span class="en-term">law of inertia</span></span>　Once a quadratic form has been reduced to a standard form,
+             the number $p$ of positive squares and the number $q$ of negative squares are determined by the quadratic
+             form itself alone and are <strong>independent</strong> of the invertible linear transformation used.
+             Moreover</p>
+          <p>$$p+q=R(A),\qquad p=\text{number of positive eigenvalues},\qquad q=\text{number of negative eigenvalues}$$</p>
+          <p>Reading: the standard form is <strong>not unique</strong> (different transformations may give
+             $2y_1^2-3y_2^2$ or $5y_1^2-y_2^2$), but the canonical form <strong>is unique</strong> (both give
+             $y_1^2-y_2^2$). The coefficients may change; the <em>number</em> of positive and of negative terms
+             cannot.</p>
+          <p><span class="thm-name">Corollary (test for congruence)</span>　Two quadratic forms in $n$ variables are
+             congruent $\iff$ they have the same positive inertia index and the same negative inertia index
+             (that is, the same canonical form). This corollary turns the abstract question "does an invertible $C$
+             exist?" into the concrete job of counting squares of each sign, and it is the main test used in
+             multiple-choice questions.</p>
+        </div>
+      </div>
+
+      <div class="box link-box">
+        <div class="box-title"><span class="ico">🔗</span>知识关联：本章是全书的汇聚点</div>
+        <ul>
+          <li><strong>第 1 章 行列式</strong>：$A$ 的秩用它算（$R(A)=n\iff|A|\ne0$）；6-3 节的"各阶顺序主子式"就是一串行列式，$D_n$ 就是 $|A|$。</li>
+          <li><strong>第 2 章 矩阵</strong>：二次型必须用<strong>实对称矩阵</strong>表示；换元动作 $A\mapsto C^TAC$ 是矩阵乘法的直接应用；合同要求 $C$ 可逆，用到逆矩阵。</li>
+          <li><strong>第 3 章 初等变换与秩</strong>：二次型的秩 $R(f)=R(A)$ 用初等行变换求；6-2 节的初等变换法（合同变换法）是初等变换的又一用法。</li>
+          <li><strong>第 4 章 向量组</strong>：求特征向量就是求齐次方程组的基础解系；重根情形要数一数有几个线性无关的特征向量；施密特正交化在第 4 章学的，6-2 节第一次派上大用场。</li>
+          <li><strong>第 5 章 特征值</strong>：惯性指数 $p,q$ 完全由特征值的正负个数决定；正交变换下 $Q^T=Q^{-1}$，所以<strong>合同与相似同时成立</strong>——这是两章之间最关键的一座桥。</li>
+          <li><strong>启下</strong>：6-2 节用特征值与正交变换算标准形，6-3 节用顺序主子式判正定，二者都以本节的合同与惯性定理为地基。</li>
+        </ul>
+      </div>
+
+      <div class="box tbl-wrap">
+        <table>
+          <thead><tr><th>比较项</th><th>相似</th><th>合同</th></tr></thead>
+          <tbody>
+            <tr><td>定义式</td><td>$B=P^{-1}AP$</td><td>$B=C^TAC$</td></tr>
+            <tr><td>对变换矩阵的要求</td><td>$P$ 可逆</td><td>$C$ 可逆</td></tr>
+            <tr><td>保持的不变量</td><td>特征值、迹、行列式、秩</td><td>秩、正负惯性指数、对称性、（可逆时）行列式的符号</td></tr>
+            <tr><td>不保持</td><td>一般不保持二次型的耦合结构</td><td>一般不保持特征值、迹</td></tr>
+            <tr><td>两者的联系</td><td colspan="2">若 $Q$ 是<strong>正交矩阵</strong>，则 $Q^{-1}=Q^T$，于是 $Q^TAQ=Q^{-1}AQ$——<strong>合同与相似同时成立</strong>。这正是第 5 章"实对称矩阵可正交对角化"的意义，也是 6-2 节正交变换法的理论基础。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>记忆口诀：<strong>相似保特征值，合同保正负号</strong>。对实对称矩阵，相似 $\Rightarrow$ 合同，但合同 $\not\Rightarrow$ 相似（例 6.3 会给出反例）。</p>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.1</span> 写出二次型的矩阵并求秩
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>写出二次型 $f(x_1,x_2,x_3)=x_1^2+2x_2^2+3x_3^2+2x_1x_2+2x_1x_3+4x_2x_3$ 的矩阵 $A$，并求二次型的秩。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：平方项系数放主对角线。</strong>$a_{11}=1,\ a_{22}=2,\ a_{33}=3$。</p>
+            <p><strong>第二步：交叉项系数平分。</strong>$x_1x_2$ 的系数是 $2$，故 $a_{12}=a_{21}=1$；$x_1x_3$ 的系数是 $2$，故 $a_{13}=a_{31}=1$；$x_2x_3$ 的系数是 $4$，故 $a_{23}=a_{32}=2$。于是</p>
+            <p>$$A=\begin{pmatrix}1&amp;1&amp;1\\1&amp;2&amp;2\\1&amp;2&amp;3\end{pmatrix}$$</p>
+            <p>自检：$A^T=A$，对称，通过。</p>
+            <p><strong>第三步：求秩。</strong>用第 1 章的行列式按第一行展开：</p>
+            <p>$$|A|=1\begin{vmatrix}2&amp;2\\2&amp;3\end{vmatrix}-1\begin{vmatrix}1&amp;2\\1&amp;3\end{vmatrix}+1\begin{vmatrix}1&amp;2\\1&amp;2\end{vmatrix}=1(6-4)-1(3-2)+1(2-2)=2-1+0=1\ne0$$</p>
+            <p>故 $R(A)=3$，二次型的秩为 3。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.2</span> 由矩阵写出二次型并求规范形
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>已知实对称矩阵 $A=\begin{pmatrix}1&amp;1&amp;0\\1&amp;1&amp;0\\0&amp;0&amp;1\end{pmatrix}$，写出二次型 $f=x^TAx$ 的表达式，并求它的秩与规范形。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：写表达式。</strong>用公式 $f=\sum a_{ii}x_i^2+2\sum_{i&lt;j}a_{ij}x_ix_j$：平方项是 $x_1^2+x_2^2+x_3^2$；交叉项只有 $2a_{12}x_1x_2=2x_1x_2$。所以</p>
+            <p>$$f=x_1^2+2x_1x_2+x_2^2+x_3^2$$</p>
+            <p><strong>第二步：求秩。</strong>对 $A$ 作初等行变换（第 2 行减去第 1 行）：</p>
+            <p>$$A\to\begin{pmatrix}1&amp;1&amp;0\\0&amp;0&amp;0\\0&amp;0&amp;1\end{pmatrix}$$</p>
+            <p>有两个非零行，故 $R(A)=2$，二次型的秩为 2。</p>
+            <p><strong>第三步：求规范形。</strong>把含 $x_1,x_2$ 的部分配成完全平方：</p>
+            <p>$$f=(x_1+x_2)^2+x_3^2$$</p>
+            <p>作可逆变换 $y_1=x_1+x_2,\ y_2=x_3$，得标准形 $f=y_1^2+y_2^2$，再作 $z_1=y_1,\ z_2=y_2$（系数已是 1，无需缩放），规范形为 $z_1^2+z_2^2$。故 $p=2,q=0$，与 $p+q=R(A)=2$ 一致。</p>
+            <p><strong>注意</strong>：秩相同的二次型未必合同。本例 $R(A)=2$ 且 $p=2$；而 $x_1^2-x_2^2$ 的秩也是 2 但 $p=1,q=1$，二者不合同。判断合同必须比惯性指数，不能只比秩。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.3</span> 验证合同关系并比较惯性指数
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $A=\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$，$C=\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$。(1) 求 $B=C^TAC$；(2) 分别求 $A,B$ 的正、负惯性指数，验证二者相同；(3) 判断 $A$ 与 $B$ 是否相似。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>(1)</strong> 先算 $AC$：</p>
+            <p>$$AC=\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}=\begin{pmatrix}1&amp;3\\2&amp;3\end{pmatrix}$$</p>
+            <p>再左乘 $C^T=\begin{pmatrix}1&amp;0\\1&amp;1\end{pmatrix}$：</p>
+            <p>$$B=C^T(AC)=\begin{pmatrix}1&amp;0\\1&amp;1\end{pmatrix}\begin{pmatrix}1&amp;3\\2&amp;3\end{pmatrix}=\begin{pmatrix}1&amp;3\\3&amp;6\end{pmatrix}$$</p>
+            <p>因为 $|C|=1\ne0$，$C$ 可逆，所以 $A$ 与 $B$ 合同。</p>
+            <p><strong>(2)</strong> 求 $A$ 的惯性指数：</p>
+            <p>$$|\lambda E-A|=\begin{vmatrix}\lambda-1&amp;-2\\-2&amp;\lambda-1\end{vmatrix}=(\lambda-1)^2-4=\lambda^2-2\lambda-3=(\lambda-3)(\lambda+1)$$</p>
+            <p>特征值为 $3$ 与 $-1$，故 $p=1,\ q=1$。</p>
+            <p>求 $B$ 的惯性指数：</p>
+            <p>$$|\lambda E-B|=\begin{vmatrix}\lambda-1&amp;-3\\-3&amp;\lambda-6\end{vmatrix}=(\lambda-1)(\lambda-6)-9=\lambda^2-7\lambda-3$$</p>
+            <p>两根为 $\lambda=\dfrac{7\pm\sqrt{61}}{2}$。由 $\sqrt{61}\approx7.81$ 得 $\lambda_1\approx7.41&gt;0$，$\lambda_2\approx-0.41&lt;0$，故 $p=1,\ q=1$，与 $A$ 相同，验证了"合同保持正负惯性指数"。</p>
+            <p><strong>(3)</strong> $A$ 的特征值是 $3,-1$，$B$ 的特征值是 $\dfrac{7\pm\sqrt{61}}{2}$，两者<strong>不同</strong>，所以 $A$ 与 $B$ <strong>不相似</strong>。</p>
+            <p>这就给出了"合同 $\not\Rightarrow$ 相似"的标准反例。（顺带一提，本例中恰好 $|A|=|B|=-3$，这只是巧合；一般由 $|B|=|C|^2|A|$ 只能推出两者行列式<strong>符号相同</strong>。）</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <ul>
+          <li><span class="tag">高频</span><span class="tag">易错</span>由二次型写矩阵。<strong>看到题第一件事就是平分交叉项系数</strong>，写完立刻检查是否对称。含参数时写 $t/2$ 而不是 $t$，这是阅卷时最常见的扣分点。</li>
+          <li><span class="tag">高频</span><span class="tag">小题</span>判断两个二次型是否合同。思路固定：<strong>分别求出正、负惯性指数</strong>（数正、负特征值的个数），相等就合同。不要去算 $C^TAC$，那是浪费时间。</li>
+          <li><span class="tag">高频</span><span class="tag">大题</span>"相似 / 合同 / 等价"三者辨析。相似保特征值、合同保正负号、等价（同秩）最弱，强度依次递减。<strong>对实对称矩阵，相似 $\Rightarrow$ 合同，但合同 $\not\Rightarrow$ 相似</strong>——反例就是例 6.3，要能随手写出来。</li>
+          <li><span class="tag">小题</span>由二次型的秩反求参数：秩 $&lt;n$ $\iff$ 行列式为 0，列一个方程即可。</li>
+          <li><span class="tag">易错</span>把"标准形唯一"当成定理。标准形<strong>不唯一</strong>，唯一的只有规范形。</li>
+        </ul>
+      </div>
+
+      <div class="box app-box">
+        <div class="box-title"><span class="ico">🔧</span>工程联系：应变能与弹性矩阵</div>
+        <p>有限元分析中，一个单元体的应变能密度写成 $U=\dfrac12\varepsilon^T D\,\varepsilon$，其中 $\varepsilon$ 是应变向量，$D$ 是<strong>弹性矩阵</strong>（实对称）。$D$ 就是这里说的"二次型的矩阵"。</p>
+        <p>物理上"材料稳定"意味着只要产生非零变形就一定要储存正的能量，即 $U&gt;0\ (\varepsilon\ne0)$——这正是 $D$ <strong>正定</strong>的数学定义。而"把 $D$ 对角化"对应工程上找<strong>主应变方向</strong>：在新坐标系里能量只剩 $\frac12(\sigma_1\varepsilon_1+\sigma_2\varepsilon_2+\sigma_3\varepsilon_3)$ 这样的平方和，没有耦合项。这就是 6-2 节正交变换法要干的事。</p>
+      </div>
+
+      <div class="box model-box">
+        <div class="box-title"><span class="ico">🧩</span>典型模型题</div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 1</span>惯性指数与合同判定<span class="lv">中等</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              题目给出两个具体的二次型（或两个实对称矩阵），问它们"是否合同"。<strong>注意问的不是相似、也不是秩</strong>。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 分别写出矩阵 $A,B$；② 各自求出正、负惯性指数 $p,q$（实对称矩阵就数特征值的正负个数，或直接配方）；
+              ③ <strong>$p,q$ 分别相等 $\iff$ 合同</strong>；④ 只有在题目额外要求"写出变换矩阵 $C$"时，才去解 $C^TAC=B$。
+              <strong>不要一上来就硬算 $C^TAC$</strong>——判合同只用 $p,q$。</div>
+            <p><strong>例</strong>　判断二次型 $f_1=2x_1^2+4x_1x_2+5x_2^2$ 与 $f_2=3y_1^2+2y_2^2$ 是否合同。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：写矩阵。</strong>交叉项系数要平分，$4x_1x_2$ 给出 $a_{12}=a_{21}=2$。</p>
+              <p>$$A=\begin{pmatrix}2&amp;2\\2&amp;5\end{pmatrix},\qquad B=\begin{pmatrix}3&amp;0\\0&amp;2\end{pmatrix}$$</p>
+              <p><strong>第二步：求 $A$ 的惯性指数。</strong></p>
+              <p>$$|\lambda E-A|=\begin{vmatrix}\lambda-2&amp;-2\\-2&amp;\lambda-5\end{vmatrix}=(\lambda-2)(\lambda-5)-4=\lambda^2-7\lambda+6=(\lambda-1)(\lambda-6)$$</p>
+              <p>特征值是 $6$ 与 $1$，都大于 $0$，故 $p=2,\ q=0$。交叉验证：$\mathrm{tr}(A)=2+5=7=6+1$，$|A|=2\times5-2\times2=6=6\times1$，与算出的特征值吻合。</p>
+              <p><strong>第三步：求 $B$ 的惯性指数。</strong>$B$ 已经是对角矩阵，对角元 $3,2$ 都大于 $0$，故 $p=2,\ q=0$。</p>
+              <p><strong>第四步：结论。</strong>两者的正、负惯性指数分别相等（都是 $p=2,q=0$），所以 $f_1$ 与 $f_2$ <strong>合同</strong>。</p>
+              <p>也可以换个说法：两者的正惯性指数都等于 $2$、负惯性指数都等于 $0$，规范形都是 $y_1^2+y_2^2$，即都与 $E$ 合同；由合同的传递性知它们彼此合同。</p>
+              <p><strong>顺带一问：它们相似吗？</strong>$A$ 的特征值是 $6,1$，$B$ 的特征值是 $3,2$，<strong>不相同</strong>，所以<strong>不相似</strong>。这就是"惯性指数相同因而合同，特征值不同因而不相似"的实例。</p>
+            </div>
+            <p><strong>易错提醒</strong>　只比"秩"就下结论是错的：秩相同只说明非零平方项的个数相同，<strong>正负号可以不同</strong>。例如 $y_1^2+y_2^2$ 与 $y_1^2-y_2^2$ 的秩都是 $2$，但前者 $p=2,q=0$、后者 $p=1,q=1$，二者不合同。</p>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 2</span>由秩反求参数<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              二次型里含一个参数（记作 $a,t,k$ 等），已知"二次型的秩为 $r$"或"$R(A)=r$"，反求这个参数。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 写矩阵；② 由"秩 $&lt;n$ $\iff$ $|A|=0$"解出参数的全部候选值；
+              ③ <strong>每个候选值都代回求秩</strong>，确认秩恰好等于题给的值（$|A|=0$ 只保证秩 $&lt;n$，可能掉得更多）；
+              ④ 若还问规范形或惯性指数，再配方或解特征方程。</div>
+            <p><strong>例</strong>　已知二次型 $f=x_1^2+2x_2^2+ax_3^2+2x_1x_2+2x_1x_3+2x_2x_3$ 的秩为 $2$，求 $a$，并写出它的规范形。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：写矩阵。</strong>三个交叉项的系数都是 $2$，平分得 $1$：</p>
+              <p>$$A=\begin{pmatrix}1&amp;1&amp;1\\1&amp;2&amp;1\\1&amp;1&amp;a\end{pmatrix}$$</p>
+              <p><strong>第二步：用 $|A|=0$ 求候选值。</strong>按第一行展开：</p>
+              <p>$$|A|=1\begin{vmatrix}2&amp;1\\1&amp;a\end{vmatrix}-1\begin{vmatrix}1&amp;1\\1&amp;a\end{vmatrix}+1\begin{vmatrix}1&amp;2\\1&amp;1\end{vmatrix}=(2a-1)-(a-1)+(1-2)=a-1$$</p>
+              <p>要让秩 $&lt;3$ 必须有 $|A|=0$，即 $a=1$。（$|A|=0$ 只是必要条件，不是充分条件，所以还要再验一次秩。）</p>
+              <p><strong>第三步：代回求秩。</strong>$a=1$ 时</p>
+              <p>$$A=\begin{pmatrix}1&amp;1&amp;1\\1&amp;2&amp;1\\1&amp;1&amp;1\end{pmatrix}$$</p>
+              <p>第 1、3 两行完全相同，故 $R(A)\le2$；而左上角的二阶子式 $\begin{vmatrix}1&amp;1\\1&amp;2\end{vmatrix}=1\ne0$，故 $R(A)\ge2$。于是 $R(A)=2$，符合题意，$a=1$。</p>
+              <p><strong>第四步：求规范形。</strong>配方：</p>
+              <p>$$f=x_1^2+x_2^2+x_3^2+2x_1x_2+2x_1x_3+2x_2x_3=(x_1+x_2+x_3)^2+x_2^2$$</p>
+              <p>（展开验证：$(x_1+x_2+x_3)^2=x_1^2+x_2^2+x_3^2+2x_1x_2+2x_1x_3+2x_2x_3$，再加 $x_2^2$ 恰好是原式。）两个平方项都带正号，$p=2,\ q=0$，规范形为 $z_1^2+z_2^2$。</p>
+            </div>
+            <p><strong>易错提醒</strong>　解出 $a=1$ 后<strong>一定要代回确认秩恰好是 $2$</strong>。如果代回后发现秩只有 $1$（三行全部成比例），那个参数值就得舍去，本题无解——这正是命题人常设的陷阱。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch6-1" data-title="6-1 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">二次型 $f=2x_1^2+3x_1x_2+x_2^2$ 的矩阵是（　）。
+            <span class="en-line" lang="en">The matrix of the quadratic form $f=2x_1^2+3x_1x_2+x_2^2$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\begin{pmatrix}2&amp;\frac{3}{2}\\[3pt]\frac{3}{2}&amp;1\end{pmatrix}$</span></li>
+            <li><span class="opt-body">$\begin{pmatrix}2&amp;3\\0&amp;1\end{pmatrix}$</span></li>
+            <li><span class="opt-body">$\begin{pmatrix}2&amp;3\\3&amp;1\end{pmatrix}$</span></li>
+            <li><span class="opt-body">$\begin{pmatrix}2&amp;\frac{3}{2}\\0&amp;1\end{pmatrix}$</span></li>
+          </ul>
+          <div class="q-explain">二次型的矩阵必须是<strong>实对称矩阵</strong>，且交叉项系数要平分。$x_1x_2$ 的系数是 $3$，故 $a_{12}=a_{21}=\frac32$。第 2 个不对称（$a_{12}=3,a_{21}=0$），且它的交叉项系数是 $3+0=3$ 看似对，但矩阵不对称就违反了二次型矩阵的定义；第 3 个对称却没平分，对应交叉项系数 $3+3=6$，是原式的两倍；第 4 个既不对称又没平分。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 $f=x^TAx$ 是 $n$ 元二次型，则 $A$ 一定是（　）。
+            <span class="en-line" lang="en">Let $f=x^TAx$ be a quadratic form in $n$ variables. Then $A$ is necessarily (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">实对称矩阵</span></li>
+            <li><span class="opt-body">可逆矩阵</span></li>
+            <li><span class="opt-body">对角矩阵</span></li>
+            <li><span class="opt-body">正交矩阵</span></li>
+          </ul>
+          <div class="q-explain">为了让矩阵与二次型一一对应，我们强制规定 $a_{ij}=a_{ji}$，所以 $A$ 必为实对称矩阵。可逆是额外性质，$f=x_1^2+x_2^2$ 的矩阵是 $E$（可逆），但改成 $f=x_1x_2$ 得到 $\begin{pmatrix}0&amp;\frac12\\\frac12&amp;0\end{pmatrix}$ 也可逆，而 $f=x_1^2$ 的矩阵 $\begin{pmatrix}1&amp;0\\0&amp;0\end{pmatrix}$ 就不可逆——可见可逆不是定义要求。对角矩阵只是标准形的情形，一般二次型的矩阵不是对角矩阵。正交矩阵要求 $Q^TQ=E$，与二次型无关。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">二次型 $f=x_1x_2$ 的矩阵是（　）。
+            <span class="en-line" lang="en">The matrix of the quadratic form $f=x_1x_2$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\begin{pmatrix}0&amp;\frac12\\\frac12&amp;0\end{pmatrix}$</span></li>
+            <li><span class="opt-body">$\begin{pmatrix}0&amp;1\\1&amp;0\end{pmatrix}$</span></li>
+            <li><span class="opt-body">$\begin{pmatrix}0&amp;1\\0&amp;0\end{pmatrix}$</span></li>
+            <li><span class="opt-body">$\begin{pmatrix}1&amp;0\\0&amp;0\end{pmatrix}$</span></li>
+          </ul>
+          <div class="q-explain">$x_1x_2$ 的系数是 $1$，平分后 $a_{12}=a_{21}=\frac12$，且没有平方项，主对角元全为 0。第 2 个没平分，它对应的二次型是 $2x_1x_2$，恰好翻倍（这是最隐蔽的一个干扰项，因为矩阵本身对称且好看）。第 3 个不对称，不算二次型的矩阵。第 4 个对应的是 $x_1^2$，连交叉项都没有了。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">二次型 $f=x_1^2+2x_1x_2+x_2^2+3x_3^2$ 的秩与规范形分别是（　）。
+            <span class="en-line" lang="en">For the quadratic form $f=x_1^2+2x_1x_2+x_2^2+3x_3^2$, the rank and the canonical form are respectively (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(A)=2$，规范形 $y_1^2+y_2^2$</span></li>
+            <li><span class="opt-body">$R(A)=3$，规范形 $y_1^2+y_2^2+y_3^2$</span></li>
+            <li><span class="opt-body">$R(A)=2$，规范形 $y_1^2-y_2^2$</span></li>
+            <li><span class="opt-body">$R(A)=2$，规范形 $y_1^2$</span></li>
+          </ul>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}1&amp;1&amp;0\\1&amp;1&amp;0\\0&amp;0&amp;3\end{pmatrix}$，第 1、2 行完全相同，故 $R(A)\le2$；第 1 行与第 3 行不成比例，故 $R(A)=2$。配方：$f=(x_1+x_2)^2+3x_3^2$，两个平方项都带正号，再令 $y_1=x_1+x_2,\ y_2=\sqrt3x_3$ 即得 $y_1^2+y_2^2$，故 $p=2,q=0$。第 2 个把秩当成了变量个数 3（秩是矩阵的非零行数，不是 $n$）；第 3 个看到 $2x_1x_2$ 就以为有负号，其实交叉项符号与平方项符号无关，$x_1+x_2$ 的平方是正的；第 4 个漏掉了 $x_3$ 的贡献，第二项系数是 3 而不是 0。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $n$ 阶实对称矩阵。若 $A$ 与 $B$ 合同，则 $B$ 也是实对称矩阵。
+            <span class="en-line" lang="en">Let $A$ be a real symmetric $n\times n$ matrix. If $A$ is congruent to $B$, then $B$ is also real symmetric.</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">正确。由合同定义有 $B=C^TAC$，两边转置：$B^T=(C^TAC)^T=C^TA^TC=C^TAC=B$（中间用了 $A^T=A$），所以 $B$ 对称。这条性质说明"合同"这个关系可以放心地用在实对称矩阵上，而 6-2、6-3 两节反复使用的 $C^TAC$ 也一定还是实对称矩阵。反过来也要注意：如果 $A$ 本身不对称，$C^TAC$ 一般也不对称，这时讨论"合同"就没有意义了。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <p class="q-stem">关于二次型的标准形、规范形与惯性指数，下列说法正确的是（　）。
+            <span class="en-line" lang="en">Which of the following statements about the standard form, the canonical form and the inertia indices of a quadratic form are correct?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">标准形不唯一，但规范形唯一</span></li>
+            <li data-correct="true"><span class="opt-body">二次型的秩等于它的标准形中非零平方项的个数</span></li>
+            <li data-correct="true"><span class="opt-body">正、负惯性指数之和等于二次型的秩</span></li>
+            <li><span class="opt-body">若某二次型化为 $2y_1^2-3y_2^2$，则它的正惯性指数为 $2$</span></li>
+          </ul>
+          <div class="q-explain">标准形依赖所作的变换，换个变换系数就变了，故不唯一；惯性定理保证规范形唯一，第 1 个对。标准形中非零平方项的个数就是 $p+q=R(A)$，第 2、3 个对。第 4 个是最典型的错误：<strong>正惯性指数是正平方项的"个数"，不是"系数"</strong>。$2y_1^2-3y_2^2$ 中正项只有 1 个，故 $p=1$、$q=1$，而不是 $p=2$。记住：$2,3$ 是系数，$1,1$ 才是惯性指数。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A=\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$，则与 $A$ 合同但<strong>不相似</strong>的矩阵是（　）。
+            <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$. Which of the following matrices is congruent to $A$ but <strong>not similar</strong> to it?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1&amp;0\\0&amp;-3\end{pmatrix}$</span></li>
+            <li><span class="opt-body">$\begin{pmatrix}3&amp;0\\0&amp;-1\end{pmatrix}$</span></li>
+            <li><span class="opt-body">$\begin{pmatrix}1&amp;0\\0&amp;3\end{pmatrix}$</span></li>
+            <li><span class="opt-body">$\begin{pmatrix}-1&amp;0\\0&amp;-3\end{pmatrix}$</span></li>
+          </ul>
+          <div class="q-explain">$A$ 的特征值为 $3$ 和 $-1$，故 $p=1,\ q=1$。逐项分析：第 2 个 $\mathrm{diag}(3,-1)$ 的惯性指数也是 $(1,1)$，且特征值与 $A$ 完全相同，<strong>既合同又相似</strong>，不满足"不相似"；第 3 个 $\mathrm{diag}(1,3)$ 全为正特征值，$p=2,q=0$，<strong>既不合同也不相似</strong>；第 4 个 $\mathrm{diag}(-1,-3)$ 全为负，$p=0,q=2$，也<strong>不合同</strong>；只有第 1 个 $\mathrm{diag}(1,-3)$ 满足 $p=1,q=1$（合同），但特征值是 $1,-3$，与 $3,-1$ 不同（不相似）。这正是"实对称矩阵：相似 $\Rightarrow$ 合同，合同 $\not\Rightarrow$ 相似"的标准反例。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <p class="q-stem">设 $A,B$ 均为 $n$ 阶实对称矩阵，则下列命题中正确的是（　）。
+            <span class="en-line" lang="en">Let $A$ and $B$ be real symmetric $n\times n$ matrices. Which of the following statements are correct?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 相似，则 $A$ 与 $B$ 合同</span></li>
+            <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 有相同的特征值，则 $A$ 与 $B$ 合同</span></li>
+            <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 合同，则 $R(A)=R(B)$</span></li>
+            <li><span class="opt-body">若 $A$ 与 $B$ 合同，则 $A$ 与 $B$ 相似</span></li>
+          </ul>
+          <div class="q-explain">对<strong>实对称矩阵</strong>：相似意味着特征值完全相同，而特征值相同意味着正、负特征值的<em>个数</em>完全相同，即正负惯性指数相同，由合同判定定理得合同——所以前两个都对。合同由 $B=C^TAC$ 定义，$C$ 可逆故秩不变，第 3 个对。第 4 个错在方向：合同只保证正负号个数一致，不保证特征值本身相同，反例就是上一题的 $\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 与 $\mathrm{diag}(1,-3)$。特别注意：若题目去掉"实对称"这个前提，第一个命题就<strong>不再成立</strong>（例如 $\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$ 与 $\begin{pmatrix}1&amp;0\\0&amp;1\end{pmatrix}$ 不相似），所以前提条件必须看清。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <p class="q-stem">已知二次型 $f=x_1^2+2x_2^2+tx_3^2+2x_1x_2$ 的秩为 $2$，则 $t=$ ______。
+            <span class="en-line" lang="en">The quadratic form $f=x_1^2+2x_2^2+tx_3^2+2x_1x_2$ has rank $2$. Then $t=$ ______.</span></p>
+          <div class="q-answer" data-answer="0|0.0"></div>
+          <div class="q-explain">二次型的矩阵 $A=\begin{pmatrix}1&amp;1&amp;0\\1&amp;2&amp;0\\0&amp;0&amp;t\end{pmatrix}$。按第三行展开：$|A|=t\cdot\begin{vmatrix}1&amp;1\\1&amp;2\end{vmatrix}=t(2-1)=t$。秩为 2 要求 $|A|=0$；同时左上角的二阶子式 $\begin{vmatrix}1&amp;1\\1&amp;2\end{vmatrix}=1\ne0$ 已保证 $R(A)\ge2$，所以 $t=0$ 时秩恰好为 2。（若 $t\ne0$，$|A|\ne0$ 则秩为 3；注意本题不能只凭 $|A|=0$ 就下结论，还要确认秩不会掉到 1。）</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">下列二次型中，与 $f=x_1^2-4x_1x_2+x_2^2$ 合同的是（　）。
+            <span class="en-line" lang="en">Which of the following quadratic forms is congruent to $f=x_1^2-4x_1x_2+x_2^2$?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$y_1^2-y_2^2$</span></li>
+            <li><span class="opt-body">$y_1^2+y_2^2$</span></li>
+            <li><span class="opt-body">$-y_1^2-y_2^2$</span></li>
+            <li><span class="opt-body">$y_1^2$</span></li>
+          </ul>
+          <div class="q-explain">$f$ 的矩阵是 $A=\begin{pmatrix}1&amp;-2\\-2&amp;1\end{pmatrix}$（$x_1x_2$ 的系数 $-4$ 平分得 $-2$）。$|\lambda E-A|=(\lambda-1)^2-4=(\lambda-3)(\lambda+1)$，特征值为 $3$ 和 $-1$，故 $p=1,\ q=1$。也可直接配方验证：$f=(x_1-2x_2)^2-3x_2^2$，一正一负。逐项核对：第 2 个 $y_1^2+y_2^2$ 的两个特征值都是 $1$，$p=2,q=0$，惯性指数与 $f$ 不同，不合同；第 3 个 $-y_1^2-y_2^2$ 是 $p=0,q=2$，正负号整个反了，不合同；第 4 个 $y_1^2$ 的秩为 $1$，而 $f$ 的秩 $R(A)=p+q=2$——合同必同秩，秩不同连比较惯性指数的必要都没有。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A=\begin{pmatrix}1&amp;1\\1&amp;a\end{pmatrix}$ 与 $\mathrm{diag}(1,-1)$ 合同，则 $a$ 的取值范围是（　）。
+            <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&amp;1\\1&amp;a\end{pmatrix}$. If $A$ is congruent to $\mathrm{diag}(1,-1)$, the range of $a$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$a&lt;1$</span></li>
+            <li><span class="opt-body">$a&gt;1$</span></li>
+            <li><span class="opt-body">$a=1$</span></li>
+            <li><span class="opt-body">$a\ne1$</span></li>
+          </ul>
+          <div class="q-explain">与 $\mathrm{diag}(1,-1)$ 合同 $\iff$ 正、负惯性指数都是 $1$，即两个特征值一正一负，这等价于 $|A|&lt;0$。$|A|=1\cdot a-1\cdot1=a-1$，故 $a&lt;1$。<strong>逐项核对：</strong>第 2 个 $a&gt;1$ 时 $|A|&gt;0$ 且 $\mathrm{tr}(A)=1+a&gt;0$，两个特征值同号且都为正（判别式 $(1+a)^2-4(a-1)=(a-1)^2+4&gt;0$ 保证有两个实根），此时 $p=2,q=0$，与 $\mathrm{diag}(1,1)$ 合同、而不与 $\mathrm{diag}(1,-1)$ 合同；第 3 个 $a=1$ 时 $A=\begin{pmatrix}1&amp;1\\1&amp;1\end{pmatrix}$，$|A|=0$，$R(A)=1$，特征值为 $2,0$，即 $p=1,q=0$，与 $\mathrm{diag}(1,0)$ 合同；第 4 个 $a\ne1$ 把 $a&gt;1$ 的情形也包了进来，同样不合同。可见"乘积小于 0"（$a&lt;1$）才是"一正一负"的完整刻画。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <p class="q-stem">已知二次型 $f=x_1^2+3x_2^2+tx_3^2+2x_1x_2+2x_2x_3$ 的秩为 $2$，则 $t=$ ______。
+            <span class="en-line" lang="en">The quadratic form $f=x_1^2+3x_2^2+tx_3^2+2x_1x_2+2x_2x_3$ has rank $2$. Then $t=$ ______.</span></p>
+          <div class="q-answer" data-answer="0.5|1/2"></div>
+          <div class="q-explain">二次型的矩阵 $A=\begin{pmatrix}1&amp;1&amp;0\\1&amp;3&amp;1\\0&amp;1&amp;t\end{pmatrix}$。按第一行展开：$|A|=1\begin{vmatrix}3&amp;1\\1&amp;t\end{vmatrix}-1\begin{vmatrix}1&amp;1\\0&amp;t\end{vmatrix}+0=(3t-1)-t=2t-1$。秩为 $2&lt;3$ 要求 $|A|=0$，故 $t=\dfrac12$。还必须代回验证秩不会掉到 $1$：$t=\dfrac12$ 时 $A=\begin{pmatrix}1&amp;1&amp;0\\1&amp;3&amp;1\\0&amp;1&amp;\frac12\end{pmatrix}$，第 1、2 两行不成比例（二阶子式 $\begin{vmatrix}1&amp;1\\1&amp;3\end{vmatrix}=2\ne0$），故 $R(A)=2$，符合题意。<strong>若只写 $|A|=0$ 就收笔是危险的</strong>：$|A|=0$ 只保证秩小于 3，本题必须补一步确认秩恰好为 2。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <p class="q-stem">设 $A,B$ 为同阶实方阵，则下列命题正确的有（　）。
+            <span class="en-line" lang="en">Let $A,B$ be real square matrices of the same order. Which of the following statements are correct?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 相似，则 $A$ 与 $B$ 一定等价</span></li>
+            <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 相似，则 $\mathrm{tr}(A)=\mathrm{tr}(B)$ 且 $|A|=|B|$</span></li>
+            <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 合同，则 $R(A)=R(B)$</span></li>
+            <li><span class="opt-body">若 $A$ 与 $B$ 相似，则 $A$ 与 $B$ 一定合同</span></li>
+            <li><span class="opt-body">若 $A$ 与 $B$ 等价，则 $A$ 与 $B$ 一定相似</span></li>
+          </ul>
+          <div class="q-explain"><strong>A 对</strong>：相似即 $B=P^{-1}AP$，取 $P_1=P^{-1}$、$P_2=P$（都可逆）即得 $B=P_1AP_2$，这正是等价的定义（等价 $\iff$ 同秩，是三者中最弱的）。<strong>B 对</strong>：相似矩阵特征多项式相同，故特征值全同，于是迹与行列式都相同（也可由 $\mathrm{tr}(P^{-1}AP)=\mathrm{tr}(APP^{-1})=\mathrm{tr}(A)$ 直接证明）。<strong>C 对</strong>：合同即 $B=C^TAC$（$C$ 可逆），而 $C^T$ 与 $C$ 都可逆，乘可逆矩阵不改变秩。<strong>D 错</strong>：相似是"同一个线性变换在不同基下的矩阵"，合同是"同一个二次型在不同基下的矩阵"，两者不等价。反例：$A=\begin{pmatrix}1&amp;0\\0&amp;2\end{pmatrix}$ 与 $B=\begin{pmatrix}1&amp;1\\0&amp;2\end{pmatrix}$ 特征值都是 $1,2$（互异），故相似；但 $A$ 对称，任何 $C^TAC$ 都必对称，而 $B$ 不对称，所以 $A$ 与 $B$ 不可能合同。（补充：对<em>实对称</em>矩阵而言，相似确实能推出合同，因为相似保持特征值、进而保持正负惯性指数；但一般矩阵没有这个结论。）<strong>E 错</strong>：等价只要求同秩，条件太弱。反例：$\begin{pmatrix}1&amp;0\\0&amp;0\end{pmatrix}$ 与 $\begin{pmatrix}2&amp;0\\0&amp;0\end{pmatrix}$ 秩都是 $1$，因而等价，但特征值分别是 $\{1,0\}$ 与 $\{2,0\}$，不相似。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷只做两件事——<strong>把二次型正确翻译成实对称矩阵</strong>，以及<strong>分清合同、相似、等价的强弱</strong>。它是全章的地基：6-2 求标准形、6-3 判正定都要先写出这个 $A$，矩阵写错则后面全错。</p>
+          <p>最集中的失分点是<strong>交叉项系数没有对半分</strong>。第 1、3 题都设了"对称但没平分"的干扰项——$\begin{pmatrix}2&amp;3\\3&amp;1\end{pmatrix}$ 对应的其实是 $2x_1^2+6x_1x_2+x_2^2$，交叉项整整翻了一倍；这类选项形式上最漂亮，也最容易骗过人。写完矩阵后花三秒自检 $a_{ij}=a_{ji}$，能拦住绝大多数错误。第二个坑是第 6 题第 4 个选项：<strong>惯性指数是正平方项的"个数"，不是"系数"</strong>，$2y_1^2-3y_2^2$ 的 $p$ 是 1 不是 2。第三个坑在第 8、9 题：实对称矩阵<strong>相似 $\Rightarrow$ 合同，但合同 $\not\Rightarrow$ 相似</strong>，方向反过来就错，$\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 与 $\mathrm{diag}(1,-3)$ 这对反例要能随手写出。第四个坑在最后一题：三个关系的强弱要按<strong>前提</strong>分清楚——<em>实对称</em>矩阵才有"相似 $\Rightarrow$ 合同"，而"相似 $\Rightarrow$ 等价"对任何方阵都成立，等价最弱，只要求同秩。</p>
+          <p>知识联系上，本卷的 $p,q$ 由特征值正负个数决定（第 5 章），$R(A)$ 用行列式与初等变换算（第 1、3 章），这两个量是后面一切判定的通用货币。</p>
+          <p>下一步：直接进入 6-2。低于 70 分先重读 6-1 的"写矩阵五步法"与易错块，并默写例 6.3 的反例；已达 80 分以上可跳过重复练习，把精力放到 6-2 的重根正交化上。</p>
+        </div>
+
+      </div>
+
+      <h2 id="s6-2" data-hours="2.4">6-2 正交变换及配方法化标准形</h2>
+
+      <p>6-1 节留下一个关键问题：惯性定理保证了规范形唯一，说明"标准形一定存在"，但<strong>怎么把它算出来</strong>？本节补上两种算法。第一种<strong>正交变换法</strong>几乎是第 5 章"实对称矩阵一定能正交对角化"的逐字翻译——把正交矩阵 $Q$ 拼出来，$Q^TAQ$ 就是对角矩阵。所以本节的重点不是新理论，而是"怎么把第 5 章的结论用对"：重根要施密特正交化、每列要单位化、$Q$ 的列顺序要与特征值一一对应，三步错一步整题就废。第二种<strong>配方法</strong>完全绕开特征值，只用代数恒等变形，算得快、系数通常是有理数，代价是丢掉几何形状。两法所得标准形系数不同，但惯性指数必然相同——这正是惯性定理的又一次体现。</p>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>为什么会有两种完全不同的做法</div>
+        <p>目标相同：找一个可逆变换 $x=Cy$ 让交叉项消失。但"可逆"这个要求很宽松，于是走出两条路：</p>
+        <ul>
+          <li><strong>把要求提高</strong>：只允许 $C$ 是正交矩阵 $Q$。变换是"刚性"的——只旋转反射不拉伸，所以二次曲面的形状、长度、夹角全不变，而且第 5 章已证明实对称矩阵一定能正交对角化。代价是要解特征方程，可能碰上无理数。</li>
+          <li><strong>把要求放到最松</strong>：$C$ 只要可逆。用配方法硬凑，纯代数运算，一般得到有理系数。代价是变换会把图形拉扁压扁，几何意义丢了。</li>
+        </ul>
+        <p>两条路的标准形系数不同，但正负平方项的<strong>个数一定相同</strong>。考试里两种都要会，因为题目会指定用哪一种。</p>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 6.3　可逆线性变换与正交变换</div>
+        <p>关系式 $x=Cy$（$C$ 为 $n$ 阶可逆矩阵）称为<span class="term">可逆线性变换</span>。代入 $f=x^TAx$ 得</p>
+        <p>$$f=(Cy)^TA(Cy)=y^T(C^TAC)y$$</p>
+        <p>所以<strong>作一次可逆线性变换，二次型的矩阵就从 $A$ 变成 $C^TAC$</strong>——这就是"化标准形"等价于"找可逆 $C$ 使 $C^TAC$ 为对角矩阵"的原因。</p>
+        <p>若 $C$ 进一步满足 $C^TC=E$（即 $C$ 是<span class="term">正交矩阵</span>，记作 $Q$），称 $x=Qy$ 为<span class="term">正交变换</span>。正交变换保持向量长度与夹角：$\|Qy\|=\|y\|$，$(Qy_1)^T(Qy_2)=y_1^Ty_2$。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 6.3</span>
+             <strong>Invertible Linear Transformation and Orthogonal Transformation.</strong>
+             A relation $x=Cy$ (with $C$ an invertible $n\times n$ matrix) is called an
+             <span class="en-term">invertible linear transformation</span>, or a change of variables. Substituting it
+             into $f=x^TAx$ gives</p>
+          <p>$$f=(Cy)^TA(Cy)=y^T(C^TAC)y$$</p>
+          <p>So <strong>one invertible linear transformation changes the matrix of the quadratic form from $A$ to
+             $C^TAC$</strong> — which is exactly why "reducing a quadratic form to a standard form" means "finding an
+             invertible $C$ that makes $C^TAC$ a diagonal matrix".</p>
+          <p>If in addition $C^TC=E$ (that is, $C$ is an <span class="en-term">orthogonal matrix</span>, written $Q$),
+             then $x=Qy$ is called an <span class="en-term">orthogonal transformation</span>. An orthogonal
+             transformation preserves lengths and angles: $\|Qy\|=\|y\|$ and $(Qy_1)^T(Qy_2)=y_1^Ty_2$.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.2　主轴定理</div>
+        <p>设 $A$ 为 $n$ 阶实对称矩阵，则必存在正交矩阵 $Q$ 使</p>
+        <p>$$Q^TAQ=Q^{-1}AQ=\Lambda=\mathrm{diag}(\lambda_1,\lambda_2,\dots,\lambda_n)$$</p>
+        <p>其中 $\lambda_1,\dots,\lambda_n$ 是 $A$ 的全部特征值，<strong>$Q$ 的第 $i$ 列是 $\lambda_i$ 对应的单位特征向量</strong>。于是作正交变换 $x=Qy$，二次型化为</p>
+        <p>$$f=\lambda_1y_1^2+\lambda_2y_2^2+\cdots+\lambda_ny_n^2$$</p>
+        <p>解读：<strong>标准形的系数就是特征值，一个不多一个不少</strong>。所以用正交变换法时，<strong>只要算出特征值，标准形就已经知道了</strong>，剩下的工作只是把 $Q$ 写出来。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 6.2</span>
+             <strong>Principal Axis Theorem.</strong>
+             Let $A$ be a real symmetric $n\times n$ matrix. Then there exists an orthogonal matrix $Q$ such that</p>
+          <p>$$Q^TAQ=Q^{-1}AQ=\Lambda=\mathrm{diag}(\lambda_1,\lambda_2,\dots,\lambda_n)$$</p>
+          <p>where $\lambda_1,\dots,\lambda_n$ are all the eigenvalues of $A$, and <strong>the $i$-th column of $Q$ is a
+             unit eigenvector belonging to $\lambda_i$</strong>. Hence the orthogonal transformation $x=Qy$ carries
+             the quadratic form into</p>
+          <p>$$f=\lambda_1y_1^2+\lambda_2y_2^2+\cdots+\lambda_ny_n^2$$</p>
+          <p>Reading: <strong>the coefficients of the standard form are exactly the eigenvalues, no more and no
+             fewer.</strong> So when an orthogonal transformation is used, the standard form is already known as soon
+             as the eigenvalues have been computed; all that is left is to write down $Q$.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法一：正交变换法（特征值法）</div>
+        <ol>
+          <li>写出二次型的矩阵 $A$（实对称，交叉项系数<strong>平分</strong>）。</li>
+          <li>解特征方程 $|\lambda E-A|=0$，求出全部特征值 $\lambda_1,\dots,\lambda_n$。</li>
+          <li>对每个特征值解齐次方程组 $(\lambda_iE-A)x=0$，求基础解系，即特征向量。</li>
+          <li><strong>重根必须处理</strong>：若某特征值的重数为 $k&gt;1$，把它的 $k$ 个特征向量先作<strong>施密特正交化</strong>，再一起单位化。（单重特征值只需单位化；不同特征值之间的特征向量由实对称性自动正交，不必再正交化。）</li>
+          <li>把单位化后的特征向量按列拼成正交矩阵 $Q=(\xi_1,\dots,\xi_n)$，<strong>列的顺序与特征值的顺序一一对应</strong>。</li>
+          <li>作正交变换 $x=Qy$，得 $f=\lambda_1y_1^2+\cdots+\lambda_ny_n^2$。</li>
+          <li><strong>自检三件事</strong>：每列长度为 1；两两内积为 0；标准形里 $\lambda_i$ 的排列与 $Q$ 的第 $i$ 列一致。花 30 秒能救回整道大题。</li>
+        </ol>
+        <p>优点：几何意义明确，保持二次曲面形状；缺点：要解特征方程，有时出现无理数。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD 6.2</span>
+             <strong>Method 1: Orthogonal Transformation (Eigenvalue Method).</strong></p>
+          <ol>
+            <li>Write down the matrix $A$ of the quadratic form (real symmetric; <strong>split</strong> the cross-term
+                coefficients).</li>
+            <li>Solve the characteristic equation $|\lambda E-A|=0$ for all the eigenvalues $\lambda_1,\dots,\lambda_n$.</li>
+            <li>For each eigenvalue solve the homogeneous system $(\lambda_iE-A)x=0$ and take a basis of the nullspace;
+                these are the eigenvectors.</li>
+            <li><strong>Repeated eigenvalues must be handled</strong>: if an eigenvalue has multiplicity $k&gt;1$,
+                first apply the <span class="en-term">Gram-Schmidt process</span> to its $k$ eigenvectors, then
+                normalize them together with the others. (A simple eigenvalue only needs normalizing; eigenvectors
+                belonging to different eigenvalues are automatically orthogonal because $A$ is symmetric.)</li>
+            <li>Put the normalized eigenvectors in the columns of an orthogonal matrix $Q=(\xi_1,\dots,\xi_n)$, keeping
+                <strong>the order of the columns matched to the order of the eigenvalues</strong>.</li>
+            <li>Apply the orthogonal transformation $x=Qy$ to obtain $f=\lambda_1y_1^2+\cdots+\lambda_ny_n^2$.</li>
+            <li><strong>Three self-checks</strong>: every column has length $1$; every two columns have inner product
+                $0$; the order of the $\lambda_i$ agrees with the columns of $Q$. Thirty seconds can save a whole
+                long-answer problem.</li>
+          </ol>
+          <p>Advantages: the geometry is clear and the shape of the quadric surface is preserved. Disadvantage:
+             it requires solving the characteristic equation, which sometimes produces irrational numbers.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法二：配方法（拉格朗日法）</div>
+        <p><strong>情形 1：含有平方项</strong>（某个 $a_{ii}\ne0$）</p>
+        <ol>
+          <li>把<strong>所有含 $x_1$ 的项</strong>集中起来：$a_{11}x_1^2+2a_{12}x_1x_2+\cdots+2a_{1n}x_1x_n$。</li>
+          <li>提出 $a_{11}$ 配成完全平方，多退少补：$a_{11}x_1^2+2x_1\sum_{j&gt;1}a_{1j}x_j=a_{11}\left(x_1+\dfrac{1}{a_{11}}\sum_{j&gt;1}a_{1j}x_j\right)^2-\dfrac{1}{a_{11}}\left(\sum_{j&gt;1}a_{1j}x_j\right)^2$。</li>
+          <li>令 $y_1=x_1+\dfrac{1}{a_{11}}\sum_{j&gt;1}a_{1j}x_j$，其余 $y_i=x_i$。这个变换可逆（$|C|=1$），且此后 $f$ 中<strong>不再含 $x_1$</strong>。</li>
+          <li>对剩下的 $x_2,\dots,x_n$ 重复以上步骤。若某个 $a_{ii}=0$ 但该变量仍有交叉项，跳过它先去配别的变量。</li>
+        </ol>
+        <p><strong>情形 2：不含任何平方项</strong>（所有 $a_{ii}=0$，但存在 $a_{ij}\ne0$）</p>
+        <ol>
+          <li>选一个非零的 $a_{ij}\ (i&lt;j)$，作变换 $x_i=y_i+y_j,\quad x_j=y_i-y_j,\quad x_k=y_k\ (k\ne i,j)$。</li>
+          <li>此时 $2a_{ij}x_ix_j=2a_{ij}(y_i+y_j)(y_i-y_j)=2a_{ij}y_i^2-2a_{ij}y_j^2$，<strong>凭空造出两个平方项</strong>；变换矩阵行列式为 $-2\ne0$，可逆。</li>
+          <li>把其余交叉项也用 $y$ 表示，此时已有平方项，转为情形 1 继续配方。</li>
+        </ol>
+        <p>优点：纯代数运算，系数通常是有理数；缺点：所作变换一般<strong>不是</strong>正交变换，几何形状会改变（但惯性指数不变）。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD 6.3</span>
+             <strong>Method 2: Completing the Square (Lagrange's Method).</strong></p>
+          <p><strong>Case 1: some square is present</strong> (some $a_{ii}\ne0$).</p>
+          <ol>
+            <li>Collect <strong>all terms containing $x_1$</strong>: $a_{11}x_1^2+2a_{12}x_1x_2+\cdots+2a_{1n}x_1x_n$.</li>
+            <li>Factor out $a_{11}$ and complete the square, adding and subtracting the surplus:
+                $a_{11}x_1^2+2x_1\sum_{j&gt;1}a_{1j}x_j=a_{11}\left(x_1+\dfrac{1}{a_{11}}\sum_{j&gt;1}a_{1j}x_j\right)^2-\dfrac{1}{a_{11}}\left(\sum_{j&gt;1}a_{1j}x_j\right)^2$.</li>
+            <li>Set $y_1=x_1+\dfrac{1}{a_{11}}\sum_{j&gt;1}a_{1j}x_j$ and $y_i=x_i$ for the remaining variables. This
+                transformation is invertible ($|C|=1$), and afterwards $f$ <strong>no longer contains $x_1$</strong>.</li>
+            <li>Repeat the same steps for $x_2,\dots,x_n$. If some $a_{ii}=0$ while that variable still occurs in a
+                cross term, skip it and complete the square in another variable first.</li>
+          </ol>
+          <p><strong>Case 2: no square at all</strong> (all $a_{ii}=0$, but some $a_{ij}\ne0$).</p>
+          <ol>
+            <li>Pick a nonzero $a_{ij}\ (i&lt;j)$ and set
+                $x_i=y_i+y_j,\quad x_j=y_i-y_j,\quad x_k=y_k\ (k\ne i,j)$.</li>
+            <li>Then $2a_{ij}x_ix_j=2a_{ij}(y_i+y_j)(y_i-y_j)=2a_{ij}y_i^2-2a_{ij}y_j^2$: <strong>two squares are
+                created out of nothing</strong>. The determinant of the transformation matrix is $-2\ne0$, so the
+                transformation is invertible.</li>
+            <li>Express the remaining cross terms in the $y$'s as well; squares are now available, so continue as in
+                Case 1.</li>
+          </ol>
+          <p>Advantages: purely algebraic, with coefficients that are usually rational. Disadvantage: the
+             transformation used is generally <strong>not</strong> orthogonal, so the geometric shape changes (the
+             inertia indices do not).</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法三（补充）：初等变换法（合同变换法）</div>
+        <ol>
+          <li>构造 $\begin{pmatrix}A\\E\end{pmatrix}$（上下叠放）。</li>
+          <li>对 $A$ 作一次<strong>初等列变换</strong>后，紧接着对 $A$ 作<strong>同类型、同参数的初等行变换</strong>（这一步保证变换形如 $C^TAC$，维持对称性）；下方原来的 $E$ 只跟着作列变换。</li>
+          <li>重复直到 $A$ 化为对角矩阵 $\Lambda$，此时下方得到可逆矩阵 $C$，满足 $C^TAC=\Lambda$，作 $x=Cy$ 即得标准形。</li>
+        </ol>
+        <p>两阶的例子：$A=\begin{pmatrix}0&amp;1\\1&amp;0\end{pmatrix}$（即 $f=2x_1x_2$）：</p>
+        <p>$$\begin{pmatrix}0&amp;1\\1&amp;0\\\hline 1&amp;0\\0&amp;1\end{pmatrix}\xrightarrow{c_1\to c_1+c_2,\ r_1\to r_1+r_2}\begin{pmatrix}2&amp;1\\1&amp;0\\\hline 1&amp;1\\0&amp;1\end{pmatrix}\xrightarrow{c_2-\frac12c_1,\ r_2-\frac12r_1}\begin{pmatrix}2&amp;0\\0&amp;-\frac12\\\hline 1&amp;-\frac12\\1&amp;\frac12\end{pmatrix}$$</p>
+        <p>于是 $\Lambda=\mathrm{diag}\left(2,-\frac12\right)$，$C=\begin{pmatrix}1&amp;-\frac12\\1&amp;\frac12\end{pmatrix}$，标准形 $2y_1^2-\frac12y_2^2$，$p=1,q=1$，与直接配方的 $2y_1^2-2y_2^2$ 惯性指数一致。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD 6.4</span>
+             <strong>Method 3 (supplementary): Elementary Transformation Method (Congruence Transformation Method).</strong></p>
+          <ol>
+            <li>Form the stacked matrix $\begin{pmatrix}A\\E\end{pmatrix}$.</li>
+            <li>After each <strong>elementary column operation</strong> on $A$, immediately perform the same type of
+                elementary row operation with the same parameter on $A$ (this is what keeps the transformation of the
+                form $C^TAC$ and preserves symmetry); the $E$ below follows the column operations only.</li>
+            <li>Repeat until $A$ has become a diagonal matrix $\Lambda$. The matrix $C$ obtained below is then
+                invertible and satisfies $C^TAC=\Lambda$, so $x=Cy$ gives the standard form.</li>
+          </ol>
+          <p>A second-order example: $A=\begin{pmatrix}0&amp;1\\1&amp;0\end{pmatrix}$ (that is, $f=2x_1x_2$):</p>
+          <p>$$\begin{pmatrix}0&amp;1\\1&amp;0\\\hline 1&amp;0\\0&amp;1\end{pmatrix}\xrightarrow{c_1\to c_1+c_2,\ r_1\to r_1+r_2}\begin{pmatrix}2&amp;1\\1&amp;0\\\hline 1&amp;1\\0&amp;1\end{pmatrix}\xrightarrow{c_2-\frac12c_1,\ r_2-\frac12r_1}\begin{pmatrix}2&amp;0\\0&amp;-\frac12\\\hline 1&amp;-\frac12\\1&amp;\frac12\end{pmatrix}$$</p>
+          <p>Hence $\Lambda=\mathrm{diag}\left(2,-\frac12\right)$ and $C=\begin{pmatrix}1&amp;-\frac12\\1&amp;\frac12\end{pmatrix}$,
+             the standard form being $2y_1^2-\frac12y_2^2$ with $p=1,q=1$ — the same inertia indices as the
+             $2y_1^2-2y_2^2$ obtained by completing the square directly.</p>
+        </div>
+      </div>
+
+      <div class="box tbl-wrap">
+        <table>
+          <thead><tr><th>比较项</th><th>正交变换法</th><th>配方法</th></tr></thead>
+          <tbody>
+            <tr><td>所用变换</td><td>$x=Qy$，$Q$ 为<strong>正交矩阵</strong></td><td>$x=Cy$，$C$ 只要求<strong>可逆</strong></td></tr>
+            <tr><td>标准形系数来源</td><td>$A$ 的全部<strong>特征值</strong></td><td>配方过程逐步算出，与特征值一般无关</td></tr>
+            <tr><td>系数特点</td><td>一定是特征值，常含无理数</td><td>通常是有理数，算得快</td></tr>
+            <tr><td>是否保持几何形状</td><td><strong>保持</strong>（只旋转反射，长度夹角不变）</td><td><strong>一般不保持</strong>（会拉伸压缩图形）</td></tr>
+            <tr><td>是否保持惯性指数</td><td>保持</td><td>保持</td></tr>
+            <tr><td>计算量</td><td>大：解特征方程、求特征向量、正交化、单位化</td><td>小：纯代数配方</td></tr>
+            <tr><td>适用场合</td><td>题目要求"正交变换"、判断二次曲面类型、理论证明</td><td>题目要求"配方法"、只求标准形与惯性指数、含参数讨论</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box link-box">
+        <div class="box-title"><span class="ico">🔗</span>知识关联：正交变换法就是第 5 章结论的直接应用</div>
+        <ul>
+          <li><strong>承上（第 5 章）</strong>：定理 6.2 与第 5 章的"实对称矩阵必可正交对角化"是<strong>同一条定理</strong>，只是把矩阵语言翻译成了二次型语言。第 5 章学得扎实的话，本节的新知识几乎为零。</li>
+          <li><strong>承上（第 3、4 章）</strong>：求特征向量就是解齐次方程组 $(\lambda E-A)x=0$ 并写出<strong>基础解系</strong>；判断重根能否凑够正交特征向量，要看解空间维数 $n-R(\lambda E-A)$。<strong>施密特正交化</strong>是第 4 章学的，本节第一次真正派上大用场。</li>
+          <li><strong>承上（第 2 章）</strong>：$x=Cy$ 代入 $x^TAx$ 得到 $C^TAC$，是矩阵乘法的直接应用；合同要求 $C$ 可逆，用到逆矩阵。</li>
+          <li><strong>横向与启下</strong>：正交矩阵满足 $Q^T=Q^{-1}$，故正交变换下<strong>合同与相似同时成立</strong>——这句话把第 5、6 两章焊在一起。本节算出的 $p,q$ 又是 6-3 节判定正定（$p=n$）与半正定（$p=R(A)&lt;n$）的直接依据。</li>
+        </ul>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点：正交变换法最容易丢分的五处</div>
+        <ul>
+          <li><strong>重根不处理</strong>：重数为 $k$ 的特征值若只交出 $k$ 个线性无关但不正交的特征向量，$Q$ 就不是正交矩阵，$Q^T\ne Q^{-1}$，整题作废。</li>
+          <li><strong>漏单位化</strong>：正交矩阵要求每列长度为 1，只正交化不单位化则 $Q^TQ\ne E$。</li>
+          <li><strong>顺序错位</strong>：$\lambda_i$ 必须与 $Q$ 的第 $i$ 列对应。（若只要求写出标准形，$\lambda$ 的顺序任意，都不算错。）</li>
+          <li><strong>多余地正交化</strong>：不同特征值对应的特征向量已自动正交，只有同一重根内部的多个特征向量之间才需要施密特正交化。搞反了会白算一大堆。</li>
+          <li><strong>忘了配方变换要可逆</strong>：$x_i=y_i+y_j,\ x_j=y_i-y_j$ 的行列式是 $-2\ne0$，合法；若随手写成 $x_i=y_i+y_j,\ x_j=y_i+y_j$ 就得到不可逆矩阵，答案无效。写完变换顺手算一下行列式。</li>
+        </ul>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.4</span> 用配方法化标准形（含平方项）
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>用配方法将 $f=x_1^2+3x_2^2+2x_3^2+2x_1x_2+4x_1x_3+4x_2x_3$ 化为标准形，写出所用的可逆线性变换，并求正、负惯性指数。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：集中含 $x_1$ 的项。</strong>$a_{11}=1\ne0$，挑出含 $x_1$ 的项：</p>
+            <p>$$x_1^2+2x_1x_2+4x_1x_3=x_1^2+2x_1(x_2+2x_3)=(x_1+x_2+2x_3)^2-(x_2+2x_3)^2$$</p>
+            <p>（用了 $u^2+2uv=(u+v)^2-v^2$，取 $u=x_1,\ v=x_2+2x_3$。）</p>
+            <p><strong>第二步：代回并整理。</strong>展开 $-(x_2+2x_3)^2=-x_2^2-4x_2x_3-4x_3^2$，代入原式：</p>
+            <p>$$f=(x_1+x_2+2x_3)^2+(-x_2^2+3x_2^2)+(-4x_2x_3+4x_2x_3)+(-4x_3^2+2x_3^2)$$</p>
+            <p>$$=(x_1+x_2+2x_3)^2+2x_2^2-2x_3^2$$</p>
+            <p>剩下的 $2x_2^2-2x_3^2$ 已不含交叉项，配方结束。</p>
+            <p><strong>第三步：写出变换。</strong>令 $y_1=x_1+x_2+2x_3,\ y_2=x_2,\ y_3=x_3$，反解得</p>
+            <p>$$x=\begin{pmatrix}1&amp;-1&amp;-2\\0&amp;1&amp;0\\0&amp;0&amp;1\end{pmatrix}y,\qquad |C|=\begin{vmatrix}1&amp;-1&amp;-2\\0&amp;1&amp;0\\0&amp;0&amp;1\end{vmatrix}=1\ne0$$</p>
+            <p>$C$ 可逆，变换合法。</p>
+            <p><strong>第四步：结论。</strong>$f=y_1^2+2y_2^2-2y_3^2$，故 $p=2,\ q=1$，$p+q=3=R(A)$，规范形为 $z_1^2+z_2^2-z_3^2$（再令 $z_1=y_1,\ z_2=\sqrt2y_2,\ z_3=\sqrt2y_3$）。</p>
+            <p><strong>验证。</strong>取 $y=(0,0,1)^T$，则 $x=(-2,0,1)^T$，代入原式：</p>
+            <p>$$f=4+0+2+0-8+0=-2$$</p>
+            <p>标准形给出 $-2y_3^2=-2$，一致 $\checkmark$。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.5</span> 用配方法化标准形（不含平方项，先造平方项）
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>用配方法将 $f=2x_1x_2+2x_1x_3-6x_2x_3$ 化为标准形，写出所用的可逆线性变换，并求正、负惯性指数。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：判断情形。</strong>矩阵 $A=\begin{pmatrix}0&amp;1&amp;1\\1&amp;0&amp;-3\\1&amp;-3&amp;0\end{pmatrix}$ 的主对角元全为 0，没有平方项，不能直接配方；但 $a_{12}=1\ne0$，属于情形 2，<strong>先造平方项</strong>。</p>
+            <p><strong>第二步：作变换造平方项。</strong>令 $x_1=y_1+y_2,\ x_2=y_1-y_2,\ x_3=y_3$（变换矩阵行列式为 $-2\ne0$，可逆）。逐项计算：</p>
+            <p>$$2x_1x_2=2(y_1+y_2)(y_1-y_2)=2y_1^2-2y_2^2$$</p>
+            <p>$$2x_1x_3=2(y_1+y_2)y_3=2y_1y_3+2y_2y_3$$</p>
+            <p>$$-6x_2x_3=-6(y_1-y_2)y_3=-6y_1y_3+6y_2y_3$$</p>
+            <p>相加得 $f=2y_1^2-2y_2^2-4y_1y_3+8y_2y_3$，已有平方项，转为情形 1。</p>
+            <p><strong>第三步：对 $y_1$ 配方。</strong></p>
+            <p>$$2y_1^2-4y_1y_3=2(y_1^2-2y_1y_3)=2\left[(y_1-y_3)^2-y_3^2\right]=2(y_1-y_3)^2-2y_3^2$$</p>
+            <p>代回得 $f=2(y_1-y_3)^2-2y_3^2-2y_2^2+8y_2y_3$。</p>
+            <p><strong>第四步：对 $y_2$ 配方并合并。</strong></p>
+            <p>$$-2y_2^2+8y_2y_3=-2\left[(y_2-2y_3)^2-4y_3^2\right]=-2(y_2-2y_3)^2+8y_3^2$$</p>
+            <p>$$f=2(y_1-y_3)^2-2(y_2-2y_3)^2+(-2+8)y_3^2=2(y_1-y_3)^2-2(y_2-2y_3)^2+6y_3^2$$</p>
+            <p><strong>第五步：写出总变换。</strong>令 $z_1=y_1-y_3,\ z_2=y_2-2y_3,\ z_3=y_3$，即 $y_1=z_1+z_3,\ y_2=z_2+2z_3,\ y_3=z_3$。代回 $x$：</p>
+            <p>$$x_1=z_1+z_2+3z_3,\qquad x_2=z_1-z_2-z_3,\qquad x_3=z_3$$</p>
+            <p>$$x=\begin{pmatrix}1&amp;1&amp;3\\1&amp;-1&amp;-1\\0&amp;0&amp;1\end{pmatrix}z,\qquad |C|=1\cdot\begin{vmatrix}1&amp;1\\1&amp;-1\end{vmatrix}=1\times(-2)=-2\ne0$$</p>
+            <p><strong>第六步：结论与验证。</strong>$f=2z_1^2-2z_2^2+6z_3^2$，故 $p=2,\ q=1,\ R(A)=3$，规范形 $z_1^2+z_2^2-z_3^2$。</p>
+            <p>取 $z=(0,0,1)^T$，则 $x=(3,-1,1)^T$，代入原式：$f=2(3)(-1)+2(3)(1)-6(-1)(1)=-6+6+6=6$，标准形给出 $6z_3^2=6$，一致 $\checkmark$。再取 $z=(1,0,0)^T$，$x=(1,1,0)^T$，原式 $=2$，标准形 $2z_1^2=2$，一致 $\checkmark$。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.6</span> 用正交变换化标准形（重根情形）
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>用正交变换将 $f=2x_1^2+2x_2^2+2x_3^2+2x_1x_2+2x_1x_3+2x_2x_3$ 化为标准形，并写出所用的正交矩阵 $Q$。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：写矩阵。</strong>交叉项系数都是 2，平分得 1：$A=\begin{pmatrix}2&amp;1&amp;1\\1&amp;2&amp;1\\1&amp;1&amp;2\end{pmatrix}$。</p>
+            <p><strong>第二步：求特征值。</strong>这个矩阵的形状是"主对角元全是 $a$、非对角元全是 $b$"，此时特征值为 $a+2b=4$（一重）与 $a-b=1$（$n-1=2$ 重）。直接算验证：</p>
+            <p>$$|\lambda E-A|=\begin{vmatrix}\lambda-2&amp;-1&amp;-1\\-1&amp;\lambda-2&amp;-1\\-1&amp;-1&amp;\lambda-2\end{vmatrix}=(\lambda-1)^2(\lambda-4)$$</p>
+            <p>（第 2、3 行加到第 1 行，提出公因子 $\lambda-4$，再把第 1 行乘 $-1$ 加到第 2、3 行即可看出。）故 $\lambda_1=4$，$\lambda_2=\lambda_3=1$（二重）。</p>
+            <p><strong>第三步：求特征向量。</strong>对 $\lambda_1=4$，解 $(4E-A)x=0$，基础解系为 $\alpha_1=(1,1,1)^T$。对 $\lambda_2=\lambda_3=1$，解 $(E-A)x=0$，即 $x_1+x_2+x_3=0$，基础解系取 $\alpha_2=(1,-1,0)^T,\ \alpha_3=(1,0,-1)^T$。</p>
+            <p><strong>第四步：重根正交化。</strong>$\alpha_2,\alpha_3$ 同属 $\lambda=1$，必须正交化。取 $\beta_2=\alpha_2=(1,-1,0)^T$，则</p>
+            <p>$$\beta_3=\alpha_3-\frac{(\alpha_3,\beta_2)}{(\beta_2,\beta_2)}\beta_2=(1,0,-1)^T-\frac12(1,-1,0)^T=\left(\frac12,\frac12,-1\right)^T$$</p>
+            <p><strong>第五步：全部单位化。</strong></p>
+            <p>$$\xi_1=\frac{1}{\sqrt3}(1,1,1)^T,\qquad \xi_2=\frac{1}{\sqrt2}(1,-1,0)^T,\qquad \xi_3=\frac{\beta_3}{\|\beta_3\|}=\frac{1}{\sqrt6}(1,1,-2)^T$$</p>
+            <p>其中 $\|\beta_3\|=\sqrt{\frac14+\frac14+1}=\sqrt{\frac32}$。于是</p>
+            <p>$$Q=(\xi_1,\xi_2,\xi_3)=\begin{pmatrix}\dfrac{1}{\sqrt3}&amp;\dfrac{1}{\sqrt2}&amp;\dfrac{1}{\sqrt6}\\[6pt]\dfrac{1}{\sqrt3}&amp;-\dfrac{1}{\sqrt2}&amp;\dfrac{1}{\sqrt6}\\[6pt]\dfrac{1}{\sqrt3}&amp;0&amp;-\dfrac{2}{\sqrt6}\end{pmatrix}$$</p>
+            <p><strong>第六步：写标准形。</strong>作正交变换 $x=Qy$，得 $f=4y_1^2+y_2^2+y_3^2$。</p>
+            <p><strong>验证。</strong>先验 $Q$ 正交：$\xi_1^T\xi_2=\frac{1}{\sqrt6}-\frac{1}{\sqrt6}+0=0$，$\xi_1^T\xi_3=\frac{1}{\sqrt{18}}+\frac{1}{\sqrt{18}}-\frac{2}{\sqrt{18}}=0$，$\xi_2^T\xi_3=\frac{1}{\sqrt{12}}-\frac{1}{\sqrt{12}}+0=0$，三列长度均为 1，故 $Q^TQ=E$。</p>
+            <p>再验特征值：$A\xi_1=\frac{1}{\sqrt3}(4,4,4)^T=4\xi_1$，正确。</p>
+            <p>最后<strong>取数值验证标准形</strong>：令 $y=(0,1,0)^T$，则 $x=\xi_2=\frac{1}{\sqrt2}(1,-1,0)^T$，代入原式得</p>
+            <p>$$f=2\cdot\frac12+2\cdot\frac12+0+2\cdot\left(-\frac12\right)+0+0=1=y_2^2\ \checkmark$$</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <ul>
+          <li><span class="tag">高频</span><span class="tag">大题</span>"用<strong>正交变换</strong>化二次型为标准形，并写出正交矩阵 $Q$"。步骤固定，一分都不能丢：写矩阵 → 求特征值 → 求特征向量 → <strong>重根施密特正交化</strong> → 全部单位化 → 拼 $Q$ → 写标准形。<strong>重根是命题人最爱埋的点</strong>，看到二重特征值立刻提醒自己要正交化。</li>
+          <li><span class="tag">高频</span><span class="tag">大题</span>"用<strong>配方法</strong>化标准形，并写出所用的可逆线性变换"。两件事必须做到：<strong>写出变换并反解成 $x=Cy$</strong>；无平方项时先作 $x_i=y_i+y_j,\ x_j=y_i-y_j$ 造平方项，漏了这一步整题崩盘。</li>
+          <li><span class="tag">小题</span><span class="tag">易错</span>只需惯性指数时不要傻算特征值。若顺序主子式全不为 0，用符号序列法（符号保持的次数为 $p$，变号次数为 $q$）30 秒出答案；否则用配方法。</li>
+          <li><span class="tag">易错</span>"正交变换下合同与相似同时成立"，因为 $Q^T=Q^{-1}$。许多综合题就靠这句话把第 5、6 两章串起来。</li>
+        </ul>
+      </div>
+
+      <div class="box app-box">
+        <div class="box-title"><span class="ico">🔧</span>工程联系：模态坐标与同时对角化</div>
+        <p>航空发动机转子、叶片盘的振动分析最终归结为广义特征值问题 $K\phi=\lambda M\phi$，其中 $K$ 是刚度矩阵、$M$ 是质量矩阵，二者都是实对称矩阵（$M$ 还正定）。系统的动能 $T=\frac12\dot{x}^TM\dot{x}$、应变能 $V=\frac12x^TKx$ <strong>都是二次型</strong>，耦合在一起很难分析。</p>
+        <p>取模态矩阵 $\Phi=(\phi_1,\dots,\phi_n)$，作变换 $x=\Phi q$，则</p>
+        <p>$$\Phi^TM\Phi=E,\qquad \Phi^TK\Phi=\mathrm{diag}(\lambda_1,\dots,\lambda_n)$$</p>
+        <p>于是在模态坐标 $q$ 下两个二次型<strong>同时化为标准形</strong>：$T=\frac12\sum\dot q_i^2$，$V=\frac12\sum\lambda_iq_i^2$，彻底解耦，每个 $\lambda_i=\omega_i^2$ 就是一个固有频率的平方。注意 $\Phi$ 一般<strong>不是</strong>正交矩阵（因为要同时对付 $M$），这是"广义"的合同变换，工程上叫 $M$ 正交性——可见正交变换并非唯一选择，配方法那种更宽松的变换在工程里同样重要。</p>
+      </div>
+
+      <div class="box model-box">
+        <div class="box-title"><span class="ico">🧩</span>典型模型题</div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 1</span>正交变换化标准形的全流程<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              题目出现"用<strong>正交变换</strong>化二次型为标准形""求正交矩阵 $Q$""把实对称矩阵正交对角化"。
+              只要求写标准形时，往往算出特征值就够了；<strong>一旦要求写出 $Q$，就必须走完六步</strong>。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 写矩阵（交叉项平分）→ ② 解 $|\lambda E-A|=0$ 求全部特征值 → ③ 对每个特征值解 $(\lambda_iE-A)x=0$，取基础解系 →
+              ④ <strong>重根的特征向量作施密特正交化</strong>（不同特征值的特征向量已自动正交，不要多此一举）→
+              ⑤ <strong>全部单位化</strong>，按列拼成 $Q$（列序与特征值顺序一一对应）→ ⑥ 写标准形 $f=\lambda_1y_1^2+\cdots+\lambda_ny_n^2$。</div>
+            <p><strong>例</strong>　用正交变换将 $f=2x_1^2+2x_2^2+2x_3^2+2x_1x_2-2x_1x_3-2x_2x_3$ 化为标准形，并写出所用的正交矩阵 $Q$。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：写矩阵。</strong>交叉项系数 $2,-2,-2$ 分别平分得 $1,-1,-1$：</p>
+              <p>$$A=\begin{pmatrix}2&amp;1&amp;-1\\1&amp;2&amp;-1\\-1&amp;-1&amp;2\end{pmatrix}$$</p>
+              <p>自检：$A^T=A$。</p>
+              <p><strong>第二步：求特征值。</strong></p>
+              <p>$$|\lambda E-A|=\begin{vmatrix}\lambda-2&amp;-1&amp;1\\-1&amp;\lambda-2&amp;1\\1&amp;1&amp;\lambda-2\end{vmatrix}$$</p>
+              <p>按第一行展开：$(\lambda-2)\left[(\lambda-2)^2-1\right]+\left[-(\lambda-2)-1\right]+\left[-1-(\lambda-2)\right]$，整理得</p>
+              <p>$$|\lambda E-A|=(\lambda-1)(\lambda^2-5\lambda+4)=(\lambda-1)^2(\lambda-4)$$</p>
+              <p>故 $\lambda_1=4$（单重），$\lambda_2=\lambda_3=1$（二重）。</p>
+              <p><strong>第三步：求特征向量。</strong>对 $\lambda_1=4$，解 $(4E-A)x=0$，基础解系取 $\alpha_1=(1,1,-1)^T$。对 $\lambda_2=\lambda_3=1$，解 $(E-A)x=0$，即 $x_1+x_2-x_3=0$，基础解系取 $\alpha_2=(1,-1,0)^T,\ \alpha_3=(1,0,1)^T$。</p>
+              <p><strong>第四步：重根作施密特正交化。</strong>$\alpha_2,\alpha_3$ 同属 $\lambda=1$，且 $(\alpha_2,\alpha_3)=1\ne0$，必须正交化。取 $\beta_2=\alpha_2=(1,-1,0)^T$，则</p>
+              <p>$$\beta_3=\alpha_3-\frac{(\alpha_3,\beta_2)}{(\beta_2,\beta_2)}\beta_2=(1,0,1)^T-\frac12(1,-1,0)^T=\left(\frac12,\frac12,1\right)^T$$</p>
+              <p>验算正交：$(\beta_2,\beta_3)=\frac12-\frac12+0=0$ $\checkmark$。</p>
+              <p><strong>第五步：全部单位化。</strong></p>
+              <p>$$\xi_1=\frac{1}{\sqrt3}(1,1,-1)^T,\qquad \xi_2=\frac{1}{\sqrt2}(1,-1,0)^T,\qquad \xi_3=\frac{\beta_3}{\|\beta_3\|}=\frac{1}{\sqrt6}(1,1,2)^T$$</p>
+              <p>其中 $\|\alpha_1\|=\sqrt3$，$\|\beta_2\|=\sqrt2$，$\|\beta_3\|=\sqrt{\frac14+\frac14+1}=\frac{\sqrt6}{2}$。于是</p>
+              <p>$$Q=(\xi_1,\xi_2,\xi_3)=\begin{pmatrix}\dfrac{1}{\sqrt3}&amp;\dfrac{1}{\sqrt2}&amp;\dfrac{1}{\sqrt6}\\[6pt]\dfrac{1}{\sqrt3}&amp;-\dfrac{1}{\sqrt2}&amp;\dfrac{1}{\sqrt6}\\[6pt]-\dfrac{1}{\sqrt3}&amp;0&amp;\dfrac{2}{\sqrt6}\end{pmatrix}$$</p>
+              <p><strong>第六步：写标准形并自检。</strong>作正交变换 $x=Qy$，得 $f=4y_1^2+y_2^2+y_3^2$。</p>
+              <p>自检一（正交性）：$\xi_1^T\xi_2=\frac{1}{\sqrt6}-\frac{1}{\sqrt6}+0=0$，$\xi_1^T\xi_3=\frac{1}{\sqrt{18}}+\frac{1}{\sqrt{18}}-\frac{2}{\sqrt{18}}=0$，$\xi_2^T\xi_3=\frac{1}{\sqrt{12}}-\frac{1}{\sqrt{12}}+0=0$；三列长度都是 $1$，故 $Q^TQ=E$。</p>
+              <p>自检二（特征向量）：$A\xi_1=\frac{1}{\sqrt3}(4,4,-4)^T=4\xi_1$ $\checkmark$。</p>
+              <p>自检三（数值验证）：取 $y=(0,1,0)^T$，则 $x=\xi_2=\frac{1}{\sqrt2}(1,-1,0)^T$，代入原式得</p>
+              <p>$$f=2\cdot\frac12+2\cdot\frac12+0+2\cdot\left(-\frac12\right)+0+0=1=y_2^2\ \checkmark$$</p>
+            </div>
+            <p><strong>易错提醒</strong>　① 重根只正交化<strong>不单位化</strong>，$Q^TQ\ne E$，整题作废；② 把"不同特征值的向量"也拿去做施密特正交化，白算一大堆；③ $Q$ 的列序与标准形的系数次序必须一一对应——若把 $\xi_1$ 放在第 3 列，标准形就要写成 $y_1^2+y_2^2+4y_3^2$，两者都对，但不能错位。</p>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 2</span>配方法（无平方项型）<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              要求"用配方法化标准形"，而二次型<strong>一个平方项都没有</strong>（矩阵主对角元全为 $0$）。</div>
+            <div class="model-route"><b>标准套路</b>
+              先对某个非零的 $a_{ij}$ 作"和差变换"造出平方项：
+              $x_i=y_i+y_j,\quad x_j=y_i-y_j,\quad x_k=y_k\ (k\ne i,j)$，此时
+              $2a_{ij}x_ix_j=2a_{ij}(y_i^2-y_j^2)$；变换矩阵的行列式为 $-2\ne0$，合法。
+              造出平方项后就转成"有平方项"的情形，再逐变量配方。</div>
+            <p><strong>例</strong>　用配方法将 $f=2x_1x_2-2x_1x_3+2x_2x_3$ 化为标准形，写出所用的可逆线性变换，并求正、负惯性指数。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：判断情形。</strong>二次型的矩阵为</p>
+              <p>$$A=\begin{pmatrix}0&amp;1&amp;-1\\1&amp;0&amp;1\\-1&amp;1&amp;0\end{pmatrix}$$</p>
+              <p>主对角元全为 $0$，属于"无平方项"的情形，先造平方项。取 $a_{12}=1\ne0$，作变换</p>
+              <p>$$x_1=y_1+y_2,\qquad x_2=y_1-y_2,\qquad x_3=y_3$$</p>
+              <p>它的矩阵行列式为 $-2\ne0$，可逆，合法。</p>
+              <p><strong>第二步：逐项代入。</strong></p>
+              <p>$$2x_1x_2=2(y_1+y_2)(y_1-y_2)=2y_1^2-2y_2^2$$</p>
+              <p>$$-2x_1x_3=-2(y_1+y_2)y_3=-2y_1y_3-2y_2y_3$$</p>
+              <p>$$2x_2x_3=2(y_1-y_2)y_3=2y_1y_3-2y_2y_3$$</p>
+              <p>三式相加，$y_1y_3$ 的系数是 $-2+2=0$，$y_2y_3$ 的系数是 $-2-2=-4$，故</p>
+              <p>$$f=2y_1^2-2y_2^2-4y_2y_3$$</p>
+              <p><strong>第三步：对 $y_2$ 配方。</strong>$y_1$ 已不含交叉项，只需处理 $-2y_2^2-4y_2y_3$：</p>
+              <p>$$-2y_2^2-4y_2y_3=-2\left[(y_2+y_3)^2-y_3^2\right]=-2(y_2+y_3)^2+2y_3^2$$</p>
+              <p>$$f=2y_1^2-2(y_2+y_3)^2+2y_3^2$$</p>
+              <p><strong>第四步：写出总变换。</strong>令 $z_1=y_1,\ z_2=y_2+y_3,\ z_3=y_3$，反解得 $y_1=z_1,\ y_2=z_2-z_3,\ y_3=z_3$，代回 $x$：</p>
+              <p>$$x_1=z_1+z_2-z_3,\qquad x_2=z_1-z_2+z_3,\qquad x_3=z_3$$</p>
+              <p>$$x=\begin{pmatrix}1&amp;1&amp;-1\\1&amp;-1&amp;1\\0&amp;0&amp;1\end{pmatrix}z,\qquad |C|=1\cdot\begin{vmatrix}1&amp;1\\1&amp;-1\end{vmatrix}=1\times(-2)=-2\ne0$$</p>
+              <p>$C$ 可逆，变换合法。</p>
+              <p><strong>第五步：结论与验证。</strong>$f=2z_1^2-2z_2^2+2z_3^2$，故 $p=2,\ q=1$，$p+q=3=R(A)$，规范形为 $u_1^2+u_2^2-u_3^2$（再令 $u_1=\sqrt2z_1,\ u_2=\sqrt2z_2,\ u_3=\sqrt2z_3$）。</p>
+              <p>取 $z=(0,0,1)^T$，则 $x=(-1,1,1)^T$，代入原式：$f=2(-1)(1)-2(-1)(1)+2(1)(1)=-2+2+2=2$；标准形给出 $2z_3^2=2$，一致 $\checkmark$。</p>
+            </div>
+            <p><strong>易错提醒</strong>　① 造平方项的变换必须<strong>可逆</strong>：若写成 $x_i=y_i+y_j,\ x_j=y_i+y_j$，行列式为 $0$，答案直接作废，写完变换顺手算一下行列式；② 变换要写成 $x=Cy$ 的形式并<strong>反解出 $x$ 的表达式</strong>，只写 $y$ 不写 $x$ 会丢分；③ 本题 $y_1$ 恰好没参与交叉项，所以只配方一次就结束——但每一步都要检查"还剩不剩交叉项"，不能凭感觉跳过。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch6-2" data-title="6-2 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">用正交变换 $x=Qy$ 将 $f=x^TAx$ 化为标准形，标准形中平方项的系数是（　）。
+            <span class="en-line" lang="en">The orthogonal transformation $x=Qy$ reduces $f=x^TAx$ to a standard form. The coefficients of the squares in that standard form are (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$A$ 的全部特征值</span></li>
+            <li><span class="opt-body">$A$ 的主对角元</span></li>
+            <li><span class="opt-body">$A$ 的各阶顺序主子式</span></li>
+            <li><span class="opt-body">$A$ 的奇异值</span></li>
+          </ul>
+          <div class="q-explain">由主轴定理 $Q^TAQ=\Lambda=\mathrm{diag}(\lambda_1,\dots,\lambda_n)$，系数就是特征值。主对角元是常见的错误联想——只有 $A$ 本身就是对角矩阵时二者才相同，例如 $A=\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 的对角元是 $1,1$，特征值却是 $3,-1$。顺序主子式是用来判定"平方项系数是否全正"这类问题（即 $p=n$，见 6-3 节）的，不是标准形的系数。奇异值恒为非负，与二次型的正负号无关。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">用配方法化二次型时，若二次型不含任何平方项但含 $x_1x_2$ 项，应首先作的变换是（　）。
+            <span class="en-line" lang="en">When a quadratic form is reduced by completing the square, if it contains no square at all but does contain the term $x_1x_2$, the transformation to be made first is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$x_1=y_1+y_2,\quad x_2=y_1-y_2,\quad x_3=y_3$</span></li>
+            <li><span class="opt-body">$x_1=y_1,\quad x_2=y_2,\quad x_3=y_3$</span></li>
+            <li><span class="opt-body">$x_1=y_1+y_2,\quad x_2=y_1+y_2,\quad x_3=y_3$</span></li>
+            <li><span class="opt-body">$x_1=y_2,\quad x_2=y_1,\quad x_3=y_3$</span></li>
+          </ul>
+          <div class="q-explain">$x_1=y_1+y_2,\ x_2=y_1-y_2$ 使 $2a_{12}x_1x_2=2a_{12}(y_1^2-y_2^2)$，凭空造出两个平方项，且变换矩阵行列式为 $-2\ne0$，可逆。第 2 个是恒等变换，什么也没改变。第 3 个使 $x_1=x_2$，变换矩阵行列式为 0，<strong>不可逆</strong>，把两个变量合并成一个，属于非法变换。第 4 个只是交换变量名，仍是零对角元，还是没平方项。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <p class="q-stem">用正交变换把二次型化为标准形，所得标准形中平方项的系数恰好是二次型矩阵的特征值。
+            <span class="en-line" lang="en">If a quadratic form is reduced to a standard form by an orthogonal transformation, then the coefficients of the squares in that standard form are exactly the eigenvalues of the matrix of the quadratic form.</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">正确，这是主轴定理的直接内容：$Q^TAQ=\Lambda$，对角元就是特征值。要强调的是这句话只对<strong>正交变换</strong>成立；换成配方法，所得标准形的系数一般与特征值毫无关系（例 6.4 中 $A$ 的特征值并非 $1,2,-2$）。另外注意顺序：$Q$ 的第 $i$ 列对应 $\lambda_i$，如果调换了 $Q$ 中列的顺序，标准形系数的次序也要跟着换。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">二次型 $f=3x_1^2+2x_1x_2+3x_2^2$ 经正交变换化成的标准形为（　）。
+            <span class="en-line" lang="en">The standard form of the quadratic form $f=3x_1^2+2x_1x_2+3x_2^2$ under an orthogonal transformation is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$4y_1^2+2y_2^2$</span></li>
+            <li><span class="opt-body">$3y_1^2+3y_2^2$</span></li>
+            <li><span class="opt-body">$4y_1^2-2y_2^2$</span></li>
+            <li><span class="opt-body">$2y_1^2+2y_2^2$</span></li>
+          </ul>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}3&amp;1\\1&amp;3\end{pmatrix}$，$|\lambda E-A|=(\lambda-3)^2-1=(\lambda-4)(\lambda-2)$，特征值为 $4,2$，故标准形为 $4y_1^2+2y_2^2$（两个系数交换顺序也对，因为 $Q$ 的列顺序可以调换）。第 2 个把<strong>主对角元</strong>当成了特征值——可用 $\mathrm{tr}(A)=6$ 检验：$3+3=6$ 看似也对，但用 $|A|=8$ 检验：$3\times3=9\ne8$，立刻暴露。第 3 个是展开 $(\lambda-3)^2-1$ 时符号出错，误以为有负特征值。第 4 个与迹矛盾（$2+2=4\ne6$）。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">二次型 $f=2x_1x_2+2x_1x_3+2x_2x_3$ 的正惯性指数 $p$ 与负惯性指数 $q$ 分别为（　）。
+            <span class="en-line" lang="en">For the quadratic form $f=2x_1x_2+2x_1x_3+2x_2x_3$, the positive inertia index $p$ and the negative inertia index $q$ are respectively (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$p=1,\ q=2$</span></li>
+            <li><span class="opt-body">$p=2,\ q=1$</span></li>
+            <li><span class="opt-body">$p=1,\ q=1$</span></li>
+            <li><span class="opt-body">$p=3,\ q=0$</span></li>
+          </ul>
+          <div class="q-explain">用配方法。先作 $x_1=y_1+y_2,\ x_2=y_1-y_2,\ x_3=y_3$：$2x_1x_2=2y_1^2-2y_2^2$，$2x_1x_3=2y_1y_3+2y_2y_3$，$2x_2x_3=2y_1y_3-2y_2y_3$，相加得 $f=2y_1^2-2y_2^2+4y_1y_3$。再对 $y_1$ 配方：$2y_1^2+4y_1y_3=2(y_1+y_3)^2-2y_3^2$，故 $f=2(y_1+y_3)^2-2y_2^2-2y_3^2$，即 $p=1,q=2$，$R(A)=3$。（特征值验证：$A=J-E$，$J$ 的特征值为 $3,0,0$，故 $A$ 的特征值为 $2,-1,-1$，且 $\mathrm{tr}(A)=0=2-1-1$ $\checkmark$。）第 2 个把正负号记反；第 3 个把二重特征值 $-1$ 只算了一次；第 4 个以为"矩阵里没负号就全正"，忽略了交叉项会产生负特征值。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <p class="q-stem">关于配方法与初等变换法（合同变换法），下列说法正确的是（　）。
+            <span class="en-line" lang="en">Which of the following statements about completing the square and the elementary transformation method (the congruence transformation method) are correct?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">配方法所用的变换 $x=Cy$ 只要求 $C$ 可逆，不要求 $C$ 正交</span></li>
+            <li data-correct="true"><span class="opt-body">配方法所得标准形的系数通常是有理数</span></li>
+            <li data-correct="true"><span class="opt-body">初等变换法中，对 $A$ 作一次初等列变换后，必须紧接着作同类型的初等行变换</span></li>
+            <li><span class="opt-body">配方法与正交变换法得到的标准形一定完全相同</span></li>
+          </ul>
+          <div class="q-explain">配方法只用可逆线性变换，$C$ 没有正交的要求，第 1 个对；因为只涉及有理运算，系数通常是有理数（例 6.4 得到 $1,2,-2$），第 2 个对。初等变换法中"列变换配同类型行变换"是为了实现 $C^TAC$ 并保持对称性——只作列变换得到的是 $AC$，那不是合同，第 3 个对。第 4 个错：标准形<strong>不唯一</strong>，同一个二次型用配方法和正交变换法得到的系数一般不同（例 6.4 的 $1,2,-2$ 与它的特征值就完全不同），两者只有惯性指数必然相同。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <p class="q-stem">关于正交变换法化二次型为标准形，下列说法正确的是（　）。
+            <span class="en-line" lang="en">Which of the following statements about reducing a quadratic form to a standard form by an orthogonal transformation are correct?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正交变换保持向量的长度与夹角，因此二次曲面的形状不变</span></li>
+            <li data-correct="true"><span class="opt-body">若 $A$ 有重特征值，其对应的特征向量必须先正交化再单位化</span></li>
+            <li data-correct="true"><span class="opt-body">不同特征值对应的特征向量不必再作施密特正交化</span></li>
+            <li><span class="opt-body">为了保证 $Q$ 是正交矩阵，所有特征向量都要统一作施密特正交化</span></li>
+          </ul>
+          <div class="q-explain">正交变换满足 $\|Qy\|=\|y\|$ 与 $(Qy_1)^T(Qy_2)=y_1^Ty_2$，只作旋转反射，形状不变，第 1 个对。重特征值的多个特征向量只保证线性无关，未必正交，必须施密特正交化，第 2 个对。第 4 个错在"所有"：实对称矩阵<strong>不同特征值</strong>对应的特征向量已自动正交，再正交化纯属白费功夫，第 3 个正是对这一点的正确表述。另外提醒：正交化之后<strong>一定要单位化</strong>，否则 $Q^TQ\ne E$。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="考研">
+          <p class="q-stem">若二次型 $f$ 经正交变换化为 $y_1^2+y_2^2-y_3^2$，则 $f$ 的矩阵 $A$ 必与 $\mathrm{diag}(1,1,-1)$ 合同。
+            <span class="en-line" lang="en">If a quadratic form $f$ is carried by an orthogonal transformation into $y_1^2+y_2^2-y_3^2$, then the matrix $A$ of $f$ must be congruent to $\mathrm{diag}(1,1,-1)$.</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">正确。设变换为 $x=Qy$（$Q$ 正交），则 $Q^TAQ=\mathrm{diag}(1,1,-1)$。正交矩阵必可逆，按合同的定义取 $C=Q$ 即得 $A$ 与 $\mathrm{diag}(1,1,-1)$ 合同。更一般地：<strong>只要两个二次型能化成同一个规范形，它们就合同</strong>，这正是惯性定理的推论。反过来，$A$ 与 $\mathrm{diag}(1,1,-1)$ 合同 $\iff$ $f$ 的正惯性指数为 2、负惯性指数为 1。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <p class="q-stem">二次型 $f=2x_1^2+4x_1x_2+5x_2^2$ 经正交变换化成的标准形为 $\lambda_1y_1^2+\lambda_2y_2^2$（其中 $\lambda_1&gt;\lambda_2$），则 $\lambda_2=$ ______。
+            <span class="en-line" lang="en">The quadratic form $f=2x_1^2+4x_1x_2+5x_2^2$ is carried by an orthogonal transformation into the standard form $\lambda_1y_1^2+\lambda_2y_2^2$ with $\lambda_1&gt;\lambda_2$. Then $\lambda_2=$ ______.</span></p>
+          <div class="q-answer" data-answer="1|1.0"></div>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}2&amp;2\\2&amp;5\end{pmatrix}$，$|\lambda E-A|=\begin{vmatrix}\lambda-2&amp;-2\\-2&amp;\lambda-5\end{vmatrix}=(\lambda-2)(\lambda-5)-4=\lambda^2-7\lambda+6=(\lambda-6)(\lambda-1)$。特征值为 $6$ 和 $1$，故 $\lambda_1=6,\ \lambda_2=1$，标准形为 $6y_1^2+y_2^2$。可用 $\mathrm{tr}(A)=7=6+1$ 和 $|A|=10-4=6=6\times1$ 快速验算。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">二次型 $f=2x_1^2+5x_2^2+5x_3^2+4x_1x_2+4x_1x_3-2x_2x_3$ 经正交变换化成的标准形为（　）。
+            <span class="en-line" lang="en">The standard form of the quadratic form $f=2x_1^2+5x_2^2+5x_3^2+4x_1x_2+4x_1x_3-2x_2x_3$ under an orthogonal transformation is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$6y_1^2+6y_2^2$</span></li>
+            <li><span class="opt-body">$6y_1^2+6y_2^2+6y_3^2$</span></li>
+            <li><span class="opt-body">$6y_1^2+6y_2^2-6y_3^2$</span></li>
+            <li><span class="opt-body">$2y_1^2+5y_2^2+5y_3^2$</span></li>
+          </ul>
+          <div class="q-explain">交叉项系数 $4,4,-2$ 分别平分，得 $A=\begin{pmatrix}2&amp;2&amp;2\\2&amp;5&amp;-1\\2&amp;-1&amp;5\end{pmatrix}$。先看有没有零特征值：按第一行展开算得 $|A|=2(25-1)-2(10+2)+2(-2-10)=48-24-24=0$，所以 $0$ 是特征值；再算 $\mathrm{tr}(A)=2+5+5=12$，二阶主子式之和 $24+6+6=36$，设另两个特征值为 $\lambda_1,\lambda_2$，则 $\lambda_1+\lambda_2=12$、$\lambda_1\lambda_2=36$，解得 $\lambda_1=\lambda_2=6$。故特征值为 $6,6,0$，标准形是 $6y_1^2+6y_2^2$（零特征值不贡献平方项）。<strong>逐项核对：</strong>第 2 个把 $0$ 也写成了 $6$，等于宣称三个特征值全为正（$p=3$）——但取 $x=(-2,1,1)^T$ 算得 $f=8+5+5-8-8-2=0$，确有非零向量使 $f=0$，与 $p=3$ 矛盾；第 3 个凭空造出一个负特征值，与 $|A|=0$（无负特征值时秩只能是 2）不符；第 4 个把<strong>主对角元</strong>当成了特征值，用 $|A|=0$ 与 $2\times5\times5=50\ne0$ 一比即知错误。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">二次型 $f=2x_1x_2+4x_1x_3-4x_2x_3$ 的正惯性指数 $p$ 与负惯性指数 $q$ 分别为（　）。
+            <span class="en-line" lang="en">For the quadratic form $f=2x_1x_2+4x_1x_3-4x_2x_3$, the positive inertia index $p$ and the negative inertia index $q$ are respectively (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$p=2,\ q=1$</span></li>
+            <li><span class="opt-body">$p=1,\ q=2$</span></li>
+            <li><span class="opt-body">$p=3,\ q=0$</span></li>
+            <li><span class="opt-body">$p=2,\ q=0$</span></li>
+          </ul>
+          <div class="q-explain">矩阵主对角元全为 $0$，先作变换 $x_1=y_1+y_2,\ x_2=y_1-y_2,\ x_3=y_3$（行列式为 $-2\ne0$，可逆）。逐项代入：$2x_1x_2=2y_1^2-2y_2^2$；$4x_1x_3=4y_1y_3+4y_2y_3$；$-4x_2x_3=-4y_1y_3+4y_2y_3$。相加得 $f=2y_1^2-2y_2^2+8y_2y_3$。再对 $y_2$ 配方：$-2y_2^2+8y_2y_3=-2(y_2-2y_3)^2+8y_3^2$，故 $f=2y_1^2-2(y_2-2y_3)^2+8y_3^2$，两个正项、一个负项，$p=2,\ q=1$。<strong>逐项核对：</strong>第 2 个把正负号个数记反了；第 3 个以为"式子里没有负号就全正"，但取 $x=(1,-1,0)^T$ 直接算得 $f=2(1)(-1)=-2&lt;0$，该二次型能取到负值，$p$ 不可能是 $3$；第 4 个既漏掉了负项，又使 $p+q=2\ne R(A)=3$——惯性指数之和必须等于秩。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <p class="q-stem">二次型 $f=2x_1^2+3x_2^2+3x_3^2+4x_2x_3$ 经正交变换化成的标准形中，最大的平方项系数为 ______。
+            <span class="en-line" lang="en">The quadratic form $f=2x_1^2+3x_2^2+3x_3^2+4x_2x_3$ is reduced to a standard form by an orthogonal transformation. The largest coefficient of the squares is ______.</span></p>
+          <div class="q-answer" data-answer="5|5.0"></div>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}2&amp;0&amp;0\\0&amp;3&amp;2\\0&amp;2&amp;3\end{pmatrix}$（$4x_2x_3$ 的系数平分得 $2$）。$x_1$ 与 $x_2,x_3$ 之间没有耦合，矩阵是分块对角的，特征值由两块分别给出：左上角单独贡献 $\lambda=2$；右下角 $\begin{pmatrix}3&amp;2\\2&amp;3\end{pmatrix}$ 的特征方程是 $(\lambda-3)^2-4=0$，解得 $\lambda=5$ 与 $\lambda=1$。故全部特征值为 $5,2,1$，标准形是 $5y_1^2+2y_2^2+y_3^2$，最大的系数为 $5$。验算：$\mathrm{tr}(A)=2+3+3=8=5+2+1$ $\checkmark$；$|A|=2\times(9-4)=10=5\times2\times1$ $\checkmark$。注意<strong>不能</strong>把主对角元 $2,3,3$ 当成标准形的系数——正交变换下标准形的系数一定是特征值。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷考的是<strong>"标准形的系数从哪里来"</strong>。同一个二次型有两条路：正交变换法的系数一定是特征值，配方法的系数由配方过程决定、一般与特征值无关；两者数值可以不同，但正负项的<strong>个数</strong>必然一致——这正是惯性定理在算法层面的体现。</p>
+          <p>最常见的错法是混淆两条路的系数来源，把 $A$ 的<strong>主对角元</strong>当成特征值。第 1、4 题都埋了这个选项，而用 $\mathrm{tr}(A)$ 与 $|A|$ 两秒就能验伪。另一个方向性错误是"没写负号就以为没有负惯性指数"：第 5 题的 $2x_1x_2+2x_1x_3+2x_2x_3$ 通篇正号，特征值却是 $2,-1,-1$，$p=1,q=2$——交叉项足够大时会"压过"平方项。第三个高发区是正交变换法的操作细节（第 9 题）：<strong>重根必须先施密特正交化再单位化</strong>，而不同特征值对应的特征向量已自动正交，再正交化纯属白算。第 2 题还提醒：造平方项的变换必须可逆，写成 $x_1=x_2$ 就非法。</p>
+          <p>联系上，正交变换法几乎是第 5 章"实对称矩阵必可正交对角化"的逐字翻译，求特征向量靠第 3 章的齐次方程组与第 4 章的施密特正交化；这里算出的 $p,q$ 又是 6-3 节判正定的依据。</p>
+          <p>下一步：重做例 6.4 与例 6.6，一道练配方、一道练重根正交化，并按"自检三件事"核对 $Q$，再进入 6-3。</p>
+        </div>
+
+      </div>
+
+      <h2 id="s6-3" data-hours="1.4">6-3 正定二次型</h2>
+
+      <p>6-2 节告诉我们，任何二次型都能化成 $d_1y_1^2+\cdots+d_ny_n^2$，而正负项的个数 $p,q$ 由二次型唯一确定。于是自然要问：<strong>$p=n$（一个负号、一个零都没有）这种特殊情形意味着什么？</strong>这就是本节的正定性——几何上对应椭球面，工程上对应平衡稳定。判定的主力工具是第 1 章的<strong>行列式</strong>（各阶顺序主子式），抽象矩阵的证明则靠第 5 章的<strong>特征值</strong>符号。本节最后把"正定"翻译成 6-1 节的合同语言：$A$ 正定 $\iff$ $A$ 与 $E$ 合同。</p>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>为什么"全都是正的"这么重要</div>
+        <p>把二次型看成能量函数：若任何非零状态的"能量"都是正的，最低点就只能在 $x=0$，而且这个平衡点<strong>稳定</strong>——稍加扰动能量增加，系统会自己弹回来。反之若存在方向 $x_0\ne0$ 使 $f(x_0)&lt;0$，沿该方向能量可无限降低，$x=0$ 就不是极小点，系统会朝那边"塌"过去，这就是<strong>失稳</strong>。</p>
+        <p>几何上：$f(x)=1$ 是二次曲面。$f$ 正定 $\iff$ <strong>椭球面</strong>；$f$ 不定 $\iff$ <strong>双曲面</strong>（有鞍点）；$f$ 半正定但不正定 $\iff$ <strong>椭圆柱面</strong>（某个方向被压扁）。用惯性指数说：正定 $\iff p=n$。</p>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 6.4　正定、负定、半正定、不定</div>
+        <p>设 $f(x)=x^TAx$ 是 $n$ 元二次型（$A$ 为实对称矩阵）。</p>
+        <ul>
+          <li>若对任意 $x\ne0$ 都有 $f(x)&gt;0$，称 $f$ 为<span class="term">正定二次型</span>，$A$ 为<span class="term">正定矩阵</span>，记作 $A&gt;O$。</li>
+          <li>若对任意 $x\ne0$ 都有 $f(x)&lt;0$，称 $f$ 为<span class="term">负定二次型</span>，$A$ 为负定矩阵，记作 $A&lt;O$。</li>
+          <li>若对任意 $x$ 都有 $f(x)\ge0$，称 $f$ 为<span class="term">半正定</span>；若 $f(x)\le0$ 则称半负定。</li>
+          <li>若 $f$ 既能取正值又能取负值，称 $f$ 为<span class="term">不定</span>。</li>
+        </ul>
+        <p>用惯性指数统一刻画（最本质的描述）：</p>
+        <p>$$f\ \text{正定}\iff p=n;\qquad f\ \text{负定}\iff q=n;\qquad f\ \text{半正定}\iff p=R(A)&lt;n;\qquad f\ \text{不定}\iff p&gt;0\ \text{且}\ q&gt;0$$</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 6.4</span>
+             <strong>Positive Definite, Negative Definite, Semidefinite and Indefinite.</strong>
+             Let $f(x)=x^TAx$ be a quadratic form in $n$ variables ($A$ a real symmetric matrix).</p>
+          <ul>
+            <li>If $f(x)&gt;0$ for every $x\ne0$, then $f$ is called
+                <span class="en-term">positive definite</span> and $A$ is a positive definite matrix, written $A&gt;O$.</li>
+            <li>If $f(x)&lt;0$ for every $x\ne0$, then $f$ is called
+                <span class="en-term">negative definite</span> and $A$ is a negative definite matrix, written $A&lt;O$.</li>
+            <li>If $f(x)\ge0$ for every $x$, then $f$ is called <span class="en-term">positive semidefinite</span>;
+                if $f(x)\le0$ for every $x$, it is called negative semidefinite.</li>
+            <li>If $f$ takes both positive and negative values, then $f$ is called
+                <span class="en-term">indefinite</span>.</li>
+          </ul>
+          <p>The unified description in terms of inertia indices (the most essential one):</p>
+          <p>$$f\ \text{positive definite}\iff p=n;\qquad f\ \text{negative definite}\iff q=n;\qquad f\ \text{positive semidefinite}\iff p=R(A)&lt;n;\qquad f\ \text{indefinite}\iff p&gt;0\ \text{and}\ q&gt;0$$</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.3　正定的四个等价条件（考试核心）</div>
+        <p>设 $A$ 为 $n$ 阶实对称矩阵，$f=x^TAx$。下列条件<strong>互相等价</strong>：</p>
+        <p><span class="thm-name">(1) 惯性指数</span>　正惯性指数 $p=n$，即规范形为 $y_1^2+y_2^2+\cdots+y_n^2$。</p>
+        <p><span class="thm-name">(2) 特征值</span>　$A$ 的<strong>全部特征值都大于 0</strong>。</p>
+        <p><span class="thm-name">(3) 顺序主子式（最常用的数值判定）</span>　$A$ 的<strong>各阶顺序主子式全都大于 0</strong>：</p>
+        <p>$$D_1=a_{11}&gt;0,\quad D_2=\begin{vmatrix}a_{11}&amp;a_{12}\\a_{21}&amp;a_{22}\end{vmatrix}&gt;0,\quad \dots,\quad D_n=|A|&gt;0$$</p>
+        <p><span class="thm-name">(4) 合同于单位矩阵</span>　$A$ 与 $E$ 合同，即存在可逆矩阵 $C$ 使 $A=C^TC$（等价地 $A=CC^T$）。</p>
+        <p><strong>为什么 (4) 成立</strong>：若 $A=C^TC$ 且 $C$ 可逆，则对 $x\ne0$ 有 $Cx\ne0$，于是 $x^TAx=(Cx)^T(Cx)=\|Cx\|^2&gt;0$。反之由正定可作合同变换化 $A$ 为 $E$，即 $A=C^TEC=C^TC$。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 6.3</span>
+             <strong>Four Equivalent Conditions for Positive Definiteness (the core of the exam).</strong>
+             Let $A$ be a real symmetric $n\times n$ matrix and let $f=x^TAx$. The following conditions are
+             <strong>equivalent to one another</strong>:</p>
+          <p><span class="thm-name">(1) Inertia indices</span>　The positive inertia index is $p=n$, that is, the
+             canonical form is $y_1^2+y_2^2+\cdots+y_n^2$.</p>
+          <p><span class="thm-name">(2) Eigenvalues</span>　<strong>All eigenvalues of $A$ are greater than $0$.</strong></p>
+          <p><span class="thm-name">(3) Leading principal minors (the most used numerical test)</span>　<strong>All the
+             <span class="en-term">leading principal minors</span> of $A$ are greater than $0$</strong>:</p>
+          <p>$$D_1=a_{11}&gt;0,\quad D_2=\begin{vmatrix}a_{11}&amp;a_{12}\\a_{21}&amp;a_{22}\end{vmatrix}&gt;0,\quad \dots,\quad D_n=|A|&gt;0$$</p>
+          <p><span class="thm-name">(4) Congruent to the identity matrix</span>　$A$ is congruent to $E$: there exists
+             an invertible matrix $C$ with $A=C^TC$ (equivalently $A=CC^T$).</p>
+          <p><strong>Why (4) holds.</strong> If $A=C^TC$ with $C$ invertible, then $Cx\ne0$ for $x\ne0$, so
+             $x^TAx=(Cx)^T(Cx)=\|Cx\|^2&gt;0$. Conversely, positive definiteness allows a congruence transformation
+             to carry $A$ into $E$, that is, $A=C^TEC=C^TC$.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 6.4　必要条件、负定与半正定</div>
+        <p><span class="thm-name">必要条件</span>　若 $A$ 正定，则 $|A|&gt;0$、$a_{ii}&gt;0$、$\mathrm{tr}(A)&gt;0$、$A$ 可逆，且 $A^{-1},A^*,A^k$ 都正定。<strong>但 $|A|&gt;0$ 与 $a_{ii}&gt;0$ 只是必要条件，不充分</strong>（反例见易错块）。</p>
+        <p><strong>理由</strong>（抽象矩阵证明题的标准套路：<strong>先验对称性，再验特征值符号</strong>）：设 $A$ 的特征值为 $\lambda_i&gt;0$，则 $A^{-1}$ 的是 $1/\lambda_i&gt;0$；$A^*=|A|A^{-1}$ 的是 $|A|/\lambda_i&gt;0$（因 $|A|=\prod\lambda_i&gt;0$）；$A^k$ 的是 $\lambda_i^k&gt;0$。三者都实对称，故都正定。</p>
+        <p><span class="thm-name">负定</span>　$A$ 负定 $\iff$ $-A$ 正定 $\iff$ 顺序主子式<strong>正负交替</strong>：奇数阶小于 0、偶数阶大于 0，即 $(-1)^kD_k&gt;0$（等价地：特征值全小于 0）。</p>
+        <p><span class="thm-name">半正定</span>　$f\ge0$ 对一切 $x$ 成立 $\iff$ 特征值全 $\ge0$ $\iff$ $p=R(A)&lt;n$ $\iff$ $A=C^TC$（$C$ 可不可逆）。</p>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 6.4</span>
+             <strong>Necessary Conditions; Negative Definite and Positive Semidefinite.</strong></p>
+          <p><span class="thm-name">Necessary conditions</span>　If $A$ is positive definite, then $|A|&gt;0$,
+             $a_{ii}&gt;0$, $\mathrm{tr}(A)&gt;0$, $A$ is invertible, and $A^{-1},A^*,A^k$ are all positive definite.
+             <strong>But $|A|&gt;0$ and $a_{ii}&gt;0$ are only necessary conditions, not sufficient ones</strong>
+             (counterexamples are in the warning box).</p>
+          <p><strong>Reason</strong> (the standard scheme for abstract proofs: <strong>check symmetry first, then the
+             signs of the eigenvalues</strong>): let the eigenvalues of $A$ be $\lambda_i&gt;0$. Then the eigenvalues
+             of $A^{-1}$ are $1/\lambda_i&gt;0$; those of $A^*=|A|A^{-1}$ are $|A|/\lambda_i&gt;0$ (because
+             $|A|=\prod\lambda_i&gt;0$); and those of $A^k$ are $\lambda_i^k&gt;0$. All three matrices are real
+             symmetric, hence all three are positive definite.</p>
+          <p><span class="thm-name">Negative definite</span>　$A$ is negative definite $\iff$ $-A$ is positive definite
+             $\iff$ the leading principal minors <strong>alternate in sign</strong>: negative for odd order and positive
+             for even order, that is, $(-1)^kD_k&gt;0$ (equivalently: all eigenvalues are less than $0$).</p>
+          <p><span class="thm-name">Positive semidefinite</span>　$f\ge0$ for all $x$ $\iff$ all eigenvalues are
+             $\ge0$ $\iff$ $p=R(A)&lt;n$ $\iff$ $A=C^TC$ ($C$ need not be invertible).</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：判断正定性的标准流程</div>
+        <ol>
+          <li><strong>先写矩阵</strong>（交叉项系数平分！）并确认 $A^T=A$。</li>
+          <li><strong>首选顺序主子式法</strong>：从左上角依次算 $D_1,D_2,\dots,D_n$，不用解特征方程。</li>
+          <li><strong>边算边判</strong>：只要出现某个 $D_k\le0$ 就立刻停下，"不正定"已成立，后面的行列式不必算。</li>
+          <li><strong>含参数时</strong>：把 $D_1&gt;0,\dots,D_n&gt;0$ 列成关于参数的不等式组，<strong>逐个解出再取交集</strong>。$D_k$ 是参数的二次式时，解出来往往是<strong>一段区间</strong>而不是半轴，别只取一半。</li>
+          <li><strong>某个 $D_k=0$ 时</strong>：「不正定」已判定，但要用特征值法或配方法才能区分半正定与不定。</li>
+          <li><strong>抽象矩阵</strong>（不给数值）：改用特征值法或直接用定义 $x^TAx&gt;0$ 证明。</li>
+        </ol>
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD 6.5</span>
+             <strong>Standard Procedure for Testing Positive Definiteness.</strong></p>
+          <ol>
+            <li><strong>Write the matrix first</strong> (split the cross-term coefficients!) and check that $A^T=A$.</li>
+            <li><strong>Try the leading principal minor test first</strong>: compute $D_1,D_2,\dots,D_n$ from the
+                top-left corner; no characteristic equation is needed.</li>
+            <li><strong>Judge as you go</strong>: as soon as some $D_k\le0$ appears, stop at once — "not positive
+                definite" is already established and the later determinants need not be computed.</li>
+            <li><strong>With a parameter</strong>: turn $D_1&gt;0,\dots,D_n&gt;0$ into a system of inequalities in the
+                parameter and <strong>solve them one by one, then intersect</strong>. When $D_k$ is quadratic in the
+                parameter the result is usually an <strong>interval</strong>, not a half-line; do not keep only half
+                of it.</li>
+            <li><strong>If some $D_k=0$</strong>: "not positive definite" is settled, but only the eigenvalue method or
+                completing the square can distinguish positive semidefinite from indefinite.</li>
+            <li><strong>For an abstract matrix</strong> (no numbers given): switch to the eigenvalue method, or prove
+                $x^TAx&gt;0$ directly from the definition.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点：这几句话背也要背下来</div>
+        <ul>
+          <li><strong>"$a_{ii}&gt;0$ 就正定"是错的。</strong>反例 $A=\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$：主对角元都是 $1&gt;0$，特征值却是 $3$ 和 $-1$，是<strong>不定</strong>的。原因是主对角元只管单个变量的平方项，管不了交叉项的耦合。</li>
+          <li><strong>"$|A|&gt;0$ 就正定"是错的。</strong>反例 $\mathrm{diag}(1,-1,-1)$：$|A|=1&gt;0$ 却有两个负特征值，不定。$|A|&gt;0$ 只说明负特征值个数是<strong>偶数</strong>，是 0 个还是 2 个它分不出来。</li>
+          <li><strong>"顺序"三个字不能丢。</strong>判据要求从左上角按 $1,2,\dots,n$ 阶依次取，不是任意主子式。反例 $A=\begin{pmatrix}1&amp;2&amp;0\\2&amp;1&amp;0\\0&amp;0&amp;1\end{pmatrix}$：一阶主子式全正，非顺序的二阶主子式 $\begin{vmatrix}1&amp;0\\0&amp;1\end{vmatrix}=1&gt;0$ 也正，但顺序主子式 $D_2=\begin{vmatrix}1&amp;2\\2&amp;1\end{vmatrix}=-3&lt;0$，$A$ 不正定（特征值 $3,-1,1$）。</li>
+          <li><strong>"只验最高阶主子式"是错的。</strong>$D_n=|A|&gt;0$ 只是必要条件，必须从低阶开始逐阶验。</li>
+          <li><strong>$D_k=0$ 时不要随口写"不定"。</strong>例如 $f=x_1^2+x_2^2+x_3^2+2x_1x_2$ 的 $D_1=1,D_2=D_3=0$，但配方得 $f=(x_1+x_2)^2+x_3^2\ge0$，且取 $x_0=(1,-1,0)^T$ 时 $f=0$，所以它是<strong>半正定而非不定</strong>。</li>
+        </ul>
+      </div>
+
+      <div class="box link-box">
+        <div class="box-title"><span class="ico">🔗</span>知识关联：正定是前面所有章节的交汇处</div>
+        <ul>
+          <li><strong>承上（第 1 章）</strong>：条件 (3) 的"顺序主子式"就是一串<strong>行列式</strong>，$D_n$ 就是 $|A|$；而 $|A|&gt;0$ 只是必要条件，正是行列式与正定性关系的最佳体现。</li>
+          <li><strong>承上（第 5 章）</strong>：条件 (2)"全部特征值大于 0"来自第 5 章。<strong>抽象矩阵的正定证明只能走这条路</strong>（如 $A^{-1},A^*,A^k$），因为算不出具体数值就没法用主子式。</li>
+          <li><strong>承上（6-1、6-2）</strong>：条件 (1) 是惯性指数语言（$p=n$），条件 (4) 是合同语言（与 $E$ 合同）。四条本质是同一件事的四种说法。</li>
+          <li><strong>横向</strong>：$A$ 正定且 $B$ 正定 $\Rightarrow$ 两者都与 $E$ 合同 $\Rightarrow$ 由传递性知 $A$ 与 $B$ 合同。这句话是很多综合题的题眼。</li>
+        </ul>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.7</span> 用顺序主子式判断正定（并用特征值交叉验证）
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>判断二次型 $f=3x_1^2+4x_2^2+5x_3^2+4x_1x_2-4x_2x_3$ 是否正定。</p>
+          <div class="solution">
+            <p class="solution-label">解法一（顺序主子式法）</p>
+            <p><strong>第一步：写矩阵。</strong>平方项系数放对角线；$x_1x_2$ 系数 4 分成 $a_{12}=a_{21}=2$；$x_2x_3$ 系数 $-4$ 分成 $a_{23}=a_{32}=-2$；无 $x_1x_3$ 项，$a_{13}=a_{31}=0$。</p>
+            <p>$$A=\begin{pmatrix}3&amp;2&amp;0\\2&amp;4&amp;-2\\0&amp;-2&amp;5\end{pmatrix}$$</p>
+            <p><strong>第二步：算各阶顺序主子式。</strong></p>
+            <p>$$D_1=3&gt;0,\qquad D_2=\begin{vmatrix}3&amp;2\\2&amp;4\end{vmatrix}=12-4=8&gt;0$$</p>
+            <p>$$D_3=|A|=3\begin{vmatrix}4&amp;-2\\-2&amp;5\end{vmatrix}-2\begin{vmatrix}2&amp;-2\\0&amp;5\end{vmatrix}+0=3(20-4)-2(10)=48-20=28&gt;0$$</p>
+            <p><strong>第三步：结论。</strong>三个顺序主子式全部大于 0，故 $A$ 正定，$f$ 为正定二次型。</p>
+            <p class="solution-label">解法二（特征值法，用于交叉验证）</p>
+            <p>$$|\lambda E-A|=\begin{vmatrix}\lambda-3&amp;-2&amp;0\\-2&amp;\lambda-4&amp;2\\0&amp;2&amp;\lambda-5\end{vmatrix}$$</p>
+            <p>按第一行展开并整理，得</p>
+            <p>$$|\lambda E-A|=\lambda^3-12\lambda^2+39\lambda-28=(\lambda-4)(\lambda^2-8\lambda+7)=(\lambda-4)(\lambda-1)(\lambda-7)$$</p>
+            <p>（试根 $\lambda=4$：$64-192+156-28=0$ $\checkmark$。）三个特征值 $7,4,1$ 全部大于 0，与解法一结论一致。</p>
+            <p><strong>验算</strong>：$\mathrm{tr}(A)=12=7+4+1$ $\checkmark$；$|A|=28=7\times4\times1$ $\checkmark$。</p>
+            <p><strong>点评</strong>：解法一只需算三个行列式，解法二要解三次方程。数值题一律优先用顺序主子式法。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 6.8</span> 含参数的正定性讨论
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>求参数 $t$ 的取值范围，使二次型 $f=x_1^2+x_2^2+5x_3^2+2tx_1x_2-2x_1x_3+4x_2x_3$ 为正定二次型。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：写矩阵。</strong>注意 $x_1x_2$ 的系数是 $2t$，平分后 $a_{12}=a_{21}=t$（<strong>写成 $2t$ 后面全错</strong>）。$x_1x_3$ 系数 $-2$ 给出 $a_{13}=-1$；$x_2x_3$ 系数 4 给出 $a_{23}=2$。</p>
+            <p>$$A=\begin{pmatrix}1&amp;t&amp;-1\\t&amp;1&amp;2\\-1&amp;2&amp;5\end{pmatrix}$$</p>
+            <p><strong>第二步：一阶顺序主子式。</strong>$D_1=1&gt;0$ 对一切 $t$ 恒成立，贡献一个"永远满足"的条件。</p>
+            <p><strong>第三步：二阶顺序主子式。</strong></p>
+            <p>$$D_2=\begin{vmatrix}1&amp;t\\t&amp;1\end{vmatrix}=1-t^2&gt;0\iff t^2&lt;1\iff -1&lt;t&lt;1$$</p>
+            <p><strong>第四步：三阶顺序主子式。</strong>按第一行展开：</p>
+            <p>$$D_3=1\begin{vmatrix}1&amp;2\\2&amp;5\end{vmatrix}-t\begin{vmatrix}t&amp;2\\-1&amp;5\end{vmatrix}+(-1)\begin{vmatrix}t&amp;1\\-1&amp;2\end{vmatrix}$$</p>
+            <p>其中 $\begin{vmatrix}1&amp;2\\2&amp;5\end{vmatrix}=1$，$\begin{vmatrix}t&amp;2\\-1&amp;5\end{vmatrix}=5t+2$，$\begin{vmatrix}t&amp;1\\-1&amp;2\end{vmatrix}=2t+1$。所以</p>
+            <p>$$D_3=1-t(5t+2)-(2t+1)=1-5t^2-2t-2t-1=-5t^2-4t$$</p>
+            <p>要求 $D_3&gt;0$：$-5t^2-4t&gt;0\iff 5t^2+4t&lt;0\iff t(5t+4)&lt;0\iff -\dfrac45&lt;t&lt;0$。（二次函数 $5t^2+4t$ 开口向上，与 $t$ 轴交于 $0$ 和 $-\dfrac45$，在两根<strong>之间</strong>取负值。）</p>
+            <p><strong>第五步：取交集。</strong></p>
+            <p>$$\begin{cases}-1&lt;t&lt;1\\[2pt]-\dfrac45&lt;t&lt;0\end{cases}\Longrightarrow -\frac45&lt;t&lt;0$$</p>
+            <p>故当且仅当 $t\in\left(-\dfrac45,0\right)$ 时二次型正定。</p>
+            <p><strong>验证。</strong>取 $t=-\dfrac12$：$D_2=\dfrac34&gt;0$，$D_3=-\dfrac54+2=\dfrac34&gt;0$，确实正定。取端点 $t=-\dfrac45$ 时 $D_3=0$，恰在分界处不正定，符合预期。</p>
+            <p><strong>易错提醒</strong>：答案既不是 $(-1,1)$（那只是二阶条件），也不是 $\left(-\frac45,\frac45\right)$（把 $t(5t+4)&lt;0$ 错解成 $|t|&lt;\frac45$）。解不等式时画个二次函数草图确认取值区间。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <ul>
+          <li><span class="tag">高频</span><span class="tag">大题</span>含参数的正定性讨论。<strong>套路固定</strong>：写矩阵（交叉项平分！）→ 列 $D_1&gt;0,D_2&gt;0,\dots,D_n&gt;0$ → 解不等式组 → <strong>取交集</strong>。三个陷阱：$tx_ix_j$ 的矩阵元素是 $t/2$（写成 $t$ 全错）；$D_k$ 是 $t$ 的二次式时解出来是<strong>区间</strong>不是半轴；必须取各阶条件的交集，低阶条件常被包含（例 6.8 中 $|t|&lt;1$ 被完全包含）。</li>
+          <li><span class="tag">高频</span><span class="tag">大题</span>正定性的证明题。抽象矩阵只能走"<strong>先验对称、再验特征值符号</strong>"：$A^{-1},A^*,A^k$ 的特征值分别是 $\frac1\lambda,\frac{|A|}{\lambda},\lambda^k$，配合"$A$ 正定 $\Rightarrow\lambda_i&gt;0$、$|A|&gt;0$"即可。</li>
+          <li><span class="tag">高频</span><span class="tag">小题</span>辨析必要条件与充要条件。看到"$a_{ii}&gt;0$""$|A|&gt;0$""$R(A)=n$"要立刻反应过来<strong>只是必要条件</strong>，随手举出 $\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 或 $\mathrm{diag}(1,-1,-1)$ 就能排除。</li>
+          <li><span class="tag">高频</span><span class="tag">易错</span>正定与合同的联系：$A$ 正定 $\iff$ $A$ 与 $E$ 合同。于是"$A,B$ 都正定 $\Rightarrow$ 都合同于 $E$ $\Rightarrow$ 互相合同"——这是很多综合题的题眼。</li>
+        </ul>
+      </div>
+
+      <div class="box app-box">
+        <div class="box-title"><span class="ico">🔧</span>工程联系：Hessian 矩阵、结构稳定性与最小二乘</div>
+        <p><strong>(1) 多元函数极值。</strong>在驻点 $x_0$ 处作 Taylor 展开：$f(x_0+\Delta)=f(x_0)+\frac12\Delta^TH(x_0)\Delta+o(\|\Delta\|^2)$，其中 $H$ 是<strong>Hessian 矩阵</strong>（二阶偏导构成的实对称矩阵）。于是判别法有了统一解释：$H(x_0)$ 正定 $\iff$ 极小值点；负定 $\iff$ 极大值点；不定 $\iff$ 鞍点。</p>
+        <p><strong>(2) 结构稳定性与屈曲。</strong>航空发动机机匣、压气机叶片的总势能 $\Pi=\frac12\Delta^TK_T\Delta-\Delta^TF$，$K_T$ 是<strong>切线刚度矩阵</strong>（对称）。二阶变分的符号决定稳定性：$K_T$ 正定 $\iff$ 稳定；出现零特征值 $\iff$ 临界屈曲载荷；出现负特征值 $\iff$ 已失稳。工程软件里"检查刚度矩阵是否正定"就是正定性判定。</p>
+        <p><strong>(3) 最小二乘。</strong>直线拟合的正规方程 $A^TA\begin{pmatrix}a\\b\end{pmatrix}=A^Tb$ 中，$A^TA$ 恒为<strong>半正定</strong>，列满秩时正定，方程组有唯一解。</p>
+      </div>
+
+      <div class="box model-box">
+        <div class="box-title"><span class="ico">🧩</span>典型模型题</div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 1</span>含参数二次型的正定性讨论<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              二次型里含一个参数，问"$t$ 取何值时二次型正定"（或负定、半正定）。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 写矩阵（<strong>$2tx_ix_j$ 对应的矩阵元素是 $t$，不是 $2t$</strong>）；② 依次算 $D_1,D_2,\dots,D_n$；
+              ③ 每个 $D_k&gt;0$ 解出一个关于参数的条件；④ <strong>取交集</strong>——低阶条件常常被高阶条件吸收，只解一半就会掉进陷阱。</div>
+            <p><strong>例</strong>　求 $t$ 的取值范围，使二次型 $f=2x_1^2+x_2^2+x_3^2+2tx_1x_2+2x_1x_3$ 正定。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：写矩阵。</strong>$2tx_1x_2$ 给出 $a_{12}=a_{21}=t$；$2x_1x_3$ 给出 $a_{13}=a_{31}=1$；没有 $x_2x_3$ 项，$a_{23}=a_{32}=0$。</p>
+              <p>$$A=\begin{pmatrix}2&amp;t&amp;1\\t&amp;1&amp;0\\1&amp;0&amp;1\end{pmatrix}$$</p>
+              <p>自检：$A^T=A$，通过。</p>
+              <p><strong>第二步：一阶顺序主子式。</strong>$D_1=2&gt;0$，对一切 $t$ 恒成立。</p>
+              <p><strong>第三步：二阶顺序主子式。</strong></p>
+              <p>$$D_2=\begin{vmatrix}2&amp;t\\t&amp;1\end{vmatrix}=2-t^2&gt;0\iff |t|&lt;\sqrt2$$</p>
+              <p><strong>第四步：三阶顺序主子式。</strong>按第一行展开：</p>
+              <p>$$D_3=2\begin{vmatrix}1&amp;0\\0&amp;1\end{vmatrix}-t\begin{vmatrix}t&amp;0\\1&amp;1\end{vmatrix}+1\begin{vmatrix}t&amp;1\\1&amp;0\end{vmatrix}=2-t^2+(0-1)=1-t^2$$</p>
+              <p>要求 $D_3&gt;0\iff |t|&lt;1$。</p>
+              <p><strong>第五步：取交集。</strong>$|t|&lt;1$ 比 $|t|&lt;\sqrt2$ 更紧，故当且仅当 $-1&lt;t&lt;1$ 时二次型正定。</p>
+              <p><strong>验证。</strong>取 $t=\dfrac12$：$D_2=2-\dfrac14=\dfrac74&gt;0$，$D_3=1-\dfrac14=\dfrac34&gt;0$，确实正定；取 $t=1$ 时 $D_3=0$，恰在分界处不正定，符合预期。</p>
+            </div>
+            <p><strong>易错提醒</strong>　两个高频错误：① 把 $2tx_1x_2$ 的系数 $2t$ 直接写进矩阵，$D_2$ 会算成 $2-4t^2$，后面全错；② 只解到 $D_2$ 就写 $|t|&lt;\sqrt2$，忘了三阶条件 $|t|&lt;1$ 更紧。</p>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 2</span>抽象矩阵的正定性证明<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              矩阵不是具体数字，而是由运算或等式给出（$B^TAB$、$A+E$、$A^*$、$A^{-1}$ 等），要求判断或证明正定性。</div>
+            <div class="model-route"><b>标准套路</b>
+              抽象矩阵<strong>算不出顺序主子式</strong>，只剩两条路：
+              ① <strong>定义法</strong>——对任意 $x\ne0$ 证明 $x^TMx&gt;0$，把 $x^TB^TABx$ 整理成 $(Bx)^TA(Bx)$ 是关键一步；
+              ② <strong>特征值法</strong>——先验证 $M$ 实对称，再说明它的特征值全为正。
+              无论走哪条路，都<strong>先验对称性</strong>。</div>
+            <p><strong>例</strong>　设 $A$ 是 $n$ 阶正定矩阵，$B$ 是 $n$ 阶实矩阵。证明：$B^TAB$ 正定的充要条件是 $B$ 可逆。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>充分性（$B$ 可逆 $\Rightarrow$ $B^TAB$ 正定）。</strong></p>
+              <p>先验对称性：$(B^TAB)^T=B^TA^TB=B^TAB$（用了 $A^T=A$），故 $B^TAB$ 是实对称矩阵。</p>
+              <p>再取任意 $x\ne0$。因为 $B$ 可逆，齐次方程组 $Bx=0$ 只有零解，所以 $Bx\ne0$。于是</p>
+              <p>$$x^T(B^TAB)x=(Bx)^TA(Bx)&gt;0$$</p>
+              <p>最后一步用了 $A$ 正定且 $Bx\ne0$。故 $B^TAB$ 正定。</p>
+              <p><strong>必要性（$B^TAB$ 正定 $\Rightarrow$ $B$ 可逆）。</strong>用反证法。设 $B$ 不可逆，则 $|B|=0$，齐次方程组 $Bx=0$ 有非零解。取 $x_0\ne0$ 使 $Bx_0=0$，则</p>
+              <p>$$x_0^T(B^TAB)x_0=(Bx_0)^TA(Bx_0)=0^TA0=0$$</p>
+              <p>这与 $B^TAB$ 正定（要求对一切 $x\ne0$ 都有 $x^T(B^TAB)x&gt;0$）矛盾。故 $B$ 必可逆。</p>
+            </div>
+            <p><strong>易错提醒</strong>　① 只证一个方向就收笔——充要条件必须<strong>两个方向都写</strong>，必要性用反证法最快；② 忘记先验对称性（"正定矩阵"本身就要求实对称）；③ 把 $Bx\ne0$ 当作理所当然——它恰恰来自 $B$ 可逆，正是这一步把"可逆"与"正定"扣在一起。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch6-3" data-title="6-3 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">$n$ 元二次型 $f=x^TAx$ 正定的充要条件是（　）。
+            <span class="en-line" lang="en">A necessary and sufficient condition for the quadratic form $f=x^TAx$ in $n$ variables to be positive definite is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$A$ 的各阶<strong>顺序</strong>主子式全都大于 0</span></li>
+            <li><span class="opt-body">$|A|&gt;0$</span></li>
+            <li><span class="opt-body">$A$ 的主对角元全都大于 0</span></li>
+            <li><span class="opt-body">存在某个可逆矩阵 $C$ 使 $C^{-1}AC$ 为对角矩阵</span></li>
+          </ul>
+          <div class="q-explain">顺序主子式全大于 0 是正定的充要条件。第 2 个 $|A|&gt;0$ 只是必要条件，反例 $\mathrm{diag}(-1,-2)$ 的 $|A|=2&gt;0$ 却是负定。第 3 个主对角元全大于 0 也只是必要，反例 $\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 对角元都是 1，特征值却是 $3,-1$。第 4 个说的是"相似于对角矩阵"，这对任何实对称矩阵都成立，与正定无关（$\mathrm{diag}(1,-1)$ 也满足）。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 $A$ 为 $n$ 阶正定矩阵，则下列结论<strong>错误</strong>的是（　）。
+            <span class="en-line" lang="en">Let $A$ be a positive definite $n\times n$ matrix. Which of the following conclusions is <strong>false</strong>?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$A$ 与 $-A$ 合同</span></li>
+            <li><span class="opt-body">$A$ 的全部特征值大于 0</span></li>
+            <li><span class="opt-body">$A$ 可逆且 $|A|&gt;0$</span></li>
+            <li><span class="opt-body">$A$ 与 $E$ 合同</span></li>
+          </ul>
+          <div class="q-explain">$A$ 正定意味着 $p=n,q=0$；而 $-A$ 的全部特征值都小于 0，即 $p=0,q=n$。两者正、负惯性指数不同，规范形一个是 $y_1^2+\cdots+y_n^2$、另一个是 $-y_1^2-\cdots-y_n^2$，<strong>不可能合同</strong>，所以第一个错误。后三个都是正定的标准性质：特征值全正、$|A|$ 等于特征值之积故大于 0、与 $E$ 合同。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <p class="q-stem">设 $A$ 为 $n$ 阶实对称矩阵。若 $A$ 的主对角元全都大于 0，则 $A$ 正定。
+            <span class="en-line" lang="en">Let $A$ be a real symmetric $n\times n$ matrix. If all the diagonal entries of $A$ are greater than $0$, then $A$ is positive definite.</span></p>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">错误。主对角元大于 0 只是必要条件，不是充分条件。反例 $A=\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$：$a_{11}=a_{22}=1&gt;0$，但 $|\lambda E-A|=(\lambda-1)^2-4=(\lambda-3)(\lambda+1)$，特征值为 $3,-1$，有负特征值，$A$ 是<strong>不定</strong>的。原因是主对角元只反映单个变量平方项的系数，而交叉项 $2a_{12}x_1x_2$ 足够大时会"压过"平方项，使二次型在某些方向取负值。正确做法是算各阶顺序主子式或全部特征值。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $n$ 阶实对称矩阵，则 "$A$ 正定" 的<strong>必要但不充分</strong>条件是（　）。
+            <span class="en-line" lang="en">Let $A$ be a real symmetric $n\times n$ matrix. A <strong>necessary but not sufficient</strong> condition for $A$ to be positive definite is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$|A|&gt;0$</span></li>
+            <li><span class="opt-body">$A$ 的各阶顺序主子式全大于 0</span></li>
+            <li><span class="opt-body">$A$ 与 $E$ 合同</span></li>
+            <li><span class="opt-body">$A$ 的全部特征值大于 0</span></li>
+          </ul>
+          <div class="q-explain">后三个都是<strong>充要</strong>条件。只有 $|A|&gt;0$ 是必要不充分：$A$ 正定时 $|A|$ 等于全部特征值之积，必大于 0；但反过来 $|A|&gt;0$ 只说明负特征值个数是<strong>偶数</strong>，例如 $\mathrm{diag}(1,-1,-1)$ 的 $|A|=1&gt;0$ 却有两个负特征值，不定；$\mathrm{diag}(-1,-2)$ 的 $|A|=2&gt;0$ 干脆是负定的。所以 $|A|&gt;0$ 推不出正定。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">若二次型 $f=2x_1^2+2x_2^2+2x_3^2+2tx_1x_2+2x_2x_3$ 正定，则 $t$ 的取值范围是（　）。
+            <span class="en-line" lang="en">If the quadratic form $f=2x_1^2+2x_2^2+2x_3^2+2tx_1x_2+2x_2x_3$ is positive definite, the range of $t$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$|t|&lt;\sqrt3$</span></li>
+            <li><span class="opt-body">$|t|&lt;2$</span></li>
+            <li><span class="opt-body">$t&lt;\sqrt3$</span></li>
+            <li><span class="opt-body">$0&lt;t&lt;\sqrt3$</span></li>
+          </ul>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}2&amp;t&amp;0\\t&amp;2&amp;1\\0&amp;1&amp;2\end{pmatrix}$（$x_1x_2$ 的系数是 $2t$，平分后为 $t$）。$D_1=2&gt;0$；$D_2=4-t^2&gt;0\Rightarrow|t|&lt;2$；$D_3=2\begin{vmatrix}2&amp;1\\1&amp;2\end{vmatrix}-t\begin{vmatrix}t&amp;1\\0&amp;2\end{vmatrix}+0=2\times3-2t^2=6-2t^2&gt;0\Rightarrow t^2&lt;3$。取交集得 $|t|&lt;\sqrt3\approx1.732$（比 2 更紧，所以 $|t|&lt;2$ 不是最终答案）。第 2 个只用了二阶条件，没有和三阶条件取交集。第 3 个漏了绝对值——$D_2,D_3$ 给出的都是 $t^2$ 的不等式，解出来必然是关于原点对称的区间。第 4 个同样漏掉了负半轴。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $n$ 阶实对称矩阵，则下列命题正确的是（　）。
+            <span class="en-line" lang="en">Let $A$ be a real symmetric $n\times n$ matrix. Which of the following statements are correct?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$A$ 半正定 $\iff$ $A$ 的全部特征值非负</span></li>
+            <li data-correct="true"><span class="opt-body">$A$ 负定 $\iff$ 奇数阶顺序主子式小于 0、偶数阶顺序主子式大于 0</span></li>
+            <li data-correct="true"><span class="opt-body">$A$ 半正定且 $|A|=0$ $\Rightarrow$ 存在 $x_0\ne0$ 使 $x_0^TAx_0=0$</span></li>
+            <li><span class="opt-body">$A$ 的主对角元全大于 0 $\Rightarrow$ $A$ 正定</span></li>
+          </ul>
+          <div class="q-explain">半正定即无负特征值，等价于特征值全非负，第 1 个对。负定等价于 $-A$ 正定，即 $-A$ 的顺序主子式全正，而 $D_k(-A)=(-1)^kD_k(A)$，故奇数阶为负、偶数阶为正，第 2 个对。第 3 个对：$|A|=0$ 说明 $0$ 是特征值，取对应的特征向量 $x_0\ne0$，则 $x_0^TAx_0=\lambda\|x_0\|^2=0$。第 4 个错，这是最经典的错误：$\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 对角元全正却是不定的。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $n$ 阶实对称矩阵且正定，$k$ 为正整数，则下列矩阵一定正定的是（　）。
+            <span class="en-line" lang="en">Let $A$ be a real symmetric positive definite $n\times n$ matrix and let $k$ be a positive integer. Which of the following matrices is necessarily positive definite?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$A^{-1}$</span></li>
+            <li data-correct="true"><span class="opt-body">$A^*$（$A$ 的伴随矩阵）</span></li>
+            <li data-correct="true"><span class="opt-body">$A^k$</span></li>
+            <li><span class="opt-body">$A-E$</span></li>
+          </ul>
+          <div class="q-explain">设 $A$ 的特征值为 $\lambda_i&gt;0$。三个矩阵都保持实对称（$(A^{-1})^T=A^{-1}$，$A^*=|A|A^{-1}$，$(A^k)^T=A^k$），再看特征值：$A^{-1}$ 为 $1/\lambda_i&gt;0$；$A^*=|A|A^{-1}$ 为 $|A|/\lambda_i&gt;0$（因 $|A|=\prod\lambda_i&gt;0$）；$A^k$ 为 $\lambda_i^k&gt;0$。故前三个都正定。第四个不行：$A-E$ 的特征值是 $\lambda_i-1$，只要 $A$ 有小于 1 的特征值（例如 $A=\mathrm{diag}(0.5,2)$，它正定），$A-E$ 就出现负特征值，不正定。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $n$ 阶实对称矩阵且满足 $A^2=A$，则 $A$ 是半正定矩阵；特别地，当 $R(A)=n$ 时 $A$ 是正定矩阵。
+            <span class="en-line" lang="en">Let $A$ be a real symmetric $n\times n$ matrix satisfying $A^2=A$. Then $A$ is positive semidefinite; in particular, $A$ is positive definite when $R(A)=n$.</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">正确。设 $\lambda$ 是 $A$ 的任一特征值，对应特征向量 $x\ne0$，则 $A^2x=Ax$。左边 $A^2x=A(\lambda x)=\lambda^2x$，右边 $=\lambda x$，故 $(\lambda^2-\lambda)x=0$，由 $x\ne0$ 得 $\lambda^2=\lambda$，即 $\lambda=0$ 或 $\lambda=1$。全部特征值非负，所以 $A$ 半正定（这里用到了 $A$ 是<strong>实对称</strong>矩阵这一前提——实对称矩阵必可正交对角化）。当 $R(A)=n$ 时 $A$ 可逆，$|A|\ne0$，说明没有特征值等于 0，于是全部特征值都是 1，$A$ 正定（事实上此时 $A=E$）。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <p class="q-stem">若二次型 $f=tx_1^2+2x_2^2+2x_3^2+2x_1x_2+2x_1x_3$ 正定，则 $t$ 的取值范围是 $t&gt;$ ______。
+            <span class="en-line" lang="en">If the quadratic form $f=tx_1^2+2x_2^2+2x_3^2+2x_1x_2+2x_1x_3$ is positive definite, the range of $t$ is $t&gt;$ ______.</span></p>
+          <div class="q-answer" data-answer="1|1.0"></div>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}t&amp;1&amp;1\\1&amp;2&amp;0\\1&amp;0&amp;2\end{pmatrix}$。$D_1=t&gt;0$；$D_2=\begin{vmatrix}t&amp;1\\1&amp;2\end{vmatrix}=2t-1&gt;0\Rightarrow t&gt;\frac12$；$D_3=t\begin{vmatrix}2&amp;0\\0&amp;2\end{vmatrix}-1\begin{vmatrix}1&amp;0\\1&amp;2\end{vmatrix}+1\begin{vmatrix}1&amp;2\\1&amp;0\end{vmatrix}=4t-2-2=4t-4&gt;0\Rightarrow t&gt;1$。三个条件取交集（$t&gt;1$ 最强，已包含 $t&gt;0$ 与 $t&gt;\frac12$），得 $t&gt;1$。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">若二次型 $f=x_1^2+x_2^2+4x_3^2+2tx_1x_2+2x_1x_3+2x_2x_3$ 正定，则 $t$ 的取值范围是（　）。
+            <span class="en-line" lang="en">If the quadratic form $f=x_1^2+x_2^2+4x_3^2+2tx_1x_2+2x_1x_3+2x_2x_3$ is positive definite, the range of $t$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\left(-\dfrac12,\ 1\right)$</span></li>
+            <li><span class="opt-body">$(-1,\ 1)$</span></li>
+            <li><span class="opt-body">$\left(-\dfrac12,\ \dfrac12\right)$</span></li>
+            <li><span class="opt-body">$\left(\dfrac12,\ 1\right)$</span></li>
+          </ul>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}1&amp;t&amp;1\\t&amp;1&amp;1\\1&amp;1&amp;4\end{pmatrix}$（$x_1x_2$ 的系数 $2t$ 平分得 $t$）。$D_1=1&gt;0$；$D_2=1-t^2&gt;0\Rightarrow|t|&lt;1$；$D_3=1\cdot(4-1)-t\cdot(4t-1)+1\cdot(t-1)=2+2t-4t^2$，要求 $D_3&gt;0\iff 2t^2-t-1&lt;0\iff(2t+1)(t-1)&lt;0\iff-\dfrac12&lt;t&lt;1$。取交集时 $|t|&lt;1$ 被 $-\dfrac12&lt;t&lt;1$ 完全包含（因 $-\dfrac12&gt;-1$），故最终答案是 $\left(-\dfrac12,1\right)$。<strong>逐项核对：</strong>第 2 个只解了二阶条件就收笔，没有与三阶条件取交集；第 3 个把 $(2t+1)(t-1)&lt;0$ 错解成 $|t|&lt;\dfrac12$，是"开口向上的二次函数在两根之间取负值"这一判断出错，且区间关于原点对称也与因式 $(2t+1)$ 不符；第 4 个方向反了，取到了两根之外。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $n$ 阶正定矩阵，$B$ 为 $n$ 阶实矩阵，则 $B^TAB$ 正定的充要条件是（　）。
+            <span class="en-line" lang="en">Let $A$ be a positive definite $n\times n$ matrix and let $B$ be a real $n\times n$ matrix. A necessary and sufficient condition for $B^TAB$ to be positive definite is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$B$ 可逆</span></li>
+            <li><span class="opt-body">$B$ 是正交矩阵</span></li>
+            <li><span class="opt-body">$B$ 是对称矩阵</span></li>
+            <li><span class="opt-body">$|A|&gt;0$</span></li>
+          </ul>
+          <div class="q-explain">先看对称性：$(B^TAB)^T=B^TA^TB=B^TAB$，所以 $B^TAB$ 一定是实对称矩阵，可以谈正定。若 $B$ 可逆，则 $x\ne0$ 时 $Bx\ne0$，于是 $x^T(B^TAB)x=(Bx)^TA(Bx)&gt;0$，$B^TAB$ 正定；反之若 $B^TAB$ 正定而 $B$ 不可逆，则存在 $x_0\ne0$ 使 $Bx_0=0$，得 $x_0^T(B^TAB)x_0=0$，与正定矛盾。故充要条件是 $B$ 可逆。<strong>逐项核对：</strong>第 2 个"正交"只是可逆的<strong>充分</strong>条件而非必要——取 $B=2E$，它可逆但不是正交矩阵，而 $B^TAB=4A$ 显然正定；第 3 个"对称"既不充分也不必要——取 $B=\begin{pmatrix}1&amp;1\\1&amp;1\end{pmatrix}$（对称但不可逆）、$A=E$，则 $B^TAB=B^2=\begin{pmatrix}2&amp;2\\2&amp;2\end{pmatrix}$ 半正定却不正定；反过来 $B=\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$ 不对称却可逆，$B^TEB=\begin{pmatrix}1&amp;1\\1&amp;2\end{pmatrix}$ 正定；第 4 个 $|A|&gt;0$ 是 $A$ 正定的必要条件，与 $B$ 无关，取 $B=O$ 得 $B^TAB=O$，可见它什么也保证不了。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <p class="q-stem">若二次型 $f=-x_1^2-2x_2^2-tx_3^2+2x_1x_2$ 负定，则 $t$ 的取值范围是 $t&gt;$ ______。
+            <span class="en-line" lang="en">If the quadratic form $f=-x_1^2-2x_2^2-tx_3^2+2x_1x_2$ is negative definite, the range of $t$ is $t&gt;$ ______.</span></p>
+          <div class="q-answer" data-answer="0|0.0"></div>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}-1&amp;1&amp;0\\1&amp;-2&amp;0\\0&amp;0&amp;-t\end{pmatrix}$（$2x_1x_2$ 的系数 $2$ 平分得 $1$）。负定 $\iff$ 顺序主子式正负交替：奇数阶小于 $0$、偶数阶大于 $0$。$D_1=-1&lt;0$（恒成立）；$D_2=(-1)(-2)-1\cdot1=1&gt;0$（恒成立，与 $t$ 无关）；$D_3=|A|=(-t)\cdot\begin{vmatrix}-1&amp;1\\1&amp;-2\end{vmatrix}=(-t)\times1=-t$，要求奇数阶的 $D_3&lt;0$，即 $t&gt;0$。换一条路验证：$-A=\begin{pmatrix}1&amp;-1&amp;0\\-1&amp;2&amp;0\\0&amp;0&amp;t\end{pmatrix}$ 的三个顺序主子式是 $1,1,t$，全正同样给出 $t&gt;0$。注意 $t=0$ 不能取：此时 $f=-(x_1-x_2)^2-x_2^2\le0$，取 $x=(0,0,1)^T$ 得 $f=0$，只是半负定，不是负定。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：正定是本章的落点，也是全书的落点。这一卷围绕<strong>"四种等价说法"与"必要条件"的分界线</strong>展开：$p=n$（惯性指数）、特征值全正、<strong>各阶"顺序"主子式全正</strong>、与 $E$ 合同，四条互为充要；而 $a_{ii}&gt;0$、$|A|&gt;0$、$R(A)=n$ 只是必要条件，卷子里反复拿它们做干扰项。</p>
+          <p>最经典的失分点有两处。其一，第 1 题的正确选项特意把"<strong>顺序</strong>"二字加粗，第 3 题与第 6 题第 4 个选项则用 $\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 设套：主对角元全正、$|A|=1&gt;0$，看着无懈可击，特征值却是 $3,-1$——<strong>主对角元只管单个变量的平方项，管不住交叉项的耦合</strong>；同理 $|A|&gt;0$ 只说明负特征值的个数是偶数，是 0 个还是 2 个它分不出来。其二，含参数题必须"逐阶列不等式再<strong>取交集</strong>"：第 5 题的 $|t|&lt;2$ 只是二阶条件，会被三阶条件 $|t|&lt;\sqrt3$ 收紧，只解一半就掉进陷阱；解 $t^2$ 型不等式时漏掉绝对值、只取正半轴，也是同一类方向性错误。</p>
+          <p>向前看，顺序主子式是一串第 1 章的行列式，特征值符号来自第 5 章，与 $E$ 合同、$p=n$ 则分别是 6-1、6-2 的语言；抽象矩阵的证明（如第 8 题的 $A^{-1},A^*,A^k$）只能走"先验对称、再验特征值符号"这一条路。</p>
+          <p>下一步：把本节易错块里的五句结论背下来，再做一遍例 6.8，然后限时 20 分钟完成章末综合测验。</p>
+        </div>
+
+      </div>
+
+      <!-- ======== 小节内容结束 ======== -->
+
+      <h2 id="final">第 6 章 · 综合测验</h2>
+      <p>本卷 10 题按 <strong>基础 → 中等 → 考研</strong> 的梯度排列，其中多道题需要<strong>跨小节</strong>综合（矩阵表示 + 惯性指数 + 正交变换 + 正定判定）。建议限时 20 分钟。</p>
+      <div class="quiz" data-quiz-id="ch6-final" data-title="第 6 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 $A$ 为 3 阶实对称矩阵，且 $A$ 与 $\mathrm{diag}(1,-1,0)$ 合同，则 $A$ 的秩与正惯性指数分别为（　）。
+            <span class="en-line" lang="en">Let $A$ be a real symmetric $3\times3$ matrix congruent to $\mathrm{diag}(1,-1,0)$. Then the rank of $A$ and its positive inertia index are respectively (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(A)=2,\ p=1$</span></li>
+            <li><span class="opt-body">$R(A)=3,\ p=2$</span></li>
+            <li><span class="opt-body">$R(A)=2,\ p=2$</span></li>
+            <li><span class="opt-body">$R(A)=1,\ p=1$</span></li>
+          </ul>
+          <div class="q-explain">合同保持秩与正、负惯性指数。$\mathrm{diag}(1,-1,0)$ 的秩为 2（有一个零对角元），正对角元 1 个、负对角元 1 个，故 $p=1,q=1$，于是 $R(A)=p+q=2,\ p=1$。第 2 个把三个对角元都当成非零，忘了 0 不计入惯性指数也不贡献秩。第 3 个把 $p$ 当成了非零元的个数。第 4 个以为负对角元会"减少"秩——秩只看有几个非零元，符号不影响。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">二次型 $f=x_1x_2+x_2x_3$ 的规范形为（　）。
+            <span class="en-line" lang="en">The canonical form of the quadratic form $f=x_1x_2+x_2x_3$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$y_1^2-y_2^2$</span></li>
+            <li><span class="opt-body">$y_1^2+y_2^2$</span></li>
+            <li><span class="opt-body">$y_1^2+y_2^2-y_3^2$</span></li>
+            <li><span class="opt-body">$y_1^2-y_2^2-y_3^2$</span></li>
+          </ul>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}0&amp;\frac12&amp;0\\\frac12&amp;0&amp;\frac12\\0&amp;\frac12&amp;0\end{pmatrix}$（交叉项系数要<strong>平分</strong>，$x_1x_2$ 系数 1 给出 $a_{12}=\frac12$）。第一行与第三行完全相同，故 $|A|=0$，秩至多 2；取二阶子式 $\begin{vmatrix}0&amp;\frac12\\\frac12&amp;0\end{vmatrix}=-\frac14\ne0$，故 $R(A)=2$，只要两个平方项，排除后两个选项。再看符号：$|\lambda E-A|=\lambda^3-\frac12\lambda=\lambda\left(\lambda^2-\frac12\right)$，特征值为 $0,\pm\frac{1}{\sqrt2}$，一正一负，故规范形是 $y_1^2-y_2^2$。第 2 个错在漏掉了负特征值。也可配方验证：令 $x_1=y_1+y_2,\ x_2=y_1-y_2$，则 $x_1x_2=y_1^2-y_2^2$，$x_2x_3=(y_1-y_2)y_3$，再配方得 $f=\left(y_1+\frac12y_3\right)^2-\left(y_2+\frac12y_3\right)^2$，确实一正一负。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">二次型 $f=2x_1^2+2x_2^2+2x_3^2-2x_1x_2-2x_1x_3-2x_2x_3$ 的规范形为（　）。
+            <span class="en-line" lang="en">The canonical form of the quadratic form $f=2x_1^2+2x_2^2+2x_3^2-2x_1x_2-2x_1x_3-2x_2x_3$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$y_1^2+y_2^2$</span></li>
+            <li><span class="opt-body">$y_1^2+y_2^2+y_3^2$</span></li>
+            <li><span class="opt-body">$y_1^2+y_2^2-y_3^2$</span></li>
+            <li><span class="opt-body">$y_1^2-y_2^2$</span></li>
+          </ul>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}2&amp;-1&amp;-1\\-1&amp;2&amp;-1\\-1&amp;-1&amp;2\end{pmatrix}=3E-J$（$J$ 为全 1 矩阵）。$J$ 的特征值为 $3,0,0$，故 $A$ 的特征值为 $3-3=0$ 与 $3-0=3$（二重），即特征值是 $3,3,0$，也可直接算得 $|\lambda E-A|=(\lambda-3)^2\lambda$。于是 $p=2,q=0$，$R(A)=2$，规范形为 $y_1^2+y_2^2$（只有两项，因为秩是 2）。第 2 个以为三个特征值都是 3，忽略了零特征值。第 3 个既没发现零特征值又把其中一个符号弄错。第 4 个把二重特征值 $3$ 误当成 $3$ 和 $-3$，属于把"重根"错当成"正负成对"。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+          <p class="q-stem">设 $A,B$ 均为 $n$ 阶实对称矩阵。若 $A$ 与 $B$ 合同且 $A$ 正定，则 $B$ 也正定。
+            <span class="en-line" lang="en">Let $A$ and $B$ be real symmetric $n\times n$ matrices. If $A$ is congruent to $B$ and $A$ is positive definite, then $B$ is also positive definite.</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain"><p>正确。由合同定义存在可逆 $C$ 使 $B=C^TAC$。对任意 $x\ne0$，因为 $C$ 可逆所以 $Cx\ne0$；又 $A$ 正定，故</p>
+            <p>$$x^TBx=x^TC^TACx=(Cx)^TA(Cx)&gt;0$$</p>
+            <p>所以 $B$ 正定。更简洁的说法：$A$ 正定 $\iff$ $A$ 与 $E$ 合同，由合同的传递性得 $B$ 也与 $E$ 合同，故 $B$ 正定。这条结论说明<strong>正定性是合同的"不变量"</strong>——换成任何可逆坐标变换都不会改变二次型是否恒正。</p></div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <p class="q-stem">设 $A,B$ 均为 $n$ 阶实对称矩阵，则下列命题正确的是（　）。
+            <span class="en-line" lang="en">Let $A$ and $B$ be real symmetric $n\times n$ matrices. Which of the following statements are correct?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 相似，则 $A$ 与 $B$ 合同</span></li>
+            <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 合同，则 $A$ 与 $B$ 等价</span></li>
+            <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 有相同的特征值，则 $A$ 与 $B$ 相似</span></li>
+            <li><span class="opt-body">若 $A$ 与 $B$ 等价，则 $A$ 与 $B$ 合同</span></li>
+          </ul>
+          <div class="q-explain">相似保特征值，特征值相同即正负特征值个数相同，故惯性指数相同，合同，第 1 个对。"等价"指存在可逆 $P,Q$ 使 $B=PAQ$，等价于<strong>同秩</strong>；合同由 $B=C^TAC$ 定义，$C$ 可逆故秩不变，所以合同必等价，第 2 个对。实对称矩阵必可正交相似于对角矩阵，特征值相同意味着它们都相似于同一个 $\Lambda$，由相似的传递性得相似，第 3 个对。第 4 个错：等价只保证秩相同，<strong>不</strong>保证正负号相同。反例 $A=\mathrm{diag}(1,1)$ 与 $B=\mathrm{diag}(1,-1)$：秩都是 2 故等价，但 $A$ 的 $p=2,q=0$、$B$ 的 $p=1,q=1$，不合同。强度关系是：<strong>相似最强，合同居中，等价最弱</strong>（在实对称前提下相似 $\Rightarrow$ 合同 $\Rightarrow$ 等价，反向均不成立）。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">若二次型 $f=x_1^2+x_2^2+5x_3^2+2tx_1x_2-2x_1x_3+4x_2x_3$ 正定，则 $t$ 的取值范围是（　）。
+            <span class="en-line" lang="en">If the quadratic form $f=x_1^2+x_2^2+5x_3^2+2tx_1x_2-2x_1x_3+4x_2x_3$ is positive definite, the range of $t$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\left(-\dfrac45,\ 0\right)$</span></li>
+            <li><span class="opt-body">$(-1,\ 1)$</span></li>
+            <li><span class="opt-body">$\left(-\dfrac45,\ \dfrac45\right)$</span></li>
+            <li><span class="opt-body">$\left(0,\ \dfrac45\right)$</span></li>
+          </ul>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}1&amp;t&amp;-1\\t&amp;1&amp;2\\-1&amp;2&amp;5\end{pmatrix}$（$x_1x_2$ 系数是 $2t$，平分后为 $t$，写成 $2t$ 会全错）。$D_1=1&gt;0$ 恒成立；$D_2=1-t^2&gt;0\Rightarrow-1&lt;t&lt;1$；$D_3=1\cdot(5-4)-t\cdot(5t+2)+(-1)\cdot(2t+1)=-5t^2-4t&gt;0\Rightarrow t(5t+4)&lt;0\Rightarrow-\frac45&lt;t&lt;0$。取交集得 $\left(-\frac45,0\right)$（因为 $-\frac45&gt;-1$，二阶条件被完全包含）。第 2 个只解了二阶条件，没有和三阶条件取交集。第 3 个把 $t(5t+4)&lt;0$ 错解成 $|t|&lt;\frac45$，是不等式方向判断错误（开口向上的二次函数在两根<strong>之间</strong>取负值）。第 4 个方向反了，取成了两根之外的区间。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <p class="q-stem">设 $A,B$ 均为 $n$ 阶正定矩阵，$k&gt;0$，则下列矩阵一定正定的是（　）。
+            <span class="en-line" lang="en">Let $A$ and $B$ be positive definite $n\times n$ matrices and let $k&gt;0$. Which of the following matrices is necessarily positive definite?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$A+B$</span></li>
+            <li data-correct="true"><span class="opt-body">$kA$</span></li>
+            <li data-correct="true"><span class="opt-body">$A^*$</span></li>
+            <li><span class="opt-body">$AB$</span></li>
+          </ul>
+          <div class="q-explain">$A+B$ 显然实对称，且对 $x\ne0$ 有 $x^T(A+B)x=x^TAx+x^TBx&gt;0+0=0$，正定；$kA$ 实对称，特征值为 $k\lambda_i&gt;0$，正定；$A^*=|A|A^{-1}$ 实对称，特征值 $|A|/\lambda_i&gt;0$（因 $|A|&gt;0$），正定。第四个是陷阱：<strong>两个正定矩阵之积不一定是对称矩阵</strong>，而"正定"本身就要求矩阵实对称，所以 $AB$ 一般不满足定义。反例 $A=\begin{pmatrix}1&amp;0\\0&amp;2\end{pmatrix}$，$B=\begin{pmatrix}2&amp;1\\1&amp;2\end{pmatrix}$（$B$ 正定：$D_1=2&gt;0,D_2=3&gt;0$），则 $AB=\begin{pmatrix}2&amp;1\\2&amp;4\end{pmatrix}$，连对称都不是。（补充：若 $A,B$ 正定<strong>且可交换</strong>，则 $AB$ 也正定。）</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <p class="q-stem">已知二次型 $f(x_1,x_2,x_3)=x^TAx$ 经正交变换 $x=Qy$ 化为 $2y_1^2+y_2^2-2y_3^2$，则 $|A|=$ ______。
+            <span class="en-line" lang="en">The quadratic form $f(x_1,x_2,x_3)=x^TAx$ is carried by the orthogonal transformation $x=Qy$ into $2y_1^2+y_2^2-2y_3^2$. Then $|A|=$ ______.</span></p>
+          <div class="q-answer" data-answer="-4|−4|-4.0|−4.0"></div>
+          <div class="q-explain">由主轴定理，正交变换下 $Q^TAQ=\Lambda$，故 $A$ 的特征值就是标准形的系数：$\lambda_1=2,\ \lambda_2=1,\ \lambda_3=-2$。矩阵的行列式等于全部特征值之积，所以 $|A|=2\times1\times(-2)=-4$。也可直接用 $|Q^TAQ|=|Q|^2|A|=|A|$（因 $|Q^T|=|Q|$），故 $|A|$ 等于对角矩阵对角元之积。这里完全不需要求出 $Q$ 本身。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A$ 为 3 阶实对称矩阵，且 $A$ 与 $\mathrm{diag}(2,2,0)$ 合同，则下列结论正确的是（　）。
+            <span class="en-line" lang="en">Let $A$ be a real symmetric $3\times3$ matrix congruent to $\mathrm{diag}(2,2,0)$. Which of the following conclusions is correct?</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$A$ 半正定但不正定，且 $R(A)=2$</span></li>
+            <li><span class="opt-body">$A$ 正定</span></li>
+            <li><span class="opt-body">$A$ 的秩为 $3$</span></li>
+            <li><span class="opt-body">$A$ 的特征值一定是 $2,2,0$</span></li>
+          </ul>
+          <div class="q-explain">合同保持秩与正、负惯性指数。$\mathrm{diag}(2,2,0)$ 的正对角元有 $2$ 个、零对角元 $1$ 个，故 $p=2,\ q=0,\ R=2$，于是 $A$ 也满足 $p=2,q=0,R(A)=2$：$p=R(A)=2&lt;3=n$，恰好是半正定而不正定，第 1 个对。<strong>逐项核对：</strong>第 2 个"正定"要求 $p=n=3$，与 $p=2$ 矛盾；第 3 个把秩当成了阶数——零对角元既不贡献 $p,q$ 也不贡献秩，$R=2$；第 4 个错在把"合同"当成了"相似"：合同<strong>不保持特征值</strong>，只保持正负号的个数，例如 $A=\mathrm{diag}(4,4,0)$ 也与 $\mathrm{diag}(2,2,0)$ 合同，它的特征值是 $4,4,0$。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">二次型 $f=x_1x_2+x_2x_3+2x_1x_3$ 的规范形为（　）。
+            <span class="en-line" lang="en">The canonical form of the quadratic form $f=x_1x_2+x_2x_3+2x_1x_3$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$y_1^2-y_2^2-y_3^2$</span></li>
+            <li><span class="opt-body">$y_1^2-y_2^2$</span></li>
+            <li><span class="opt-body">$y_1^2+y_2^2-y_3^2$</span></li>
+            <li><span class="opt-body">$y_1^2+y_2^2+y_3^2$</span></li>
+          </ul>
+          <div class="q-explain">矩阵 $A=\begin{pmatrix}0&amp;\dfrac12&amp;1\\[4pt]\dfrac12&amp;0&amp;\dfrac12\\[4pt]1&amp;\dfrac12&amp;0\end{pmatrix}$（交叉项系数必须<strong>平分</strong>：$x_1x_2$ 的系数 $1$ 给出 $\dfrac12$，$x_1x_3$ 的系数 $2$ 给出 $1$）。先看秩：$|A|=\dfrac12\ne0$，故 $R(A)=3$，规范形必须有三项，第 2 个只有两项，直接排除。再定符号：主对角元全为 $0$，先作 $x_1=y_1+y_2,\ x_2=y_1-y_2,\ x_3=y_3$，则 $x_1x_2=y_1^2-y_2^2$，$x_2x_3=(y_1-y_2)y_3$，$2x_1x_3=2(y_1+y_2)y_3$，三式相加得 $f=y_1^2-y_2^2+3y_1y_3+y_2y_3$。配方：$y_1^2+3y_1y_3=\left(y_1+\dfrac32y_3\right)^2-\dfrac94y_3^2$，$-y_2^2+y_2y_3=-\left(y_2-\dfrac12y_3\right)^2+\dfrac14y_3^2$，于是 $f=\left(y_1+\dfrac32y_3\right)^2-\left(y_2-\dfrac12y_3\right)^2-2y_3^2$，一正两负，$p=1,q=2$，规范形为 $y_1^2-y_2^2-y_3^2$。<strong>逐项核对：</strong>第 2 个秩只有 2，与 $R(A)=3$ 矛盾；第 3 个把两个负平方项写成了一个，$p=2,q=1$ 与 $p=1,q=2$ 不同；第 4 个以为"系数全为正"就正定，但 $|A|\ne0$ 且配方结果含两个负号，实际 $p=1,q=2$，与正定（$p=3$）相差甚远。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：六章到这里合流。这一卷考的是<strong>能不能把前五章的工具在同一道题里调度起来</strong>——写矩阵用第 2 章的实对称矩阵，算秩用第 1、3 章的行列式，定惯性指数用第 5 章的特征值，正交变换法直接搬第 5 章的正交对角化。</p>
+          <p>学完本章，你应该能用两个词把整门课串起来：<strong>秩</strong>和<strong>特征值</strong>。秩回答"有多少个独立有效的东西"——解的自由度、向量组的秩、二次型的非零平方项个数；特征值回答"在什么方向上以什么倍率不变"——可对角化、惯性指数的正负个数、符号判定。</p>
+          <p>失分点仍集中在老地方。写二次型矩阵时<strong>交叉项系数要对半分</strong>（第 6 题里 $2t$ 写进矩阵就是 $t$）；判定正定时<strong>"顺序"主子式四个字不能丢</strong>，且必须逐阶取交集，只解二阶条件就会错选 $(-1,1)$。第 2、3 题考"秩不够时规范形要少写几项"：0 特征值不贡献 $p,q$，$3E-J$ 的特征值 $3,3,0$ 只能给出 $y_1^2+y_2^2$。第 5 题要分清<strong>相似 $\Rightarrow$ 合同 $\Rightarrow$ 等价</strong>这条强度链，第 7 题则提醒"两个正定矩阵之积 $AB$ 连对称都不一定"。</p>
+          <p>复习建议：六章到此收官，基础阶段可以结束了。接下来按考研数一的节奏进入强化：以真题和 660 题级别的选填为主线刷题；二次型几乎每年必有一道大题，务必手写完整过程。</p>
+        </div>
+
+      </div>
+
+            <!-- SHELL:BOTTOMNAV -->
+      <nav class="chapter-nav">
+        <a class="prev" href="la5.html"><span class="dir">← 上一页</span><span class="ttl">第 5 章 特征值与矩阵对角化</span></a>
+        <a class="next" href="../cheatsheet.html"><span class="dir">下一页 →</span><span class="ttl">公式速查表</span></a>
+      </nav>
+      <!-- /SHELL:BOTTOMNAV -->
+
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <p><strong>线性代数学习站</strong> · 按「一高数」课程顺序编排</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="../assets/js/plot.js"></script>
+<script src="../assets/js/videos.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/course-data.js"></script>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/theme.js"></script>
+
+</body>
+</html>

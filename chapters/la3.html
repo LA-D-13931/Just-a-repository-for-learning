@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第3章 线性方程组与初等变换 · 线性代数学习站</title>
+<meta name="description" content="克拉默法则、线性方程组解的判定定理、初等变换与矩阵的秩——线性代数最核心的一套工具。">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script>
+  /* MathJax 配置：与高数各章一致（本地引擎 + 关闭自动全量排版，由脚本分片驱动） */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    startup: { typeset: false, ready: function () { MathJax.startup.defaultReady(); window.__mjxReady = true; } }
+  };
+</script>
+<script id="MathJax-script" async src="../assets/js/vendor/tex-svg.js"></script>
+<script>
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head';
+    var pending = [], busy = false, started = false, sweepDone = false;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) { schedule(); return; }
+          /* 兜底补排（第 32 节）：例题标题 .example-head 里的公式此前从不进入队列，
+             导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
+             凡是仍含 `$` 且未被 MathJax 处理的 .example-head，补排一次。
+             只处理这一类元素，不影响其他已排好的内容。 */
+          if (!sweepDone) {
+            sweepDone = true;
+            var left = Array.prototype.slice.call(document.querySelectorAll(SEL))
+              .filter(function (el) {
+                return !el.querySelector('mjx-container') &&
+                  Array.from(el.childNodes).some(function (n) {
+                    return n.nodeType === 3 && /\$[^$]{1,200}\$/.test(n.nodeValue || '');
+                  });
+              });
+            if (left.length) { pending = pending.concat(left); schedule(); }
+          }
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL));
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+
+</script>
+</head>
+<body data-page="la3" data-chapter="3" data-subject="linearAlgebra">
+
+  <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="../index.html">
+      <span class="brand-mark">LA</span>
+      <span>线性代数<small>行列式 · 矩阵 · 方程组 · 特征值 · 二次型</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="../index.html">首页</a>
+      <a href="../cheatsheet.html">公式速查表</a>
+      <a href="../exam.html">综合自测卷</a>
+    </nav>
+    <span class="crumb">第 3 章 线性方程组与初等变换</span>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+        <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="la1.html"><span class="num">1</span>行列式</a>
+          <a class="toc-chapter" href="la2.html"><span class="num">2</span>矩阵</a>
+          <a class="toc-chapter is-active" href="la3.html"><span class="num">3</span>线性方程组与初等变换</a>
+          <a class="toc-chapter" href="la4.html"><span class="num">4</span>向量组与解的结构</a>
+          <a class="toc-chapter" href="la5.html"><span class="num">5</span>特征值与矩阵对角化</a>
+          <a class="toc-chapter" href="la6.html"><span class="num">6</span>二次型</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">本页目录</div>
+          <nav class="toc" data-toc></nav>
+        </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div class="page-eyebrow">CHAPTER 3 · 对应「一高数」第 3 章</div>
+        <h1>第 3 章　线性方程组与初等变换</h1>
+        <p class="lede">本章回答线性代数的中心问题：一个线性方程组<b>什么时候有解、有多少解、解怎么全部写出来</b>。答案只有一句话——比较系数矩阵与增广矩阵的秩。为了把这句话落地，我们先把「秩」这个概念彻底讲清楚，再把初等变换这件万能工具磨快。</p>
+      </div>
+
+      <!-- ======== 以下为小节内容 ======== -->
+
+      <h2 id="s3-1" data-hours="1.9">3-1 克拉默法则</h2>
+
+      <p>第 1 章我们把 $n$ 阶行列式算得很熟，第 2 章又建立了矩阵语言，但这两样工具还没有真正解决过一个方程组。本节给出第一个答案：当方程个数恰好等于未知量个数、且系数矩阵的行列式不为零时，方程组有唯一解，而且每个未知数都能用两个行列式的商显式写出来。这个结论的价值不在「算得快」，而在于它第一次把「解是否存在、是否唯一」变成了一个可以用行列式判定的问题。它的局限同样明显——只认方阵、只认 $D\ne0$——把这个局限补掉，正是 3-2 节的任务。</p>
+
+      <div class="box link-box">
+        <div class="box-title"><span class="ico">🔗</span>知识关联</div>
+        <ul>
+          <li><strong>承上</strong>：克拉默法则的两个零件都来自前面——系数行列式 $D=|A|$ 是第 1 章的对象，系数矩阵 $A$ 是第 2 章的对象；而条件 $D\ne0$ 用第 2 章的话说就是「$A$ 可逆」。</li>
+          <li><strong>启下</strong>：$D\ne0$ 时解可以写成 $x=A^{-1}b$，这正是 3-3 节「用初等行变换求逆矩阵」的用武之地；本节齐次方程组的判据「有非零解 $\iff D=0$」，在 3-2 节会被推广成「有非零解 $\iff R(A)&lt;n$」。</li>
+          <li><strong>横向</strong>：$|A|=0 \iff R(A)&lt;n \iff A$ 不可逆——这一串等价把<strong>行列式、秩、可逆性</strong>三个概念焊在了同一条线上，本章后面的每一节都会用到它。</li>
+        </ul>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>为什么需要克拉默法则</div>
+        <p>在第 1 章我们见过二元一次方程组，用加减消元可以算出 $x_1 = \dfrac{b_1a_{22} - a_{12}b_2}{a_{11}a_{22}-a_{12}a_{21}}$，$x_2 = \dfrac{a_{11}b_2 - b_1a_{21}}{a_{11}a_{22}-a_{12}a_{21}}$。这两个式子的<strong>分母一模一样</strong>，都是系数行列式 $D$；而分子恰好是把 $D$ 的某一列换成常数项之后得到的行列式。</p>
+        <p>克拉默法则就是把二元情形的这个观察推广到 $n$ 元：只要 $D \ne 0$，方程组的解就<strong>唯一存在</strong>，而且每个未知数都可以用商 $D_j / D$ 显式写出来。这个「显式」是它最大的价值——它把「解是否存在、是否唯一」从计算问题变成了一个行列式是否为零的问题。</p>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 3.1　线性方程组的标准形式</div>
+        <p>称含有 $n$ 个未知量 $x_1,x_2,\ldots,x_n$、由 $n$ 个方程组成的方程组
+        $$\begin{cases} a_{11}x_1 + a_{12}x_2 + \cdots + a_{1n}x_n = b_1 \\ a_{21}x_1 + a_{22}x_2 + \cdots + a_{2n}x_n = b_2 \\ \qquad \vdots \\ a_{n1}x_1 + a_{n2}x_2 + \cdots + a_{nn}x_n = b_n \end{cases}$$
+        为 <span class="term">n 元线性方程组</span>。其中 $a_{ij}$ 称为<span class="term">系数</span>，$b_i$ 称为<span class="term">常数项</span>。若常数项 $b_1=b_2=\cdots=b_n=0$，则称为<span class="term">齐次线性方程组</span>；否则称为<span class="term">非齐次线性方程组</span>。</p>
+        <p>记系数矩阵为 $A=(a_{ij})_{n\times n}$，常数项列向量 $b=(b_1,\ldots,b_n)^T$，则方程组可写成矩阵形式 $Ax=b$。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 3.1</span>
+             <strong>Standard Form of a Linear System.</strong>
+             A system consisting of $n$ equations in the $n$ unknowns $x_1,x_2,\ldots,x_n$, written as
+             $$\begin{cases} a_{11}x_1 + a_{12}x_2 + \cdots + a_{1n}x_n = b_1 \\ a_{21}x_1 + a_{22}x_2 + \cdots + a_{2n}x_n = b_2 \\ \qquad \vdots \\ a_{n1}x_1 + a_{n2}x_2 + \cdots + a_{nn}x_n = b_n \end{cases}$$
+             is called a <span class="en-term">linear system in $n$ unknowns</span>.
+             The numbers $a_{ij}$ are its <span class="en-term">coefficients</span> and the numbers $b_i$ are its
+             <span class="en-term">constant terms</span>. If $b_1=b_2=\cdots=b_n=0$ the system is called
+             <span class="en-term">homogeneous</span>; otherwise it is called a
+             <span class="en-term">nonhomogeneous system</span>.</p>
+          <p>Writing $A=(a_{ij})_{n\times n}$ for the coefficient matrix and $b=(b_1,\ldots,b_n)^T$ for the column
+             vector of constant terms, the system can be written in matrix form as $Ax=b$.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 3.1　克拉默（Cramer）法则</div>
+        <p><span class="thm-name">定理 3.1</span>　设 $n$ 元线性方程组 $Ax=b$ 的<strong>系数行列式</strong></p>
+        <p>$$D=|A|=\begin{vmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{vmatrix} \ne 0$$</p>
+        <p>则方程组<strong>有唯一解</strong>，且</p>
+        <p>$$x_j = \frac{D_j}{D}, \qquad j = 1, 2, \ldots, n$$</p>
+        <p>其中 $D_j$ 是把 $D$ 的<strong>第 $j$ 列</strong>换成常数项 $b_1,b_2,\ldots,b_n$（其余各列保持原样、原顺序）后得到的 $n$ 阶行列式。例如</p>
+        <p>$$D_1=\begin{vmatrix} b_1 & a_{12} & \cdots & a_{1n} \\ b_2 & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ b_n & a_{n2} & \cdots & a_{nn} \end{vmatrix},\qquad D_2=\begin{vmatrix} a_{11} & b_1 & \cdots & a_{1n} \\ a_{21} & b_2 & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & b_n & \cdots & a_{nn} \end{vmatrix}$$</p>
+        <p><strong>适用条件</strong>（缺一不可）：① 方程个数 $=$ 未知数个数（$A$ 必须是方阵）；② $D \ne 0$。两条都不满足或只满足一条时，克拉默法则<strong>不能使用</strong>。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 3.1</span>
+             <strong>Cramer's Rule.</strong>
+             Suppose that the linear system $Ax=b$ in $n$ unknowns has a nonzero
+             <span class="en-term">coefficient determinant</span></p>
+          <p>$$D=|A|=\begin{vmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{vmatrix} \ne 0$$</p>
+          <p>Then the system has <strong>exactly one solution</strong>, given by</p>
+          <p>$$x_j = \frac{D_j}{D}, \qquad j = 1, 2, \ldots, n$$</p>
+          <p>where $D_j$ is the determinant of order $n$ obtained from $D$ by replacing its
+             <strong>$j$-th column</strong> with the constant terms $b_1,b_2,\ldots,b_n$, all the remaining
+             columns keeping their original positions and order. For example,</p>
+          <p>$$D_1=\begin{vmatrix} b_1 & a_{12} & \cdots & a_{1n} \\ b_2 & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ b_n & a_{n2} & \cdots & a_{nn} \end{vmatrix},\qquad D_2=\begin{vmatrix} a_{11} & b_1 & \cdots & a_{1n} \\ a_{21} & b_2 & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & b_n & \cdots & a_{nn} \end{vmatrix}$$</p>
+          <p><strong>Conditions of validity</strong> (both are indispensable):
+             ① the number of equations equals the number of unknowns (so that $A$ is square);
+             ② $D \ne 0$. If neither condition holds, or only one of them does, Cramer's rule
+             <strong>cannot be used</strong>.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>推论 3.1　齐次方程组的判定</div>
+        <p>设 $A$ 为 $n$ 阶方阵，齐次线性方程组 $Ax=0$。</p>
+        <p><span class="thm-name">推论 3.1</span>　若 $D=|A| \ne 0$，则 $Ax=0$ <strong>只有零解</strong> $x=0$。</p>
+        <p><span class="thm-name">推论 3.2</span>　若 $Ax=0$ <strong>有非零解</strong>，则必有 $D=|A| = 0$。反之，$D=0$ 时 $Ax=0$ 也一定有非零解。</p>
+        <p>合并成一句最关键的话：</p>
+        <p>$$Ax=0 \text{ 有非零解} \iff D=|A| = 0 \iff R(A) \&lt; n$$</p>
+        <p>注意 $x=0$ 永远是齐次方程组的解，所以「有没有非零解」才是唯一值得讨论的问题。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">PROP 3.1</span>
+             <strong>The Homogeneous System $Ax=0$.</strong>
+             Let $A$ be an $n\times n$ matrix and consider the
+             <span class="en-term">homogeneous</span> linear system $Ax=0$.</p>
+          <p><span class="bi-en-label">PROP 3.1</span>
+             If $D=|A| \ne 0$, then $Ax=0$ has <strong>only the zero solution</strong> $x=0$.</p>
+          <p><span class="bi-en-label">PROP 3.2</span>
+             If $Ax=0$ has a <strong>nonzero solution</strong>, then necessarily $D=|A| = 0$.
+             Conversely, when $D=0$ the system $Ax=0$ certainly does have a nonzero solution.</p>
+          <p>Combining the two gives the single most important statement:</p>
+          <p>$$Ax=0 \text{ has a nonzero solution} \iff D=|A| = 0 \iff R(A) \&lt; n$$</p>
+          <p>Note that $x=0$ is always a solution of a homogeneous system, so the only question worth
+             discussing is whether a <em>nonzero</em> solution exists.</p>
+        </div>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>为什么 $D=0$ 就意味着有非零解</div>
+        <p>把 $Ax=0$ 的左端看成 $A$ 的各列按系数 $x_1,\dots,x_n$ 相加：$x_1\boldsymbol{\alpha}_1 + x_2\boldsymbol{\alpha}_2 + \cdots + x_n\boldsymbol{\alpha}_n = 0$，其中 $\boldsymbol{\alpha}_j$ 是 $A$ 的第 $j$ 列。$D\ne0$ 说明这 $n$ 个列向量「张成整个 $n$ 维空间」，谁也不能被其他几个拼出来，于是要让这个和等于零向量，只能所有系数都取 $0$——只有零解。</p>
+        <p>$D=0$ 说明这 $n$ 个列向量「塌了」、落在某个更低维的子空间里，至少有一列可以被其余列拼出来，于是存在不全为零的系数使组合为零——有非零解。这个「塌了几维、还剩几维独立」的度量，就是下一节要讲的<strong>秩</strong>。</p>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：用克拉默法则解方程组的步骤</div>
+        <ol>
+          <li>确认方程个数与未知数个数相等（$A$ 是方阵），写出系数行列式 $D=|A|$。</li>
+          <li>计算 $D$。若 $D \ne 0$，继续；若 $D=0$，克拉默法则<strong>失效</strong>，改用 3-2 的消元法判定。</li>
+          <li>对每个 $j=1,2,\ldots,n$，把 $D$ 的第 $j$ 列换成 $b$，算得 $D_j$（只需算 $n$ 个 $n$ 阶行列式）。</li>
+          <li>写出 $x_j = D_j/D$，即为唯一解。</li>
+        </ol>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD</span>
+             <strong>Solving a Linear System by Cramer's Rule.</strong></p>
+          <ol>
+            <li>Check that the number of equations equals the number of unknowns ($A$ is square) and write
+                down the coefficient determinant $D=|A|$.</li>
+            <li>Compute $D$. If $D \ne 0$, go on. If $D=0$, Cramer's rule <strong>fails</strong> —
+                switch to the elimination method of &sect;3-2.</li>
+            <li>For each $j=1,2,\ldots,n$, replace the $j$-th column of $D$ by $b$ and compute $D_j$
+                (this means evaluating $n$ determinants of order $n$).</li>
+            <li>Write $x_j = D_j/D$; this is the unique solution.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.1</span> 用克拉默法则解三元方程组
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>解线性方程组
+          $$\begin{cases} 2x_1 + x_2 + x_3 = 3 \\ x_1 - x_2 + 2x_3 = -3 \\ 3x_1 + x_2 - x_3 = 6 \end{cases}$$</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：算系数行列式 $D$。</strong>按第一行展开：</p>
+            <p>$$D=\begin{vmatrix} 2 & 1 & 1 \\ 1 & -1 & 2 \\ 3 & 1 & -1 \end{vmatrix} = 2\begin{vmatrix}-1&2\\1&-1\end{vmatrix} - 1\begin{vmatrix}1&2\\3&-1\end{vmatrix} + 1\begin{vmatrix}1&-1\\3&1\end{vmatrix}$$</p>
+            <p>$$= 2\big[(-1)(-1)-2\cdot 1\big] - 1\big[1\cdot(-1)-2\cdot 3\big] + 1\big[1\cdot 1-(-1)\cdot 3\big]$$</p>
+            <p>$$= 2(1-2) - (-1-6) + (1+3) = -2 + 7 + 4 = 9 \ne 0$$</p>
+            <p>因为 $D \ne 0$，方程组有唯一解，可以用克拉默法则。</p>
+            <p><strong>第二步：算 $D_1$（第 1 列换成常数项 $3,-3,6$）。</strong></p>
+            <p>$$D_1=\begin{vmatrix} 3 & 1 & 1 \\ -3 & -1 & 2 \\ 6 & 1 & -1 \end{vmatrix} = 3(1-2) - 1(3-12) + 1(-3+6) = -3 + 9 + 3 = 9$$</p>
+            <p>所以 $x_1 = \dfrac{D_1}{D} = \dfrac{9}{9} = 1$。</p>
+            <p><strong>第三步：算 $D_2$（第 2 列换成常数项）。</strong></p>
+            <p>$$D_2=\begin{vmatrix} 2 & 3 & 1 \\ 1 & -3 & 2 \\ 3 & 6 & -1 \end{vmatrix} = 2(3-12) - 3(-1-6) + 1(6+9) = -18 + 21 + 15 = 18$$</p>
+            <p>所以 $x_2 = \dfrac{D_2}{D} = \dfrac{18}{9} = 2$。</p>
+            <p><strong>第四步：算 $D_3$（第 3 列换成常数项）。</strong></p>
+            <p>$$D_3=\begin{vmatrix} 2 & 1 & 3 \\ 1 & -1 & -3 \\ 3 & 1 & 6 \end{vmatrix} = 2(-6+3) - 1(6+9) + 3(1+3) = -6 - 15 + 12 = -9$$</p>
+            <p>所以 $x_3 = \dfrac{D_3}{D} = \dfrac{-9}{9} = -1$。</p>
+            <p><strong>第五步：验算。</strong>把 $(1,2,-1)$ 代回：$2+2-1=3$ ✓，$1-2-2=-3$ ✓，$3+2+1=6$ ✓。所以唯一解为 $x=(1,2,-1)^T$。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.2</span> 已知齐次方程组有非零解求参数
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>已知齐次线性方程组
+          $$\begin{cases} \lambda x_1 + x_2 + x_3 = 0 \\ x_1 + \lambda x_2 + x_3 = 0 \\ x_1 + x_2 + \lambda x_3 = 0 \end{cases}$$
+          有非零解，求 $\lambda$ 的值。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>思路：</strong>这是 3 个方程 3 个未知数的齐次方程组，$A$ 是 3 阶方阵。由推论 3.2，「有非零解 $\iff$ 系数行列式 $D=0$」，所以条件就是一个关于 $\lambda$ 的三次方程。</p>
+            <p><strong>第一步：算 $D$。</strong>把第 2、3 行都减去第 1 行（行列式的性质：某行加上另一行的 $k$ 倍，行列式不变）：</p>
+            <p>$$D=\begin{vmatrix} \lambda & 1 & 1 \\ 1 & \lambda & 1 \\ 1 & 1 & \lambda \end{vmatrix} = \begin{vmatrix} \lambda & 1 & 1 \\ 1-\lambda & \lambda-1 & 0 \\ 1-\lambda & 0 & \lambda-1 \end{vmatrix}$$</p>
+            <p>按第 3 列展开：</p>
+            <p>$$D = 1\cdot\begin{vmatrix} 1-\lambda & \lambda-1 \\ 1-\lambda & 0 \end{vmatrix} + \lambda\cdot\begin{vmatrix} \lambda & 1 \\ 1-\lambda & \lambda-1 \end{vmatrix}$$</p>
+            <p>第一项：$(1-\lambda)\cdot 0 - (\lambda-1)(1-\lambda) = -(1-\lambda)^2\cdot(-1)$，即 $(\lambda-1)(1-\lambda)$……为避免符号出错，改用更稳的算法——把第 2、3 行加到第 1 行上：</p>
+            <p>$$D=\begin{vmatrix} \lambda+2 & \lambda+2 & \lambda+2 \\ 1 & \lambda & 1 \\ 1 & 1 & \lambda \end{vmatrix} = (\lambda+2)\begin{vmatrix} 1 & 1 & 1 \\ 1 & \lambda & 1 \\ 1 & 1 & \lambda \end{vmatrix}$$</p>
+            <p>再把后两行减去第一行：</p>
+            <p>$$D=(\lambda+2)\begin{vmatrix} 1 & 1 & 1 \\ 0 & \lambda-1 & 0 \\ 0 & 0 & \lambda-1 \end{vmatrix} = (\lambda+2)(\lambda-1)^2$$</p>
+            <p>（最后一步用了上三角行列式等于主对角线元素之积。）</p>
+            <p><strong>第二步：解 $D=0$。</strong></p>
+            <p>$$(\lambda+2)(\lambda-1)^2 = 0 \quad\Longrightarrow\quad \lambda = -2 \ \text{ 或 }\ \lambda = 1$$</p>
+            <p><strong>第三步：验算。</strong>$\lambda=1$ 时三个方程都是 $x_1+x_2+x_3=0$，$(1,-1,0)$ 是它的非零解 ✓；$\lambda=-2$ 时取 $(1,1,1)$，三式分别为 $-2+1+1=0$、$1-2+1=0$、$1+1-2=0$ ✓。所以 $\lambda=-2$ 或 $\lambda=1$。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.3</span> 用克拉默法则作证明
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $n$ 元线性方程组 $Ax=b$ 的系数矩阵 $A$ 与常数项向量 $b$ 的元素<strong>全为整数</strong>，且 $|A|=\pm 1$。证明：该方程组的解 $x_1,x_2,\ldots,x_n$ 全是整数。</p>
+          <div class="solution">
+            <p class="solution-label">证明</p>
+            <p>因为 $|A|=\pm 1 \ne 0$，满足克拉默法则的两个条件，所以方程组有唯一解且</p>
+            <p>$$x_j = \frac{D_j}{D} = \frac{D_j}{\pm 1}, \qquad j=1,2,\ldots,n$$</p>
+            <p>下面说明 $D_j$ 一定是整数。由定义，$n$ 阶行列式是 $n!$ 项的代数和，其中每一项都是「取自不同行不同列的 $n$ 个元素之积」再乘 $\pm 1$。$D_j$ 是由 $A$ 的 $n-1$ 列与 $b$ 拼成的，元素全为整数，所以每一项都是整数之积，仍是整数；整数相加仍是整数，故 $D_j \in \mathbb{Z}$。</p>
+            <p>于是 $x_j = \pm D_j \in \mathbb{Z}$，即每个未知量的值都是整数。证毕。</p>
+            <p><strong>点评：</strong>本题不需要真的把 $x_j$ 算出来，只需要「$x_j=D_j/D$ 是一个显式表达式」这个事实。这正是克拉默法则相对于消元法的优势——它给出的不是算法，而是<strong>解析表达式</strong>，可以用来做定性推理。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点</div>
+        <ul>
+          <li><strong>条件不满足就硬用。</strong>克拉默法则要求「方程个数 $=$ 未知数个数」<strong>且</strong> $D \ne 0$。$3$ 个方程 $4$ 个未知数时，$A$ 不是方阵，$D$ 根本无从谈起，此时必须用 3-2 的消元法。</li>
+          <li><strong>把 $D\ne 0$ 当成唯一解的充要条件。</strong>它只是<strong>充分条件</strong>。$D=0$ 时方程组可能无解，也可能有无穷多解，不能直接下结论。</li>
+          <li><strong>替换错列。</strong>求 $x_j$ 要替换第 $j$ <strong>列</strong>，不是第 $j$ 行；而且其余各列必须保持原有的先后顺序，一旦调换过某两列，答案就错了。</li>
+          <li><strong>符号写错。</strong>常数项代进去时连符号一起搬，例 3.1 中 $b_2=-3$，$D_1$ 的第二行第一列就写 $-3$。</li>
+          <li><strong>把「有非零解 $\iff D=0$」推广到非方阵。</strong>这个等价只在 $A$ 为 $n$ 阶方阵时成立，非方阵要改用「$R(A) &lt; n$」判断。</li>
+        </ul>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <ul>
+          <li><span class="tag">高频</span><span class="tag">易错</span>「齐次方程组有非零解，求参数」——立刻写出 $D=0$，把行列式算成关于参数的多项式再解方程；给了 $|A|$ 与 $|A_j|$ 则直接代 $x_j=D_j/D$。这是本章出现频率最高的填空题。</li>
+          <li><span class="tag">大题</span>用克拉默法则作理论证明（如上面的整数解问题、伴随矩阵公式 $A^{-1}=A^*/|A|$ 的推导）。看到「证明解是整数」「证明解唯一」这类要求，优先考虑克拉默法则。</li>
+          <li><span class="tag">大题</span>用克拉默法则实际解三元方程组。考研中一般不出，期末考试可能出现，务必会算。若系数行列式算出来是 $0$，要立刻改用消元法继续讨论——看到 $D=0$ 就写「无解」是本章最常见的错误。</li>
+        </ul>
+      </div>
+
+      <div class="box app-box">
+        <div class="box-title"><span class="ico">🔧</span>工程联系：克拉默法则为什么「不能用」却「不能丢」</div>
+        <p>航空发动机转子动力学的有限元模型动辄几十万个自由度，最终归结为大型线性方程组 $Kx=f$。用克拉默法则求解要算 $n+1$ 个 $n$ 阶行列式，运算量约 $(n+1)\cdot n!$（$n=20$ 时已超出任何计算机的能力）；工程上用的是<strong>消元法</strong>，运算量约 $n^3/3$。但它的价值在<strong>理论</strong>：判据 $|A|\ne0$ 一旦失效，就意味着结构存在刚体位移模式、约束不足，「刚度矩阵奇异」正是这件事的数学表述；而显式解 $x_j=D_j/D$ 是推导伴随矩阵公式 $A^{-1}=A^*/|A|$ 的出发点。</p>
+      </div>
+
+      <div class="box model-box">
+        <div class="box-title"><span class="ico">🧩</span>典型模型题</div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 1</span>含参数方程组的分类讨论（克拉默法则路径）<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              方程组里带一个参数（记作 $\lambda$、$a$、$k$ 等），而且<strong>方程个数恰好等于未知量个数</strong>，问「参数取何值时无解 / 有唯一解 / 有无穷多解」。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 写出系数行列式 $D$ 并<strong>因式分解</strong>；② $D\ne 0$ 时方程组有唯一解；③ 令 $D=0$ 解出各个根，<strong>把每个根单独代回原方程组</strong>（或算 $D_j$）判断是无解还是无穷多解；④ 汇总成分类不重不漏的答案。方阵情形走的是克拉默法则这条线，3-2 节还会给出对非方阵也通用的行变换路径。</div>
+            <p><strong>例</strong>　问 $a$ 取何值时，线性方程组
+               $$\begin{cases} a x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 1 \\ x_1 + x_2 + 2x_3 = 1 \end{cases}$$
+               有唯一解？无解？有无穷多解？</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：算 $D$ 并分解因式。</strong>用对角线法则，正三项 $a\cdot a\cdot 2+1+1=2a^2+2$，负三项 $1\cdot a\cdot1+a\cdot1\cdot1+1\cdot1\cdot2=2a+2$：</p>
+              <p>$$D=\begin{vmatrix} a & 1 & 1 \\ 1 & a & 1 \\ 1 & 1 & 2 \end{vmatrix}=2a^2+2-2a-2=2a^2-2a=2a(a-1)$$</p>
+              <p><strong>第二步：$D\ne 0$ 的情形。</strong>$a\ne 0$ 且 $a\ne 1$ 时 $D\ne 0$，由克拉默法则，方程组有<strong>唯一解</strong>。</p>
+              <p><strong>第三步：逐个根代回。</strong></p>
+              <ul>
+                <li><strong>$a=1$：</strong>三个方程变成 $x_1+x_2+x_3=1$、$x_1+x_2+x_3=1$、$x_1+x_2+2x_3=1$。前两个方程完全相同，第三个减去它们得 $x_3=0$，于是只剩 $x_1+x_2=1$——<strong>一个</strong>有效方程含三个未知量，$R(A)=R(\bar A)=2 &lt; 3$，方程组有<strong>无穷多解</strong>，自由未知量 $3-2=1$ 个。取 $x_2=c$，得 $x_1=1-c,\ x_3=0$，通解为
+                   $$x=(1,0,0)^T+c(-1,1,0)^T,\qquad c\in\mathbb{R}$$</li>
+                <li><strong>$a=0$：</strong>原方程组变成 $x_2+x_3=1$、$x_1+x_3=1$、$x_1+x_2+2x_3=1$。前两式相加得 $x_1+x_2+2x_3=2$，与第三式 $x_1+x_2+2x_3=1$ 矛盾，故 <strong>无解</strong>。<br>
+                   用 $D_j$ 判断也一样快：此时 $D_1=\begin{vmatrix}1&1&1\\1&0&1\\1&1&2\end{vmatrix}=1(0-1)-1(2-1)+1(1-0)=-1\ne 0$。$D=0$ 而某个 $D_j\ne 0$，正是无解的标志。</li>
+              </ul>
+              <p><strong>答案：</strong>$a\ne 0$ 且 $a\ne 1$ 时方程组有唯一解；$a=1$ 时有无穷多解，通解为 $x=(1,0,0)^T+c(-1,1,0)^T$；$a=0$ 时无解。</p>
+              <p class="solution-label">易错提醒</p>
+              <p>$D=0$ 只说明「不是唯一解」，<strong>不能直接断定是无穷多解</strong>——$a=0$ 与 $a=1$ 都使 $D=0$，结论却一个是无解、一个是无穷多解，必须逐个根代回原方程组分辨。另外，用 $D_j$ 快速判断只在 $R(A)=n-1$ 时可靠（本例正是如此）；若 $R(A)\le n-2$，所有 $D_j$ 都会等于零，但仍可能无解，那时只能回到消元法判秩。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 2</span>由解反求参数<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              题目给出<strong>具体的解向量</strong>（如「$\eta=(1,1,0)^T$ 是方程组的解」），或给出解的情况（唯一解 / 无解 / 有无穷多解），要求确定其中的参数。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 把已知解<strong>逐个方程</strong>代入（漏掉任何一个方程都会丢条件），得到关于参数的方程；② 联立解出参数，并用其余条件回代检验——若各条件互相矛盾，正确的回答是「这样的参数不存在」；③ 用求出的参数解方程组，写出通解；④ 把题目给出的解代回通解，核对它确实被包含，这一步能查出参数是否漏解。</div>
+            <p><strong>例</strong>　设线性方程组
+               $$\begin{cases} x_1 + x_2 + x_3 = 2 \\ 2x_1 + 3x_2 + a x_3 = 5 \\ x_1 + a x_2 + 3x_3 = 4 \end{cases}$$
+               已知 $\eta_1=(1,1,0)^T$ 与 $\eta_2=(1,0,1)^T$ 都是它的解，求 $a$ 的值及方程组的通解。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：把两个解分别代入。</strong></p>
+              <p>代入 $\eta_1=(1,1,0)^T$：第 1 式 $1+1+0=2$ ✓；第 2 式 $2+3+0=5$ ✓；第 3 式 $1+a\cdot1+0=4$，得 $a=3$。</p>
+              <p>代入 $\eta_2=(1,0,1)^T$：第 1 式 $1+0+1=2$ ✓；第 3 式 $1+0+3=4$ ✓；第 2 式 $2+0+a\cdot1=5$，同样得 $a=3$。两个条件给出一致的 $a=3$，说明题目条件相容。</p>
+              <p><strong>第二步：代回判秩。</strong>取 $a=3$，对增广矩阵作行变换：</p>
+              <p>$$\bar A=\begin{pmatrix} 1 & 1 & 1 & 2 \\ 2 & 3 & 3 & 5 \\ 1 & 3 & 3 & 4 \end{pmatrix}\xrightarrow{\ r_2-2r_1,\ r_3-r_1\ }\begin{pmatrix} 1 & 1 & 1 & 2 \\ 0 & 1 & 1 & 1 \\ 0 & 2 & 2 & 2 \end{pmatrix}\xrightarrow{\ r_3-2r_2\ }\begin{pmatrix} 1 & 1 & 1 & 2 \\ 0 & 1 & 1 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
+              <p>$R(A)=R(\bar A)=2$，未知量个数 $n=3$，故 $R(A)=R(\bar A)=2 &lt; 3=n$，方程组有<strong>无穷多解</strong>，自由未知量 $3-2=1$ 个。</p>
+              <p><strong>第三步：写通解。</strong>主元在第 1、2 列，$x_1,x_2$ 是主元未知量，$x_3$ 自由。同解方程组为 $\begin{cases} x_1+x_2+x_3=2 \\ x_2+x_3=1 \end{cases}$，解得 $x_2=1-x_3$、$x_1=2-(1-x_3)-x_3=1$。令 $x_3=c$，得</p>
+              <p>$$x=(1,1,0)^T+c(0,-1,1)^T,\qquad c\in\mathbb{R}$$</p>
+              <p><strong>第四步：核对题目给出的解。</strong>取 $c=0$ 得 $(1,1,0)^T=\eta_1$ ✓；取 $c=1$ 得 $(1,0,1)^T=\eta_2$ ✓。两个已知解都被通解包含，答案正确。</p>
+              <p class="solution-label">易错提醒</p>
+              <p>最容易犯的错是<strong>只代一个方程就下结论</strong>。本题单看 $\eta_1$ 的第 3 式就得到 $a=3$，但仍必须代 $\eta_2$ 检验；反过来，若两个解给出的参数值不一致，正确的回答是「不存在这样的参数」，而不是随便取一个。另外，求出参数后要回到方程组重新判秩，「有两个不同的解」本身就意味着有解且不唯一。</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="quiz" data-quiz-id="ch3-1" data-title="3-1 克拉默法则 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 $n$ 元线性方程组 $Ax=b$ 的系数行列式 $D=|A| \ne 0$，则（　）。
+             <span class="en-line" lang="en">Let $Ax=b$ be a linear system in $n$ unknowns whose coefficient determinant is $D=|A| \ne 0$. Then (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">方程组无解</span></li>
+            <li><span class="opt-body">方程组有无穷多解</span></li>
+            <li data-correct="true"><span class="opt-body">方程组有唯一解</span></li>
+            <li><span class="opt-body">方程组解的个数无法确定</span></li>
+          </ul>
+          <div class="q-explain">这正是克拉默法则的结论：$D\ne 0$ 时方程组有唯一解 $x_j=D_j/D$。前两个选项对应的是 $D=0$ 时可能出现的情形，但 $D\ne0$ 时它们都不会发生。第四个选项是迷惑项——只要 $D\ne0$，解的存在性与唯一性就被完全确定，不需要再作任何判定。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 $A$ 为 $n$ 阶方阵，则齐次线性方程组 $Ax=0$ 有非零解的充要条件是（　）。
+             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. A necessary and sufficient condition for the homogeneous system $Ax=0$ to have a nonzero solution is (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$|A| \ne 0$</span></li>
+            <li data-correct="true"><span class="opt-body">$|A| = 0$</span></li>
+            <li><span class="opt-body">$R(A) = n$</span></li>
+            <li><span class="opt-body">$b = 0$</span></li>
+          </ul>
+          <div class="q-explain">由推论 3.2：$Ax=0$ 有非零解 $\iff D=|A|=0$。第一、三个错误选项（$|A|\ne0$ 与 $R(A)=n$）说的都是「只有零解」，它们彼此等价，但方向与题目要求正好相反。第四个选项 $b=0$ 只是齐次方程组的定义，任何齐次方程组都满足它，可是零解也一定满足，所以它区分不了「只有零解」和「有非零解」，不能作为判据。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="基础">
+          <p class="q-stem">已知 3 元线性方程组 $Ax=b$ 满足 $|A|=2$，$|A_1|=4$，$|A_3|=-6$，其中 $A_j$ 是把 $A$ 的第 $j$ 列换成常数项向量 $b$ 后得到的矩阵，则 $x_1 + x_3 = $ ______。
+             <span class="en-line" lang="en">A linear system $Ax=b$ in 3 unknowns satisfies $|A|=2$, $|A_1|=4$ and $|A_3|=-6$, where $A_j$ is the matrix obtained from $A$ by replacing its $j$-th column with the constant vector $b$. Then $x_1 + x_3 = $ ______.</span></p>
+          <div class="q-answer" data-answer="-1|−1"></div>
+          <div class="q-explain">由克拉默法则 $x_j=D_j/D$：$x_1=4/2=2$，$x_3=(-6)/2=-3$，所以 $x_1+x_3=2-3=-1$。注意 $|A_3|=-6$ 中的负号必须带进计算，符号丢失会得到 $3$ 或 $5$ 之类的错误答案。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">设 $A$ 为 3 阶矩阵，且 $|A|=0$，则下列命题正确的是（　）。
+             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=0$. Which of the following statements is correct? (　)</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$A$ 的每一行都能由其余两行经加、减与数乘得到</span></li>
+            <li data-correct="true"><span class="opt-body">齐次线性方程组 $Ax=0$ 有非零解</span></li>
+            <li><span class="opt-body">对任意 3 维列向量 $b$，$Ax=b$ 都有无穷多解</span></li>
+            <li><span class="opt-body">$R(A)=0$</span></li>
+          </ul>
+          <div class="q-explain">$|A|=0 \Rightarrow R(A)\le 2 &lt; 3 = n$，由推论 3.2 得 $Ax=0$ 有非零解。<br>第一个选项是常见误读：$|A|=0$ 只说明 $R(A)\le 2 &lt; 3=n$，即至少有一行可由其余两行经加、减与数乘得到，而不是每一行都可以。反例 $A=\mathrm{diag}(1,1,0)$，其第 1 行 $(1,0,0)$ 就无法由第 2、3 行经加、减与数乘得到。第三个选项偷偷把「有解」也一起假设了：$|A|=0$ 时 $R(A)$ 可能小于 $R(\bar A)$，例如取 $A=\mathrm{diag}(1,1,0)$、$b=(0,0,1)^T$ 就无解。第四个选项把秩压到了 0，而 $|A|=0$ 只保证 $A$ 不满秩，秩可以是 2、1 或 0。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，下列条件中与「$Ax=0$ 只有零解」等价的是（　）。
+             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. Which of the following conditions is equivalent to "$Ax=0$ has only the zero solution"? (　)</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$|A| \ne 0$</span></li>
+            <li data-correct="true"><span class="opt-body">$R(A) = n$</span></li>
+            <li data-correct="true"><span class="opt-body">$A$ 可逆</span></li>
+            <li><span class="opt-body">$R(A) &lt; n$</span></li>
+          </ul>
+          <div class="q-explain">对 $n$ 阶方阵，$|A|\ne0$、$R(A)=n$、$A$ 可逆这三件事互相等价，也都等价于「$Ax=0$ 只有零解」——它们只是同一件事的三种说法，任一条都可以作为另外两条的判据。<br>第四个选项恰好相反：$R(A)&lt;n \iff |A|=0 \iff Ax=0$ 有非零解。「只有零解」与「有非零解」是互斥的两个命题，看题时不要串行。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，若 $|A|=0$，则对任意 $n$ 维列向量 $b$，方程组 $Ax=b$ 都无解。
+             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. If $|A|=0$, then for every $n$-dimensional column vector $b$ the system $Ax=b$ has no solution.</span></p>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">错误。$|A|=0$ 只说明 $R(A)&lt;n$，并没有说明 $R(\bar A)$ 是多少。若 $b$ 恰好落在 $A$ 的列向量组张成的空间里，就有 $R(\bar A)=R(A)&lt;n$，方程组不但有解，还有无穷多解（$b=0$ 时就是齐次情形，一定有解）。反例：$A=\begin{pmatrix}1&0\\0&0\end{pmatrix}$，$|A|=0$，取 $b=(1,0)^T$，则 $x=(1,c)^T$（$c$ 任意）都是解。<br>这个命题是「$D\ne0$ 必有唯一解」的错误逆否：$D\ne0$ 是唯一解的<strong>充分</strong>条件而非必要条件，不能靠否定它来推出「无解」。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A$ 为 3 阶矩阵，$|A|=2$，$A^*$ 为 $A$ 的伴随矩阵，$b$ 为 3 维非零列向量，则方程组 $A^*x=b$ 的解为（　）。
+             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$, let $A^*$ be the adjugate matrix of $A$, and let $b$ be a nonzero 3-dimensional column vector. Then the solution of the system $A^*x=b$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac12 Ab$</span></li>
+            <li><span class="opt-body">$2Ab$</span></li>
+            <li><span class="opt-body">$\dfrac14 Ab$</span></li>
+            <li><span class="opt-body">$A^{-1}b$</span></li>
+          </ul>
+          <div class="q-explain">由 $|A^*|=|A|^{n-1}=2^2=4\ne0$ 知 $A^*$ 可逆，解唯一。又 $A^*=|A|A^{-1}=2A^{-1}$，故 $(A^*)^{-1}=\frac{1}{|A|}A=\frac12A$，于是 $x=(A^*)^{-1}b=\frac12Ab$。<br>第二个选项把 $A^*=|A|A^{-1}$ 记反成了 $A^*=\frac{1}{|A|}A^{-1}$，于是逆矩阵的系数变成了 $|A|=2$。第三个选项是把 $|A^*|=4$ 当成了要进入答案的系数，但 $|A^*|$ 只用来判断可逆性，不参与解的表达式。第四个选项混淆了 $A^*$ 与 $A^{-1}$：本题是 $A^*x=b$，若取 $x=A^{-1}b$，则 $A^*x=2A^{-2}b\ne b$。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">若齐次线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + ax_3 = 0 \\ x_1 + 4x_2 + a^2x_3 = 0 \end{cases}$ 只有零解，则 $a$ 满足（　）。
+             <span class="en-line" lang="en">If the homogeneous system $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + ax_3 = 0 \\ x_1 + 4x_2 + a^2x_3 = 0 \end{cases}$ has only the zero solution, then $a$ satisfies (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$a \ne 1$ 且 $a \ne 2$</span></li>
+            <li><span class="opt-body">$a \ne 1$</span></li>
+            <li><span class="opt-body">$a \ne 2$</span></li>
+            <li><span class="opt-body">$a \ne 0$</span></li>
+          </ul>
+          <div class="q-explain">$A$ 是 3 阶方阵，由推论 3.1，只有零解 $\iff D\ne0$。作行变换 $r_2-r_1$、$r_3-r_1$ 得 $\begin{pmatrix}1&1&1\\0&1&a-1\\0&3&a^2-1\end{pmatrix}$，再作 $r_3-3r_2$ 得 $\begin{pmatrix}1&1&1\\0&1&a-1\\0&0&(a-1)(a-2)\end{pmatrix}$，故 $D=(a-1)(a-2)$（上三角行列式等于主对角线之积）。由 $D\ne0$ 得 $a\ne1$ 且 $a\ne2$。<br>第二、三个选项各漏掉了一个临界值：只写 $a\ne1$ 时，取 $a=2$ 会使 $D=0$、方程组有非零解，条件不充分。第四个选项与结论无关——$a=0$ 时 $D=2\ne0$ 其实满足条件，而真正的临界值 $a=1$ 却被漏掉了。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <p class="q-stem">设 $A$ 为 4 阶矩阵，且 $A$ 的所有 3 阶子式全为零，则（　）。
+             <span class="en-line" lang="en">Let $A$ be a $4\times4$ matrix all of whose minors of order $3$ are zero. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(A) \le 2$</span></li>
+            <li data-correct="true"><span class="opt-body">$R(A) &lt; 4$</span></li>
+            <li data-correct="true"><span class="opt-body">$|A| = 0$</span></li>
+            <li><span class="opt-body">$R(A) = 2$</span></li>
+          </ul>
+          <div class="q-explain">「所有 3 阶子式全为零」说明非零子式的最高阶数不超过 2，即 $R(A)\le2$，这是秩的<strong>上界</strong>；由此立刻得到 $R(A)\le2&lt;4$ 以及 $|A|=0$（4 阶行列式本身就含 3 阶以上的子式）。<br>第四个选项错在把「$\le$」当成了「$=$」：秩还可以是 1 或 0，例如 $A=O$ 的所有 3 阶子式也全为零，但 $R(A)=0$。要记住：说「所有 $r+1$ 阶子式为零」只给出秩的上界，要确定秩的具体数值，还必须另有「存在某个 $r$ 阶非零子式」这样的下界信息。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">当 $a$ 取何值时，线性方程组 $\begin{cases} a x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 1 \\ x_1 + x_2 + 2x_3 = 1 \end{cases}$ 有无穷多解？（　）
+             <span class="en-line" lang="en">For which value of $a$ does the linear system $\begin{cases} a x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 1 \\ x_1 + x_2 + 2x_3 = 1 \end{cases}$ have infinitely many solutions? (　)</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$a = 0$</span></li>
+            <li data-correct="true"><span class="opt-body">$a = 1$</span></li>
+            <li><span class="opt-body">$a = 0$ 或 $a = 1$</span></li>
+            <li><span class="opt-body">$a \ne 0$ 且 $a \ne 1$</span></li>
+          </ul>
+          <div class="q-explain">系数行列式 $D=\begin{vmatrix} a & 1 & 1 \\ 1 & a & 1 \\ 1 & 1 & 2 \end{vmatrix}=2a^2+2-2a-2=2a(a-1)$，所以「不是唯一解」只可能发生在 $a=0$ 或 $a=1$，两个值都必须单独代回检验。<br>$a=1$ 时三个方程化为 $x_1+x_2+x_3=1$、$x_1+x_2+x_3=1$、$x_1+x_2+2x_3=1$，由第三式减第一式得 $x_3=0$，于是只剩一个有效方程 $x_1+x_2=1$，$R(A)=R(\bar A)=2&lt;3=n$，确有无穷多解（通解 $x=(1,0,0)^T+c(-1,1,0)^T$）。<br>第一个选项 $a=0$ 错在只令 $D=0$ 就当成无穷多解：此时 $\bar A=\begin{pmatrix}0&1&1&1\\1&0&1&1\\1&1&2&1\end{pmatrix}$，第 1、2 行相加得 $(1,1,2\mid2)$，与第 3 行 $(1,1,2\mid1)$ 矛盾，故 $R(A)=2&lt;R(\bar A)=3$，是<strong>无解</strong>。第三个选项把两个临界值不加区分地并列，正是「$D=0$ 一律当成无穷多解」的典型错误。第四个选项是 $D\ne0$、方程组有唯一解的条件，与题目要求相反。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 2 \\ x_1 + 2x_2 + a x_3 = b \\ 2x_1 + 3x_2 + 3x_3 = 5 \end{cases}$ 有无穷多解，且 $\eta=(1,1,0)^T$ 是它的一个解，则（　）。
+             <span class="en-line" lang="en">The linear system $\begin{cases} x_1 + x_2 + x_3 = 2 \\ x_1 + 2x_2 + a x_3 = b \\ 2x_1 + 3x_2 + 3x_3 = 5 \end{cases}$ has infinitely many solutions, and $\eta=(1,1,0)^T$ is one of them. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$a = 2,\ b = 3$</span></li>
+            <li><span class="opt-body">$a = 2,\ b = 1$</span></li>
+            <li><span class="opt-body">$a \ne 2,\ b = 3$</span></li>
+            <li><span class="opt-body">$a = 2,\ b$ 为任意常数</span></li>
+          </ul>
+          <div class="q-explain">先把已知解代进去。$\eta=(1,1,0)^T$ 满足第 1 式（$1+1+0=2$ ✓）与第 3 式（$2+3+0=5$ ✓），代入第 2 式得 $1+2+0=3=b$，所以 $b=3$。「有无穷多解」再给出 $a$：系数行列式 $D=\begin{vmatrix}1&1&1\\1&2&a\\2&3&3\end{vmatrix}=2-a$（第 3 行恰是前两行之和当且仅当 $a=2$），故必须 $a=2$。代入检验：$a=2,b=3$ 时 $\bar A\to\begin{pmatrix}1&1&1&2\\0&1&1&1\\0&0&0&0\end{pmatrix}$，$R(A)=R(\bar A)=2&lt;3$，确为无穷多解，通解 $x=(1,1,0)^T+c(0,-1,1)^T$ 也确实含 $\eta$。<br>第二个选项 $b=1$ 是把 $b$ 代错了方程或算错了常数：$a=2,b=1$ 时 $r_3-r_2$ 给出 $(0,0,0\mid4)$，$R(A)=2&lt;R(\bar A)=3$，方程组<strong>无解</strong>。第三个选项只要求 $D\ne0$ 的反面不成立——$a\ne2$ 时 $R(A)=3=n$，方程组至多只有一个解，与「无穷多解」矛盾。第四个选项忽略了已知解的作用：$\eta$ 是解直接定出 $b=3$；若 $a=2$ 而 $b\ne3$，第三行化为 $(0,0,0\mid b-3)$，仍是无解。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">若齐次线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + 4x_3 = 0 \\ x_1 + 3x_2 + a x_3 = 0 \end{cases}$ 有非零解，则其通解为（　）。
+             <span class="en-line" lang="en">If the homogeneous system $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + 4x_3 = 0 \\ x_1 + 3x_2 + a x_3 = 0 \end{cases}$ has a nonzero solution, then its general solution is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$x = c(2,-3,1)^T,\ c\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x = c(2,3,1)^T,\ c\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x = c(1,-3,2)^T,\ c\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x = c(-2,3,1)^T,\ c\in\mathbb{R}$</span></li>
+          </ul>
+          <div class="q-explain">第一步先用推论 3.2 定出 $a$。$D=\begin{vmatrix}1&1&1\\1&2&4\\1&3&a\end{vmatrix}=1(2a-12)-1(a-4)+1(3-2)=a-7$，有非零解 $\iff D=0$，故 $a=7$。<br>第二步解方程组。$a=7$ 时作 $r_2-r_1$、$r_3-r_1$ 得 $(0,1,3)$ 与 $(0,2,6)$，$r_3-2r_2$ 化为零行，于是 $x_2=-3x_3$、$x_1=-x_2-x_3=2x_3$，通解 $x=c(2,-3,1)^T$（$c\in\mathbb{R}$）。代回验算：$2-3+1=0$ ✓，$2-6+4=0$ ✓，$2-9+7=0$ ✓。<br>第二个选项 $(2,3,1)^T$ 连第一个方程都不满足（$2+3+1=6\ne0$）。第三个选项 $(1,-3,2)^T$ 只满足第一个方程（$1-3+2=0$），代入第二个方程得 $1-6+8=3\ne0$，不是解。第四个选项 $(-2,3,1)^T$ 代入第一个方程得 $-2+3+1=2\ne0$，只是把正确解的第一个分量改了号。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷考的是<strong>「$|A|$、$R(A)$、解的情况」三者之间的等价链</strong>，位置在第 1 章行列式与本章秩的语言之间。前两题直接考克拉默法则的适用条件，中间三题反复辨析「只有零解」与「有非零解」，伴随矩阵、含参数讨论与子式定义也一并带到。</p>
+          <p>最常见的错法有三处。<strong>一是把充分条件当必要条件</strong>：$D\ne0$ 只是唯一解的充分条件，由它推不出「$|A|=0$ 必无解」，判断题正踩在这个逆否误用上；同理 $|A|=0$ 只说 $R(A)\le 2$，即「至少有一行」可由其余两行经加、减与数乘得到，而不是「每一行」。<strong>二是把「不满秩」夸大或缩小</strong>：$|A|=0$ 时秩可以是 $2,1,0$，它既不等于 $0$，也不意味着对任意 $b$ 都无解。三是<strong>漏临界值</strong>：含参数题必须写全 $a\ne1$ 且 $a\ne2$。第 7 题的三个干扰项分别来自 $A^*=|A|A^{-1}$ 记反、把 $|A^*|$ 混进答案、把 $A^*$ 与 $A^{-1}$ 混同，可见伴随矩阵的两个恒等式 $A^*A=|A|E$、$A^*=|A|A^{-1}$ 必须随手可写。</p>
+          <p>本卷结论向后直接铺成 3-2 的判定定理：当 $R(A)=R(\bar A)=n$ 时，判定定理就退化成克拉默法则；卷中用子式给秩定上界的那道题，也是 3-3 秩定义的伏笔。</p>
+          <p>下一步：若得分低于 0.7，先把 $|A|=0 \iff R(A)&lt;n \iff Ax=0$ 有非零解这条链默写一遍，再进入 3-2。克拉默法则只认「方阵且 $D\ne0$」这一种最好的情形，通用工具是下一节的初等行变换。</p>
+        </div>
+
+      </div>
+
+      <h2 id="s3-2" data-hours="4.5">3-2 线性方程组</h2>
+
+      <p>上一节我们用克拉默法则解决了「方程个数 $=$ 未知量个数且 $|A|\ne0$」这一种最好的情形，但真实问题里方程个数往往不等于未知量个数，$|A|=0$ 时克拉默法则更是直接失效。本节引入<strong>初等行变换</strong>这个通用工具：它不挑方程个数、不需要 $|A|\ne0$，能把任意线性方程组的解一次性判清楚——有解还是无解、唯一还是无穷多、无穷多时通解长什么样。这套方法后面求逆矩阵、求秩、求基础解系都要反复使用，是整门课出现频率最高的技术。本节也是全章的重点，值得投入 4 小时。</p>
+
+      <div class="box link-box">
+        <div class="box-title"><span class="ico">🔗</span>知识关联（全局回望）</div>
+        <ul>
+          <li><strong>回望第 1 章</strong>：第 1 章的克拉默法则只处理方阵且 $D\ne0$ 的情形。本节的判定定理是它的全面升级：当 $R(A)=R(\bar A)=n$ 时 $A$ 必为方阵且 $|A|\ne0$，判定定理立刻退化成 $x_j=D_j/D$。所以第 1 章的判据是本节定理的一个<strong>特例</strong>，而不是另一套并列的东西。</li>
+          <li><strong>回望第 2 章</strong>：本节唯一的技术手段——初等行变换——就是第 2 章求逆矩阵时用的那把刀，只是这次它作用在增广矩阵上。第 2 章证明了「初等矩阵左乘 $=$ 行变换」，本节正是靠这条性质保证行变换不改变方程组的解集。</li>
+          <li><strong>启下</strong>：自由未知量的个数 $n-R(A)$，就是第 4 章<span class="term">基础解系</span>所含向量的个数；本节「含参数讨论」的整套流程，在第 5 章求特征向量（解 $(A-\lambda E)x=0$）时会原样再用一遍。</li>
+          <li><strong>横向</strong>：$R(A)=n \iff |A|\ne0$，把第 1 章的行列式与本章的秩连成一条线；$R(A)=R(\bar A)$ 则把第 2 章的矩阵运算与方程组的可解性连了起来。</li>
+        </ul>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>为什么克拉默法则不够用</div>
+        <p>克拉默法则有两个硬伤：一是只认方阵，二是只处理 $D \ne 0$ 这一种「最好」的情形。可现实中我们要面对的方程组，往往是</p>
+        <p>$$\begin{cases} x_1 + x_2 + x_3 = 1 \\ 2x_1 + 2x_2 + 2x_3 = 3 \end{cases} \quad\text{（方程个数 } 2 \ne 3 \text{，不是方阵）}$$</p>
+        <p>或者虽然是方阵但 $D=0$：
+        $$\begin{cases} x_1 + x_2 + x_3 = 3 \\ x_1 + 2x_2 + 3x_3 = 4 \\ 2x_1 + 3x_2 + 4x_3 = 7 \end{cases}$$</p>
+        <p>这种时候，我们需要的不是「算出解」，而是先回答三个问题：<strong>有解吗？有解的话有几个？解怎么全部写出来？</strong>三个问题的答案，全部蕴含在系数矩阵与增广矩阵的<strong>秩</strong>的比较之中。这就是本节的核心。</p>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 3.2　一般线性方程组及其矩阵表示</div>
+        <p>含有 $n$ 个未知量 $x_1,\ldots,x_n$、由 $m$ 个方程组成的线性方程组的一般形式为</p>
+        <p>$$\begin{cases} a_{11}x_1 + a_{12}x_2 + \cdots + a_{1n}x_n = b_1 \\ a_{21}x_1 + a_{22}x_2 + \cdots + a_{2n}x_n = b_2 \\ \qquad \vdots \\ a_{m1}x_1 + a_{m2}x_2 + \cdots + a_{mn}x_n = b_m \end{cases}$$</p>
+        <p>记</p>
+        <p>$$A=\begin{pmatrix} a_{11} & \cdots & a_{1n} \\ \vdots & & \vdots \\ a_{m1} & \cdots & a_{mn} \end{pmatrix}_{m\times n},\quad x=\begin{pmatrix}x_1\\\vdots\\x_n\end{pmatrix},\quad b=\begin{pmatrix}b_1\\\vdots\\b_m\end{pmatrix}$$</p>
+        <p>$A$ 称为<span class="term">系数矩阵</span>；把 $b$ 添到 $A$ 的最后一列得到的 $m\times(n+1)$ 矩阵</p>
+        <p>$$\bar A = (A \mid b)=\begin{pmatrix} a_{11} & \cdots & a_{1n} & b_1 \\ \vdots & & \vdots & \vdots \\ a_{m1} & \cdots & a_{mn} & b_m \end{pmatrix}$$</p>
+        <p>称为<span class="term">增广矩阵</span>。方程组等价于矩阵方程</p>
+        <p>$$Ax=b$$</p>
+        <p>当 $b=0$ 时称为<span class="term">齐次线性方程组</span>，记作 $Ax=0$；当 $b\ne 0$ 时称为<span class="term">非齐次线性方程组</span>。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 3.2</span>
+             <strong>General Linear System and its Matrix Form.</strong>
+             A linear system of $m$ equations in $n$ unknowns $x_1,\ldots,x_n$ has the general form</p>
+          <p>$$\begin{cases} a_{11}x_1 + a_{12}x_2 + \cdots + a_{1n}x_n = b_1 \\ a_{21}x_1 + a_{22}x_2 + \cdots + a_{2n}x_n = b_2 \\ \qquad \vdots \\ a_{m1}x_1 + a_{m2}x_2 + \cdots + a_{mn}x_n = b_m \end{cases}$$</p>
+          <p>Write</p>
+          <p>$$A=\begin{pmatrix} a_{11} & \cdots & a_{1n} \\ \vdots & & \vdots \\ a_{m1} & \cdots & a_{mn} \end{pmatrix}_{m\times n},\quad x=\begin{pmatrix}x_1\\\vdots\\x_n\end{pmatrix},\quad b=\begin{pmatrix}b_1\\\vdots\\b_m\end{pmatrix}$$</p>
+          <p>$A$ is called the <span class="en-term">coefficient matrix</span>. Appending $b$ as an extra last
+             column of $A$ gives the $m\times(n+1)$ matrix</p>
+          <p>$$\bar A = (A \mid b)=\begin{pmatrix} a_{11} & \cdots & a_{1n} & b_1 \\ \vdots & & \vdots & \vdots \\ a_{m1} & \cdots & a_{mn} & b_m \end{pmatrix}$$</p>
+          <p>called the <span class="en-term">augmented matrix</span>. The system is equivalent to the matrix
+             equation</p>
+          <p>$$Ax=b$$</p>
+          <p>When $b=0$ it is called a <span class="en-term">homogeneous</span> system and written $Ax=0$;
+             when $b\ne 0$ it is called a <span class="en-term">nonhomogeneous system</span>.</p>
+        </div>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>秩到底在说什么</div>
+        <p>先建立一个直观图像。<strong>矩阵的秩 = 这个矩阵中真正独立的信息量。</strong></p>
+        <p>写方程组时我们常常写了很多「废话方程」。比如</p>
+        <p>$$\begin{cases} x_1 + x_2 + x_3 = 3 & (1) \\ x_1 + 2x_2 + 3x_3 = 4 & (2) \\ 2x_1 + 3x_2 + 4x_3 = 7 & (3) \end{cases}$$</p>
+        <p>第 (3) 个方程恰好是 (1) 与 (2) 相加，它没有提供任何新信息，删掉它方程组照样解。所以这个方程组「表面上有 3 个方程，实际上只有 2 条独立约束」——这个「2」就是<strong>系数矩阵的秩</strong>。</p>
+        <p>更精确地说：$R(A)$ 是<strong>有效方程的个数</strong>，$n - R(A)$ 是<strong>没被约束住的自由度</strong>（可以自由取值的未知量个数）。</p>
+        <p>那增广矩阵 $\bar A$ 的秩又是什么？它把常数项也算进「信息」里。如果 $R(\bar A) &gt; R(A)$，说明常数项 $b$ 带来了系数矩阵里没有的新信息——翻译成人话就是：方程之间本来矛盾了。例如</p>
+        <p>$$\begin{cases} x_1 + x_2 = 1 \\ x_1 + x_2 = 2 \end{cases}$$</p>
+        <p>系数矩阵两行相同，$R(A)=1$；增广矩阵的两行 $[1,1,1]$ 与 $[1,1,2]$ 不成比例，$R(\bar A)=2$。秩的增加恰好标记了「矛盾」，于是无解。整节的判定定理，本质就是这一句话。</p>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：消元法与初等行变换的对应关系</div>
+        <p>中学解方程组用的是「消元」：把某个方程的若干倍加到另一个方程上，消掉一个未知量。这个过程<strong>完全不改变方程组的解集</strong>，因为它只是把同一组约束换一种写法。</p>
+        <p>把「方程」抽象成「行」，就得到三种<strong>初等行变换</strong>：</p>
+        <ol>
+          <li><strong>互换两行</strong> $r_i \leftrightarrow r_j$：对应「交换两个方程的位置」，解集不变。</li>
+          <li><strong>某一行乘非零常数 $k$</strong> $r_i \times k\ (k\ne 0)$：对应「方程两边同乘 $k$」，解集不变。</li>
+          <li><strong>某行的 $k$ 倍加到另一行</strong> $r_j + k\,r_i$：对应「把两个方程相加后替换其中一个」，解集不变。</li>
+        </ol>
+        <p>所以：<strong>对增广矩阵 $\bar A$ 作初等行变换，得到的新矩阵所对应的方程组与原方程组同解。</strong>这就是消元法的矩阵语言。</p>
+        <p>操作时把 $m$ 个方程、$n$ 个未知量连同常数项一起写成一张表 $\bar A=(A\mid b)$，然后对这张表做行变换——这比反复抄写 $x_1,x_2,\ldots$ 高效得多，也不容易抄错。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD</span>
+             <strong>Elimination Written as Elementary Row Operations.</strong>
+             In school we solve a system by <em>elimination</em>: adding a multiple of one equation to
+             another, thereby removing an unknown. This process <strong>does not change the solution set at
+             all</strong>, because it only rewrites the same constraints in another form.</p>
+          <p>Abstracting "equation" into "row" gives the three <span class="en-term">elementary row
+             operations</span>:</p>
+          <ol>
+            <li><strong>Interchange two rows</strong> $r_i \leftrightarrow r_j$: this corresponds to swapping
+                two equations; the solution set is unchanged.</li>
+            <li><strong>Multiply a row by a nonzero constant $k$</strong> $r_i \times k\ (k\ne 0)$: this
+                corresponds to multiplying both sides of an equation by $k$; the solution set is unchanged.</li>
+            <li><strong>Add $k$ times one row to another row</strong> $r_j + k\,r_i$: this corresponds to adding
+                two equations and replacing one of them; the solution set is unchanged.</li>
+          </ol>
+          <p>Hence: <strong>applying elementary row operations to the augmented matrix $\bar A$ produces a new
+             matrix whose system has exactly the same solutions as the original one.</strong> This is
+             elimination written in the language of matrices.</p>
+          <p>In practice we write the $m$ equations, the $n$ unknowns and the constant terms as one table
+             $\bar A=(A\mid b)$ and then work on that table — far more efficient, and far less error-prone,
+             than repeatedly copying $x_1,x_2,\ldots$</p>
+        </div>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 3.3　行阶梯形矩阵与行最简形矩阵</div>
+        <p>称一个矩阵为<span class="term">行阶梯形矩阵</span>，若它满足：</p>
+        <ul>
+          <li>① 若存在元素全为零的行（<span class="term">零行</span>），则零行全部位于矩阵的<strong>最下方</strong>；</li>
+          <li>② 每个非零行从左往右数的<strong>第一个非零元素</strong>（称为该行的<span class="term">主元</span>）所在列，严格位于上一行主元所在列的<strong>右方</strong>。</li>
+        </ul>
+        <p>例如 $\begin{pmatrix} 1 & 2 & 3 & 4 \\ 0 & 1 & 2 & 1 \\ 0 & 0 & 0 & 3 \\ 0 & 0 & 0 & 0 \end{pmatrix}$ 是行阶梯形，它的形状像一段楼梯；主元分别是 $1,1,3$。</p>
+        <p>称一个矩阵为<span class="term">行最简形矩阵</span>，若它满足：</p>
+        <ul>
+          <li>① 它是行阶梯形矩阵；</li>
+          <li>② 每个非零行的主元都等于 $1$；</li>
+          <li>③ 每个主元所在列的<strong>其余元素全为 $0$</strong>。</li>
+        </ul>
+        <p>例如 $\begin{pmatrix} 1 & 0 & -1 & 0 \\ 0 & 1 & 2 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}$ 是行最简形。</p>
+        <p><strong>一眼分辨：</strong>把主元圈出来。若主元下方有非零元，它还不是阶梯形；若主元上方还有非零元，或主元不是 $1$，它只是阶梯形而不是最简形。<strong>只有主元是 $1$、且主元上下全是 $0$，才是行最简形。</strong></p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 3.3</span>
+             <strong>Row Echelon Form and Reduced Row Echelon Form.</strong>
+             A matrix is in <span class="en-term">row echelon form</span> if:</p>
+          <ul>
+            <li>① if there are rows whose entries are all zero (zero rows), then all of them lie
+                <strong>below</strong> every nonzero row;</li>
+            <li>② the <strong>first nonzero entry</strong> of a nonzero row — called the
+                <span class="en-term">pivot</span> of that row — lies strictly to the <strong>right</strong> of
+                the pivot of the row above it.</li>
+          </ul>
+          <p>For example $\begin{pmatrix} 1 & 2 & 3 & 4 \\ 0 & 1 & 2 & 1 \\ 0 & 0 & 0 & 3 \\ 0 & 0 & 0 & 0 \end{pmatrix}$
+             is in row echelon form: its shape is that of a staircase, and its pivots are $1,1,3$.</p>
+          <p>A matrix is in <span class="en-term">reduced row echelon form (RREF)</span> if:</p>
+          <ul>
+            <li>① it is in row echelon form;</li>
+            <li>② every pivot equals $1$;</li>
+            <li>③ every <strong>other</strong> entry in a pivot column is $0$.</li>
+          </ul>
+          <p>For example $\begin{pmatrix} 1 & 0 & -1 & 0 \\ 0 & 1 & 2 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}$
+             is in reduced row echelon form.</p>
+          <p><strong>Telling them apart at a glance.</strong> Circle the pivots. If some pivot has a nonzero
+             entry below it, the matrix is not yet in echelon form; if some pivot has a nonzero entry above
+             it, or a pivot is not $1$, the matrix is only in echelon form, not in reduced form.
+             <strong>Only when every pivot is $1$ and everything above and below the pivots is $0$ is the
+             matrix in reduced row echelon form.</strong></p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 3.2　线性方程组解的判定定理（本章最重要的结论）</div>
+        <p>设 $A$ 为 $m\times n$ 矩阵，$\bar A=(A\mid b)$ 为增广矩阵，$n$ 为未知量个数。对非齐次线性方程组 $Ax=b$：</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>秩的关系</th><th>解的情况</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>$R(A) &lt; R(\bar A)$</td><td><strong>无解</strong></td><td>常数项带来了系数矩阵里没有的信息，方程之间矛盾（化行最简形时会出现 $[0\ 0\ \cdots\ 0 \mid c]$ 且 $c\ne 0$ 的行）</td></tr>
+              <tr><td>$R(A) = R(\bar A) = n$</td><td><strong>有唯一解</strong></td><td>有效方程个数恰等于未知量个数，每个未知量都被唯一确定，自由未知量 $n-n=0$ 个</td></tr>
+              <tr><td>$R(A) = R(\bar A) = r &lt; n$</td><td><strong>有无穷多解</strong></td><td>自由未知量个数 $= n - R(A) = n - r$，可以任意取值，通解中含 $n-r$ 个任意常数</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>注意第一行与后两行的关系：<strong>有解当且仅当 $R(A)=R(\bar A)$</strong>。所以判定的正确顺序永远是——先看两个秩是否相等（有没有解），再看这个公共的秩与 $n$ 谁大（有几个解）。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 3.2</span>
+             <strong>Solvability and Number of Solutions of a Linear System.</strong>
+             Let $A$ be an $m\times n$ matrix, let $\bar A=(A\mid b)$ be the augmented matrix, and let $n$ be
+             the number of unknowns. For the <span class="en-term">nonhomogeneous system</span> $Ax=b$:</p>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Relation between the ranks</th><th>Solutions</th><th>Explanation</th></tr></thead>
+              <tbody>
+                <tr><td>$R(A) &lt; R(\bar A)$</td><td><strong>no solution</strong></td><td>The constant terms carry information that the coefficient matrix does not have, so the equations contradict one another (reducing to RREF produces a row $[0\ 0\ \cdots\ 0 \mid c]$ with $c\ne 0$)</td></tr>
+                <tr><td>$R(A) = R(\bar A) = n$</td><td><strong>exactly one solution</strong></td><td>The number of effective equations equals the number of unknowns, so every unknown is determined; there are $n-n=0$ free variables</td></tr>
+                <tr><td>$R(A) = R(\bar A) = r &lt; n$</td><td><strong>infinitely many solutions</strong></td><td>The number of <span class="en-term">free variables</span> is $n - R(A) = n - r$; they may be chosen arbitrarily, so the general solution contains $n-r$ arbitrary constants</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Note how the first row relates to the other two: <strong>the system is consistent if and only if
+             $R(A)=R(\bar A)$</strong>. So the correct order of testing is always — first compare the two ranks
+             (is there a solution at all?), and only then compare that common rank with $n$ (how many
+             solutions are there?).</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 3.3　齐次线性方程组 $Ax=0$ 的解</div>
+        <p>设 $A$ 为 $m\times n$ 矩阵。</p>
+        <p><span class="thm-name">性质 3.1</span>　$Ax=0$ <strong>必有解</strong>，$x=0$ 永远是它的解（称为<span class="term">零解</span>）。因此齐次方程组永远不可能「无解」，只需讨论有没有非零解。</p>
+        <p><span class="thm-name">性质 3.2</span>　$Ax=0$ 只有零解 $\iff R(A) = n$。</p>
+        <p><span class="thm-name">性质 3.3</span>　$Ax=0$ 有非零解 $\iff R(A) &lt; n$；此时它有无穷多解，自由未知量个数为 $n - R(A)$。</p>
+        <p>特别地，当 $m &lt; n$（方程个数少于未知量个数）时，必有 $R(A) \le m &lt; n$，所以<strong>方程个数少于未知量个数的齐次方程组必有非零解</strong>。</p>
+        <p>另外，$A$ 为 $n$ 阶方阵时 $R(A)=n \iff |A|\ne 0$，此时性质 3.3 就退化成 3-1 的推论 3.2，两条线索在这里汇合。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 3.3</span>
+             <strong>Solutions of the Homogeneous System $Ax=0$.</strong>
+             Let $A$ be an $m\times n$ matrix.</p>
+          <p><span class="bi-en-label">PROP 3.1</span>
+             $Ax=0$ <strong>always has a solution</strong>: $x=0$ is one, called the
+             <span class="en-term">zero solution</span>. A homogeneous system can therefore never be
+             inconsistent; the only question is whether a nonzero solution exists.</p>
+          <p><span class="bi-en-label">PROP 3.2</span>
+             $Ax=0$ has only the zero solution $\iff R(A) = n$.</p>
+          <p><span class="bi-en-label">PROP 3.3</span>
+             $Ax=0$ has a nonzero solution $\iff R(A) &lt; n$; in that case it has infinitely many solutions,
+             with $n - R(A)$ <span class="en-term">free variables</span>.</p>
+          <p>In particular, when $m &lt; n$ (fewer equations than unknowns) we always have
+             $R(A) \le m &lt; n$, so <strong>a homogeneous system with fewer equations than unknowns must have
+             a nonzero solution</strong>.</p>
+          <p>Moreover, when $A$ is $n\times n$ we have $R(A)=n \iff |A|\ne 0$, and then Property 3.3 reduces
+             to Corollary 3.2 of &sect;3-1 — the two threads meet here.</p>
+        </div>
+      </div>
+
+      <div class="box app-box">
+        <div class="box-title"><span class="ico">🔧</span>工程联系：静定、超静定与秩</div>
+        <p>桁架、发动机机匣支座这类结构，要由平衡方程解出各杆内力与支座反力。设未知力共 $n$ 个，能写出的<strong>独立</strong>平衡方程构成 $Ax=b$，方程个数为 $m$。此时判定定理逐字对应着力学结论：</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>秩的关系</th><th>力学含义</th></tr></thead>
+            <tbody>
+              <tr><td>$R(A) &lt; R(\bar A)$</td><td>给定载荷无法被平衡，结构是<strong>几何可变机构</strong>（约束不足，会动）</td></tr>
+              <tr><td>$R(A) = R(\bar A) = n$</td><td><strong>静定结构</strong>，反力与内力可由平衡方程唯一确定</td></tr>
+              <tr><td>$R(A) = R(\bar A) &lt; n$</td><td><strong>超静定结构</strong>，有 $n - R(A)$ 个多余约束，单靠平衡方程解不出来，必须补充变形协调条件（力法 / 位移法）</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>所以材料力学里那句「超静定次数 $=$ 未知力个数 $-$ 独立平衡方程个数」，用本章的语言就是 $n - R(A)$——而且用秩来表达更准确，因为它自动排除了「看似写了 $m$ 个方程、其实只有 $R(A)$ 个独立」的陷阱。类似地，管道网络的流量分配、电路网络的节点电压方程，判定的逻辑完全相同。</p>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：求解线性方程组的完整步骤</div>
+        <ol>
+          <li><strong>写增广矩阵。</strong>把 $m$ 个方程按「各未知量系数 ｜ 常数项」的顺序写成 $\bar A=(A\mid b)$，缺项的系数写 $0$（这一步最容易漏项，务必对齐）。</li>
+          <li><strong>化行最简形。</strong>只对 $\bar A$ 作<strong>初等行变换</strong>：先用第 1 行把第 1 列下方清零，再用第 2 行把第 2 列下方清零……自上而下化出阶梯形；然后自下而上，把主元化为 $1$，并把主元所在列的其他元素清零。</li>
+          <li><strong>判秩。</strong>数一数 $A$ 与 $\bar A$ 各有多少个非零行（就是行阶梯形里非零行的行数，即秩）。若 $R(A) &lt; R(\bar A)$，直接写「无解」，结束。若相等，记公共值为 $r$。</li>
+          <li><strong>写同解方程组。</strong>把行最简形中<strong>主元所在的列对应的未知量</strong>留在左边，其余未知量（称为<span class="term">自由未知量</span>）连同常数一起移到右边。自由未知量共有 $n-r$ 个。</li>
+          <li><strong>自由未知量取参数。</strong>给 $n-r$ 个自由未知量各取一个独立的任意常数，通常取 $x_{k_1}=c_1,\ \ldots,\ x_{k_{n-r}}=c_{n-r}$。</li>
+          <li><strong>写通解。</strong>把左边的主元未知量用这些常数表示出来，写成列向量形式。令所有常数为 $0$ 得到的就是<strong>特解</strong>，常数项部分就是齐次方程组的通解。</li>
+          <li><strong>验算。</strong>把特解代回原方程组至少验算一个方程；若是有参数的情形，检查是否漏掉了使某一步除法失效的参数值。</li>
+        </ol>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD</span>
+             <strong>The Complete Procedure for Solving a Linear System.</strong></p>
+          <ol>
+            <li><strong>Write the augmented matrix.</strong> Put the $m$ equations in the order
+                "coefficients of the unknowns $\mid$ constant term" as $\bar A=(A\mid b)$, and write $0$ for
+                every missing unknown (this is where terms get dropped, so keep the columns aligned).</li>
+            <li><strong>Reduce to RREF.</strong> Apply <strong>elementary row operations</strong> only, working
+                on $\bar A$: use row 1 to clear the entries below the first pivot, then row 2 to clear below the
+                second, and so on downwards, to reach row echelon form; then work upwards, make each pivot
+                equal to $1$, and clear the remaining entries of each pivot column.</li>
+            <li><strong>Read off the ranks.</strong> Count the nonzero rows of $A$ and of $\bar A$ (that count is
+                the rank). If $R(A) &lt; R(\bar A)$, write down "no solution" and stop. Otherwise let $r$ be the
+                common value.</li>
+            <li><strong>Write the equivalent system.</strong> Keep the unknowns whose columns contain pivots on
+                the left, and move all the other unknowns (the <span class="en-term">free variables</span>) to
+                the right together with the constants. There are $n-r$ free variables.</li>
+            <li><strong>Give the free variables parameters.</strong> Assign to the $n-r$ free variables
+                independent arbitrary constants, usually $x_{k_1}=c_1,\ \ldots,\ x_{k_{n-r}}=c_{n-r}$.</li>
+            <li><strong>Write the general solution.</strong> Express the pivot unknowns in terms of those
+                constants and write the answer as a column vector. Setting all constants to $0$ gives a
+                <span class="en-term">particular solution</span>; the constant-free part is the general solution
+                of the associated homogeneous system.</li>
+            <li><strong>Check.</strong> Substitute the particular solution back into at least one of the original
+                equations; in a problem with parameters, check that no value that makes some division invalid
+                has been missed.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.4</span> 唯一解的情形
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>解方程组
+          $$\begin{cases} x_1 - x_2 + x_3 = 1 \\ 2x_1 + x_2 - x_3 = 2 \\ x_1 + 2x_2 + x_3 = 4 \end{cases}$$</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：写增广矩阵并化行最简形。</strong></p>
+            <p>$$\bar A=\begin{pmatrix} 1 & -1 & 1 & 1 \\ 2 & 1 & -1 & 2 \\ 1 & 2 & 1 & 4 \end{pmatrix}$$</p>
+            <p>作行变换（$r_2-2r_1$，$r_3-r_1$，目的是把第 1 列下方清零）：</p>
+            <p>$$\xrightarrow{\ r_2-2r_1,\ r_3-r_1\ }\begin{pmatrix} 1 & -1 & 1 & 1 \\ 0 & 3 & -3 & 0 \\ 0 & 3 & 0 & 3 \end{pmatrix}$$</p>
+            <p>再作 $r_3-r_2$，把第 2 列下方清零：</p>
+            <p>$$\xrightarrow{\ r_3-r_2\ }\begin{pmatrix} 1 & -1 & 1 & 1 \\ 0 & 3 & -3 & 0 \\ 0 & 0 & 3 & 3 \end{pmatrix}$$</p>
+            <p>已经是行阶梯形（主元 $1,3,3$，都在阶梯上）。继续把主元化成 $1$（$r_2\times\frac13$，$r_3\times\frac13$）：</p>
+            <p>$$\xrightarrow{\ \frac13 r_2,\ \frac13 r_3\ }\begin{pmatrix} 1 & -1 & 1 & 1 \\ 0 & 1 & -1 & 0 \\ 0 & 0 & 1 & 1 \end{pmatrix}$$</p>
+            <p>再自下而上把主元上方的元素清零：$r_2+r_3$，$r_1-r_3$（消去第 3 列的非主元 $1$）：</p>
+            <p>$$\xrightarrow{\ r_2+r_3,\ r_1-r_3\ }\begin{pmatrix} 1 & -1 & 0 & 0 \\ 0 & 1 & 0 & 1 \\ 0 & 0 & 1 & 1 \end{pmatrix}$$</p>
+            <p>最后 $r_1+r_2$，消去第 2 列的非主元 $-1$：</p>
+            <p>$$\xrightarrow{\ r_1+r_2\ }\begin{pmatrix} 1 & 0 & 0 & 1 \\ 0 & 1 & 0 & 1 \\ 0 & 0 & 1 & 1 \end{pmatrix}$$</p>
+            <p>这就是行最简形。</p>
+            <p><strong>第二步：判秩。</strong>$A$ 与 $\bar A$ 都有 3 个非零行，故 $R(A)=R(\bar A)=3$；未知量个数 $n=3$。因为 $R(A)=R(\bar A)=n=3$，所以方程组有<strong>唯一解</strong>，自由未知量 $3-3=0$ 个。</p>
+            <p><strong>第三步：写解。</strong>行最简形直接给出 $x_1=1,\ x_2=1,\ x_3=1$。</p>
+            <p><strong>第四步：验算。</strong>代入原方程组：$1-1+1=1$ ✓；$2+1-1=2$ ✓；$1+2+1=4$ ✓。</p>
+            <p>所以 $x=(1,1,1)^T$。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.5</span> 无解的情形
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>判断方程组
+          $$\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + 2x_2 + 3x_3 = 2 \\ 2x_1 + 3x_2 + 4x_3 = 4 \end{cases}$$
+          是否有解。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：化行阶梯形。</strong></p>
+            <p>$$\bar A=\begin{pmatrix} 1 & 1 & 1 & 1 \\ 1 & 2 & 3 & 2 \\ 2 & 3 & 4 & 4 \end{pmatrix}\xrightarrow{\ r_2-r_1,\ r_3-2r_1\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 1 \\ 0 & 1 & 2 & 2 \end{pmatrix}\xrightarrow{\ r_3-r_2\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 1 \\ 0 & 0 & 0 & 1 \end{pmatrix}$$</p>
+            <p><strong>第二步：判秩。</strong></p>
+            <p>系数矩阵部分 $\begin{pmatrix}1&1&1\\0&1&2\\0&0&0\end{pmatrix}$ 有 2 个非零行，故 $R(A)=2$。</p>
+            <p>增广矩阵有 3 个非零行（最后一行 $[0\ 0\ 0\ 1]$ 是非零行），故 $R(\bar A)=3$。</p>
+            <p><strong>第三步：下结论。</strong>因为 $R(A)=2 &lt; R(\bar A)=3$，由判定定理，方程组<strong>无解</strong>。</p>
+            <p><strong>第四步：理解原因。</strong>最后一行 $[0\ 0\ 0 \mid 1]$ 对应的方程是 $0\cdot x_1 + 0\cdot x_2 + 0\cdot x_3 = 1$，即 $0=1$，这是矛盾方程，所以无解。</p>
+            <p>其实原方程组中第 3 个方程的系数行恰好等于前两个方程系数行之和（$[1,1,1]+[1,2,3]=[2,3,4]$），但常数项 $1+2=3 \ne 4$，这个「差 1」就是矛盾所在。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.6</span> 无穷多解的情形与通解
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>求解方程组
+          $$\begin{cases} x_1 + x_2 + x_3 = 3 \\ x_1 + 2x_2 + 3x_3 = 4 \\ 2x_1 + 3x_2 + 4x_3 = 7 \end{cases}$$</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：化行最简形。</strong></p>
+            <p>$$\bar A=\begin{pmatrix} 1 & 1 & 1 & 3 \\ 1 & 2 & 3 & 4 \\ 2 & 3 & 4 & 7 \end{pmatrix}\xrightarrow{\ r_2-r_1,\ r_3-2r_1\ }\begin{pmatrix} 1 & 1 & 1 & 3 \\ 0 & 1 & 2 & 1 \\ 0 & 1 & 2 & 1 \end{pmatrix}\xrightarrow{\ r_3-r_2\ }\begin{pmatrix} 1 & 1 & 1 & 3 \\ 0 & 1 & 2 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
+            <p>再作 $r_1-r_2$，把第 2 列的主元上方清零：</p>
+            <p>$$\xrightarrow{\ r_1-r_2\ }\begin{pmatrix} 1 & 0 & -1 & 2 \\ 0 & 1 & 2 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
+            <p>这是行最简形（主元 $1,1$，所在列其余元素均为 $0$）。</p>
+            <p><strong>第二步：判秩。</strong>$R(A)=R(\bar A)=2$（两个非零行），未知量个数 $n=3$。因为 $R(A)=R(\bar A)=2 &lt; 3=n$，所以方程组有<strong>无穷多解</strong>，自由未知量的个数为 $n-R(A)=3-2=1$。</p>
+            <p><strong>第三步：写同解方程组。</strong>主元在第 1、2 列，所以 $x_1,x_2$ 是主元未知量，$x_3$ 是自由未知量：</p>
+            <p>$$\begin{cases} x_1 - x_3 = 2 \\ x_2 + 2x_3 = 1 \end{cases} \quad\Longrightarrow\quad \begin{cases} x_1 = 2 + x_3 \\ x_2 = 1 - 2x_3 \end{cases}$$</p>
+            <p><strong>第四步：取参数并写通解。</strong>令 $x_3 = c$（$c$ 为任意常数），则</p>
+            <p>$$\begin{pmatrix} x_1 \\ x_2 \\ x_3 \end{pmatrix} = \begin{pmatrix} 2 \\ 1 \\ 0 \end{pmatrix} + c\begin{pmatrix} 1 \\ -2 \\ 1 \end{pmatrix}, \qquad c \in \mathbb{R}$$</p>
+            <p><strong>第五步：验算。</strong>取 $c=0$，得 $(2,1,0)$：$2+1+0=3$ ✓，$2+2+0=4$ ✓，$4+3+0=7$ ✓。取 $c=1$，得 $(3,-1,1)$：$3-1+1=3$ ✓，$3-2+3=4$ ✓，$6-3+4=7$ ✓。两组解都对，通解形式正确。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.7</span> 求齐次方程组的通解
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>求齐次线性方程组
+          $$\begin{cases} x_1 + x_2 + x_3 + x_4 = 0 \\ x_1 + 2x_2 + 3x_3 + 4x_4 = 0 \\ 2x_1 + 3x_2 + 4x_3 + 5x_4 = 0 \end{cases}$$
+          的通解。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：写系数矩阵并化行最简形。</strong>齐次方程组的增广矩阵最后一列全是 $0$，行变换后仍然是 $0$，所以只需对系数矩阵 $A$ 作变换。</p>
+            <p>$$A=\begin{pmatrix} 1 & 1 & 1 & 1 \\ 1 & 2 & 3 & 4 \\ 2 & 3 & 4 & 5 \end{pmatrix}\xrightarrow{\ r_2-r_1,\ r_3-2r_1\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 3 \\ 0 & 1 & 2 & 3 \end{pmatrix}\xrightarrow{\ r_3-r_2\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 3 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
+            <p>再作 $r_1-r_2$：</p>
+            <p>$$\xrightarrow{\ r_1-r_2\ }\begin{pmatrix} 1 & 0 & -1 & -2 \\ 0 & 1 & 2 & 3 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
+            <p>这是行最简形，主元在第 1、2 列。</p>
+            <p><strong>第二步：判秩。</strong>$R(A)=2$，未知量个数 $n=4$。因为 $R(A)=2 &lt; 4 = n$，齐次方程组有<strong>非零解</strong>（事实上是无穷多解），自由未知量个数为 $n-R(A)=4-2=2$。</p>
+            <p><strong>第三步：写同解方程组。</strong>主元未知量为 $x_1,x_2$，自由未知量为 $x_3,x_4$：</p>
+            <p>$$\begin{cases} x_1 - x_3 - 2x_4 = 0 \\ x_2 + 2x_3 + 3x_4 = 0 \end{cases}\quad\Longrightarrow\quad \begin{cases} x_1 = x_3 + 2x_4 \\ x_2 = -2x_3 - 3x_4 \end{cases}$$</p>
+            <p><strong>第四步：取参数写通解。</strong>令 $x_3=c_1,\ x_4=c_2$（$c_1,c_2$ 为任意常数），则</p>
+            <p>$$\begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ x_4 \end{pmatrix} = c_1\begin{pmatrix} 1 \\ -2 \\ 1 \\ 0 \end{pmatrix} + c_2\begin{pmatrix} 2 \\ -3 \\ 0 \\ 1 \end{pmatrix},\qquad c_1,c_2\in\mathbb{R}$$</p>
+            <p><strong>第五步：验算。</strong>取 $c_1=1,c_2=0$，得 $(1,-2,1,0)$：$1-2+1+0=0$ ✓，$1-4+3+0=0$ ✓，$2-6+4+0=0$ ✓。取 $c_1=0,c_2=1$，得 $(2,-3,0,1)$：$2-3+0+1=0$ ✓，$2-6+0+4=0$ ✓，$4-9+0+5=0$ ✓。两个解向量都对，通解形式正确。</p>
+            <p><strong>说明：</strong>因为齐次方程组一定有零解，所以通解中不需要单独写特解（特解就是零向量），只需写出常数部分。像本例这样，让 $n-R(A)$ 个自由未知量依次取一组特殊值（如 $(c_1,c_2)=(1,0)$ 与 $(0,1)$）得到的这 $n-R(A)$ 个解，本书称为该方程组的一组<strong>基础解</strong>——通解就是这组解的任意常数倍之和。这套解的正式命名与一般理论见 §4-3。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.8</span> 含参数 $\lambda$ 的方程组讨论（考研高频题型）
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>讨论 $\lambda$ 取何值时，线性方程组
+          $$\begin{cases} \lambda x_1 + x_2 + x_3 = 1 \\ x_1 + \lambda x_2 + x_3 = \lambda \\ x_1 + x_2 + \lambda x_3 = \lambda^2 \end{cases}$$
+          无解、有唯一解、有无穷多解？有解时求出全部解。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>思路：</strong>系数矩阵中含参数，不能先入为主地用克拉默法则（因为 $D$ 可能为零）。标准做法是<strong>对增广矩阵作初等行变换</strong>，但在消元过程中若需要除以含 $\lambda$ 的式子，必须先讨论该式是否为零。这里先把第 1 行换到最上面，避免一开始就除以 $\lambda$。</p>
+            <p><strong>第一步：交换第 1、3 行，把含 $\lambda$ 最少的行提到第一行。</strong></p>
+            <p>$$\bar A=\begin{pmatrix} \lambda & 1 & 1 & 1 \\ 1 & \lambda & 1 & \lambda \\ 1 & 1 & \lambda & \lambda^2 \end{pmatrix}\xrightarrow{\ r_1\leftrightarrow r_3\ }\begin{pmatrix} 1 & 1 & \lambda & \lambda^2 \\ 1 & \lambda & 1 & \lambda \\ \lambda & 1 & 1 & 1 \end{pmatrix}$$</p>
+            <p><strong>第二步：消去第 1 列下方。</strong>作 $r_2-r_1$ 与 $r_3-\lambda r_1$：</p>
+            <p>$$r_2-r_1 = \big(0,\ \lambda-1,\ 1-\lambda \mid \lambda-\lambda^2\big) = (\lambda-1)\big(0,\ 1,\ -1 \mid -\lambda\big)$$</p>
+            <p>$$r_3-\lambda r_1 = \big(0,\ 1-\lambda,\ 1-\lambda^2 \mid 1-\lambda^3\big) = (1-\lambda)\big(0,\ 1,\ 1+\lambda \mid 1+\lambda+\lambda^2\big)$$</p>
+            <p>（这里用了 $1-\lambda^2=(1-\lambda)(1+\lambda)$，$1-\lambda^3=(1-\lambda)(1+\lambda+\lambda^2)$。）</p>
+            <p><strong>第三步：分情况讨论。</strong></p>
+            <p><strong>情形 1：$\lambda \ne 1$。</strong>此时 $\lambda-1\ne 0$，$1-\lambda \ne 0$，可以把第 2 行除以 $\lambda-1$、第 3 行除以 $1-\lambda$（这是<strong>非零常数</strong>乘某一行，属于初等行变换，不改变解集）：</p>
+            <p>$$\longrightarrow\begin{pmatrix} 1 & 1 & \lambda & \lambda^2 \\ 0 & 1 & -1 & -\lambda \\ 0 & 1 & 1+\lambda & 1+\lambda+\lambda^2 \end{pmatrix}\xrightarrow{\ r_3-r_2\ }\begin{pmatrix} 1 & 1 & \lambda & \lambda^2 \\ 0 & 1 & -1 & -\lambda \\ 0 & 0 & \lambda+2 & (\lambda+1)^2 \end{pmatrix}$$</p>
+            <p>（最后一行：$(1+\lambda)-(-1)=\lambda+2$；$(1+\lambda+\lambda^2)-(-\lambda)=1+2\lambda+\lambda^2=(\lambda+1)^2$。）</p>
+            <p><strong>情形 1a：$\lambda \ne 1$ 且 $\lambda \ne -2$。</strong>此时 $\lambda+2\ne 0$，三个主元都非零，$R(A)=R(\bar A)=3=n$，方程组有<strong>唯一解</strong>。继续回代：</p>
+            <p>由第 3 行：$(\lambda+2)x_3 = (\lambda+1)^2 \Rightarrow x_3 = \dfrac{(\lambda+1)^2}{\lambda+2}$。</p>
+            <p>由第 2 行：$x_2 - x_3 = -\lambda \Rightarrow x_2 = x_3 - \lambda = \dfrac{(\lambda+1)^2 - \lambda(\lambda+2)}{\lambda+2} = \dfrac{\lambda^2+2\lambda+1-\lambda^2-2\lambda}{\lambda+2} = \dfrac{1}{\lambda+2}$。</p>
+            <p>由第 1 行：$x_1 + x_2 + \lambda x_3 = \lambda^2 \Rightarrow x_1 = \lambda^2 - x_2 - \lambda x_3 = \dfrac{\lambda^2(\lambda+2) - 1 - \lambda(\lambda+1)^2}{\lambda+2}$。</p>
+            <p>分子 $=\lambda^3+2\lambda^2-1-\lambda(\lambda^2+2\lambda+1) = \lambda^3+2\lambda^2-1-\lambda^3-2\lambda^2-\lambda = -(\lambda+1)$。</p>
+            <p>所以 $x_1 = -\dfrac{\lambda+1}{\lambda+2}$。唯一解为</p>
+            <p>$$x_1 = -\frac{\lambda+1}{\lambda+2},\qquad x_2 = \frac{1}{\lambda+2},\qquad x_3 = \frac{(\lambda+1)^2}{\lambda+2}$$</p>
+            <p><strong>情形 1b：$\lambda = -2$。</strong>此时 $\lambda \ne 1$ 仍成立，上面的行阶梯形可代入：第 3 行变为 $[0\ 0\ 0 \mid (-2+1)^2]=[0\ 0\ 0\mid 1]$。于是 $R(A)=2$，$R(\bar A)=3$，$R(A) &lt; R(\bar A)$，方程组<strong>无解</strong>。</p>
+            <p><strong>情形 2：$\lambda = 1$。</strong>此时不能除以 $\lambda-1$，回到原增广矩阵直接代入：三个方程都变成 $x_1+x_2+x_3=1$，即</p>
+            <p>$$\bar A \to \begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
+            <p>$R(A)=R(\bar A)=1 &lt; 3=n$，方程组有<strong>无穷多解</strong>，自由未知量 $3-1=2$ 个。取 $x_2=c_1,\ x_3=c_2$，则 $x_1 = 1-c_1-c_2$，通解为</p>
+            <p>$$\begin{pmatrix} x_1 \\ x_2 \\ x_3 \end{pmatrix} = \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix} + c_1\begin{pmatrix} -1 \\ 1 \\ 0 \end{pmatrix} + c_2\begin{pmatrix} -1 \\ 0 \\ 1 \end{pmatrix},\qquad c_1,c_2\in\mathbb{R}$$</p>
+            <p><strong>第四步：验算（关键！）。</strong>取 $\lambda = 0$（属于情形 1a）：公式给出 $x_1 = -1/2,\ x_2 = 1/2,\ x_3 = 1/2$。代入原方程组：第 1 式 $0\cdot(-1/2)+1/2+1/2 = 1$ ✓；第 2 式 $-1/2+0\cdot 1/2+1/2 = 0 = \lambda$ ✓；第 3 式 $-1/2+1/2+0\cdot 1/2 = 0 = \lambda^2$ ✓。</p>
+            <p>取 $\lambda = 2$（情形 1a）：公式给出 $x_1=-3/4,\ x_2=1/4,\ x_3=9/4$。代入：第 1 式 $2(-3/4)+1/4+9/4 = -1.5+2.5=1$ ✓；第 2 式 $-3/4+2(1/4)+9/4 = -0.75+0.5+2.25=2=\lambda$ ✓；第 3 式 $-3/4+1/4+2(9/4) = -0.75+4.75=4=\lambda^2$ ✓。</p>
+            <p>取 $\lambda = 1$：通解中令 $c_1=c_2=0$ 得 $(1,0,0)$，代入 $x_1+x_2+x_3=1$ ✓。</p>
+            <p><strong>结论：</strong>$\lambda \ne 1$ 且 $\lambda \ne -2$ 时唯一解；$\lambda = -2$ 时无解；$\lambda = 1$ 时有无穷多解（含 2 个任意常数）。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.9</span> 由解反求通解（解的结构反求，考研数一常考）
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $A$ 为 $4\times 4$ 矩阵，$R(A)=2$，$b$ 为 4 维非零列向量。已知 $\eta_1=(1,0,0,0)^T$、$\eta_2=(0,1,0,0)^T$、$\eta_3=(0,0,1,0)^T$ 都是非齐次方程组 $Ax=b$ 的解。求 $Ax=b$ 的通解。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：确定自由未知量个数。</strong>$n=4$（未知量个数 $=$ 列数），$R(A)=2$。由于 $\eta_1$ 是解，方程组有解，故 $R(\bar A)=R(A)=2 &lt; n$，方程组有<strong>无穷多解</strong>，自由未知量个数为</p>
+            <p>$$n - R(A) = 4 - 2 = 2$$</p>
+            <p>也就是说，通解中应当恰好含 <strong>2 个</strong>独立任意常数，我们需要找出 $Ax=0$ 的 2 个非零解 $\xi_1,\xi_2$，使 $Ax=0$ 的每个解都能写成 $c_1\xi_1+c_2\xi_2$ 的形式——也就是这 2 个解互不成比例，各自贡献一个独立方向。</p>
+            <p><strong>第二步：由非齐次解构造齐次解。</strong>利用「$A\eta_i=b$ 对每个 $i$ 都成立」这一条件：</p>
+            <p>$$A(\eta_i - \eta_j) = A\eta_i - A\eta_j = b - b = 0$$</p>
+            <p>所以任意两个非齐次解的<strong>差</strong>都是齐次方程组 $Ax=0$ 的解。取</p>
+            <p>$$\xi_1 = \eta_1 - \eta_2 = (1,-1,0,0)^T,\qquad \xi_2 = \eta_1 - \eta_3 = (1,0,-1,0)^T$$</p>
+            <p>则 $\xi_1,\xi_2$ 都满足 $A\xi_1=0,\ A\xi_2=0$。</p>
+            <p><strong>第三步：验证 $\xi_1,\xi_2$ 各自贡献一个独立方向。</strong>设 $k_1\xi_1 + k_2\xi_2 = 0$，即</p>
+            <p>$$k_1(1,-1,0,0)^T + k_2(1,0,-1,0)^T = (k_1+k_2,\ -k_1,\ -k_2,\ 0)^T = (0,0,0,0)^T$$</p>
+            <p>由第 2 个分量 $-k_1=0$ 得 $k_1=0$；由第 3 个分量 $-k_2=0$ 得 $k_2=0$。这说明 $k_1\xi_1+k_2\xi_2=0$ 只有 $k_1=k_2=0$ 这一种可能，$\xi_1,\xi_2$ 互不成比例，通解中的两个任意常数都是必需的。</p>
+            <p><strong>第四步：写出通解。</strong>$Ax=0$ 的自由未知量个数是 $4-R(A)=2$，而 $\xi_1,\xi_2$ 是它两个互不成比例的非零解，恰好充当通解中的 2 个独立方向（即 $Ax=0$ 的一组基础解）。于是 $Ax=b$ 的通解为</p>
+            <p>$$x = \eta_1 + c_1\xi_1 + c_2\xi_2 = \begin{pmatrix}1\\0\\0\\0\end{pmatrix} + c_1\begin{pmatrix}1\\-1\\0\\0\end{pmatrix} + c_2\begin{pmatrix}1\\0\\-1\\0\end{pmatrix},\qquad c_1,c_2\in\mathbb{R}$$</p>
+            <p><strong>第五步：验算（一定要回到原条件核对）。</strong></p>
+            <p>取 $c_1=-1,\ c_2=0$：$x = (1,0,0,0)^T - (1,-1,0,0)^T = (0,1,0,0)^T = \eta_2$ ✓ ——通解确实能表示出题目给出的另一个解。</p>
+            <p>取 $c_1=0,\ c_2=-1$：$x = (1,0,0,0)^T - (1,0,-1,0)^T = (0,0,1,0)^T = \eta_3$ ✓。</p>
+            <p>再检查齐次部分确实「归零」：由于 $A\xi_1 = A(\eta_1-\eta_2) = b-b=0$ 与 $A\xi_2=A(\eta_1-\eta_3)=0$ 是由矩阵乘法的线性性直接得到的，无论 $A$ 的具体元素是什么都成立。所以只要 $A,b$ 存在（题目已给出三个解，存在性成立），这个通解就是正确的。</p>
+            <p><strong>本题的命题逻辑（考研为什么爱考它）：</strong>题目<strong>没有给出 $A$ 的元素</strong>，却要你写出通解。这类「解的结构反求」题的唯一出路是：① 用 $n-R(A)$ 定出解的个数；② 用 $A(\eta_i-\eta_j)=0$ 造齐次解；③ 用 $\eta_i$ 之一作特解。三个条件缺一不可，而 $R(A)$ 的数值正是「要造几个齐次解」的指令——这就是 3-2 节判定定理（定理 3.2）反过来用的地方。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点</div>
+        <ul>
+          <li><strong>对增广矩阵作了列变换。</strong>解方程组时只能作<strong>初等行变换</strong>。列变换会把未知量之间的位置关系打乱（第 1 列和第 2 列一换，$x_1$ 与 $x_2$ 的角色就互换了），得到的不再是同解方程组。</li>
+          <li><strong>判无解时只看 $R(A)$。</strong>「$R(A) &lt; m$（非零行数少于方程个数）就无解」是错的——那只说明有冗余方程。必须比较 $R(A)$ 与 $R(\bar A)$，只有 $R(A) &lt; R(\bar A)$ 才是无解。</li>
+          <li><strong>自由未知量个数记错。</strong>是 $n - R(A)$（未知量个数减去系数矩阵的秩），不是 $n - R(\bar A)$，也不是 $n - m$。有解时 $R(A)=R(\bar A)$，两者才恰好相同。</li>
+          <li><strong>自由未知量取少了。</strong>必须取满 $n-R(A)$ 个互相独立的参数，否则会漏掉一部分解。上面例 3.7 中 $x_3,x_4$ 必须同时取参数。</li>
+          <li><strong>只化到行阶梯形就写解。</strong>行阶梯形还需要回代才能得到解，容易出错；化到行最简形可以直接读出主元未知量的表达式，推荐一步到位。</li>
+          <li><strong>含参数时随意除以含参数的式子。</strong>除以 $\lambda-1$ 之前必须先说明「当 $\lambda \ne 1$ 时」，再把 $\lambda=1$ 单独拿出来讨论。漏掉这一步会丢解（如例 3.8 中 $\lambda=1$ 的无穷多解）。</li>
+          <li><strong>把齐次方程组的结论搬到非齐次上。</strong>「$R(A) &lt; n$ 就有解」只对<strong>齐次</strong>方程组成立；非齐次方程组还必须满足 $R(A)=R(\bar A)$。</li>
+        </ul>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <ul>
+          <li><span class="tag">高频</span><span class="tag">大题</span><strong>含参数方程组讨论解的情况</strong>（如例 3.8）。这是考研数学一/二/三与期末考的必考题型，几乎年年出现。固定套路：写 $\bar A$ → 初等行变换 → 在必须除以含参式子处停下来分情况 → 对每个临界值单独回代判秩 → 分别回答无解/唯一解/无穷多解 → 有解时写出通解。</li>
+          <li><span class="tag">高频</span><span class="tag">小题</span>给定 $R(A)$ 与 $R(\bar A)$，直接问解的个数或自由未知量个数。看到「$R(A)=R(\bar A)=r$」立刻写下「自由未知量 $n-r$ 个」。</li>
+          <li><span class="tag">高频</span><span class="tag">大题</span>求解具体数值方程组并写出通解。评分点是：行最简形是否正确、自由未知量是否取全、通解是否写成「特解 $+$ 齐次通解」的向量形式。</li>
+          <li><span class="tag">小题</span>「若 $Ax=b$ 有解，则 $R(A)=R(\bar A)$」这类命题真假判断。「有解」与「秩相等」是等价的，两个方向都成立，不要只记一个方向。</li>
+          <li><span class="tag">易错</span>$\lambda$ 的临界值往往不止一个（本例中 $\lambda=1$ 与 $\lambda=-2$ 来自不同的消元步骤），必须把消元过程中<strong>每一个</strong>被除掉的含参式子都令其为零，逐一检验，不能只查系数行列式 $D=0$ 的那几个根。</li>
+          <li><span class="tag">易错</span>题目给出「方程组有无穷多解，求参数」时，条件是 $R(A)=R(\bar A) &lt; n$ 而不是 $R(A)=R(\bar A)$。只写「秩相等」会漏掉「必须小于 $n$」这个关键限制。</li>
+          <li><span class="tag">大题</span>齐次方程组求通解，并回答「$k$ 为何值时只有零解」。后者等价于 $R(A)=n$，是同一件事的两种问法。</li>
+        </ul>
+      </div>
+
+      <div class="box app-box">
+        <div class="box-title"><span class="ico">🔧</span>工程联系：发动机管路网络的流量方程组</div>
+        <p>发动机燃油与滑油管路网络的流量分配，可以写成一个线性方程组：对每个节点写流量守恒（流入 $=$ 流出），对每个独立回路写压力平衡（沿回路压降之和为零），未知量是各支路的流量。整理后得到 $Ax=b$，判定定理逐条对应着工程结论：</p>
+        <ul>
+          <li>$R(A) &lt; R(\bar A)$：给定的总流量与管径／阻力模型自相矛盾，<strong>流量分配方案不存在</strong>——实际含义是网络模型建错了（漏写了某个节点方程，或写出了多余（可由其余方程推出）的方程）。</li>
+          <li>$R(A)=R(\bar A)=n$：各支路流量被<strong>唯一确定</strong>，网络是「适定」的，这是进行热-流耦合计算的前提。</li>
+          <li>$R(A)=R(\bar A) &lt; n$：存在 $n-R(A)$ 个<strong>环流自由度</strong>（并联支路之间可以互相「绕流」），需要补充额外约束（例如某支路阀门开度给定、或两路流量按比例分配）才能定下唯一工况。</li>
+        </ul>
+        <p>消元法的另一个好处在这里也体现出来：如果不小心把某个节点方程写了两遍，它会在行变换中自动变成零行，$R(A)$ 会诚实地告诉你「实际只有几条独立方程」——这比人工检查方程是否重复可靠得多。</p>
+      </div>
+
+      <div class="box model-box">
+        <div class="box-title"><span class="ico">🧩</span>典型模型题</div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 1</span>含参数非齐次方程组的分类讨论（行变换路径）<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              方程组里带参数（常数项里可能还带一个独立参数），而且<strong>不一定是方阵</strong>，问「参数取何值时无解 / 有唯一解 / 有无穷多解」。这是考研数学一、二、三的必考大题。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 写增广矩阵 $\bar A$；② 作初等行变换化阶梯形，<strong>在必须除以含参式子的地方停下来</strong>；③ 先比较 $R(A)$ 与 $R(\bar A)$（有没有解），再与 $n$ 比（有几个解）；④ 每个临界值单独回代，分别回答无解 / 唯一解 / 无穷多解；⑤ 有解时写出通解。临界值可能来自<strong>不止一处</strong>除法，要全部找到。</div>
+            <p><strong>例</strong>　讨论 $a,b$ 取何值时，线性方程组
+               $$\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + 2x_2 + 3x_3 = 2 \\ x_1 + 3x_2 + a x_3 = b \end{cases}$$
+               无解、有唯一解、有无穷多解？有无穷多解时求通解。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：写增广矩阵并作行变换。</strong></p>
+              <p>$$\bar A=\begin{pmatrix} 1 & 1 & 1 & 1 \\ 1 & 2 & 3 & 2 \\ 1 & 3 & a & b \end{pmatrix}\xrightarrow{\ r_2-r_1,\ r_3-r_1\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 1 \\ 0 & 2 & a-1 & b-1 \end{pmatrix}\xrightarrow{\ r_3-2r_2\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 1 \\ 0 & 0 & a-5 & b-3 \end{pmatrix}$$</p>
+              <p>这里用的都是「某行的倍数加到另一行」，<strong>没有除以含参数的式子</strong>，所以中途不必讨论。</p>
+              <p><strong>第二步：看第三个主元 $a-5$ 是否为零。</strong></p>
+              <ul>
+                <li><strong>$a\ne 5$：</strong>三个主元 $1,1,a-5$ 都非零，$R(A)=R(\bar A)=3=n$，方程组有<strong>唯一解</strong>（$b$ 取任何值结论都一样，因为此时系数行列式 $D=a-5\ne 0$）。</li>
+                <li><strong>$a=5$：</strong>第三行变成 $(0,\ 0,\ 0 \mid b-3)$，是否矛盾取决于 $b$。</li>
+              </ul>
+              <p><strong>第三步：讨论 $a=5$ 时的 $b$。</strong></p>
+              <ul>
+                <li><strong>$a=5$ 且 $b\ne 3$：</strong>第三行是 $[0\ 0\ 0 \mid b-3]$ 而 $b-3\ne 0$，即矛盾方程 $0=b-3$。于是 $R(A)=2 &lt; R(\bar A)=3$，方程组<strong>无解</strong>。</li>
+                <li><strong>$a=5$ 且 $b=3$：</strong>第三行全为零，$R(A)=R(\bar A)=2 &lt; 3=n$，方程组有<strong>无穷多解</strong>，自由未知量 $3-2=1$ 个。</li>
+              </ul>
+              <p><strong>第四步：求 $a=5,b=3$ 时的通解。</strong>此时同解方程组为</p>
+              <p>$$\begin{cases} x_1+x_2+x_3=1 \\ x_2+2x_3=1 \end{cases}\quad\Longrightarrow\quad \begin{cases} x_1=x_3 \\ x_2=1-2x_3 \end{cases}$$</p>
+              <p>令 $x_3=c$，得通解</p>
+              <p>$$x=(0,1,0)^T+c(1,-2,1)^T,\qquad c\in\mathbb{R}$$</p>
+              <p><strong>第五步：验算。</strong>取 $c=0$ 得 $(0,1,0)^T$，代入 $a=5,b=3$ 的原方程组：$0+1+0=1$ ✓，$0+2+0=2$ ✓，$0+3+5\cdot0=3=b$ ✓。取 $c=1$ 得 $(1,-1,1)^T$：$1-1+1=1$ ✓，$1-2+3=2$ ✓，$1-3+5=3=b$ ✓。</p>
+              <p><strong>答案：</strong>$a\ne 5$ 时方程组有唯一解；$a=5$ 且 $b\ne 3$ 时无解；$a=5$ 且 $b=3$ 时有无穷多解，通解为 $x=(0,1,0)^T+c(1,-2,1)^T$（$c\in\mathbb{R}$）。</p>
+              <p class="solution-label">易错提醒</p>
+              <p>最容易丢分的是<strong>把 $b$ 当成可以任取的常数</strong>：$a=5$ 只保证 $R(A)=2$，要让方程组有解还必须 $b=3$；$b\ne 3$ 时是无解而不是无穷多解。另外，判断顺序永远是先比 $R(A)$ 与 $R(\bar A)$（有解吗），再比公共秩与 $n$（几个解）——只写「秩相等」会漏掉「唯一解」与「无穷多解」的区别。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 2</span>不满秩时求通解（解的结构反求）<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              题目<strong>不给矩阵 $A$ 的元素</strong>，只给 $R(A)$ 的数值和几个具体的解向量，要求写出 $Ax=b$ 的通解；或者直接问通解中含几个独立任意常数。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 用 $n-R(A)$ 定出<strong>自由未知量的个数</strong>，也就是通解中独立任意常数的个数——这是「要造几个齐次解」的指令；② 用「非齐次解之差是齐次解」即 $A(\eta_i-\eta_j)=b-b=0$ 造齐次解；③ 核对造出来的齐次解恰好有 $n-R(A)$ 个，且<strong>互不成比例、缺一不可</strong>（即每一个都贡献一个新的独立方向；否则独立常数的个数会虚增，通解就写多了）；④ 取一个非齐次解作特解，写成「特解 $+$ 齐次通解」；⑤ 用题目给出的其余解回代核对。</div>
+            <p><strong>例</strong>　设 $A$ 为 3 阶矩阵，$R(A)=1$，已知 $\eta_1=(1,2,3)^T$、$\eta_2=(2,2,3)^T$、$\eta_3=(1,3,4)^T$ 都是非齐次线性方程组 $Ax=b$ 的解。求 $Ax=b$ 的通解。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：定自由未知量个数。</strong>$n=3$（未知量个数），$R(A)=1$。「$\eta_1$ 是解」说明方程组有解，故 $R(\bar A)=R(A)=1 &lt; 3=n$，方程组有无穷多解，自由未知量个数为</p>
+              <p>$$n-R(A)=3-1=2$$</p>
+              <p>也就是说，通解中恰含 <strong>2 个</strong>独立任意常数，需要造 $Ax=0$ 的 2 个互不成比例（各自贡献一个独立方向）的齐次解。</p>
+              <p><strong>第二步：由非齐次解造齐次解。</strong>对任意 $i,j$，</p>
+              <p>$$A(\eta_i-\eta_j)=A\eta_i-A\eta_j=b-b=0$$</p>
+              <p>所以非齐次解的<strong>差</strong>一定是 $Ax=0$ 的解。取</p>
+              <p>$$\xi_1=\eta_2-\eta_1=(1,0,0)^T,\qquad \xi_2=\eta_3-\eta_1=(0,1,1)^T$$</p>
+              <p><strong>第三步：验证 $\xi_1,\xi_2$ 各自贡献一个独立方向。</strong>设 $k_1\xi_1+k_2\xi_2=(k_1,\ k_2,\ k_2)^T=(0,0,0)^T$。由第 1 个分量得 $k_1=0$，由第 2 个分量得 $k_2=0$，故 $\xi_1,\xi_2$ 互不成比例，通解中的两个任意常数缺一不可。</p>
+              <p><strong>第四步：写出通解。</strong>$Ax=0$ 的自由未知量个数是 $3-R(A)=2$，而 $\xi_1,\xi_2$ 是它两个互不成比例的非零解，恰好是 $Ax=0$ 的一组基础解。于是</p>
+              <p>$$x=\eta_1+c_1\xi_1+c_2\xi_2=\begin{pmatrix}1\\2\\3\end{pmatrix}+c_1\begin{pmatrix}1\\0\\0\end{pmatrix}+c_2\begin{pmatrix}0\\1\\1\end{pmatrix},\qquad c_1,c_2\in\mathbb{R}$$</p>
+              <p><strong>第五步：核对题目给出的另外两个解。</strong>取 $c_1=1,c_2=0$ 得 $(2,2,3)^T=\eta_2$ ✓；取 $c_1=0,c_2=1$ 得 $(1,3,4)^T=\eta_3$ ✓。两个已知解都被通解包含，答案正确。</p>
+              <p class="solution-label">易错提醒</p>
+              <p>三处最容易错。<strong>一是把 $\eta_i$ 本身当成齐次解</strong>——$\eta_1$ 代入 $A$ 得到的是 $b\ne 0$，只有它们的<strong>差</strong>才满足 $A\xi=0$。<strong>二是只造出 1 个齐次解就收笔</strong>——$n-R(A)$ 是几就必须造几个，本题是 2 个。<strong>三是忘了写特解</strong>，只写 $c_1\xi_1+c_2\xi_2$，那是 $Ax=0$ 的通解而不是 $Ax=b$ 的。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 3</span>同解方程组<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              题目出现「方程组 (Ⅰ) 与 (Ⅱ) <strong>同解</strong>」「两个方程组的解完全相同」等字样，或要求确定参数使两组方程组的解集一致。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 解集相同意味着<strong>互相包含</strong>：把 (Ⅰ) 的通解代进 (Ⅱ)（或反过来），得到关于参数的方程；② 但这一步只保证「一边包含另一边」，还必须补上<strong>维数（秩）的核对</strong>——同解的齐次方程组自由未知量个数必须相同，即 $n-R(A_{\mathrm{I}})=n-R(A_{\mathrm{II}})$；③ 解出参数后回代，确认两边的行最简形给出同一个同解方程组（或秩相同且解互相包含）。</div>
+            <p><strong>例</strong>　已知齐次线性方程组
+               (Ⅰ) $\begin{cases} x_1 + x_2 + x_3 = 0 \\ 2x_1 + 3x_2 + x_3 = 0 \end{cases}$ 与
+               (Ⅱ) $\begin{cases} x_1 + 2x_2 + a x_3 = 0 \\ x_1 + x_2 + b x_3 = 0 \end{cases}$
+               同解，求 $a,b$ 的值。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：解出 (Ⅰ) 的通解。</strong>对 (Ⅰ) 的系数矩阵作行变换 $r_2-2r_1$，得 $(0,1,-1)$，即</p>
+              <p>$$\begin{cases} x_1+x_2+x_3=0 \\ x_2-x_3=0 \end{cases}\quad\Longrightarrow\quad x_2=x_3,\quad x_1=-x_2-x_3=-2x_3$$</p>
+              <p>令 $x_3=c$，得 (Ⅰ) 的通解 $x=c(-2,1,1)^T$（$c\in\mathbb{R}$），自由未知量个数为 $n-R(A_{\mathrm{I}})=3-2=1$。</p>
+              <p><strong>第二步：把 (Ⅰ) 的解代进 (Ⅱ)。</strong>同解意味着 (Ⅰ) 的每个解都必须是 (Ⅱ) 的解，取 $c=1$ 的解 $(-2,1,1)^T$ 代入 (Ⅱ)：</p>
+              <p>第一个方程：$-2+2\cdot1+a\cdot1=0$，得 $a=0$；</p>
+              <p>第二个方程：$-2+1+b\cdot1=0$，得 $b=1$。</p>
+              <p><strong>第三步：核对维数（关键的一步）。</strong>把 $a=0,b=1$ 代回 (Ⅱ)，得 $\begin{cases} x_1+2x_2=0 \\ x_1+x_2+x_3=0 \end{cases}$，其系数矩阵的两行 $(1,2,0)$ 与 $(1,1,1)$ 不成比例，故 $R(A_{\mathrm{II}})=2$，自由未知量个数 $3-2=1$，与 (Ⅰ) 相同。</p>
+              <p><strong>第四步：确认解集一致。</strong>两边自由未知量个数都是 $1$，且 (Ⅰ) 的解向量 $(-2,1,1)^T$ 满足 (Ⅱ)（第二步已保证），所以两者互相包含，确实同解。此时 (Ⅱ) 的通解为 $x=c(-2,1,1)^T$，与 (Ⅰ) 完全一致。</p>
+              <p><strong>答案：</strong>$a=0,\ b=1$。</p>
+              <p class="solution-label">易错提醒</p>
+              <p>只做第二步、不做第三步是这类题目最大的陷阱。若解出的参数使 (Ⅱ) 的两行变成<strong>相同</strong>（秩从 2 掉到 1），(Ⅱ) 的解集就比 (Ⅰ) 大，此时根本不是同解，必须回答「这样的参数不存在」。所以「同解」要同时管住两件事：<strong>解互相包含</strong>与<strong>秩（自由度）相同</strong>。另外，代入时要用 (Ⅰ) 的通解而不是某一个特解——本题 (Ⅰ) 的自由未知量只有 1 个，代 $c=1$ 与代通解等价；若自由未知量多于 1 个，就必须代通解，否则会漏条件。</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="quiz" data-quiz-id="ch3-2" data-title="3-2 线性方程组 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，则非齐次线性方程组 $Ax=b$ 有解的充要条件是（　）。
+             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix. A necessary and sufficient condition for the nonhomogeneous system $Ax=b$ to be consistent is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(A) = R(\bar A)$</span></li>
+            <li><span class="opt-body">$R(A) = R(\bar A) = n$</span></li>
+            <li><span class="opt-body">$R(A) &lt; n$</span></li>
+            <li><span class="opt-body">$|A| \ne 0$</span></li>
+          </ul>
+          <div class="q-explain">「有解 $\iff$ 系数矩阵的秩等于增广矩阵的秩」是判定定理中唯一的「有解」条件。<br>第二个选项是学生最容易犯的错：$R(A)=R(\bar A)=n$ 确实能推出有解，但它要求公共秩恰好等于 $n$，这是「有唯一解」的条件，比「有解」强得多——公共秩小于 $n$ 时方程组照样有解（只是有无穷多解），所以它不是必要条件。第三个选项只在齐次方程组中才与「有解」等价（齐次方程组必有解），对非齐次方程组，$R(A)&lt;n$ 时若 $R(\bar A)$ 更大就无解。第四个选项 $|A|$ 只对方阵有定义，$A$ 是 $m\times n$ 矩阵时根本不能写。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$R(A) = R(\bar A) = r &lt; n$，则 $Ax=b$（　）。
+             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix with $R(A) = R(\bar A) = r &lt; n$. Then $Ax=b$ (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">无解</span></li>
+            <li><span class="opt-body">有唯一解</span></li>
+            <li data-correct="true"><span class="opt-body">有无穷多解，自由未知量有 $n-r$ 个</span></li>
+            <li><span class="opt-body">有无穷多解，自由未知量有 $r$ 个</span></li>
+          </ul>
+          <div class="q-explain">两个秩相等 $\Rightarrow$ 有解；公共秩 $r&lt;n$ $\Rightarrow$ 未知量个数多于有效方程个数 $\Rightarrow$ 有无穷多解，自由未知量个数为 $n-r$。<br>第二个选项漏掉了「与 $n$ 比较」这一步，看到两个秩相等就断定唯一解，这是本章最典型的失分点。第四个选项把 $n-r$ 写成了 $r$，混淆了「被约束住的个数」与「自由的个数」。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 4 元非齐次线性方程组 $Ax=b$ 的通解为 $x=(1,0,1,0)^T + c_1(1,1,0,0)^T + c_2(0,0,1,1)^T$（$c_1,c_2$ 为任意常数），则 $R(A)=$（　）。
+             <span class="en-line" lang="en">The general solution of a nonhomogeneous system $Ax=b$ in 4 unknowns is $x=(1,0,1,0)^T + c_1(1,1,0,0)^T + c_2(0,0,1,1)^T$, where $c_1,c_2$ are arbitrary constants. Then $R(A)=$ (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$1$</span></li>
+            <li data-correct="true"><span class="opt-body">$2$</span></li>
+            <li><span class="opt-body">$3$</span></li>
+            <li><span class="opt-body">$4$</span></li>
+          </ul>
+          <div class="q-explain">通解中独立任意常数的个数恰好等于自由未知量的个数，而自由未知量个数 $=n-R(A)$。这里 $n=4$、任意常数有 $c_1,c_2$ 两个，故 $R(A)=4-2=2$。<br>第三个选项是把自由未知量个数直接当成了 $R(A)$（或当成 $n-1$），这是「解的结构反求」题中最常见的错误。第四个选项等于说 $A$ 满秩，那样方程组只可能有唯一解，与题设的通解形式直接矛盾。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$b$ 为 $m$ 维列向量。下列命题正确的是（　）。
+             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and $b$ an $m$-dimensional column vector. Which of the following statements are correct? (　)</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $R(A) = R(\bar A)$，则 $Ax=b$ 有解</span></li>
+            <li data-correct="true"><span class="opt-body">若 $Ax=b$ 有无穷多解，则 $R(A) &lt; n$</span></li>
+            <li data-correct="true"><span class="opt-body">若 $Ax=b$ 有唯一解，则 $R(A) = n$</span></li>
+            <li><span class="opt-body">若 $Ax=0$ 只有零解，则 $Ax=b$ 有唯一解</span></li>
+          </ul>
+          <div class="q-explain">前三条都是判定定理的直接推论：秩相等即有解；有无穷多解时公共秩必须小于 $n$（因而 $R(A)&lt;n$）；有唯一解时公共秩必须等于 $n$（因而 $R(A)=n$）。<br>第四个选项是本章最隐蔽的错误：$Ax=0$ 只有零解只说明 $R(A)=n$（列满秩），完全没有涉及常数项 $b$。当 $m&gt;n$（方程比未知量多）时，$b$ 很可能不在 $A$ 的列向量组张成的空间里，此时 $R(\bar A)=n+1&gt;R(A)=n$，方程组无解。反例：$A=\begin{pmatrix}1\\0\end{pmatrix}$、$b=\begin{pmatrix}1\\1\end{pmatrix}$，$Ax=0$ 只有零解，但 $Ax=b$ 无解。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <p class="q-stem">设 $\eta_1,\eta_2$ 是 4 元非齐次线性方程组 $Ax=b$ 的两个不同的解，且 $R(A)=2$，则（　）。
+             <span class="en-line" lang="en">Let $\eta_1,\eta_2$ be two distinct solutions of a nonhomogeneous system $Ax=b$ in 4 unknowns, and let $R(A)=2$. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$Ax=0$ 有非零解</span></li>
+            <li data-correct="true"><span class="opt-body">$Ax=b$ 有无穷多解</span></li>
+            <li data-correct="true"><span class="opt-body">$\eta_1 - \eta_2$ 是 $Ax=0$ 的解</span></li>
+            <li><span class="opt-body">$\eta_1 + \eta_2$ 是 $Ax=b$ 的解</span></li>
+          </ul>
+          <div class="q-explain">「4 元」即未知量个数 $n=4$。由 $\eta_1$ 是解知方程组有解，故 $R(\bar A)=R(A)=2$；公共秩 $2&lt;n=4$，所以有无穷多解，自由未知量有 $4-2=2$ 个，这也说明 $Ax=0$ 有非零解。<br>第三条由 $A(\eta_1-\eta_2)=A\eta_1-A\eta_2=b-b=0$ 直接得到，这就是「非齐次解的差是齐次解」这一基本事实，它也是所有解的结构问题的出发点。<br>第四条错：$A(\eta_1+\eta_2)=A\eta_1+A\eta_2=2b$，只有当 $b=0$ 时才等于 $b$。正确说法是「$\eta_1+\eta_2$ 是 $Ax=2b$ 的解」，而 $\frac{\eta_1+\eta_2}{2}$ 才是 $Ax=b$ 的解——关键是组合系数之和必须为 1。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵。若 $R(A) = R(\bar A)$，则方程组 $Ax=b$ 有唯一解。
+             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix. If $R(A) = R(\bar A)$, then the system $Ax=b$ has a unique solution.</span></p>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">错误。$R(A)=R(\bar A)$ 只保证方程组<strong>有解</strong>，解的个数还必须把公共秩与 $n$ 作比较：公共秩 $=n$ 才有唯一解；公共秩 $&lt;n$ 时有无穷多解（自由未知量 $n-R(A)$ 个）。例如 $\begin{cases}x_1+x_2=1\\ 2x_1+2x_2=2\end{cases}$，两个秩都是 1，但 $1&lt;n=2$，方程组有无穷多解。<br>把「秩相等」直接等同于「唯一解」，是漏掉了「与 $n$ 比较」这一步。这个命题与「有解 $\iff$ 秩相等」只差半句话，因此极易被误判为正确——它是本章判断题最经典的陷阱，也是命题人最爱的干扰项。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 实矩阵，则方程组 $Ax=0$ 与 $A^TAx=0$ 的解集（　）。
+             <span class="en-line" lang="en">Let $A$ be a real $m\times n$ matrix. Then the solution sets of the systems $Ax=0$ and $A^TAx=0$ are (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">前者是后者的真子集</span></li>
+            <li><span class="opt-body">后者是前者的真子集</span></li>
+            <li data-correct="true"><span class="opt-body">相同</span></li>
+            <li><span class="opt-body">没有包含关系，需视 $A$ 的取值而定</span></li>
+          </ul>
+          <div class="q-explain">先证 $Ax=0$ 的解都是 $A^TAx=0$ 的解：若 $Ax=0$，两边左乘 $A^T$ 即得 $A^TAx=0$。再证反向：若 $A^TAx=0$，两边左乘 $x^T$ 得 $x^TA^TAx=0$，即 $(Ax)^T(Ax)=0$，也就是 $\|Ax\|^2=0$；向量长度的平方为零当且仅当该向量是零向量，故 $Ax=0$。两个解集互相包含，因此完全相同。<br>前两个选项只验证了其中一个方向的包含关系就下结论，这是学生最常犯的错。第四个选项也不对：这个结论对<strong>任意</strong>实矩阵都成立，与 $A$ 的具体取值无关——这正是它在最小二乘法（正规方程 $A^TAx=A^Tb$）中如此有用的原因。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <p class="q-stem">设 $A$ 为 4 阶矩阵，$A^*$ 为其伴随矩阵，且 $R(A)=3$，则 $R(A^*) = $ ______。
+             <span class="en-line" lang="en">Let $A$ be a $4\times4$ matrix and $A^*$ its adjugate matrix, with $R(A)=3$. Then $R(A^*) = $ ______.</span></p>
+          <div class="q-answer" data-answer="1"></div>
+          <div class="q-explain">伴随矩阵的秩是分段结论：$R(A)=n$ 时 $R(A^*)=n$；$R(A)=n-1$ 时 $R(A^*)=1$；$R(A)\le n-2$ 时 $R(A^*)=0$。这里 $n=4$、$R(A)=3=n-1$，故 $R(A^*)=1$。<br>推导：$R(A)=3$ 说明 $A$ 至少有一个 3 阶非零子式，于是 $A^*\ne O$，$R(A^*)\ge1$；又 $|A|=0$ 使 $A^*A=|A|E=O$，由 $AB=O\Rightarrow R(A)+R(B)\le n$（见 3-3 节的性质 3.5）得 $R(A^*)+R(A)\le4$，即 $R(A^*)\le1$。两边夹逼得 $R(A^*)=1$。<br>常见错误答案是 3——直觉上「$A$ 的秩只比满秩差一级」，$A^*$ 的秩似乎也该只差一级，实际上它直接掉到了 1。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">已知线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + 2x_2 + ax_3 = 2 \\ x_1 + 4x_2 + a^2x_3 = b \end{cases}$ 有无穷多解，则（　）。
+             <span class="en-line" lang="en">The linear system $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + 2x_2 + ax_3 = 2 \\ x_1 + 4x_2 + a^2x_3 = b \end{cases}$ has infinitely many solutions. Then (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$a = 1$ 且 $b = 4$</span></li>
+            <li><span class="opt-body">$a = 2$ 且 $b = 4$</span></li>
+            <li data-correct="true"><span class="opt-body">$a = 1$ 或 $a = 2$，且 $b = 4$</span></li>
+            <li><span class="opt-body">$a = 1$ 或 $a = 2$，$b$ 为任意常数</span></li>
+          </ul>
+          <div class="q-explain">对增广矩阵作行变换：$r_2-r_1=(0,1,a-1\mid 1)$，$r_3-r_1=(0,3,a^2-1\mid b-1)$，再作 $r_3-3r_2$ 得 $(0,0,(a-1)(a-2)\mid b-4)$。于是<br>$$R(A)=2 \iff (a-1)(a-2)=0 \iff a=1 \text{ 或 } a=2;\qquad R(\bar A)=2 \iff b-4=0 \iff b=4$$<br>有无穷多解要求 $R(A)=R(\bar A)&lt;3$，两个条件同时成立，故选第三项。<br>前两个选项分类不完整，各只列出一个临界值。第四个选项是本题最需要警惕的错误：$b$ 不是可以任取的——当 $a=1$ 或 $a=2$ 而 $b\ne4$ 时最后一行形如 $(0,0,0\mid b-4)$，$R(A)=2&lt;R(\bar A)=3$，方程组<strong>无解</strong>而非无穷多解。「有无穷多解」必须同时管住「秩相等」和「公共秩小于 $n$」这两件事。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">若线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 2 \\ x_1 + x_2 + a^2 x_3 = 1 \end{cases}$ 有无穷多解，则 $a=$（　）。
+             <span class="en-line" lang="en">If the linear system $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 2 \\ x_1 + x_2 + a^2 x_3 = 1 \end{cases}$ has infinitely many solutions, then $a=$ (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$1$</span></li>
+            <li data-correct="true"><span class="opt-body">$-1$</span></li>
+            <li><span class="opt-body">$1$ 或 $-1$</span></li>
+            <li><span class="opt-body">$a \ne 1$ 且 $a \ne -1$</span></li>
+          </ul>
+          <div class="q-explain">系数行列式 $D=\begin{vmatrix}1&1&1\\1&a&1\\1&1&a^2\end{vmatrix}=a^3-a^2-a+1=(a-1)^2(a+1)$，所以临界值只有 $a=1$ 与 $a=-1$，两者必须分别代回原方程组检验，「有无穷多解」绝不能由 $D=0$ 直接得出。<br>$a=-1$ 时方程组为 $\begin{cases}x_1+x_2+x_3=1\\ x_1-x_2+x_3=2\\ x_1+x_2+x_3=1\end{cases}$，第 1、3 两式相同，两式相减得 $-2x_2=1$ 即 $x_2=-\frac12$，只剩 $x_1+x_3=\frac32$ 一个有效方程，$R(A)=R(\bar A)=2&lt;3=n$，确有无穷多解，通解为 $x=(\frac32,-\frac12,0)^T+c(-1,0,1)^T$。<br>第一个选项 $a=1$ 错在「$D=0$ 就是无穷多解」：此时三个方程的左端全变成 $x_1+x_2+x_3$，而右端分别为 $1,2,1$，第 1、2 两式矛盾，$R(A)=1&lt;R(\bar A)=2$，是<strong>无解</strong>。第三个选项把 $a=1$ 也算了进去，同样是漏掉回代检验。第四个选项 $D\ne0$ 是方程组有<strong>唯一解</strong>的条件，方向相反。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A$ 为 3 阶矩阵，$R(A)=1$，且 $\eta_1=(1,1,0)^T$、$\eta_2=(2,1,1)^T$、$\eta_3=(1,2,1)^T$ 都是非齐次线性方程组 $Ax=b$ 的解，则 $Ax=b$ 的通解为（　）。
+             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=1$, and let $\eta_1=(1,1,0)^T$, $\eta_2=(2,1,1)^T$, $\eta_3=(1,2,1)^T$ all be solutions of the nonhomogeneous system $Ax=b$. Then the general solution of $Ax=b$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$x=(1,1,0)^T+c_1(1,0,1)^T+c_2(0,1,1)^T,\quad c_1,c_2\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x=(1,1,0)^T+c(1,1,0)^T,\quad c\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x=(1,1,0)^T+c_1(2,1,1)^T+c_2(1,2,1)^T,\quad c_1,c_2\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x=c_1(1,0,1)^T+c_2(0,1,1)^T,\quad c_1,c_2\in\mathbb{R}$</span></li>
+          </ul>
+          <div class="q-explain">$n=3$、$R(A)=1$，且 $\eta_1$ 是解说明方程组有解，故 $R(\bar A)=R(A)=1&lt;3=n$，有无穷多解，自由未知量个数为 $n-R(A)=3-1=2$，通解中必须恰好出现 2 个独立任意常数。<br>齐次解由「非齐次解之差是齐次解」造出：$\xi_1=\eta_2-\eta_1=(1,0,1)^T$，$\xi_2=\eta_3-\eta_1=(0,1,1)^T$，二者互不成比例（$k_1\xi_1+k_2\xi_2=(k_1,k_2,k_2)^T=0$ 给出 $k_1=k_2=0$），个数又恰为 2，恰好是 $Ax=0$ 的一组基础解。取 $\eta_1$ 作特解，第一项即为通解；核验可得 $c_1=1,c_2=0$ 时 $x=\eta_2$，$c_1=0,c_2=1$ 时 $x=\eta_3$。<br>第二个选项只含 1 个任意常数，与自由未知量个数 2 不符；而且 $(1,1,0)^T=\eta_1$ 本身是非齐次解，$A\eta_1=b\ne0$，把它当齐次解的方向是错的。第三个选项把非齐次解 $\eta_2,\eta_3$ 直接当成了齐次解。第四个选项丢掉了非齐次特解——$b\ne0$ 时 $c_1\xi_1+c_2\xi_2$ 是 $Ax=0$ 的通解，代回只能得到 $0$ 而不是 $b$。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">已知方程组 (Ⅰ) $\begin{cases} x_1 + 2x_2 + x_3 = 0 \\ x_1 + x_2 - x_3 = 0 \end{cases}$ 与方程组 (Ⅱ) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 2x_1 + x_2 + b x_3 = 0 \end{cases}$ 同解，则（　）。
+             <span class="en-line" lang="en">The system (I) $\begin{cases} x_1 + 2x_2 + x_3 = 0 \\ x_1 + x_2 - x_3 = 0 \end{cases}$ and the system (II) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 2x_1 + x_2 + b x_3 = 0 \end{cases}$ have the same solutions. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$a = 2,\ b = -4$</span></li>
+            <li><span class="opt-body">$a = -4,\ b = 2$</span></li>
+            <li><span class="opt-body">$a = 2,\ b = 4$</span></li>
+            <li><span class="opt-body">$a = -2,\ b = -4$</span></li>
+          </ul>
+          <div class="q-explain">同解意味着 (Ⅰ) 的解全是 (Ⅱ) 的解。先解 (Ⅰ)：作 $r_2-r_1$ 得 $(0,-1,-2)$，即 $x_2=-2x_3$、$x_1=-2x_2-x_3=4x_3-x_3=3x_3$，故 (Ⅰ) 的通解为 $x=c(3,-2,1)^T$，自由未知量个数为 $3-2=1$。<br>把 $(3,-2,1)^T$ 代进 (Ⅱ)：第一个方程 $3+a\cdot(-2)+1=0$，得 $a=2$；第二个方程 $2\cdot3+(-2)+b\cdot1=0$，得 $b=-4$。<br>再核对维数（这一步不能省）：$a=2,\ b=-4$ 时 (Ⅱ) 为 $\begin{cases} x_1+2x_2+x_3=0 \\ 2x_1+x_2-4x_3=0 \end{cases}$，两行 $(1,2,1)$ 与 $(2,1,-4)$ 不成比例，$R(A_{\mathrm{II}})=2$，自由未知量个数 $3-2=1$，与 (Ⅰ) 相同；且 $(3,-2,1)^T$ 代入两式分别得 $3-4+1=0$ 与 $6-2-4=0$，所以两者解集完全一致，通解都是 $x=c(3,-2,1)^T$。<br>第二个选项把 $a$ 与 $b$ 的位置对调了：用一个解向量同时定出两个参数时，「哪个方程对应哪个参数」必须一一对齐，否则就会得到这种互换的错误组合。第三个选项 $b=4$ 是符号错误——由 $2\cdot3+(-2)+b=0$ 得 $b=-4$，漏掉负号是这类题最常见的失分点。第四个选项 $a=-2$ 同样是符号错误，由 $3+a\cdot(-2)+1=0$ 得的是 $a=2$。这也提醒：求出参数后必须把 $(3,-2,1)^T$ 代回 (Ⅱ) 的<strong>两个</strong>方程各验算一次。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这是全章<strong>分量最重的一份</strong>，考判定定理的完整用法——有解吗、有几个、怎么全写出来。前两题与判断题同考一个点：$R(A)=R(\bar A)$ 只保证有解；第 3、5 题考 $n-R(A)$ 与「非齐次解之差是齐次解」；第 7 题把秩的工具推到 $A^TAx=0$；伴随矩阵与含参数讨论则各有题覆盖。</p>
+          <p>全卷最集中的失分点是<strong>漏掉「与 $n$ 比较」这一步</strong>：看到两个秩相等就写唯一解。必须背到条件反射的三判据是——$R(A)=R(\bar A)=n$ 唯一解，$=r&lt;n$ 无穷多解（自由未知量 $n-r$ 个），$R(A)&lt;R(\bar A)$ 无解。其次是自由未知量记错，是 $n-R(A)$ 而不是 $r$、$n-m$ 或 $n-R(\bar A)$。第三是含参数题把 $b$ 当任意常数：$a=1$ 或 $2$ 只保证 $R(A)=2$，还必须 $b=4$ 才有 $R(\bar A)=2$，否则是无解而非无穷多解。第 4 题的第四项也很隐蔽：$Ax=0$ 只有零解只管住列满秩，管不住常数项，$m&gt;n$ 时 $b$ 可能落在列空间之外。</p>
+          <p>向前，本卷接 3-1（公共秩为 $n$ 时退化为克拉默法则）与第 2 章的初等行变换；向后，它是第 4 章解的结构与基础解系的直接前置——$n-R(A)$ 就是基础解系所含向量的个数，第 5 章解 $(A-\lambda E)x=0$ 还会原样再用一遍。再提醒一次：增广矩阵<strong>只能作初等行变换</strong>，列变换会打乱未知量之间的对应关系。</p>
+          <p>下一步：回读 3-2 判定定理的表格，把三判据与 $n-R(A)$ 抄成一张卡片，重做例 3.8 的含参数讨论（注意 $\lambda=1$ 与 $\lambda=-2$ 来自不同步骤），再进 3-3 把「秩怎么算」补上。</p>
+        </div>
+
+      </div>
+
+      <h2 id="s3-3" data-hours="2.9">3-3 初等变换与秩</h2>
+
+      <p>3-2 节的判定定理把「方程组有没有解、有几个解」全部归结为比较 $R(A)$ 与 $R(\bar A)$，可是我们始终回避了一个问题：<strong>秩到底怎么算？</strong>按定义去数非零子式的最高阶数，一个 $5\times5$ 矩阵就有 $100$ 个 3 阶子式，穷举根本不可行。本节补上这块地基：先把初等变换写成矩阵乘法（初等矩阵），证明它不改变秩，于是求秩就有了唯一实用的办法——化行阶梯形、数非零行。本节还要把秩这个贯穿全书的量彻底讲清楚，它后面会在第 4 章（极大线性无关组）、第 5 章（可对角化的判定）反复出现。</p>
+
+      <div class="box link-box">
+        <div class="box-title"><span class="ico">🔗</span>知识关联</div>
+        <ul>
+          <li><strong>承上</strong>：秩的定义二（行阶梯形的非零行数）依赖第 2 章讲过的矩阵行变换；而初等矩阵不过是「单位矩阵作一次初等变换」的产物，本质上是第 2 章矩阵乘法的应用。</li>
+          <li><strong>启下</strong>：$R(A)=n \iff A$ 可逆，直接给出 3-2 节「唯一解」的判据和求逆矩阵的方法；第 4 章用秩定义<span class="term">极大线性无关组</span>，第 5 章用 $n-R(A-\lambda E)$ 数特征向量的个数。</li>
+          <li><strong>横向</strong>：$A\cong B \iff A,B$ 同型且秩相等，把第 2 章的矩阵等价与本节的等价标准形 $\begin{pmatrix}E_r&amp;O\\O&amp;O\end{pmatrix}$ 串在了一起——秩就是矩阵在等价关系下唯一的不变量。</li>
+        </ul>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>为什么要把「变换」和「秩」放在一起讲</div>
+        <p>上一节我们把「方程组有没有解」归结为比较 $R(A)$ 与 $R(\bar A)$，可是<strong>秩怎么算</strong>？按定义去数「非零子式的最高阶数」，一个 $5\times 5$ 矩阵有 $C_5^3\times C_5^3=100$ 个 3 阶子式，穷举是不现实的。</p>
+        <p>初等变换提供了唯一的实用出路：<strong>初等变换不改变秩</strong>。于是我们可以把一个复杂的矩阵通过行变换化成一个形状最简单的矩阵——行阶梯形，然后数一数它有几个非零行就得到了秩。这就是「变换」与「秩」被放在同一节的原因：一个负责把矩阵「化简」，一个负责在化简后「读数」。</p>
+        <p>更妙的是，初等变换本身也能写成矩阵乘法：每一次行变换 $=$ 左乘一个「初等矩阵」。这样「$A$ 经过行变换变成 $B$」就成了一句严格的代数命题，可以写进证明里。</p>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 3.4　初等变换</div>
+        <p>对矩阵的<strong>行</strong>施行的下面三种变换，称为<span class="term">初等行变换</span>：</p>
+        <ul>
+          <li>① <strong>互换两行</strong>：$r_i \leftrightarrow r_j$；</li>
+          <li>② <strong>某一行乘非零常数 $k$</strong>：$r_i \times k \quad (k\ne 0)$；</li>
+          <li>③ <strong>某行的 $k$ 倍加到另一行</strong>：$r_j + k\,r_i$（$k$ 可以是零，此时相当于不变）。</li>
+        </ul>
+        <p>把上述定义中的「行」全部换成「列」，就得到<span class="term">初等列变换</span>：$c_i \leftrightarrow c_j$、$c_i\times k\ (k\ne0)$、$c_j + k c_i$。初等行变换与初等列变换统称为<span class="term">初等变换</span>。</p>
+        <p>若矩阵 $A$ 经过有限次初等变换变成 $B$，则称 $A$ 与 $B$ <span class="term">等价</span>，记作 $A \cong B$。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 3.4</span>
+             <strong>Elementary Transformations.</strong>
+             The following three operations performed on the <strong>rows</strong> of a matrix are called
+             <span class="en-term">elementary row operations</span>:</p>
+          <ul>
+            <li>① <strong>interchange two rows</strong>: $r_i \leftrightarrow r_j$;</li>
+            <li>② <strong>multiply a row by a nonzero constant $k$</strong>: $r_i \times k \quad (k\ne 0)$;</li>
+            <li>③ <strong>add $k$ times one row to another row</strong>: $r_j + k\,r_i$ ($k$ may be zero, in
+                which case nothing changes).</li>
+          </ul>
+          <p>Replacing "row" by "column" throughout gives the
+             <span class="en-term">elementary column operations</span>: $c_i \leftrightarrow c_j$,
+             $c_i\times k\ (k\ne0)$, $c_j + k c_i$. Row operations and column operations together are called
+             <span class="en-term">elementary transformations</span>.</p>
+          <p>If $A$ can be changed into $B$ by finitely many elementary transformations, we say $A$ and $B$ are
+             <span class="en-term">equivalent</span> and write $A \cong B$.</p>
+        </div>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 3.5　初等矩阵</div>
+        <p>对 $n$ 阶单位矩阵 $E$ 施行<strong>一次</strong>初等变换所得到的矩阵，称为 $n$ 阶<span class="term">初等矩阵</span>。三种初等变换对应三类初等矩阵：</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>变换类型</th><th>记号</th><th>以 3 阶为例</th><th>行列式</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>互换第 $i,j$ 行</td>
+                <td>$E(i,j)$</td>
+                <td>$\begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}$</td>
+                <td>$-1$</td>
+              </tr>
+              <tr>
+                <td>第 $i$ 行乘 $k\ (k\ne 0)$</td>
+                <td>$E(i(k))$</td>
+                <td>$\begin{pmatrix} 1 & 0 & 0 \\ 0 & k & 0 \\ 0 & 0 & 1 \end{pmatrix}$</td>
+                <td>$k$</td>
+              </tr>
+              <tr>
+                <td>第 $j$ 行的 $k$ 倍加到第 $i$ 行</td>
+                <td>$E(i,j(k))$</td>
+                <td>$\begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & k \\ 0 & 0 & 1 \end{pmatrix}$</td>
+                <td>$1$</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 3.5</span>
+             <strong>Elementary Matrices.</strong>
+             A matrix obtained by performing <strong>one single</strong> elementary transformation on the
+             $n\times n$ identity matrix $E$ is called an <span class="en-term">elementary matrix</span> of
+             order $n$. The three kinds of elementary transformations give the three kinds of elementary
+             matrices:</p>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Type of transformation</th><th>Notation</th><th>Example of order 3</th><th>Determinant</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>Interchange rows $i,j$</td>
+                  <td>$E(i,j)$</td>
+                  <td>$\begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}$</td>
+                  <td>$-1$</td>
+                </tr>
+                <tr>
+                  <td>Multiply row $i$ by $k\ (k\ne 0)$</td>
+                  <td>$E(i(k))$</td>
+                  <td>$\begin{pmatrix} 1 & 0 & 0 \\ 0 & k & 0 \\ 0 & 0 & 1 \end{pmatrix}$</td>
+                  <td>$k$</td>
+                </tr>
+                <tr>
+                  <td>Add $k$ times row $j$ to row $i$</td>
+                  <td>$E(i,j(k))$</td>
+                  <td>$\begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & k \\ 0 & 0 & 1 \end{pmatrix}$</td>
+                  <td>$1$</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 3.4　初等矩阵的核心性质（左行右列）</div>
+        <p><span class="thm-name">定理 3.4</span>　设 $A$ 为 $m\times n$ 矩阵。用 $m$ 阶初等矩阵<strong>左乘</strong> $A$，相当于对 $A$ 作<strong>一次相应的初等行变换</strong>；用 $n$ 阶初等矩阵<strong>右乘</strong> $A$，相当于对 $A$ 作<strong>一次相应的初等列变换</strong>。</p>
+        <p>记忆口诀：<strong>左乘行变换，右乘列变换</strong>。这个规律不是巧合——矩阵乘法 $PA$ 的每一行都是把 $A$ 的各行<strong>按系数相加</strong>得到的，所以左乘只能「重新组合行」；而 $AQ$ 的每一列都是把 $A$ 的各列<strong>按系数相加</strong>得到的，所以右乘只能「重新组合列」。</p>
+        <p>以 $A=\begin{pmatrix}1&amp;2\\3&amp;4\end{pmatrix}$ 与互换两行的初等矩阵 $E(1,2)=\begin{pmatrix}0&amp;1\\1&amp;0\end{pmatrix}$ 为例：$E(1,2)A=\begin{pmatrix}3&amp;4\\1&amp;2\end{pmatrix}$ 正是互换 $A$ 的两行，而 $AE(1,2)=\begin{pmatrix}2&amp;1\\4&amp;3\end{pmatrix}$ 却是互换 $A$ 的两列。同一个矩阵，左乘与右乘的效果完全不同——这就是「左行右列」这四个字的全部内容。</p>
+        <p><span class="thm-name">性质 3.4</span>　初等矩阵都可逆，且其逆矩阵仍是<strong>同类型</strong>的初等矩阵：</p>
+        <p>$$E(i,j)^{-1}=E(i,j),\qquad E(i(k))^{-1}=E\!\left(i\!\left(\tfrac1k\right)\right),\qquad E(i,j(k))^{-1}=E(i,j(-k))$$</p>
+        <p>直观理解：互换两行做两次就还原；某行乘 $k$ 再乘 $1/k$ 就还原；某行加 $k$ 倍再加 $-k$ 倍就还原。既然逆矩阵还是初等矩阵，那么「初等变换」这个操作<strong>完全可以反向撤销</strong>，所以它不丢失信息、不改变秩。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 3.4</span>
+             <strong>Left Multiplication Acts on Rows, Right Multiplication on Columns.</strong>
+             Let $A$ be an $m\times n$ matrix. Multiplying $A$ on the <strong>left</strong> by an elementary
+             matrix of order $m$ performs <strong>one corresponding elementary row operation</strong> on $A$;
+             multiplying $A$ on the <strong>right</strong> by an elementary matrix of order $n$ performs
+             <strong>one corresponding elementary column operation</strong> on $A$.</p>
+          <p>Mnemonic: <strong>left multiplication $\to$ row operation, right multiplication $\to$ column
+             operation</strong>. This is no accident — every row of the product $PA$ is obtained by adding the rows of
+             the rows of $A$, so left multiplication can only "recombine rows"; every column of $AQ$ is a
+             similarly obtained from the columns of $A$, so right multiplication can only "recombine columns".</p>
+          <p>Take $A=\begin{pmatrix}1&amp;2\\3&amp;4\end{pmatrix}$ and the row-interchange elementary matrix
+             $E(1,2)=\begin{pmatrix}0&amp;1\\1&amp;0\end{pmatrix}$. Then
+             $E(1,2)A=\begin{pmatrix}3&amp;4\\1&amp;2\end{pmatrix}$ interchanges the two rows of $A$, whereas
+             $AE(1,2)=\begin{pmatrix}2&amp;1\\4&amp;3\end{pmatrix}$ interchanges the two columns. The same
+             matrix, multiplied on the left or on the right, has completely different effects — that is the
+             whole content of the phrase "left rows, right columns".</p>
+          <p><span class="bi-en-label">PROP 3.4</span>
+             Every elementary matrix is invertible, and its inverse is again an elementary matrix of the
+             <strong>same type</strong>:</p>
+          <p>$$E(i,j)^{-1}=E(i,j),\qquad E(i(k))^{-1}=E\!\left(i\!\left(\tfrac1k\right)\right),\qquad E(i,j(k))^{-1}=E(i,j(-k))$$</p>
+          <p>Intuitively: interchanging two rows twice restores the matrix; multiplying a row by $k$ and then
+             by $1/k$ restores it; adding $k$ times a row and then $-k$ times that row restores it. Since the
+             inverse is again an elementary matrix, an elementary transformation can always be
+             <strong>undone</strong>; it loses no information and does not change the rank.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 3.5　矩阵等价与等价标准形</div>
+        <p><span class="thm-name">定理 3.5</span>　$A \cong B$（$A$ 与 $B$ 等价）$\iff$ 存在可逆矩阵 $P$（$m$ 阶）与 $Q$（$n$ 阶），使得</p>
+        <p>$$PAQ = B$$</p>
+        <p>道理很简单：每一次初等行变换 $=$ 左乘一个初等矩阵，每一次初等列变换 $=$ 右乘一个初等矩阵。把这一串初等矩阵乘起来（初等矩阵都可逆，可逆矩阵之积仍可逆）就得到了 $P$ 与 $Q$。</p>
+        <p><span class="thm-name">定理 3.6</span>　若 $A$ 为 $m\times n$ 矩阵且 $R(A)=r$，则 $A$ 必等价于如下的<span class="term">等价标准形</span>：</p>
+        <p>$$A \cong \begin{pmatrix} E_r & O \\ O & O \end{pmatrix}_{m\times n}$$</p>
+        <p>其中 $E_r$ 是 $r$ 阶单位矩阵，$O$ 是相应阶数的零矩阵。这个标准形是<strong>唯一的</strong>——换句话说，$r$ 是等价关系下唯一的不变量：<strong>两个同型矩阵等价 $\iff$ 它们的秩相等</strong>。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 3.5</span>
+             <strong>Equivalent Matrices and the Canonical Form.</strong>
+             $A \cong B$ (that is, $A$ is equivalent to $B$) $\iff$ there exist invertible matrices $P$ (of
+             order $m$) and $Q$ (of order $n$) such that</p>
+          <p>$$PAQ = B$$</p>
+          <p>The reason is simple: every elementary row operation is left multiplication by an elementary
+             matrix, and every elementary column operation is right multiplication by an elementary matrix.
+             Multiplying that whole chain together (elementary matrices are invertible, and a product of
+             invertible matrices is invertible) produces $P$ and $Q$.</p>
+          <p><span class="bi-en-label">THM 3.6</span>
+             If $A$ is an $m\times n$ matrix with $R(A)=r$, then $A$ is necessarily equivalent to the following
+             <span class="en-term">canonical form</span>:</p>
+          <p>$$A \cong \begin{pmatrix} E_r & O \\ O & O \end{pmatrix}_{m\times n}$$</p>
+          <p>where $E_r$ is the identity matrix of order $r$ and $O$ denotes zero matrices of the appropriate
+             orders. This canonical form is <strong>unique</strong> — in other words, $r$ is the only invariant
+             of the equivalence relation: <strong>two matrices of the same size are equivalent if and only if
+             they have the same rank</strong>.</p>
+        </div>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 3.6　矩阵的秩（两个等价定义）</div>
+        <p><strong>定义一（子式定义，用于证明）。</strong>在 $m\times n$ 矩阵 $A$ 中，任取 $k$ 行与 $k$ 列，位于这些行、列交叉处的 $k^2$ 个元素按原位置构成的 $k$ 阶行列式，称为 $A$ 的一个 <span class="term">$k$ 阶子式</span>。若 $A$ 中存在一个 $r$ 阶子式不为零，而所有 $r+1$ 阶子式（若存在的话）全为零，则称 $r$ 为矩阵 $A$ 的<span class="term">秩</span>，记作 $R(A)$。规定零矩阵的秩为 $0$。</p>
+        <p>等价的说法：<strong>$R(A)=r \iff$ 存在 $r$ 阶非零子式，且所有 $r+1$ 阶子式全为 $0$。</strong>（当 $r=\min\{m,n\}$ 时不存在 $r+1$ 阶子式，此时只需前半句。）换句话说是：$R(A)$ 就是<strong>非零子式的最高阶数</strong>。</p>
+        <p><strong>定义二（阶梯形定义，用于计算）。</strong>$R(A)$ 等于 $A$ 的行阶梯形矩阵中<strong>非零行的行数</strong>。</p>
+        <p><strong>两个定义是等价的</strong>，这一点由「初等变换不改变秩」+「行阶梯形矩阵的非零行数就是其非零子式的最高阶数」保证。考试中的分工十分明确：</p>
+        <ul>
+          <li><strong>计算</strong>用定义二：化行阶梯形，数非零行。</li>
+          <li><strong>证明</strong>用定义一：要说「$R(A)\ge r$」就构造一个 $r$ 阶非零子式；要说「$R(A)\le r$」就说所有 $r+1$ 阶子式全为零。这是秩的证明题的标准打法。</li>
+        </ul>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 3.6</span>
+             <strong>The Rank of a Matrix (Two Equivalent Definitions).</strong></p>
+          <p><strong>Definition 1 (by minors; used for proofs).</strong> In an $m\times n$ matrix $A$, choose
+             any $k$ rows and any $k$ columns; the determinant of order $k$ formed by the $k^2$ entries at the
+             intersections of those rows and columns, kept in their original positions, is called a
+             <span class="en-term">minor of order $k$</span> of $A$. If $A$ has a minor of order $r$ that is
+             nonzero while every minor of order $r+1$ (if such minors exist) is zero, then $r$ is called the
+             <span class="en-term">rank</span> of $A$, written $R(A)$. The rank of the zero matrix is defined to
+             be $0$.</p>
+          <p>Equivalently: <strong>$R(A)=r \iff$ there exists a nonzero minor of order $r$, and all minors of
+             order $r+1$ are zero.</strong> (When $r=\min\{m,n\}$ no minor of order $r+1$ exists, and only the
+             first half is needed.) In other words, $R(A)$ is the <strong>highest order of a nonzero
+             minor</strong>.</p>
+          <p><strong>Definition 2 (by echelon form; used for computation).</strong> $R(A)$ equals the
+             <strong>number of nonzero rows</strong> in a row echelon form of $A$.</p>
+          <p><strong>The two definitions are equivalent</strong>; this is guaranteed by "elementary
+             transformations do not change the rank" together with "the number of nonzero rows of a matrix in
+             row echelon form is the highest order of its nonzero minors". In examinations the division of
+             labour is completely clear:</p>
+          <ul>
+            <li><strong>For computation</strong> use Definition 2: reduce to row echelon form and count the
+                nonzero rows.</li>
+            <li><strong>For proofs</strong> use Definition 1: to show $R(A)\ge r$, exhibit one nonzero minor of
+                order $r$; to show $R(A)\le r$, show that all minors of order $r+1$ are zero. This is the
+                standard way to attack a proof problem about rank.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>秩的直观含义（三句话记住它）</div>
+        <p><strong>第一句：秩是矩阵中真正独立的信息量。</strong>矩阵里写了很多数，但有些行可以由别的行拼出来，这些行是「冗余」的；$R(A)$ 数的是<strong>不可替代</strong>的那几行有几个。</p>
+        <p><strong>第二句：秩是有效方程的个数。</strong>$R(A)$ 就是「这 $m$ 个方程里真正起约束作用的只有几条」，所以 $n-R(A)$ 就是「还有几个未知量没人管得住」，即自由未知量的个数。为什么是 $n-R(A)$ 而不是 $n-m$？因为那些冗余方程根本不算约束。</p>
+        <p><strong>第三句：秩是矩阵「塌缩」后剩下的维数。</strong>把 $A$ 看成 $\mathbb{R}^n\to\mathbb{R}^m$ 的映射，$R(A)$ 就是像空间的维数；等价标准形说明这个矩阵的「本质」只是一个 $r$ 维恒等映射，其余维度都被压成了零。</p>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>性质 3.5　秩的基本性质</div>
+        <p>设 $A$ 为 $m\times n$ 矩阵。</p>
+        <ul>
+          <li>① $0 \le R(A) \le \min\{m,n\}$。（秩不会超过行数，也不会超过列数。）</li>
+          <li>② $R(A^T) = R(A)$。（转置不改变秩，这解释了为什么「行秩 $=$ 列秩」。）</li>
+          <li>③ $R(kA) = R(A)$，其中 $k \ne 0$。（乘非零数是初等变换，不改变秩。）</li>
+          <li>④ <strong>初等变换不改变矩阵的秩</strong>，即若 $A\cong B$ 则 $R(A)=R(B)$。</li>
+          <li>⑤ 若 $A$ 为 $n$ 阶方阵，则 $R(A)=n \iff |A| \ne 0 \iff A$ 可逆。（此时称 $A$ 为<span class="term">满秩矩阵</span>；$R(A) &lt; n$ 时称 $A$ 为<span class="term">降秩矩阵</span>。）</li>
+          <li>⑥ $R(AB) \le \min\{R(A), R(B)\}$。（乘积的秩不会超过任一个因子的秩——「信息只会丢失，不会凭空产生」。第 2 章曾作为秩的不等式出现过。）</li>
+          <li>⑦ 若 $P,Q$ 可逆，则 $R(PAQ)=R(A)$。（可逆矩阵是初等矩阵之积，乘上去不改变秩。）</li>
+          <li>⑧ 若 $A$ 为 $m\times n$、$B$ 为 $n\times s$ 矩阵且 $AB=O$，则 $R(A)+R(B)\le n$。（理由：$B$ 的每一列都是 $Ax=0$ 的解，而该齐次方程组的<strong>自由未知量个数</strong>为 $n-R(A)$。这个结论考研中常反过来用。）</li>
+        </ul>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">PROP 3.5</span>
+             <strong>Basic Properties of the Rank.</strong>
+             Let $A$ be an $m\times n$ matrix.</p>
+          <ul>
+            <li>① $0 \le R(A) \le \min\{m,n\}$. (The rank never exceeds the number of rows or the number of columns.)</li>
+            <li>② $R(A^T) = R(A)$. (Transposition does not change the rank; this explains why the row rank equals the column rank.)</li>
+            <li>③ $R(kA) = R(A)$ for $k \ne 0$. (Multiplying by a nonzero number is an elementary transformation, so the rank is unchanged.)</li>
+            <li>④ <strong>Elementary transformations do not change the rank</strong>: if $A\cong B$ then $R(A)=R(B)$.</li>
+            <li>⑤ If $A$ is $n\times n$, then $R(A)=n \iff |A| \ne 0 \iff A$ is invertible. (In that case $A$ is called a <span class="en-term">matrix of full rank</span>; if $R(A) &lt; n$, $A$ is called rank deficient.)</li>
+            <li>⑥ $R(AB) \le \min\{R(A), R(B)\}$. (The rank of a product never exceeds the rank of either factor — "information can only be lost, never created". This already appeared in Chapter 2 as a rank inequality.)</li>
+            <li>⑦ If $P,Q$ are invertible, then $R(PAQ)=R(A)$. (An invertible matrix is a product of elementary matrices, and multiplying by it does not change the rank.)</li>
+            <li>⑧ If $A$ is $m\times n$, $B$ is $n\times s$ and $AB=O$, then $R(A)+R(B)\le n$. (Reason: every column of $B$ is a solution of $Ax=0$, and that homogeneous system has $n-R(A)$ free variables. In examinations this result is often used backwards.)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：用初等行变换求秩</div>
+        <ol>
+          <li>对矩阵 $A$ 作<strong>初等行变换</strong>（行列变换都可以，因为都不改变秩；但为了和后续解方程组兼容，习惯上只用行变换）。</li>
+          <li>目标是化成<strong>行阶梯形</strong>：自上而下，用第 1 行把第 1 列下方清零，用第 2 行把第 2 列下方清零……</li>
+          <li>数行阶梯形中<strong>非零行的行数</strong>，即为 $R(A)$。不需要继续化到行最简形（求秩时行阶梯形就够了）。</li>
+          <li>若矩阵含参数，则在消元过程中每遇到需要除以含参数的式子，就分情况讨论，最后对每个临界参数值单独求出秩。</li>
+        </ol>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD</span>
+             <strong>Finding the Rank by Elementary Row Operations.</strong></p>
+          <ol>
+            <li>Apply <strong>elementary transformations</strong> to $A$ (both row and column operations are
+                allowed, since neither changes the rank; but for compatibility with solving systems later we
+                habitually use row operations only).</li>
+            <li>The goal is <strong>row echelon form</strong>: working downwards, use row 1 to clear the entries
+                below the first pivot, then row 2 to clear below the second, and so on.</li>
+            <li>Count the <strong>nonzero rows</strong> of the echelon form; that is $R(A)$. There is no need to
+                continue to reduced row echelon form (for finding the rank, echelon form is enough).</li>
+            <li>If the matrix contains parameters, then whenever the elimination would divide by an expression
+                containing a parameter, split into cases; finally compute the rank separately for each critical
+                value of the parameter.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：用初等变换求逆矩阵</div>
+        <ol>
+          <li>构造分块矩阵 $(A \mid E)$，其中 $A$ 为 $n$ 阶方阵。这一步的依据是「$A$ 可逆 $\iff A\cong E$」。</li>
+          <li>对 $(A \mid E)$ 只作<strong>初等行变换</strong>（绝不能作列变换），目标是把左半部分化成 $E$。作变换时相当于左乘一串初等矩阵，记它们的乘积为 $P$，则 $P(A\mid E) = (PA \mid PE)$。</li>
+          <li>若左半部分能化成 $E$，即 $PA=E$，则必有 $P=A^{-1}$，于是右半部分自动变成 $A^{-1}$，结果是 $(E \mid A^{-1})$。</li>
+          <li>若左半部分出现<strong>全零行</strong>，说明 $R(A) &lt; n$，$A$ 不可逆，应立即停止并写出「$A$ 不可逆」的结论。</li>
+          <li>求完建议验算：算一两个位置上的 $AA^{-1}$ 的元素，或验证 $|A|\cdot|A^{-1}|=1$。$n=3$ 时完整验算 $AA^{-1}=E$ 也很快，强烈建议做。</li>
+        </ol>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD</span>
+             <strong>Finding an Inverse Matrix by Elementary Transformations.</strong></p>
+          <ol>
+            <li>Form the block matrix $(A \mid E)$, where $A$ is an $n\times n$ matrix. The justification is
+                "$A$ is invertible $\iff A\cong E$".</li>
+            <li>Apply <strong>elementary row operations only</strong> to $(A \mid E)$ (never column
+                operations), aiming to turn the left half into $E$. Doing so is equivalent to multiplying on
+                the left by a chain of elementary matrices; let $P$ be their product, so that
+                $P(A\mid E) = (PA \mid PE)$.</li>
+            <li>If the left half can be turned into $E$, that is $PA=E$, then necessarily $P=A^{-1}$, so the
+                right half automatically becomes $A^{-1}$ and the result is $(E \mid A^{-1})$.</li>
+            <li>If a <strong>zero row</strong> appears in the left half, then $R(A) &lt; n$ and $A$ is not
+                invertible; stop at once and state the conclusion "$A$ is not invertible".</li>
+            <li>Always check the answer afterwards: compute a couple of entries of $AA^{-1}$, or verify
+                $|A|\cdot|A^{-1}|=1$. For $n=3$ a full check of $AA^{-1}=E$ is quick and strongly
+                recommended.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.10</span> 求数值矩阵的秩
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>求矩阵 $A=\begin{pmatrix} 1 & 1 & 2 & 2 & 1 \\ 0 & 2 & 1 & 5 & -1 \\ 2 & 0 & 3 & -1 & 3 \\ 1 & 1 & 0 & 4 & -1 \end{pmatrix}$ 的秩。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：化行阶梯形。</strong>用第 1 行消去第 1 列下方的元素（$r_3-2r_1$，$r_4-r_1$，第 2 行第 1 列已是 $0$，不用动）：</p>
+            <p>$$r_3-2r_1 = (2,0,3,-1,3)-(2,2,4,4,2)=(0,-2,-1,-5,1)$$</p>
+            <p>$$r_4-r_1 = (1,1,0,4,-1)-(1,1,2,2,1)=(0,0,-2,2,-2)$$</p>
+            <p>$$A \to \begin{pmatrix} 1 & 1 & 2 & 2 & 1 \\ 0 & 2 & 1 & 5 & -1 \\ 0 & -2 & -1 & -5 & 1 \\ 0 & 0 & -2 & 2 & -2 \end{pmatrix}$$</p>
+            <p>再用第 2 行消去第 2 列下方：$r_3+r_2 = (0,0,0,0,0)$，正好是零行。</p>
+            <p>$$\to \begin{pmatrix} 1 & 1 & 2 & 2 & 1 \\ 0 & 2 & 1 & 5 & -1 \\ 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & -2 & 2 & -2 \end{pmatrix}\xrightarrow{\ r_3\leftrightarrow r_4\ }\begin{pmatrix} 1 & 1 & 2 & 2 & 1 \\ 0 & 2 & 1 & 5 & -1 \\ 0 & 0 & -2 & 2 & -2 \\ 0 & 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
+            <p>（把零行换到最下方，这才是标准的行阶梯形。）</p>
+            <p><strong>第二步：数非零行。</strong>行阶梯形中有 3 个非零行，故 $R(A)=3$。</p>
+            <p><strong>第三步：用子式定义核对。</strong>取第 1、2、4 行与第 1、2、3 列，得 3 阶子式</p>
+            <p>$$\begin{vmatrix} 1 & 1 & 2 \\ 0 & 2 & 1 \\ 1 & 1 & 0 \end{vmatrix} = 1(0-1) - 1(0-1) + 2(0-2) = -1 + 1 - 4 = -4 \ne 0$$</p>
+            <p>存在 3 阶非零子式，故 $R(A)\ge 3$；而行阶梯形只有 3 个非零行，$R(A)\le 3$。两者结合得 $R(A)=3$ ✓，与阶梯形法一致。（顺带一提：本例中取第 1、2、3 行与第 1、2、3 列的那个 3 阶子式恰好等于 $0$——这说明「存在一个非零子式」不能换成「所有子式都非零」。）</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.11</span> 用初等行变换求逆矩阵
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>求 $A=\begin{pmatrix} 1 & 2 & 3 \\ 2 & 2 & 1 \\ 3 & 4 & 3 \end{pmatrix}$ 的逆矩阵。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：构造 $(A\mid E)$。</strong></p>
+            <p>$$(A\mid E)=\begin{pmatrix} 1 & 2 & 3 & 1 & 0 & 0 \\ 2 & 2 & 1 & 0 & 1 & 0 \\ 3 & 4 & 3 & 0 & 0 & 1 \end{pmatrix}$$</p>
+            <p><strong>第二步：化左半部分为 $E$。</strong></p>
+            <p>$r_2-2r_1$，$r_3-3r_1$：</p>
+            <p>$$\to\begin{pmatrix} 1 & 2 & 3 & 1 & 0 & 0 \\ 0 & -2 & -5 & -2 & 1 & 0 \\ 0 & -2 & -6 & -3 & 0 & 1 \end{pmatrix}$$</p>
+            <p>$r_3-r_2$：</p>
+            <p>$$\to\begin{pmatrix} 1 & 2 & 3 & 1 & 0 & 0 \\ 0 & -2 & -5 & -2 & 1 & 0 \\ 0 & 0 & -1 & -1 & -1 & 1 \end{pmatrix}$$</p>
+            <p>$r_3\times(-1)$：</p>
+            <p>$$\to\begin{pmatrix} 1 & 2 & 3 & 1 & 0 & 0 \\ 0 & -2 & -5 & -2 & 1 & 0 \\ 0 & 0 & 1 & 1 & 1 & -1 \end{pmatrix}$$</p>
+            <p>回代消去上方的元素：$r_1-3r_3$，$r_2+5r_3$：</p>
+            <p>$$r_1-3r_3 = (1,2,0 \mid 1-3,\ 0-3,\ 0+3) = (1,2,0\mid -2,-3,3)$$</p>
+            <p>$$r_2+5r_3 = (0,-2,0 \mid -2+5,\ 1+5,\ 0-5)=(0,-2,0\mid 3,6,-5)$$</p>
+            <p>$$\to\begin{pmatrix} 1 & 2 & 0 & -2 & -3 & 3 \\ 0 & -2 & 0 & 3 & 6 & -5 \\ 0 & 0 & 1 & 1 & 1 & -1 \end{pmatrix}$$</p>
+            <p>$r_2\times(-\tfrac12)$：</p>
+            <p>$$\to\begin{pmatrix} 1 & 2 & 0 & -2 & -3 & 3 \\ 0 & 1 & 0 & -\frac32 & -3 & \frac52 \\ 0 & 0 & 1 & 1 & 1 & -1 \end{pmatrix}$$</p>
+            <p>$r_1-2r_2$：</p>
+            <p>$$r_1-2r_2 = (1,0,0 \mid -2+3,\ -3+6,\ 3-5) = (1,0,0\mid 1,3,-2)$$</p>
+            <p>$$\to\begin{pmatrix} 1 & 0 & 0 & 1 & 3 & -2 \\ 0 & 1 & 0 & -\frac32 & -3 & \frac52 \\ 0 & 0 & 1 & 1 & 1 & -1 \end{pmatrix}=(E\mid A^{-1})$$</p>
+            <p>所以</p>
+            <p>$$A^{-1}=\begin{pmatrix} 1 & 3 & -2 \\ -\frac32 & -3 & \frac52 \\ 1 & 1 & -1 \end{pmatrix}$$</p>
+            <p><strong>第三步：验算 $AA^{-1}=E$。</strong>$A$ 的第 1 行 $(1,2,3)$ 与 $A^{-1}$ 的三列对应项相乘再相加：$1-3+3=1$ ✓，$3-6+3=0$ ✓，$-2+5-3=0$ ✓。第 2 行 $(2,2,1)$：$2-3+1=0$ ✓，$6-6+1=1$ ✓，$-4+5-1=0$ ✓。第 3 行 $(3,4,3)$：$3-6+3=0$ ✓，$9-12+3=0$ ✓，$-6+10-3=1$ ✓。九个元素全部符合，计算正确。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 3.12</span> 含参数矩阵的秩（讨论）
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $A=\begin{pmatrix} 1 & 1 & 1 \\ 1 & 2 & a \\ 1 & 4 & a^2 \end{pmatrix}$，讨论 $a$ 取何值时 $R(A)=3$，$a$ 取何值时 $R(A)=2$。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步：作初等行变换。</strong>用第 1 行消去第 1 列下方（$r_2-r_1$，$r_3-r_1$）：</p>
+            <p>$$A\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & 1 & a-1 \\ 0 & 3 & a^2-1 \end{pmatrix}$$</p>
+            <p>再用第 2 行消去第 3 行第 2 列（$r_3-3r_2$）：</p>
+            <p>$$\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & 1 & a-1 \\ 0 & 0 & (a^2-1)-3(a-1) \end{pmatrix}$$</p>
+            <p>计算最后一个元素：$(a^2-1)-3(a-1) = a^2-3a+2 = (a-1)(a-2)$。</p>
+            <p>$$\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & 1 & a-1 \\ 0 & 0 & (a-1)(a-2) \end{pmatrix}$$</p>
+            <p><strong>第二步：讨论主元是否为零。</strong>此时已经是行阶梯形，主元为 $1,\ 1,\ (a-1)(a-2)$。</p>
+            <ul>
+              <li>当 $(a-1)(a-2)\ne 0$，即 $a\ne 1$ 且 $a\ne 2$ 时，三个主元都非零，行阶梯形有 3 个非零行，$R(A)=3$。</li>
+              <li>当 $a=1$ 或 $a=2$ 时，第 3 行为零行，只有 2 个非零行，$R(A)=2$。</li>
+            </ul>
+            <p><strong>第三步：分别验算两个临界值。</strong></p>
+            <p>$a=1$ 时，$A=\begin{pmatrix} 1&1&1 \\ 1&2&1 \\ 1&4&1 \end{pmatrix}$。作 $r_2-r_1=[0,1,0]$，$r_3-r_1=[0,3,0]$，$r_3-3r_2=[0,0,0]$，得行阶梯形 $\begin{pmatrix}1&1&1\\0&1&0\\0&0&0\end{pmatrix}$，非零行 2 个，$R(A)=2$ ✓。</p>
+            <p>$a=2$ 时，$A=\begin{pmatrix} 1&1&1 \\ 1&2&2 \\ 1&4&4 \end{pmatrix}$。$r_2-r_1=[0,1,1]$，$r_3-r_1=[0,3,3]$，$r_3-3r_2=[0,0,0]$，得 $\begin{pmatrix}1&1&1\\0&1&1\\0&0&0\end{pmatrix}$，非零行 2 个，$R(A)=2$ ✓。</p>
+            <p><strong>结论：</strong>$a\ne 1$ 且 $a\ne 2$ 时 $R(A)=3$；$a=1$ 或 $a=2$ 时 $R(A)=2$。</p>
+            <p><strong>交叉验证：</strong>$A$ 是 3 阶方阵，$R(A)=3 \iff |A|\ne 0$，而 $|A|$ 正是行阶梯形主元之积 $1\cdot1\cdot(a-1)(a-2)=(a-1)(a-2)$——与 3-1 克拉默法则的判据完全吻合。这也提醒我们：<strong>含参数方阵的秩，临界值就是 $|A|=0$ 的根</strong>，但用行变换求可以顺便得到所有秩，信息更全。</p>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点</div>
+        <ul>
+          <li><strong>把「存在 $r$ 阶非零子式」说成「所有 $r$ 阶子式非零」。</strong>秩的定义只要<strong>有一个</strong> $r$ 阶子式不为零、且所有 $r+1$ 阶子式全为零。例 3.10 中就出现过「某个 3 阶子式为零、另一个 3 阶子式非零」的情况。</li>
+          <li><strong>求逆矩阵时混用列变换。</strong>$(A\mid E)\to(E\mid A^{-1})$ 只允许初等<strong>行</strong>变换。一旦用了列变换，右半部分就不再是 $A^{-1}$。要区分：求秩可以用列变换，求逆不行。</li>
+          <li><strong>看到左半出现零行还继续算。</strong>左半部分出现全零行说明 $R(A) &lt; n$，$A$ 不可逆，应立刻停止并写结论。</li>
+          <li><strong>误以为初等矩阵的行列式都是 $1$。</strong>互换型是 $-1$，倍乘型是 $k$，只有倍加型才是 $1$——它们都<strong>不为零</strong>（这正是可逆的原因），但不一定等于 $1$。</li>
+          <li><strong>对非方阵写 $|A|$。</strong>「$R(A)=n \iff |A|\ne 0$」中的 $A$ 必须是 $n$ 阶方阵；对 $m\times n$ 矩阵，$R(A)=n$ 只说明列满秩。</li>
+          <li><strong>含参数时漏掉临界值。</strong>要把消元过程中每一个可能为零的主元都令其为零逐一讨论，不能只看最后一个主元，也不能只看行列式。</li>
+        </ul>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点</div>
+        <ul>
+          <li><span class="tag">高频</span><span class="tag">小题</span>求具体数值矩阵的秩。套路固定：初等行变换化行阶梯形，数非零行。$3\times4$ 或 $4\times5$ 的矩阵是常见规格。</li>
+          <li><span class="tag">高频</span><span class="tag">大题</span>含参数矩阵的秩的讨论（如例 3.12）。评分点是「是否把参数的所有临界值都找到了」。技巧：若 $A$ 是方阵，$|A|=0$ 的根一定是临界值，可以先用行列式<strong>找出候选值</strong>，再代入求出各情形下的秩；非方阵则只能靠行变换中主元为零来确定。</li>
+          <li><span class="tag">高频</span><span class="tag">大题</span>用初等变换求逆矩阵。这是 $n=3$ 时的标准大题，必须练到又快又准。记住「只作行变换」和「化到左半为 $E$」两个要点，算完务必验算一两个元素。</li>
+          <li><span class="tag">小题</span>秩的性质辨析：「$R(A)=R(A^T)$」「$R(kA)=R(A)\ (k\ne0)$」「$R(AB)\le\min\{R(A),R(B)\}$」都是常考的正确命题；而「$R(A+B)=R(A)+R(B)$」「$R(AB)=R(A)R(B)$」一定是错的。</li>
+          <li><span class="tag">易错</span>用秩的定义一作证明：要证 $R(A)\ge r$ 只需<strong>找出一个</strong> $r$ 阶非零子式；要证 $R(A)\le r$ 必须说明<strong>所有</strong> $r+1$ 阶子式全为零。把这两个方向搞反是证明题最常见的失分点。</li>
+          <li><span class="tag">小题</span>初等矩阵左乘／右乘的效果判断——记住「左行右列」，并注意 $P$ 的阶数必须与 $A$ 的行数（左乘）或列数（右乘）匹配；秩的不等式 $R(A+B)\le R(A)+R(B)$、$R(AB)\le\min\{R(A),R(B)\}$ 与 Sylvester 不等式 $R(AB)\ge R(A)+R(B)-n$ 也是常考的小题。</li>
+        </ul>
+      </div>
+
+      <div class="box app-box">
+        <div class="box-title"><span class="ico">🔧</span>工程联系：刚度矩阵求逆与结构稳定性</div>
+        <p>有限元分析中结构的总刚度方程为 $Ku=f$（$K$ 为 $n$ 阶刚度矩阵，$u$ 为节点位移，$f$ 为载荷），两条工程结论正好对应本节的两个概念：</p>
+        <p><strong>① 稳定性 $=$ 满秩。</strong>$K$ 可逆（$R(K)=n$，$|K|\ne0$）$\iff$ 结构没有刚体位移模式、约束足够，方程有唯一解；若 $R(K) &lt; n$，说明结构存在 $n-R(K)$ 个可自由运动的模式，位移无法确定——软件报的「刚度矩阵奇异」说的就是这件事。</p>
+        <p><strong>② 求逆 $=$ 求柔度矩阵。</strong>要反复施加不同工况的载荷时，可先把 $K$ 求逆，之后 $u=K^{-1}f$ 只是一次矩阵乘法。小规模模型直接用 $(K\mid E)\to(E\mid K^{-1})$，大规模模型用 $LU$ 分解避免显式求逆——第一步永远是初等行变换。</p>
+      </div>
+
+      <div class="box model-box">
+        <div class="box-title"><span class="ico">🧩</span>典型模型题</div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 1</span>由矩阵等式反求秩（夹逼法）<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              已知矩阵的<strong>多项式等式</strong>（如 $A^2=A$、$A^2=E$、$A^2-3A+2E=O$），要求某个与 $A$ 相关的矩阵的秩，或证明一个秩的等式。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 把等式<strong>因式分解</strong>成 $XY=O$ 的形式；② 用 $AB=O \Rightarrow R(A)+R(B)\le n$ 得到<strong>上界</strong>；③ 再把 $X,Y$ 作差（或作和）凑出单位矩阵的倍数，用 $R(X+Y)\le R(X)+R(Y)$ 得到<strong>下界</strong>；④ 上下夹逼，等号成立。</div>
+            <p><strong>例</strong>　设 $A$ 为 $n$ 阶矩阵，满足 $A^2=A$。（1）证明 $R(A)+R(A-E)=n$；（2）若 $n=4$ 且 $R(A)=3$，求 $R(A-E)$。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>（1）第一步：因式分解。</strong>$A^2=A$ 即 $A^2-A=O$，也就是</p>
+              <p>$$A(A-E)=O$$</p>
+              <p><strong>第二步：用 $AB=O$ 求上界。</strong>由性质 3.5 ⑧，对 $n$ 阶矩阵有 $AB=O \Rightarrow R(A)+R(B)\le n$。取 $B=A-E$，得</p>
+              <p>$$R(A)+R(A-E)\le n \qquad (\ast)$$</p>
+              <p><strong>第三步：凑单位矩阵求下界。</strong>注意这两个矩阵之差恰好是单位矩阵：</p>
+              <p>$$A-(A-E)=E$$</p>
+              <p>而「和的秩不超过秩的和」即 $R(X+Y)\le R(X)+R(Y)$。把它用在 $X=A$、$Y=-(A-E)$ 上（注意 $R(-(A-E))=R(A-E)$），得</p>
+              <p>$$n=R(E)=R\big(A-(A-E)\big)\le R(A)+R(A-E)$$</p>
+              <p><strong>第四步：夹逼。</strong>与 $(\ast)$ 合并，$n\le R(A)+R(A-E)\le n$，故</p>
+              <p>$$R(A)+R(A-E)=n$$</p>
+              <p><strong>（2）</strong>把 $n=4$ 代入上式：$R(A-E)=4-R(A)=4-3=\mathbf{1}$。</p>
+              <p><strong>验算（用一个具体例子）。</strong>取 $A=\mathrm{diag}(1,1,1,0)$，它满足 $A^2=A$，$R(A)=3$；而 $A-E=\mathrm{diag}(0,0,0,-1)$，$R(A-E)=1$ ✓。</p>
+              <p class="solution-label">易错提醒</p>
+              <p>两处最容易出错。<strong>一是只做上界就下结论</strong>：$AB=O$ 给出的只是 $\le n$，必须再补一条下界才能断言等号，而等号恰恰是考研要求的那一句。<strong>二是把 $A(A-E)=O$ 误读成「$A=O$ 或 $A-E=O$」</strong>——矩阵没有「乘积为零则必有一个因子为零」这条性质，非零矩阵的乘积完全可以为零。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 2</span>含参数矩阵的秩的讨论<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              矩阵的元素里带参数，问「参数取何值时秩为 3 / 秩为 2 / 秩最小」。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 作初等<strong>行</strong>变换化行阶梯形，把参数留在主元里；② 令<strong>每一个可能为零的主元</strong>等于零，得到全部候选临界值（不能只看最后一个）；③ 对每个临界值单独代回，重新数非零行；④ 若 $A$ 是方阵，可以先用 $|A|=0$ 的根<strong>快速找出候选值</strong>，再用行变换求出每种情形下的秩。最后还要回答「秩能不能更小」——下限往往由某两行不成比例直接封死。</div>
+            <p><strong>例</strong>　设 $A=\begin{pmatrix} 1 & 1 & 1 \\ 1 & a & 2 \\ 1 & 2 & a \end{pmatrix}$，讨论 $a$ 取何值时 $R(A)=3$、$R(A)=2$、$R(A)=1$。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：先用行列式找候选值。</strong>（$A$ 是方阵，这一招最快。）按对角线法则，正三项 $a^2+2+2$，负三项 $a+4+a$：</p>
+              <p>$$|A|=\begin{vmatrix} 1 & 1 & 1 \\ 1 & a & 2 \\ 1 & 2 & a \end{vmatrix}=a^2+4-2a-4=a^2-2a=a(a-2)$$</p>
+              <p>所以只有 $a=0$ 与 $a=2$ 可能使秩小于 $3$；$a\ne 0$ 且 $a\ne 2$ 时 $|A|\ne 0$，$R(A)=3$。</p>
+              <p><strong>第二步：用初等行变换求 $a=0$ 时的秩。</strong>此时 $A=\begin{pmatrix}1&1&1\\1&0&2\\1&2&0\end{pmatrix}$，作 $r_2-r_1$、$r_3-r_1$：</p>
+              <p>$$A\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & -1 & 1 \\ 0 & 1 & -1 \end{pmatrix}\xrightarrow{\ r_3+r_2\ }\begin{pmatrix} 1 & 1 & 1 \\ 0 & -1 & 1 \\ 0 & 0 & 0 \end{pmatrix}$$</p>
+              <p>只有 2 个非零行，且第 2 行 $(0,-1,1)$ 与第 1 行 $(1,1,1)$ 不成比例，故 $R(A)=2$。</p>
+              <p><strong>第三步：求 $a=2$ 时的秩。</strong>此时 $A=\begin{pmatrix}1&1&1\\1&2&2\\1&2&2\end{pmatrix}$，第 2、3 两行完全相同，作 $r_3-r_2$ 得零行：</p>
+              <p>$$A\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & 1 & 1 \\ 0 & 0 & 0 \end{pmatrix}$$</p>
+              <p>2 个非零行，故 $R(A)=2$。</p>
+              <p><strong>第四步：$R(A)$ 能等于 $1$ 吗？</strong>若 $R(A)=1$，则第 1 行 $(1,1,1)$ 与第 2 行 $(1,a,2)$ 必须成比例：由第 1 个分量得比例系数为 $1$，于是第 2 个分量应有 $a=1$，第 3 个分量应有 $2=1$，矛盾。所以<strong>对任何 $a$ 都有 $R(A)\ge 2$，$R(A)=1$ 不可能出现</strong>。</p>
+              <p><strong>答案：</strong>$a\ne 0$ 且 $a\ne 2$ 时 $R(A)=3$；$a=0$ 或 $a=2$ 时 $R(A)=2$；不存在使 $R(A)=1$ 的 $a$。</p>
+              <p class="solution-label">易错提醒</p>
+              <p>两点要小心。<strong>一是漏掉某个主元</strong>：含参数时每一步消元得到的主元都可能为零，必须逐一令零讨论，只盯着最后一行会漏解。<strong>二是问什么答什么</strong>：题目问「$a$ 取何值时 $R(A)=1$」，正确答案是「不存在」，而不是把 $a=0,2$ 照抄一遍。另外，第一步用 $|A|=0$ 找候选值只对方阵有效，非方阵只能靠行变换中主元为零来确定。</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="quiz" data-quiz-id="ch3-3" data-title="3-3 初等变换与秩 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">用初等变换求逆矩阵时，应对分块矩阵 $(A\mid E)$ 作（　）。
+             <span class="en-line" lang="en">When finding an inverse matrix by elementary transformations, one should apply to the block matrix $(A\mid E)$ (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">只作初等行变换</span></li>
+            <li><span class="opt-body">只作初等列变换</span></li>
+            <li><span class="opt-body">行变换与列变换都可以随意使用</span></li>
+            <li><span class="opt-body">先作行变换再作列变换，两者交替进行</span></li>
+          </ul>
+          <div class="q-explain">$(A\mid E)\to(E\mid A^{-1})$ 的原理是：若存在可逆矩阵 $P$ 使 $PA=E$，则 $P=A^{-1}$，此时右半部分自动变成 $PE=A^{-1}$。而「左乘一个矩阵」只能由<strong>行</strong>变换实现（左乘行变换，右乘列变换），所以全程只能用初等行变换。<br>其余三个选项都引入了列变换：一旦对 $(A\mid E)$ 作列变换，相当于右乘某个初等矩阵 $Q$，左右两半会同时被改变，最终右半部分不再是 $A^{-1}$。要注意区分场景——求秩时行、列变换都能用，求逆矩阵时只能用行变换。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$R(A)=r$，则下列刻画正确的是（　）。
+             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix with $R(A)=r$. Which of the following characterizations is correct? (　)</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$A$ 的所有 $r$ 阶子式都不为零</span></li>
+            <li data-correct="true"><span class="opt-body">$A$ 存在 $r$ 阶非零子式，且所有 $r+1$ 阶子式全为零</span></li>
+            <li><span class="opt-body">$A$ 的所有 $r+1$ 阶子式都不为零</span></li>
+            <li><span class="opt-body">$A$ 存在 $r+1$ 阶非零子式</span></li>
+          </ul>
+          <div class="q-explain">秩的定义由两个方向的条件合成：「存在 $r$ 阶非零子式」给出 $R(A)\ge r$，「所有 $r+1$ 阶子式全为零」给出 $R(A)\le r$，缺一不可。<br>第一个选项把「存在」偷换成了「所有」——秩只要有一个 $r$ 阶子式非零就够了，其余 $r$ 阶子式完全可能为零（例 3.10 中就出现过某个 3 阶子式为零、另一个不为零的情况）。第三个选项方向反了，且与秩的定义直接矛盾。第四个选项若成立则秩至少为 $r+1$，与「所有 $r+1$ 阶子式全为零」冲突。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$P,Q$ 分别为 $m$ 阶与 $n$ 阶可逆矩阵，则（　）。
+             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and let $P$, $Q$ be invertible matrices of orders $m$ and $n$ respectively. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(PAQ) = R(A)$</span></li>
+            <li><span class="opt-body">$R(PAQ) = R(A)$ 仅当 $P,Q$ 都是初等矩阵时成立</span></li>
+            <li><span class="opt-body">$R(PAQ) = R(A)$ 仅当 $P=E$ 或 $Q=E$ 时成立</span></li>
+            <li><span class="opt-body">$R(PAQ) = R(A)\cdot R(P)\cdot R(Q)$</span></li>
+          </ul>
+          <div class="q-explain">可逆矩阵可以分解为有限个初等矩阵之积，所以左乘 $P$、右乘 $Q$ 相当于对 $A$ 作了有限次初等行、列变换，而初等变换不改变矩阵的秩，故 $R(PAQ)=R(A)$ 对一切可逆的 $P,Q$ 成立。<br>第二、三个选项都把结论限制得太窄，它们只覆盖「初等矩阵」「单位矩阵」这些特例。第四个选项是拼凑出来的公式：$R(P)=m$、$R(Q)=n$，右端等于 $R(A)\cdot m\cdot n$，连秩的基本上界 $\min\{m,n\}$ 都会被突破。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$B$ 为 $n\times s$ 矩阵，则下列不等式一定成立的是（　）。
+             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix. Which of the following inequalities always holds? (　)</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(AB) \le \min\{R(A),\,R(B)\}$</span></li>
+            <li><span class="opt-body">$R(AB) \ge \min\{R(A),\,R(B)\}$</span></li>
+            <li><span class="opt-body">$R(AB) = R(A)\cdot R(B)$</span></li>
+            <li><span class="opt-body">$R(AB) \ge \max\{R(A),\,R(B)\}$</span></li>
+          </ul>
+          <div class="q-explain">$AB$ 的每一列都可由 $A$ 的列向量经加、减与数乘得到，故 $R(AB)\le R(A)$；再对 $(AB)^T=B^TA^T$ 用一次同样的结论得 $R(AB)\le R(B)$，合起来即第一项。<br>第二个选项方向反了：取 $A=\begin{pmatrix}1&0\\0&0\end{pmatrix}$、$B=\begin{pmatrix}0&0\\0&1\end{pmatrix}$，$R(A)=R(B)=1$ 但 $AB=O$，$R(AB)=0&lt;1$。第四个选项比第二个更强，更不可能成立——$R(AB)$ 连 $R(A)$ 都超不过。第三个选项把乘法搬到了秩上，而秩对乘法没有这种可乘性（$R(A)\cdot R(B)$ 甚至会超过 $\min\{m,n\}$ 这个秩的上界）。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">设 $A,B$ 均为 $n$ 阶矩阵，且 $AB=O$，则（　）。
+             <span class="en-line" lang="en">Let $A$ and $B$ be $n\times n$ matrices with $AB=O$. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(A) + R(B) \le n$</span></li>
+            <li><span class="opt-body">$R(A) + R(B) \ge n$</span></li>
+            <li><span class="opt-body">$A = O$ 或 $B = O$</span></li>
+            <li><span class="opt-body">$R(A) = R(B) = 0$</span></li>
+          </ul>
+          <div class="q-explain">$AB=O$ 说明 $B$ 的每一列都是 $Ax=0$ 的解；而 $Ax=0$ 的自由未知量个数是 $n-R(A)$，$B$ 的列作为它的解最多只能贡献 $n-R(A)$ 个独立方向，所以 $R(B)\le n-R(A)$，移项即得 $R(A)+R(B)\le n$。<br>第二个选项方向写反了：例如 $n=3$ 时取 $A=\mathrm{diag}(1,0,0)$、$B=\mathrm{diag}(0,1,0)$，此时 $AB=O$ 而 $R(A)+R(B)=1+1=2&lt;3$，可见 $\ge n$ 不成立。第三个选项错：取 $A=\mathrm{diag}(1,0,0)$、$B=\mathrm{diag}(0,1,0)$，两者都不是零矩阵，乘积却是零——这正是「非零矩阵的乘积可以为零」，也是矩阵与数最大的差别之一。第四个选项把秩说成了 $0$，而两个矩阵的秩都可以是正的。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $3\times 4$ 矩阵，$B$ 为 $4\times 3$ 矩阵，且 $R(AB)=3$，则 $R(A) = $ ______。
+             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times3$ matrix with $R(AB)=3$. Then $R(A) = $ ______.</span></p>
+          <div class="q-answer" data-answer="3"></div>
+          <div class="q-explain">由 $R(AB)\le\min\{R(A),R(B)\}$ 得 $R(A)\ge R(AB)=3$；又 $A$ 只有 3 行，故 $R(A)\le 3$。两边夹逼得 $R(A)=3$（同理 $R(B)=3$，因为 $B$ 是 $4\times3$、只有 3 <strong>列</strong>，故 $R(B)\le 3$，且 $R(B)\ge R(AB)=3$）。<br>这类「由乘积的秩反推因子的秩」是考研常考的小题，关键是把不等式两个方向都用上：下界来自 $R(AB)\le R(A)$，上界来自矩阵本身的形状。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <p class="q-stem">设 $A,B$ 为 $n$ 阶矩阵，则下列结论正确的是（　）。
+             <span class="en-line" lang="en">Let $A$ and $B$ be $n\times n$ matrices. Which of the following conclusions are correct? (　)</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(A+B) \le R(A) + R(B)$</span></li>
+            <li data-correct="true"><span class="opt-body">$R(AB) \le \min\{R(A),\,R(B)\}$</span></li>
+            <li data-correct="true"><span class="opt-body">若 $A$ 可逆，则 $R(AB) = R(B)$</span></li>
+            <li><span class="opt-body">$R(A) + R(B) \ge n$ 是 $AB = O$ 的充要条件</span></li>
+          </ul>
+          <div class="q-explain">前三条都成立。$R(A+B)\le R(A)+R(B)$ 是因为 $A+B$ 的每一列都是 $A$ 的对应列与 $B$ 的对应列之和，也就是由「$A$ 的列与 $B$ 的列合起来」这组向量经加、减与数乘得到的。$R(AB)\le\min\{R(A),R(B)\}$ 见 3-3 节性质 3.5 ⑥。第三条的理由是：可逆矩阵是初等矩阵之积，左乘 $A$ 相当于对 $B$ 作有限次初等行变换，而初等行变换不改变秩。<br>第四个选项错在方向：由 $AB=O$ 能推出的是 $R(A)+R(B)\le n$，与题目写的不等式方向恰好相反。它也不是充要条件——$R(A)+R(B)\ge n$ 与 $AB=O$ 之间没有这种双向关系，例如 $A=B=E$ 时 $R(A)+R(B)=2n\ge n$，但 $AB=E\ne O$。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，满足 $A^2 - 3A + 2E = O$，则（　）。
+             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2 - 3A + 2E = O$. Then (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$A = E$ 或 $A = 2E$</span></li>
+            <li data-correct="true"><span class="opt-body">$R(A-E) + R(A-2E) \le n$</span></li>
+            <li><span class="opt-body">$|A-E| = 0$ 且 $|A-2E| = 0$</span></li>
+            <li data-correct="true"><span class="opt-body">$A$ 可逆，且 $A^{-1} = \dfrac{3E-A}{2}$</span></li>
+          </ul>
+          <div class="q-explain">把条件因式分解：$A^2-3A+2E=(A-E)(A-2E)=O$。<br>第二项正确：由 $AB=O\Rightarrow R(A)+R(B)\le n$（取 $A-E$ 与 $A-2E$）即得。（其实还能得到更强的等号：$R(X)+R(Y)\ge R(X+Y)$，取 $X=A-E,\ Y=2E-A$，则 $X+Y=E$，故 $R(A-E)+R(2E-A)\ge n$，而 $R(2E-A)=R(A-2E)$，与 $\le n$ 合并得恒等于 $n$。）<br>第三项错：由 $(A-E)(A-2E)=O$ 及 $AB=O\Rightarrow R(A)+R(B)\le n$ 只能得到 $R(A-E)+R(A-2E)\le n$，即 $A-E$ 与 $A-2E$ 中<strong>至少有一个</strong>不满秩（$|A-E|=0$ 与 $|A-2E|=0$ 至少有一个成立），推不出两个都成立。取 $A=E$，它满足 $A^2-3A+2E=O$，但 $A-2E=-E$ 可逆、$|A-2E|\ne0$，所以「$|A-2E|=0$」不成立。命题人常把「至少有一个」偷换成「两个都是」来设陷阱。<br>第四项正确：由 $A^2-3A+2E=O$ 移项得 $3A-A^2=2E$，即 $A(3E-A)=2E$，于是 $A\cdot\frac{3E-A}{2}=E$，按逆矩阵定义得 $A^{-1}=\frac{3E-A}{2}$，同时也就证明了 $A$ 可逆。第一个选项是过度推断：条件只给出 $(A-E)(A-2E)=O$，例如 $A=\mathrm{diag}(1,2)$ 满足它，但既不等于 $E$ 也不等于 $2E$。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="考研">
+          <p class="q-stem">设 $A$ 为 4 阶矩阵，$A^*$ 是 $A$ 的伴随矩阵。若 $R(A)=3$，则 $R(A^*)=3$。
+             <span class="en-line" lang="en">Let $A$ be a $4\times4$ matrix and $A^*$ its adjugate matrix. If $R(A)=3$, then $R(A^*)=3$.</span></p>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">错误。伴随矩阵的秩是分段结论：$R(A)=n$ 时 $R(A^*)=n$；$R(A)=n-1$ 时 $R(A^*)=1$；$R(A)\le n-2$ 时 $R(A^*)=0$。这里 $n=4$、$R(A)=3=n-1$，所以 $R(A^*)=1$ 而不是 3。<br>理由：$R(A)=3$ 说明 $A$ 存在 3 阶非零子式，故 $A^*\ne O$，$R(A^*)\ge1$；又 $|A|=0$ 使 $A^*A=|A|E=O$，由 $AB=O\Rightarrow R(A)+R(B)\le n$ 得 $R(A^*)\le 4-3=1$。秩从 3 直接掉到 1 而不是 2，是因为 $A^*$ 的每个元素都是 $n-1$ 阶代数余子式，只要有一个非零，整列就成比例——这正是「秩只降一级」这种直觉失效的典型例子。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，且 $A^2 = E$，则（　）。
+             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix with $A^2 = E$. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(A-E) + R(A+E) = n$</span></li>
+            <li><span class="opt-body">$R(A-E) + R(A+E) \le n$，但等号不一定成立</span></li>
+            <li><span class="opt-body">$R(A-E) = R(A+E)$</span></li>
+            <li><span class="opt-body">$R(A-E) + R(A+E) = 2n$</span></li>
+          </ul>
+          <div class="q-explain">$A^2=E$ 即 $A^2-E=O$，因式分解得 $(A-E)(A+E)=O$。<br>用 $AB=O \Rightarrow R(A)+R(B)\le n$（性质 3.5 ⑧，此处 $n$ 就是矩阵的阶）立刻得到<strong>上界</strong> $R(A-E)+R(A+E)\le n$。<br>再取差凑单位矩阵：$(A+E)-(A-E)=2E$，由 $R(X+Y)\le R(X)+R(Y)$ 得 $n=R(2E)\le R(A+E)+R(A-E)$，这是<strong>下界</strong>。上下夹逼，等号<strong>恒成立</strong>。<br>第二个选项错在「等号不一定成立」——恰恰相反，等号一定成立，「只做上界就下结论」正是这个模型里最常见的失分点。第三个选项错：取 $A=E$，则 $R(A-E)=R(O)=0$，而 $R(A+E)=R(2E)=n\ne 0$，两者并不相等。第四个选项错：仍取 $A=E$、$n=2$，左端为 $0+2=2$，右端为 $2n=4$；一般地两个秩之和由夹逼恒等于 $n$，不可能等于 $2n$。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A=\begin{pmatrix} 1 & 1 & 1 \\ 1 & a & 3 \\ 1 & 3 & a \end{pmatrix}$，则 $R(A)=2$ 的充要条件是（　）。
+             <span class="en-line" lang="en">Let $A=\begin{pmatrix} 1 & 1 & 1 \\ 1 & a & 3 \\ 1 & 3 & a \end{pmatrix}$. A necessary and sufficient condition for $R(A)=2$ is (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$a = 3$</span></li>
+            <li><span class="opt-body">$a = -1$</span></li>
+            <li data-correct="true"><span class="opt-body">$a = 3$ 或 $a = -1$</span></li>
+            <li><span class="opt-body">$a \ne 3$ 且 $a \ne -1$</span></li>
+          </ul>
+          <div class="q-explain">$A$ 是 3 阶方阵，先用行列式定候选值：作 $r_2-r_1$、$r_3-r_1$ 得 $(0,a-1,2)$ 与 $(0,2,a-1)$，于是 $|A|=(a-1)^2-4=a^2-2a-3=(a-3)(a+1)$，候选临界值只有 $a=3$ 与 $a=-1$。<br>两个值都要代回验算。$a=3$ 时 $A=\begin{pmatrix}1&1&1\\1&3&3\\1&3&3\end{pmatrix}$，第 2、3 两行完全相同，$R(A)=2$；$a=-1$ 时 $A=\begin{pmatrix}1&1&1\\1&-1&3\\1&3&-1\end{pmatrix}$，$r_2-r_1=(0,-2,2)$、$r_3-r_1=(0,2,-2)$，$r_3+r_2$ 化为零行，$R(A)=2$。<br>还要说明秩不会更小：第 1 行 $(1,1,1)$ 与第 2 行 $(1,a,3)$ 若成比例，由第一个分量得比例系数为 $1$，于是第 3 个分量应有 $3=1$，矛盾，故恒有 $R(A)\ge 2$。因此 $R(A)=2 \iff a=3$ 或 $a=-1$。<br>第一、二个选项各漏掉一个临界值，属于分类不完整，是含参数秩讨论题最典型的失分方式。第四个选项 $a\ne3$ 且 $a\ne-1$ 时 $|A|\ne0$，$R(A)=3$，与题目要求相反；顺带一提，本题中 $R(A)=1$ 永远不可能出现，所以也没有「漏掉第三类」的问题。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $3\times 4$ 矩阵，$B$ 为 $4\times 3$ 矩阵，且 $AB=O$，则 $R(A) + R(B)$ 的最大值为 ______。
+             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times3$ matrix with $AB=O$. Then the maximum value of $R(A) + R(B)$ is ______.</span></p>
+          <div class="q-answer" data-answer="4"></div>
+          <div class="q-explain">由 $AB=O \Rightarrow R(A)+R(B)\le n$（性质 3.5 ⑧），这里的「$n$」是乘积 $AB$ 的<strong>中间维数</strong>，即 $A$ 的列数、也是 $B$ 的行数，故 $n=4$，于是 $R(A)+R(B)\le 4$。<br>上界 4 能否取到？取 $A=\begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\end{pmatrix}$（$R(A)=3$）与 $B=\begin{pmatrix}0&0&0\\0&0&0\\0&0&0\\1&0&0\end{pmatrix}$（$R(B)=1$）。$A$ 的第 4 列全为零，而 $B$ 只有第 4 行第 1 列一个非零元，故 $AB=O$，且 $R(A)+R(B)=3+1=4$。所以最大值就是 4。<br>常见错答有两个。答 <strong>3</strong> 是把「$R(A)+R(B)$」与「$R(A)$ 的上界 $\min\{m,n\}=3$」混为一谈，忘了 $R(B)$ 也要计入。答 <strong>6</strong> 是分别取了 $R(A)\le3$、$R(B)\le3$ 再把两个上界相加，而 $AB=O$ 恰恰把两者之和压到了 4 以内——这正是本题的关键。另外，$R(A)+R(B)\le\min\{m,s\}=\min\{3,3\}=3$ 也是错的，中间维数 $n=4$ 才是正确的上界来源。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷补的是全章的<strong>地基——秩怎么算、初等变换为什么不改变秩</strong>。前两题考操作规则（求逆只用行变换）与秩的子式定义，第 3 题考 $R(PAQ)=R(A)$，其余各题集中训练秩的等式与不等式工具箱，伴随矩阵秩的分段结论也单独成题。</p>
+          <p>最常见的错法：一是<strong>把工具箱的方向记反</strong>，$R(AB)\le\min\{R(A),R(B)\}$ 写成 $\ge$，$AB=O$ 时写成 $R(A)+R(B)\ge n$（正确方向是 $\le n$，取 $A=\mathrm{diag}(1,0)$、$B=\mathrm{diag}(0,1)$ 即可否定）。二是<strong>把「存在」当成「所有」</strong>：秩为 $r$ 只要求存在一个 $r$ 阶非零子式，并非所有 $r$ 阶子式都非零。三是伴随矩阵的秩凭直觉「降一级」，而 $n=4$、$R(A)=3$ 时它直接掉到 $1$——分段结论「满秩则满秩，差一级掉到 $1$，差两级归零」要硬记，它正是由 $A^*A=|A|E=O$ 配合 $AB=O \Rightarrow R(A)+R(B)\le n$ 推出来的。</p>
+          <p>本卷向前接第 2 章的初等矩阵与「左乘行变换、右乘列变换」——求逆与求秩之所以规则不同，根子就在这里；向后则是第 4 章用秩定义极大线性无关组、第 5 章用 $n-R(A-\lambda E)$ 数特征向量个数的公共工具。</p>
+          <p>下一步：把 $R(AB)\le\min\{R(A),R(B)\}$、$R(A+B)\le R(A)+R(B)$、$AB=O \Rightarrow R(A)+R(B)\le n$、可逆矩阵左乘不改变秩这几条整理成卡片，并把任意矩阵化行最简形练到不假思索，然后做章末综合测验。</p>
+        </div>
+
+      </div>
+
+      <!-- ======== 小节内容结束 ======== -->
+
+      <h2 id="final">第 3 章 · 综合测验</h2>
+      <p>下面 10 道题覆盖三节的核心结论：克拉默法则的适用条件、解的判定定理、初等变换与秩。建议先不看笔记独立完成，再对照解析检查思路。全部做对说明你已经掌握了本章的主干。</p>
+      <div class="quiz" data-quiz-id="ch3-final" data-title="第 3 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="fill" data-level="基础">
+          <p class="q-stem">设 4 元非齐次线性方程组 $Ax=b$ 有两个不同的解 $\eta_1,\eta_2$，且 $R(A)=2$，则 $Ax=b$ 的通解中含有的独立任意常数个数为 ______。
+             <span class="en-line" lang="en">A nonhomogeneous system $Ax=b$ in 4 unknowns has two distinct solutions $\eta_1,\eta_2$, and $R(A)=2$. Then the general solution of $Ax=b$ contains ______ independent arbitrary constants.</span></p>
+          <div class="q-answer" data-answer="2"></div>
+          <div class="q-explain">$\eta_1$ 是解说明方程组有解，故 $R(\bar A)=R(A)=2&lt;n=4$，方程组有无穷多解，自由未知量个数为 $n-R(A)=4-2=2$，所以通解中含 2 个独立任意常数。<br>注意不要被 $\eta_1,\eta_2$ 干扰：它们只提供 1 个齐次解 $\eta_1-\eta_2$，剩下的齐次解要靠「自由未知量个数为 2」这一信息来补足。这类「已知两个非齐次解加秩，求通解结构」的题目，考查的正是 $n-R(A)$ 公式与「非齐次解之差是齐次解」这两条。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">设 $A$ 为 3 阶矩阵，$R(A)=2$，$\eta_1=(1,1,1)^T$ 与 $\eta_2=(2,3,4)^T$ 都是非齐次线性方程组 $Ax=b$ 的解，则 $Ax=b$ 的通解为（　）。
+             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=2$, and let $\eta_1=(1,1,1)^T$ and $\eta_2=(2,3,4)^T$ both be solutions of the nonhomogeneous system $Ax=b$. Then the general solution of $Ax=b$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$x=(1,1,1)^T + c(1,2,3)^T,\ c\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x=(1,1,1)^T + c(2,3,4)^T,\ c\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x=(1,1,1)^T + c(1,1,1)^T,\ c\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x=(2,3,4)^T + c(1,1,1)^T,\ c\in\mathbb{R}$</span></li>
+          </ul>
+          <div class="q-explain">$n=3$、$R(A)=2&lt;3$ 且方程组有解，故有无穷多解，通解中应含 $n-R(A)=1$ 个任意常数。齐次部分需要一个 $Ax=0$ 的非零解：由「非齐次解之差是齐次解」，$\eta_1-\eta_2=(-1,-2,-3)^T$ 满足 $A(\eta_1-\eta_2)=0$，而 $(1,2,3)^T=-(\eta_1-\eta_2)$ 也是 $Ax=0$ 的非零解，因此第一项正确（特解取 $\eta_1$，齐次解取 $(1,2,3)^T$）。<br>第二、三、四个选项都把<strong>非齐次解</strong>当成了齐次解：$(2,3,4)^T=\eta_2$ 与 $(1,1,1)^T=\eta_1$ 代入 $A$ 都得到 $b$ 而不是 $0$。以它们为方向得到的是「过原点方向的直线」，例如第三个选项实际只能取到形如 $(1+c)(1,1,1)^T$ 的点，而 $A\big((1+c)\eta_1\big)=(1+c)b\ne b$（$c\ne0$ 时）。通解的正确结构是「非齐次特解 $+$ 齐次通解」，两者绝不能混用。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$B$ 为 $n\times s$ 矩阵，且 $AB=O$，则（　）。
+             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix with $AB=O$. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$R(A) + R(B) \le n$</span></li>
+            <li><span class="opt-body">$R(A) + R(B) \le m$</span></li>
+            <li><span class="opt-body">$R(A) + R(B) \le s$</span></li>
+            <li><span class="opt-body">$R(A) + R(B) \le \min\{m,\,s\}$</span></li>
+          </ul>
+          <div class="q-explain">$AB=O$ 说明 $B$ 的每一列都是 $Ax=0$ 的解；该齐次方程组有 $n$ 个未知量、自由未知量个数为 $n-R(A)$，而 $B$ 的列都是它的解，最多只能贡献 $n-R(A)$ 个独立方向，故 $R(B)\le n-R(A)$，即 $R(A)+R(B)\le n$。<br>关键是认清「$n$」是谁：$n$ 既是 $A$ 的列数，又是 $B$ 的行数，也就是乘积 $AB$ 的<strong>中间维数</strong>——$Ax=0$ 的 $n$ 个未知量正来自它，所以只有它出现在结论里。其余三个选项分别把中间维数错写成了 $A$ 的行数 $m$、$B$ 的列数 $s$ 以及两者的较小者，都是没有回到「自由未知量个数 $=n-R(A)$」这一步去核对。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <p class="q-stem">设 $A$ 为 3 阶矩阵，$A^*$ 是 $A$ 的伴随矩阵，则（　）。
+             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix and $A^*$ its adjugate matrix. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $R(A)=3$，则 $R(A^*)=3$</span></li>
+            <li data-correct="true"><span class="opt-body">若 $R(A)=2$，则 $R(A^*)=1$</span></li>
+            <li data-correct="true"><span class="opt-body">若 $R(A)\le 1$，则 $R(A^*)=0$</span></li>
+            <li><span class="opt-body">若 $R(A)=2$，则 $R(A^*)=2$</span></li>
+          </ul>
+          <div class="q-explain">伴随矩阵的秩随 $A$ 的秩分段取值，规律是「满秩则满秩，差一级则掉到 1，差两级归零」：<br>① $R(A)=3=n$：$|A|\ne0$，由 $A^*=|A|A^{-1}$ 知 $A^*$ 也可逆，$R(A^*)=3$。<br>② $R(A)=2=n-1$：$A$ 存在 2 阶非零子式，故 $A^*\ne O$，$R(A^*)\ge1$；又 $A^*A=|A|E=O$（因 $|A|=0$），由 $AB=O\Rightarrow R(A)+R(B)\le3$ 得 $R(A^*)\le1$，于是 $R(A^*)=1$。<br>③ $R(A)\le1=n-2$：此时 $A$ 的所有 2 阶子式全为零，即 $A^*$ 的每个元素都是 0，$A^*=O$，$R(A^*)=0$。<br>第四项与第二项直接矛盾，它出自「$A$ 的秩降一级，$A^*$ 的秩也降一级」的直觉，但正确的规律是直接掉到 1，这一点务必记牢。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A$ 为 3 阶矩阵，$A^*$ 为其伴随矩阵，且 $R(A)=2$，则齐次线性方程组 $A^*x=0$ 的自由未知量个数为（　）。
+             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix and $A^*$ its adjugate matrix, with $R(A)=2$. Then the number of free variables of the homogeneous system $A^*x=0$ is (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$1$</span></li>
+            <li data-correct="true"><span class="opt-body">$2$</span></li>
+            <li><span class="opt-body">$3$</span></li>
+          </ul>
+          <div class="q-explain">第一步（3-3 的伴随矩阵秩结论）：$n=3$、$R(A)=2=n-1$，故 $R(A^*)=1$。理由：$A$ 有 2 阶非零子式使 $A^*\ne O$，而 $A^*A=|A|E=O$ 配合 $AB=O\Rightarrow R(A)+R(B)\le n$ 又给出 $R(A^*)\le 3-2=1$。<br>第二步（3-2 的自由度公式）：$A^*x=0$ 是 3 元齐次方程组，自由未知量个数 $=n-R(A^*)=3-1=2$，选第三项。<br>第二个选项是把 $R(A^*)=1$ 直接当成了自由未知量个数，漏掉「用 $n$ 减去它」这一步——这是自由未知量题目最高频的错误。第四个选项相当于认为 $A^*=O$（那样自由未知量才是 3 个），但 $R(A)=2$ 时 $A^*$ 必有非零列，$A^*\ne O$。第一个选项相当于认为 $A^*$ 满秩，与 $R(A^*)=1$ 矛盾。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">若线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 1 \\ 2x_1 + 3x_2 + ax_3 = 3 \\ x_1 + ax_2 + 3x_3 = 2 \end{cases}$ 无解，则 $a = $（　）。
+             <span class="en-line" lang="en">If the linear system $\begin{cases} x_1 + x_2 + x_3 = 1 \\ 2x_1 + 3x_2 + ax_3 = 3 \\ x_1 + ax_2 + 3x_3 = 2 \end{cases}$ has no solution, then $a = $ (　).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$3$</span></li>
+            <li data-correct="true"><span class="opt-body">$0$ 或 $3$</span></li>
+            <li><span class="opt-body">$0$ 或 $1$ 或 $3$</span></li>
+          </ul>
+          <div class="q-explain">对增广矩阵作行变换：$r_2-2r_1=(0,1,a-2\mid1)$，$r_3-r_1=(0,a-1,2\mid1)$。<br><strong>先讨论 $a\ne1$</strong>（此时 $a-1\ne0$，可把第 3 行除以 $a-1$）：$\frac{1}{a-1}r_3=(0,1,\frac{2}{a-1}\mid\frac{1}{a-1})$，再作 $r_3-r_2$ 得<br>$$\Big(0,\ 0,\ \frac{2}{a-1}-(a-2)\ \Big|\ \frac{1}{a-1}-1\Big)=\Big(0,\ 0,\ \frac{a(3-a)}{a-1}\ \Big|\ \frac{2-a}{a-1}\Big)$$<br>无解要求该行主元为零而右端不为零，即 $a(3-a)=0$ 且 $2-a\ne0$，得 $a=0$ 或 $a=3$。<br><strong>再单独检验 $a=1$</strong>（此时不能作上面的除法）：三行化为 $(1,1,1\mid1)$、$(0,1,-1\mid1)$、$(0,0,2\mid1)$，秩为 3，方程组有唯一解 $x=(-1,\frac32,\frac12)^T$，<strong>不是无解</strong>。<br>所以 $a=0$ 或 $a=3$，选第三项。第四个选项把 $a=1$ 也列了进去，说明没有对每个临界参数值回代检验——把「消元过程中被除掉的式子等于零」直接当成「无解」，是含参数讨论题最常见的失分方式。第一、二个选项则各漏掉了一个临界值，属于分类不完整。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，则下列说法正确的是（　）。
+             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. Which of the following statements are correct? (　)</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $R(A)=n$，则对任意 $n$ 维列向量 $b$，$Ax=b$ 都有唯一解</span></li>
+            <li data-correct="true"><span class="opt-body">若 $|A|=0$，则存在 $n$ 维列向量 $b$，使 $Ax=b$ 无解</span></li>
+            <li data-correct="true"><span class="opt-body">若 $Ax=0$ 有非零解，则存在 $n$ 维列向量 $b$，使 $Ax=b$ 有无穷多解</span></li>
+            <li><span class="opt-body">若 $R(A)=R(\bar A)$，则 $Ax=b$ 有唯一解</span></li>
+          </ul>
+          <div class="q-explain">第一项：$R(A)=n$ 即 $|A|\ne0$，$A$ 可逆，对任何 $b$ 都有唯一解 $x=A^{-1}b$。<br>第二项：$|A|=0$ 时 $R(A)&lt;n$，$A$ 的 $n$ 个列向量张不成整个 $\mathbb{R}^n$，因此必有某个 $b$ 不在列空间中，此时 $R(\bar A)=R(A)+1$，方程组无解（取与列空间正交的非零向量作 $b$ 即可）。<br>第三项：取 $b=0$。此时 $Ax=b$ 就是 $Ax=0$，由题设它已有非零解，而零向量也永远是解，故它有无穷多解——所以这样的 $b$ 确实存在。注意这一项说的是「存在 $b$」，不是「对任意 $b$」，范围不同结论也不同。<br>第四项错：$R(A)=R(\bar A)$ 只保证有解，解的个数还要把公共秩与 $n$ 比较。公共秩 $&lt;n$ 时是无穷多解，只有公共秩 $=n$ 才是唯一解。这是本章出现频率最高的错误命题。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，$R(A)=n-1$，则 $A^*$ 的每一列都是齐次线性方程组 $Ax=0$ 的解。
+             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix with $R(A)=n-1$. Then every column of $A^*$ is a solution of the homogeneous system $Ax=0$.</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">正确。$R(A)=n-1&lt;n$ 故 $|A|=0$，代入伴随矩阵的基本恒等式 $AA^*=A^*A=|A|E$ 得 $AA^*=O$。把 $A^*$ 按列分块为 $(\gamma_1,\gamma_2,\ldots,\gamma_n)$，则<br>$$AA^*=(A\gamma_1,\ A\gamma_2,\ \ldots,\ A\gamma_n)=(0,0,\ldots,0)$$<br>（这里必须用 $AA^*$ 而不是 $A^*A$：$A^*A$ 的列是 $A^*\alpha_j$，只能推出"$A$ 的列是 $A^*x=0$ 的解"，方向正好相反。）<br>故 $A\gamma_j=0$ 对每个 $j$ 成立，即 $A^*$ 的每一列都是 $Ax=0$ 的解。<br>结合秩的分段结论还能看得更透彻：此时 $R(A^*)=1$，$A^*$ 的列向量两两成比例，它们张成的是一维空间，而 $Ax=0$ 的自由未知量个数恰为 $n-R(A)=1$。所以 $A^*$ 的任一非零列就是 $Ax=0$ 的一组基础解。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">已知方程组 (Ⅰ) $\begin{cases} x_1 + x_2 + x_3 = 0 \\ 2x_1 + x_2 - x_3 = 0 \end{cases}$ 与方程组 (Ⅱ) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 3x_1 + x_2 + b x_3 = 0 \end{cases}$ 同解，则（　）。
+             <span class="en-line" lang="en">The system (I) $\begin{cases} x_1 + x_2 + x_3 = 0 \\ 2x_1 + x_2 - x_3 = 0 \end{cases}$ and the system (II) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 3x_1 + x_2 + b x_3 = 0 \end{cases}$ have the same solutions. Then (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$a = 1,\ b = -3$</span></li>
+            <li><span class="opt-body">$a = -3,\ b = 1$</span></li>
+            <li><span class="opt-body">$a = 1,\ b = 3$</span></li>
+            <li><span class="opt-body">$a = -1,\ b = -3$</span></li>
+          </ul>
+          <div class="q-explain">同解意味着 (Ⅰ) 的解全落在 (Ⅱ) 的解集里。先解 (Ⅰ)：作 $r_2-2r_1$ 得 $(0,-1,-3)$，即 $x_2=-3x_3$、$x_1=-x_2-x_3=3x_3-x_3=2x_3$，通解为 $x=c(2,-3,1)^T$，自由未知量个数 $3-2=1$。<br>把 $(2,-3,1)^T$ 代进 (Ⅱ)：第一个方程 $2+a\cdot(-2)+1=0$，得 $a=1$；第二个方程 $3\cdot2+(-2)+b\cdot1=0$，得 $b=-3$。<br>再核对维数：$a=1,\ b=-3$ 时 (Ⅱ) 为 $\begin{cases} x_1+x_2+x_3=0 \\ 3x_1+x_2-3x_3=0 \end{cases}$，两行 $(1,1,1)$ 与 $(3,1,-3)$ 不成比例，$R(A_{\mathrm{II}})=2$，自由未知量个数也是 1；且 $(2,-3,1)^T$ 代入两式分别得 $2-3+1=0$ 与 $6-3-3=0$。两边的解集互相包含又同维，确实同解。这正是 s3-2 模型 3 强调的：<strong>「同解」必须同时管住「解互相包含」与「秩（自由度）相同」</strong>。<br>第二个选项把 $a$ 与 $b$ 的位置对调了，没有把「哪个方程定哪个参数」一一对齐。第三个选项 $b=3$ 是符号错误——由 $3\cdot2+(-2)+b=0$ 得 $b=-3$。第四个选项 $a=-1$ 同样是符号错误，由 $2-2a+1=0$ 得的是 $a=1$。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <p class="q-stem">设 $A$ 为 $3\times 4$ 矩阵，$R(A)=2$，且 $\eta_1=(1,0,0,1)^T$、$\eta_2=(0,1,0,2)^T$、$\eta_3=(0,0,1,3)^T$ 都是非齐次线性方程组 $Ax=b$ 的解，则 $Ax=b$ 的通解为（　）。
+             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix with $R(A)=2$, and let $\eta_1=(1,0,0,1)^T$, $\eta_2=(0,1,0,2)^T$, $\eta_3=(0,0,1,3)^T$ all be solutions of the nonhomogeneous system $Ax=b$. Then the general solution of $Ax=b$ is (　).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$x=(1,0,0,1)^T+c_1(1,-1,0,-1)^T+c_2(1,0,-1,-2)^T,\quad c_1,c_2\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x=(1,0,0,1)^T+c_1(0,1,0,2)^T+c_2(0,0,1,3)^T,\quad c_1,c_2\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x=(1,0,0,1)^T+c(1,-1,0,-1)^T,\quad c\in\mathbb{R}$</span></li>
+            <li><span class="opt-body">$x=c_1(1,-1,0,-1)^T+c_2(1,0,-1,-2)^T,\quad c_1,c_2\in\mathbb{R}$</span></li>
+          </ul>
+          <div class="q-explain">$n=4$（未知量个数）、$R(A)=2$，且 $\eta_1$ 是解说明方程组有解，故 $R(\bar A)=R(A)=2&lt;4=n$，有无穷多解，自由未知量个数为 $n-R(A)=4-2=2$，通解中必须恰好出现 2 个独立任意常数，且必须含一个非齐次特解。<br>齐次解由「非齐次解之差是齐次解」造出：$\xi_1=\eta_1-\eta_2=(1,-1,0,-1)^T$，$\xi_2=\eta_1-\eta_3=(1,0,-1,-2)^T$。它们互不成比例（$k_1\xi_1+k_2\xi_2=(k_1+k_2,\,-k_1,\,-k_2,\,-k_1-2k_2)^T=0$ 由第 2、3 个分量给出 $k_1=k_2=0$），个数又恰为 2，恰好是 $Ax=0$ 的一组基础解。取 $\eta_1$ 作特解即得第一项；核验：$c_1=-1,c_2=0$ 时 $x=(0,1,0,2)^T=\eta_2$ ✓，$c_1=0,c_2=-1$ 时 $x=(0,0,1,3)^T=\eta_3$ ✓。<br>第二个选项把非齐次解 $\eta_2,\eta_3$ 直接当成了齐次解——它们代入 $A$ 得到的是 $b\ne0$ 而不是 $0$。第三个选项只含 1 个任意常数，与自由未知量个数 2 不符（两个非齐次解之差只提供 1 个齐次解，另一个必须靠 $n-R(A)$ 补足）。第四个选项丢了非齐次特解，那只是 $Ax=0$ 的通解，代回得到的是 $0$ 而不是 $b$。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这 10 题是整章的收口，把三节串成一条线——第 1、2、8 题围绕<strong>解的结构</strong>（特解加齐次解、$n-R(A)$ 个自由未知量），第 3、4、5 题把<strong>秩的不等式与伴随矩阵</strong>用到底，第 6、7 题是含参数讨论与命题真假的综合，最后两题补上「同解」与「多解求通解」的综合演练。</p>
+          <p>本章是考研数一的绝对重点章，考研题占比约 35%，两大主线就是「含参数讨论解的情况」和「秩的判定与不等式」。必须背到条件反射的三句话：$R(A)=R(\bar A)=n$ 唯一解，$=r&lt;n$ 无穷多解（自由未知量 $n-r$ 个），$R(A)&lt;R(\bar A)$ 无解。第 7 题第四项「$R(A)=R(\bar A)$ 则唯一解」、第 3 题把中间维数 $n$ 错认成 $m$ 或 $s$，都是这条判据没背牢。第 6 题则提醒：含参数时必须把消元中除掉的每个含参式子令零后<strong>逐一回代检验</strong>，$a=1$ 恰恰是有唯一解的情形。另外，增广矩阵<strong>只能作行变换</strong>，求逆矩阵同理，只有求秩时才可以行、列并用。</p>
+          <p>学完本章，初等行变换应成为全课使用频率最高的技术——你应当能不假思索地把任意矩阵化成行最简形。向后看，第 4 章「向量组与解的结构」的每一处前置都在这里：$n-R(A)$ 是基础解系所含向量的个数，「非齐次解之差是齐次解」是解的结构定理的起点，极大线性无关组要用秩来定义。</p>
+          <p>下一步：若本卷有错，按错因归类——概念记反的回读定理 3.2 与性质 3.3，算错的把例 3.4、3.7、3.8 各重算一遍，然后再进第 4 章。</p>
+        </div>
+
+      </div>
+
+            <!-- SHELL:BOTTOMNAV -->
+      <nav class="chapter-nav">
+        <a class="prev" href="la2.html"><span class="dir">← 上一页</span><span class="ttl">第 2 章 矩阵</span></a>
+        <a class="next" href="la4.html"><span class="dir">下一页 →</span><span class="ttl">第 4 章 向量组与解的结构</span></a>
+      </nav>
+      <!-- /SHELL:BOTTOMNAV -->
+
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <p><strong>线性代数学习站</strong> · 按「一高数」课程顺序编排</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="../assets/js/plot.js"></script>
+<script src="../assets/js/videos.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/course-data.js"></script>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/theme.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第5章 特征值与矩阵对角化 · 线性代数学习站</title>
+<meta name="description" content="特征值与特征向量的定义、求法与性质，相似矩阵与可对角化条件；实对称矩阵的正交对角化与施密特正交化。">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script>
+  /* MathJax 配置：与高数各章一致（本地引擎 + 关闭自动全量排版，由脚本分片驱动） */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    startup: { typeset: false, ready: function () { MathJax.startup.defaultReady(); window.__mjxReady = true; } }
+  };
+</script>
+<script id="MathJax-script" async src="../assets/js/vendor/tex-svg.js"></script>
+<script>
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head';
+    var pending = [], busy = false, started = false, sweepDone = false;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) { schedule(); return; }
+          /* 兜底补排（第 32 节）：例题标题 .example-head 里的公式此前从不进入队列，
+             导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
+             凡是仍含 `$` 且未被 MathJax 处理的 .example-head，补排一次。
+             只处理这一类元素，不影响其他已排好的内容。 */
+          if (!sweepDone) {
+            sweepDone = true;
+            var left = Array.prototype.slice.call(document.querySelectorAll(SEL))
+              .filter(function (el) {
+                return !el.querySelector('mjx-container') &&
+                  Array.from(el.childNodes).some(function (n) {
+                    return n.nodeType === 3 && /\$[^$]{1,200}\$/.test(n.nodeValue || '');
+                  });
+              });
+            if (left.length) { pending = pending.concat(left); schedule(); }
+          }
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL));
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+
+</script>
+</head>
+<body data-page="la5" data-chapter="5" data-subject="linearAlgebra">
+
+  <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="../index.html">
+      <span class="brand-mark">LA</span>
+      <span>线性代数<small>行列式 · 矩阵 · 方程组 · 特征值 · 二次型</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="../index.html">首页</a>
+      <a href="../cheatsheet.html">公式速查表</a>
+      <a href="../exam.html">综合自测卷</a>
+    </nav>
+    <span class="crumb">第 5 章 特征值与矩阵对角化</span>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+        <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="la1.html"><span class="num">1</span>行列式</a>
+          <a class="toc-chapter" href="la2.html"><span class="num">2</span>矩阵</a>
+          <a class="toc-chapter" href="la3.html"><span class="num">3</span>线性方程组与初等变换</a>
+          <a class="toc-chapter" href="la4.html"><span class="num">4</span>向量组与解的结构</a>
+          <a class="toc-chapter is-active" href="la5.html"><span class="num">5</span>特征值与矩阵对角化</a>
+          <a class="toc-chapter" href="la6.html"><span class="num">6</span>二次型</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">本页目录</div>
+          <nav class="toc" data-toc></nav>
+        </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div class="page-eyebrow">CHAPTER 5 · 对应「一高数」第 5 章</div>
+        <h1>第 5 章　特征值与矩阵对角化</h1>
+        <p class="lede">前四章都在研究"矩阵是什么、方程组怎么解"；从这一章开始，我们问一个完全不同的问题：<strong>把矩阵看成一个变换，它有没有"最舒服"的方向？</strong>答案就是特征值与特征向量。它是振动模态、主应力、主成分分析的数学内核，也是考研数一每年必出大题的地方——相似对角化的判定、实对称矩阵的正交对角化，几乎是压轴题的常客。</p>
+      </div>
+
+      <!-- ======== 以下为小节内容 ======== -->
+
+      <h2 id="s5-1" data-hours="5">5-1 特征值与特征向量</h2>
+
+      <p><strong>承上启下。</strong>前四章我们一直在回答"给定一个矩阵或方程组，把它的解算出来"：第 1 章算行列式，第 2 章做矩阵运算与求逆，第 3 章用初等行变换解线性方程组，第 4 章讨论向量组的线性相关性与基础解系。这些工具都很强，但都停留在"把已知的东西算出来"，还没有回答一个更本质的问题：<strong>一个矩阵作为线性变换，它自身的"固有结构"是什么？</strong>本节引入<strong>特征值与特征向量</strong>，用 $Ax=\lambda x$ 这一个等式把"方向不变"这件事写成代数式，然后用三件旧工具把它彻底算清楚——用<em>第 1 章的行列式</em>构造特征多项式 $|A-\lambda E|$ 求特征值，用<em>第 3 章的齐次方程组</em>$(A-\lambda E)x=0$ 求特征向量，用<em>第 4 章的线性无关</em>判断能不能对角化。本节是全书第一个"汇聚点"，第 1、2、4 章的知识在这里第一次被同时用上；它的结论后面直接服务于第 6 章的二次型化简，也是考研数学一每年必出大题的地方。这一节内容量最大（约 4.5 学时），请留足时间。</p>
+
+      <p>先建立一个正确的心理图像：<strong>矩阵不是一张数表，而是一个"把向量搬到另一个向量"的动作</strong>。$A$ 乘 $x$ 得到 $Ax$，一般情况下 $Ax$ 和 $x$ 既不平行也不等长。但总有一些特殊方向，$A$ 作用上去之后方向一根毫毛都不动，只是长度被缩放——这一节就是要把这些方向找出来。</p>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>几何直观：什么叫"方向不变，只被伸缩"</div>
+        <p>取 $A=\begin{pmatrix}3&1\\1&3\end{pmatrix}$，分别作用在三个向量上：</p>
+        <p>$$A\begin{pmatrix}1\\0\end{pmatrix}=\begin{pmatrix}3\\1\end{pmatrix},\qquad A\begin{pmatrix}1\\1\end{pmatrix}=\begin{pmatrix}4\\4\end{pmatrix}=4\begin{pmatrix}1\\1\end{pmatrix},\qquad A\begin{pmatrix}1\\-1\end{pmatrix}=\begin{pmatrix}2\\-2\end{pmatrix}=2\begin{pmatrix}1\\-1\end{pmatrix}$$</p>
+        <p>第一个向量被"拧"了方向；后两个向量被 $A$ 作用后<strong>方向完全没变</strong>，只是长度分别变成了原来的 $4$ 倍和 $2$ 倍。</p>
+        <p>这种"方向不变、只被拉伸或压缩"的方向，就是这个矩阵的<strong>特征方向</strong>；伸缩的倍数（这里是 $4$ 和 $2$）就是<strong>特征值</strong>。一句话：</p>
+        <p><strong>特征向量 = 矩阵作用下最"听话"的方向；特征值 = 在这个方向上的放大率。</strong></p>
+        <p>为什么这个概念重要？因为一旦找到了这些特殊方向，矩阵在这个方向上的作用就退化成了"乘一个数"，复杂问题瞬间变简单：</p>
+        <ul>
+          <li><strong>振动</strong>：叶片盘、机翼、桥梁都有自己的"固有振型"。振型就是特征向量——系统按这个形状振动时，所有点同频同相，运动方程退化成 $\ddot{q}=-\omega^2 q$ 这样的一元方程。$\omega^2$ 就是特征值。</li>
+          <li><strong>应力</strong>：一点处的应力张量是 $3\times3$ 实对称矩阵，它的特征方向就是<strong>主方向</strong>——在这些面上只有正应力没有剪应力。特征值就是主应力。</li>
+          <li><strong>数据</strong>：主成分分析（PCA）找的是协方差矩阵的特征向量，即数据"方差最大"的方向。</li>
+        </ul>
+        <p>注意一个反直觉的事实：<strong>特征向量不一定存在（实数意义下）</strong>。旋转矩阵 $\begin{pmatrix}0&-1\\1&0\end{pmatrix}$ 把每个非零向量都转 $90^\circ$，没有任何方向能保持不变——所以它在实数域内没有特征值。这正是下一节要专门讨论"实对称矩阵"的原因：实对称矩阵一定有实特征值，而且特征方向还互相垂直。</p>
+      </div>
+
+      <div class="viz" data-viz="eigen-explore" data-matrix="3,1;1,3" data-vec="1,0.5"></div>
+
+      <div class="box link-box">
+        <div class="box-title"><span class="ico">🔗</span>知识关联：这一节把前四章串了起来</div>
+        <ul>
+          <li><strong>承上 · 第 1 章（行列式）</strong>：特征多项式 $|A-\lambda E|$ 本身就是一个 $n$ 阶行列式，特征方程 $|A-\lambda E|=0$ 就是"行列式等于零"。第 1 章学的按行（列）展开、提公因子、行列式的性质，在这里全部用得上。反过来，$|A|=\lambda_1\lambda_2\cdots\lambda_n$ 又给出了"用特征值算行列式"的新途径——第 2 章苦算的 $|A|$，现在只要把特征值乘起来。</li>
+          <li><strong>承上 · 第 2 章（矩阵运算）</strong>：$Ax=\lambda x$ 里的 $Ax$ 是第 2 章的矩阵乘法；$A^k$、$A^{-1}$、$A^*$ 的特征值公式是第 2 章"$A^*=|A|A^{-1}$""$(AB)^{-1}=B^{-1}A^{-1}$"这些恒等式的直接衍生物。本节的对角化 $P^{-1}AP=\Lambda$ 则是分块矩阵思想的延伸——把一个复杂矩阵拆成"对角部分 + 变换"。</li>
+          <li><strong>承上 · 第 4 章（线性无关）</strong>：判断"能否对角化"的标准是"有没有 $n$ 个线性<em>无关</em>的特征向量"，这纯粹是第 4 章的概念。$n-R(A-\lambda E)=k$ 里的 $R$ 是第 3 章的秩，$\ker(A-\lambda E)$ 的基础解系是第 4 章解的结构。可以说，<strong>5-1 的每一道大题都是第 1、3、4 章内容的合成</strong>：算行列式 → 求秩 → 解基础解系 → 判断线性无关。</li>
+          <li><strong>横向 · 一处容易忽略的对照</strong>：第 3 章"$R(A)=n\iff|A|\ne0\iff Ax=0$ 只有零解"，对应到本章就是"$A$ 可逆 $\iff$ 特征值全不为零 $\iff$ $(A-0E)x=0$ 只有零解"。零特征值、不可逆、行列式为零，其实是同一件事的三种说法。</li>
+          <li><strong>启下 · 第 5-2 与第 6 章</strong>：本节末尾会看到一般矩阵的相似对角化有两个缺陷（$P$ 不唯一、$P^{-1}$ 难算，且不一定能对角化）。5-2 用"正交矩阵"修补它们，第 6 章则把 5-2 的结果直接搬去化简二次型——"用正交变换化 $f=x^TAx$ 为标准形"，标准形的系数就是这里求出的特征值。</li>
+        </ul>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 5.1　特征值与特征向量</div>
+        <p>设 $A$ 是 $n$ 阶方阵。如果存在数 $\lambda$ 和 $n$ 维<strong>非零</strong>向量 $x$，使得</p>
+        <p>$$Ax=\lambda x,$$</p>
+        <p>则称数 $\lambda$ 为方阵 $A$ 的<span class="term">特征值</span>（eigenvalue），非零向量 $x$ 称为 $A$ 的对应于（或属于）$\lambda$ 的<span class="term">特征向量</span>（eigenvector）。</p>
+        <p>把 $Ax=\lambda x$ 写成 $(A-\lambda E)x=0$。注意：这是<strong>关于 $x$ 的齐次线性方程组</strong>。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 5.1</span>
+             <strong>Eigenvalues and Eigenvectors.</strong>
+             Let $A$ be an $n\times n$ matrix. If there exist a number $\lambda$ and a
+             <strong>nonzero</strong> $n$-dimensional vector $x$ such that</p>
+          <p>$$Ax=\lambda x,$$</p>
+          <p>then the number $\lambda$ is called an <span class="en-term">eigenvalue</span> of the
+             matrix $A$, and the nonzero vector $x$ is called an
+             <span class="en-term">eigenvector</span> of $A$ corresponding to (or belonging to)
+             $\lambda$.</p>
+          <p>Rewrite $Ax=\lambda x$ as $(A-\lambda E)x=0$. Note that this is a
+             <strong>homogeneous linear system</strong> for the unknown $x$.</p>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>定义里的三处"陷阱"，第一遍学必须记牢</div>
+        <ul>
+          <li><strong>$x$ 必须非零</strong>。若允许 $x=0$，那 $A\cdot 0=\lambda\cdot 0$ 对<em>任何</em> $\lambda$ 都成立，特征值就没有意义了。</li>
+          <li><strong>$\lambda$ 可以是 $0$，$x$ 不可以是 $0$</strong>。$\lambda=0$ 意味着 $Ax=0$ 有非零解，即 $|A|=0$。</li>
+          <li><strong>特征向量不是"一个"向量，而是一整族</strong>。若 $x$ 是对应 $\lambda$ 的特征向量，则对任意 $k\ne 0$，$kx$ 也是；事实上 $\lambda$ 对应的<strong>全体特征向量加上零向量</strong>构成 $\ker(A-\lambda E)$，是一个子空间，叫<strong>特征子空间</strong>。</li>
+          <li>反过来说：一个<strong>非零</strong>向量 $x$ 只能对应一个特征值。若 $Ax=\lambda_1x=\lambda_2x$ 且 $x\ne0$，则 $(\lambda_1-\lambda_2)x=0$，必有 $\lambda_1=\lambda_2$。</li>
+        </ul>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 5.2　特征多项式与特征方程</div>
+        <p>$\lambda$ 是 $A$ 的特征值 $\iff$ 齐次方程组 $(A-\lambda E)x=0$ 有非零解 $\iff$ $|A-\lambda E|=0$。</p>
+        <p>因此，把 $f(\lambda)=|A-\lambda E|$ 称为 $A$ 的<span class="term">特征多项式</span>，它是一个关于 $\lambda$ 的 $n$ 次多项式（$\lambda^n$ 的系数是 $(-1)^n$）；把</p>
+        <p>$$|A-\lambda E|=0$$</p>
+        <p>称为 $A$ 的<span class="term">特征方程</span>。特征方程的根（在复数范围内按重数计共 $n$ 个）就是 $A$ 的全部特征值。</p>
+        <p>求出 $\lambda_i$ 后，$\lambda_i$ 对应的全部特征向量就是方程组 $(A-\lambda_iE)x=0$ 的<strong>全部非零解</strong>，即 $\lambda_i$ 对应特征子空间 $\ker(A-\lambda_iE)$ 中除零向量外的所有向量。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 5.2</span>
+             <strong>Characteristic Polynomial and Characteristic Equation.</strong>
+             $\lambda$ is an eigenvalue of $A$ $\iff$ the homogeneous system $(A-\lambda E)x=0$ has a
+             nonzero solution $\iff$ $|A-\lambda E|=0$.</p>
+          <p>Therefore $f(\lambda)=|A-\lambda E|$ is called the
+             <span class="en-term">characteristic polynomial</span> of $A$. It is a polynomial of
+             degree $n$ in $\lambda$ (the coefficient of $\lambda^n$ is $(-1)^n$), and</p>
+          <p>$$|A-\lambda E|=0$$</p>
+          <p>is called the <span class="en-term">characteristic equation</span> of $A$. Its roots —
+             counted with multiplicity, $n$ of them over the complex numbers — are exactly all the
+             eigenvalues of $A$.</p>
+          <p>Once the $\lambda_i$ are known, <em>all</em> eigenvectors for $\lambda_i$ are the
+             <strong>nonzero solutions</strong> of $(A-\lambda_iE)x=0$, that is, all vectors of the
+             eigenspace $\ker(A-\lambda_iE)$ except the zero vector.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：求特征值与特征向量的五步流程</div>
+        <ol>
+          <li><strong>写出特征多项式</strong> $|A-\lambda E|$。3 阶就按某一行（列）展开；能找出公因子先提公因子，别硬展开成 $-\lambda^3+c_2\lambda^2-c_1\lambda+c_0$。</li>
+          <li><strong>解特征方程</strong> $|A-\lambda E|=0$，求出全部特征值 $\lambda_1,\dots,\lambda_n$（<strong>重根要写全</strong>，例如 $(\lambda-1)^2(\lambda-3)=0$ 给出二重根 $\lambda=1$ 与单根 $\lambda=3$）。</li>
+          <li><strong>对每个特征值</strong> $\lambda_i$，写出齐次方程组 $(A-\lambda_iE)x=0$，用初等行变换把系数矩阵化成行最简形，求基础解系 $\xi_1,\dots,\xi_{s}$，其中 $s=n-R(A-\lambda_iE)$。</li>
+          <li><strong>写出通解</strong>：$k_1\xi_1+k_2\xi_2+\cdots+k_s\xi_s$。这就是 $\lambda_i$ 对应的<strong>全部</strong>特征向量。</li>
+          <li><strong>必须写上 $k_1,\dots,k_s$ 不全为零</strong>（写成 $k\ne0$ 或"$k$ 为不全为零的常数"）。漏掉这一句是阅卷最常见的扣分点——因为零向量不是特征向量。</li>
+        </ol>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD 5.1</span>
+             <strong>Finding Eigenvalues and Eigenvectors: The Five-Step Procedure.</strong></p>
+          <ol>
+            <li><strong>Write the characteristic polynomial</strong> $|A-\lambda E|$. For order $3$,
+                expand along one row (or column); factor out common factors first instead of
+                expanding everything into $-\lambda^3+c_2\lambda^2-c_1\lambda+c_0$.</li>
+            <li><strong>Solve the characteristic equation</strong> $|A-\lambda E|=0$ and find all
+                eigenvalues $\lambda_1,\dots,\lambda_n$ (<strong>list repeated roots with their
+                multiplicity</strong>: $(\lambda-1)^2(\lambda-3)=0$ gives a double root $1$ and a
+                simple root $3$).</li>
+            <li><strong>For each eigenvalue</strong> $\lambda_i$, write the homogeneous system
+                $(A-\lambda_iE)x=0$, reduce its coefficient matrix to reduced row echelon form, and
+                find a basis of the nullspace $\xi_1,\dots,\xi_{s}$, where
+                $s=n-R(A-\lambda_iE)$.</li>
+            <li><strong>Write the general solution</strong>
+                $k_1\xi_1+k_2\xi_2+\cdots+k_s\xi_s$. This gives <em>all</em> eigenvectors for
+                $\lambda_i$.</li>
+            <li><strong>Always state that $k_1,\dots,k_s$ are not all zero</strong> (write $k\ne0$, or
+                "$k$ a constant that is not all zero"). Omitting this line is the most common way to
+                lose points, because the zero vector is not an eigenvector.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.1</span> 求二阶矩阵的特征值与特征向量
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>求 $A=\begin{pmatrix}3&1\\1&3\end{pmatrix}$ 的特征值与特征向量。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，写特征多项式。</strong></p>
+            <p>$$|A-\lambda E|=\begin{vmatrix}3-\lambda&1\\1&3-\lambda\end{vmatrix}=(3-\lambda)^2-1$$</p>
+            <p>用平方差公式分解：$(3-\lambda)^2-1=(3-\lambda-1)(3-\lambda+1)=(2-\lambda)(4-\lambda)$。</p>
+            <p><strong>第二步，令其为零，解特征值。</strong></p>
+            <p>$$(2-\lambda)(4-\lambda)=0\ \Longrightarrow\ \lambda_1=2,\quad \lambda_2=4.$$</p>
+            <p><strong>先验算一遍</strong>：$\lambda_1+\lambda_2=6$，而 $\mathrm{tr}(A)=3+3=6$ ✓；$\lambda_1\lambda_2=8$，而 $|A|=3\times3-1\times1=8$ ✓。两个检验都通过，说明特征值没算错。</p>
+            <p><strong>第三步，对 $\lambda_1=2$ 解 $(A-2E)x=0$。</strong></p>
+            <p>$$A-2E=\begin{pmatrix}1&1\\1&1\end{pmatrix}\xrightarrow{\text{行变换}}\begin{pmatrix}1&1\\0&0\end{pmatrix}$$</p>
+            <p>方程化为 $x_1+x_2=0$，即 $x_2=-x_1$。取 $x_1=1$ 得基础解系 $\xi_1=\begin{pmatrix}1\\-1\end{pmatrix}$。</p>
+            <p>所以对应于 $\lambda_1=2$ 的全部特征向量为 $k_1\begin{pmatrix}1\\-1\end{pmatrix}$，$k_1\ne0$。</p>
+            <p><strong>第四步，对 $\lambda_2=4$ 解 $(A-4E)x=0$。</strong></p>
+            <p>$$A-4E=\begin{pmatrix}-1&1\\1&-1\end{pmatrix}\xrightarrow{\text{行变换}}\begin{pmatrix}1&-1\\0&0\end{pmatrix}$$</p>
+            <p>方程化为 $x_1-x_2=0$，即 $x_1=x_2$。取 $x_1=1$ 得基础解系 $\xi_2=\begin{pmatrix}1\\1\end{pmatrix}$。</p>
+            <p>对应于 $\lambda_2=4$ 的全部特征向量为 $k_2\begin{pmatrix}1\\1\end{pmatrix}$，$k_2\ne0$。</p>
+            <p><strong>回代验证</strong>：$A\xi_1=\begin{pmatrix}3-1\\1-3\end{pmatrix}=\begin{pmatrix}2\\-2\end{pmatrix}=2\xi_1$ ✓；$A\xi_2=\begin{pmatrix}3+1\\1+3\end{pmatrix}=\begin{pmatrix}4\\4\end{pmatrix}=4\xi_2$ ✓。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.2</span> 三阶矩阵（含二重特征值）的完整求解与可对角化判断
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>求 $A=\begin{pmatrix}3&-1&-2\\2&0&-2\\2&-1&-1\end{pmatrix}$ 的特征值与特征向量，并判断 $A$ 能否对角化。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，求特征多项式。</strong>按第一行展开：</p>
+            <p>$$|A-\lambda E|=\begin{vmatrix}3-\lambda&-1&-2\\2&-\lambda&-2\\2&-1&-1-\lambda\end{vmatrix}$$</p>
+            <p>$$=(3-\lambda)\big[\lambda(1+\lambda)-2\big]-(-1)\big[2(-1-\lambda)-(-4)\big]+(-2)\big[-2-(-2\lambda)\big]$$</p>
+            <p>逐项化简：第一项 $(3-\lambda)(\lambda^2+\lambda-2)$；第二项 $+(-2-2\lambda)$；第三项 $+(-4+4\lambda)$。合并：</p>
+            <p>$$(3-\lambda)(\lambda^2+\lambda-2)+(2-2\lambda)+(4-4\lambda)=-\lambda^3+2\lambda^2-\lambda=-\lambda(\lambda-1)^2.$$</p>
+            <p><strong>第二步，解 $-\lambda(\lambda-1)^2=0$</strong>，得</p>
+            <p>$$\lambda_1=0,\qquad \lambda_2=\lambda_3=1\ (\text{二重}).$$</p>
+            <p><strong>验算</strong>：$\mathrm{tr}(A)=3+0+(-1)=2$，而 $0+1+1=2$ ✓；$|A|=0\times1\times1=0$，把 $\lambda=0$ 代入 $|A-\lambda E|$ 得 $0$，一致 ✓（也可以通过 $A$ 的两行成比例看出 $|A|=0$）。</p>
+            <p><strong>第三步，对 $\lambda_1=0$ 解 $Ax=0$。</strong></p>
+            <p>$$A=\begin{pmatrix}3&-1&-2\\2&0&-2\\2&-1&-1\end{pmatrix}\xrightarrow{r_2\times\frac12}\cdots\ \text{化简得}\ x_1=x_2=x_3$$</p>
+            <p>取 $x_3=1$，得基础解系 $\xi_1=\begin{pmatrix}1\\1\\1\end{pmatrix}$。（回代：$A\xi_1=(3-1-2,\ 2+0-2,\ 2-1-1)^T=(0,0,0)^T$ ✓）</p>
+            <p>对应 $\lambda_1=0$ 的全部特征向量：$k_1\begin{pmatrix}1\\1\\1\end{pmatrix}$，$k_1\ne0$。</p>
+            <p><strong>第四步，对 $\lambda=1$ 解 $(A-E)x=0$。</strong></p>
+            <p>$$A-E=\begin{pmatrix}2&-1&-2\\2&-1&-2\\2&-1&-2\end{pmatrix}$$</p>
+            <p>三行完全相同，秩为 $1$，方程就是一个：$2x_1-x_2-2x_3=0$，即 $x_2=2x_1-2x_3$。这里 $x_1,x_3$ 是自由变量，基础解系含 $3-1=2$ 个向量：</p>
+            <p>取 $(x_1,x_3)=(1,0)$ 得 $\xi_2=\begin{pmatrix}1\\2\\0\end{pmatrix}$；取 $(x_1,x_3)=(0,1)$ 得 $\xi_3=\begin{pmatrix}0\\-2\\1\end{pmatrix}$。</p>
+            <p>对应 $\lambda=1$ 的全部特征向量：$k_2\begin{pmatrix}1\\2\\0\end{pmatrix}+k_3\begin{pmatrix}0\\-2\\1\end{pmatrix}$，$k_2,k_3$ 不全为零。</p>
+            <p>（回代：$A\xi_2=(3-2,\ 2+0,\ 2-2)^T=(1,2,0)^T=\xi_2$ ✓；$A\xi_3=(0+2-2,\ 0+0-2,\ 0+2-1)^T=(0,-2,1)^T=\xi_3$ ✓）</p>
+            <p><strong>第五步，判断能否对角化。</strong>$A$ 有 $3$ 个线性无关的特征向量 $\xi_1,\xi_2,\xi_3$（它们分别属于不同特征子空间，自动线性无关；而 $\xi_2,\xi_3$ 是同一方程组的基础解系，也线性无关）。所以 $A$ 可以对角化。</p>
+            <p>取 $P=(\xi_1,\xi_2,\xi_3)=\begin{pmatrix}1&1&0\\1&2&-2\\1&0&1\end{pmatrix}$，则 $P^{-1}AP=\mathrm{diag}(0,1,1)$。</p>
+            <p>（验算 $|P|=1\cdot(2\cdot1-(-2)\cdot0)-1\cdot(1\cdot1-(-2)\cdot1)+0=-1\ne0$，确实可逆 ✓。注意 $\Lambda$ 的对角元顺序 $0,1,1$ 必须与 $P$ 的列顺序一一对应。）</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>性质 5.1　特征值之和、之积（最有用的两个检验工具）</div>
+        <p>设 $n$ 阶矩阵 $A=(a_{ij})$ 的全部特征值为 $\lambda_1,\lambda_2,\dots,\lambda_n$（按重数计），则</p>
+        <p>$$\lambda_1+\lambda_2+\cdots+\lambda_n=\mathrm{tr}(A)=a_{11}+a_{22}+\cdots+a_{nn},$$</p>
+        <p>$$\lambda_1\lambda_2\cdots\lambda_n=|A|.$$</p>
+        <p><span class="thm-name">为什么成立</span>　在 $|A-\lambda E|$ 中令 $\lambda=0$ 即得第二式。第一式来自比较 $\lambda^{n-1}$ 的系数（$\lambda^{n-1}$ 只可能从对角线元素 $(a_{11}-\lambda)(a_{22}-\lambda)\cdots(a_{nn}-\lambda)$ 中产生）。</p>
+        <p><span class="thm-name">怎么用</span>　<strong>每算完一组特征值，先花十秒钟验算这两个等式。</strong>它能在考场上拦住 90% 的算术错误。反过来，它也是"只给特征值、求参数"这类题的解题入口。</p>
+        <p><span class="thm-name">重要推论</span></p>
+        <ul>
+          <li>$A$ 可逆 $\iff$ $A$ 的全部特征值都不等于 $0$。（因为 $|A|=\prod\lambda_i$）</li>
+          <li>若 $\lambda$ 是 $A$ 的特征值，则 $\lambda$ 也是 $A^T$ 的特征值。因为 $|A^T-\lambda E|=|(A-\lambda E)^T|=|A-\lambda E|$，特征多项式完全相同。<strong>但特征向量一般不同</strong>，不要想当然。</li>
+          <li>$A$ 与 $A^T$ 不仅特征值相同，而且一定相似（这一点在做选择题时很好用）。</li>
+        </ul>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">PROP 5.1</span>
+             <strong>Sum and Product of the Eigenvalues (the two most useful checks).</strong>
+             Let $\lambda_1,\lambda_2,\dots,\lambda_n$ (counted with multiplicity) be all eigenvalues
+             of the $n\times n$ matrix $A=(a_{ij})$. Then</p>
+          <p>$$\lambda_1+\lambda_2+\cdots+\lambda_n=\mathrm{tr}(A)=a_{11}+a_{22}+\cdots+a_{nn},$$</p>
+          <p>$$\lambda_1\lambda_2\cdots\lambda_n=|A|.$$</p>
+          <p><strong>Why it holds.</strong> Putting $\lambda=0$ in $|A-\lambda E|$ gives the second
+             identity. The first comes from comparing the coefficients of $\lambda^{n-1}$, which can
+             only arise from the diagonal product
+             $(a_{11}-\lambda)(a_{22}-\lambda)\cdots(a_{nn}-\lambda)$.</p>
+          <p><strong>How to use it.</strong> Every time you finish computing a set of eigenvalues,
+             spend ten seconds checking these two identities. They catch most arithmetic slips.</p>
+          <p><strong>Important corollaries.</strong></p>
+          <ul>
+            <li>$A$ is invertible $\iff$ none of its eigenvalues equals $0$ (because
+                $|A|=\prod\lambda_i$).</li>
+            <li>If $\lambda$ is an eigenvalue of $A$, it is also an eigenvalue of $A^T$, since
+                $|A^T-\lambda E|=|(A-\lambda E)^T|=|A-\lambda E|$: the characteristic polynomials are
+                identical. <strong>The eigenvectors, however, are usually different</strong> — do not
+                assume they carry over.</li>
+            <li>$A$ and $A^T$ not only share their eigenvalues; they are always similar.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>性质 5.2　特征值与矩阵运算的关系（考研计算核心）</div>
+        <p>设 $\lambda$ 是 $A$ 的特征值，$x$ 是对应的特征向量（$x\ne0$）。以下各式中，<strong>$x$ 始终是同一个特征向量</strong>：</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>矩阵</th><th>特征值</th><th>特征向量</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>$kA$</td><td>$k\lambda$</td><td>$x$</td><td>$k$ 为任意常数（可以是 $0$）</td></tr>
+              <tr><td>$A^m$</td><td>$\lambda^m$</td><td>$x$</td><td>$m$ 为正整数</td></tr>
+              <tr><td>$f(A)=a_mA^m+\cdots+a_1A+a_0E$</td><td>$f(\lambda)$</td><td>$x$</td><td>多项式，常数项必须乘 $E$</td></tr>
+              <tr><td>$A^{-1}$（$A$ 可逆）</td><td>$\dfrac{1}{\lambda}$</td><td>$x$</td><td>由 $Ax=\lambda x$ 得 $x=\lambda A^{-1}x$</td></tr>
+              <tr><td>$A^*$（$A$ 可逆）</td><td>$\dfrac{|A|}{\lambda}$</td><td>$x$</td><td>用 $A^*=|A|A^{-1}$</td></tr>
+              <tr><td>$A^T$</td><td>$\lambda$</td><td>一般不同</td><td>特征多项式相同</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><span class="thm-name">关键提醒</span>　上表中<strong>没有</strong> $A+B$、$AB$ 这两行，因为：</p>
+        <ul>
+          <li>$A+B$ 的特征值<strong>一般不等于</strong> $\lambda_A+\lambda_B$，因为 $A$ 与 $B$ 的特征向量通常不是同一个方向，$x$ 未必是 $B$ 的特征向量，$(A+B)x=Ax+Bx$ 也就推不下去。</li>
+          <li>同理 $AB$ 的特征值一般不是 $\lambda_A\lambda_B$。但有一个结论成立：若 $A$ 与 $B$ 可交换（$AB=BA$），则它们有公共的特征向量（这是后话，了解即可）。</li>
+        </ul>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">PROP 5.2</span>
+             <strong>Eigenvalues of Related Matrices (the core of exam computation).</strong>
+             Let $\lambda$ be an eigenvalue of $A$ with eigenvector $x$ ($x\ne0$). In every row below,
+             <strong>$x$ is the same eigenvector</strong>:</p>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Matrix</th><th>Eigenvalue</th><th>Eigenvector</th><th>Remark</th></tr></thead>
+              <tbody>
+                <tr><td>$kA$</td><td>$k\lambda$</td><td>$x$</td><td>$k$ any scalar (possibly $0$)</td></tr>
+                <tr><td>$A^m$</td><td>$\lambda^m$</td><td>$x$</td><td>$m$ a positive integer</td></tr>
+                <tr><td>$f(A)=a_mA^m+\cdots+a_1A+a_0E$</td><td>$f(\lambda)$</td><td>$x$</td><td>polynomial; the constant term must be multiplied by $E$</td></tr>
+                <tr><td>$A^{-1}$ ($A$ invertible)</td><td>$\dfrac{1}{\lambda}$</td><td>$x$</td><td>from $Ax=\lambda x$ we get $x=\lambda A^{-1}x$</td></tr>
+                <tr><td>$A^*$ (the <span class="en-term">adjugate</span> of $A$, $A$ invertible)</td><td>$\dfrac{|A|}{\lambda}$</td><td>$x$</td><td>use $A^*=|A|A^{-1}$</td></tr>
+                <tr><td>$A^T$</td><td>$\lambda$</td><td>usually different</td><td>same characteristic polynomial</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>Key warning.</strong> There is <strong>no</strong> row for $A+B$ or $AB$ above, because:</p>
+          <ul>
+            <li>The eigenvalues of $A+B$ are in general <strong>not</strong> $\lambda_A+\lambda_B$:
+                $A$ and $B$ usually have different eigenvectors, so $x$ need not be an eigenvector of
+                $B$ and $(A+B)x=Ax+Bx$ leads nowhere.</li>
+            <li>Likewise the eigenvalues of $AB$ are in general not $\lambda_A\lambda_B$. One statement
+                that is true: if $A$ and $B$ commute ($AB=BA$), they have a common eigenvector.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点清单（每一条都是真实失分点）</div>
+        <ul>
+          <li><strong>把 $\lambda$ 写成了 $\lambda$ 的方程的解，却忘了验证 $|A-\lambda E|$ 的符号。</strong>特征多项式写成 $|A-\lambda E|$ 还是 $|\lambda E-A|$ 都可以，两者的根相同，但别在展开到一半时混用。</li>
+          <li><strong>特征向量漏写 "$k\ne0$" 或 "$k$ 不全为零"。</strong>这是定义的一部分，漏了就是错的。</li>
+          <li><strong>只求出一个特征向量就收工。</strong>若 $n-R(A-\lambda E)=2$，就必须给出<em>两个</em>线性无关的特征向量，用 $k_1\xi_1+k_2\xi_2$ 表示。</li>
+          <li><strong>把 "$A$ 有 $n$ 个特征值"当成可对角化的条件。</strong>$n$ 阶矩阵的特征多项式是 $n$ 次的，<em>永远</em>有 $n$ 个（按重数计）特征值。判据是"$n$ 个<strong>线性无关的</strong>特征向量"。</li>
+          <li><strong>误以为"特征值全为实数 $\Rightarrow$ 实对称矩阵"。</strong>反例 $\begin{pmatrix}1&1\\0&2\end{pmatrix}$ 特征值 $1,2$ 全为实数，但它不是对称矩阵。反之实对称矩阵确有全实特征值，这是单向的。</li>
+          <li><strong>误以为 $A^T$ 与 $A$ 的特征向量相同。</strong>只有特征值一定相同。例如 $A=\begin{pmatrix}1&1\\0&2\end{pmatrix}$，$\lambda=1$ 对应 $A$ 的特征向量 $(1,0)^T$，而 $A^T=\begin{pmatrix}1&0\\1&2\end{pmatrix}$ 对应 $\lambda=1$ 的特征向量是 $(1,-1)^T$，完全不同。</li>
+        </ul>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.3</span> 含参数问题：由重特征值反求参数并求对角化矩阵
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>设 $A=\begin{pmatrix}a&1&1\\1&a&1\\1&1&a\end{pmatrix}$，已知 $\lambda=1$ 是 $A$ 的二重特征值。</p>
+          <p>(1) 求 $a$ 及 $A$ 的另一个特征值；(2) 判断 $A$ 能否对角化，若能，求出可逆矩阵 $P$ 使 $P^{-1}AP=\Lambda$。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>(1) 先找出这个矩阵的特征值规律。</strong>注意 $A$ 的<strong>每行元素之和</strong>都是 $a+2$，于是</p>
+            <p>$$A\begin{pmatrix}1\\1\\1\end{pmatrix}=\begin{pmatrix}a+1+1\\1+a+1\\1+1+a\end{pmatrix}=(a+2)\begin{pmatrix}1\\1\\1\end{pmatrix}.$$</p>
+            <p>所以 $\lambda=a+2$ 一定是一个特征值。又 $\mathrm{tr}(A)=3a$，由"特征值之和等于迹"得另外两个特征值之和为 $3a-(a+2)=2a-2$；由题设它们都是 $1$，故 $2a-2=2$，得</p>
+            <p>$$a=2.$$</p>
+            <p>此时另一个特征值为 $a+2=4$。所以三个特征值为 $\boxed{\lambda_1=\lambda_2=1,\ \lambda_3=4}$。</p>
+            <p><strong>双重验算</strong>：$\mathrm{tr}(A)=3\times2=6=1+1+4$ ✓；$|A|=(a+2)(a-1)^2=4\times1=4$，直接展开 $A=\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$ 的行列式得 $2(4-1)-1(2-1)+1(1-2)=6-1-1=4$ ✓。两个检验都过，$a=2$ 确定无误。</p>
+            <p><strong>(2) 判断可对角化。</strong>对二重特征值 $\lambda=1$：</p>
+            <p>$$A-E=\begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix},\qquad R(A-E)=1.$$</p>
+            <p>于是线性无关的特征向量个数为 $n-R(A-E)=3-1=2$，<strong>恰好等于</strong>重数 $2$。对单根 $\lambda=4$，$n-R(A-4E)=3-2=1$，也等于重数。所以 $A$ 可对角化。</p>
+            <p><strong>求特征向量。</strong></p>
+            <p>$\lambda=1$：$(A-E)x=0$ 即 $x_1+x_2+x_3=0$，取基础解系</p>
+            <p>$$\xi_1=\begin{pmatrix}1\\-1\\0\end{pmatrix},\qquad \xi_2=\begin{pmatrix}1\\0\\-1\end{pmatrix}.$$</p>
+            <p>$\lambda=4$：$A-4E=\begin{pmatrix}-2&1&1\\1&-2&1\\1&1&-2\end{pmatrix}$，解得 $x_1=x_2=x_3$，取</p>
+            <p>$$\xi_3=\begin{pmatrix}1\\1\\1\end{pmatrix}.$$</p>
+            <p><strong>组装 $P$。</strong>把特征向量按列排，且<strong>列的顺序必须与 $\Lambda$ 对角元的顺序一一对应</strong>：</p>
+            <p>$$P=(\xi_1,\xi_2,\xi_3)=\begin{pmatrix}1&1&1\\-1&0&1\\0&-1&1\end{pmatrix},\qquad P^{-1}AP=\begin{pmatrix}1&&\\&1&\\&&4\end{pmatrix}=\Lambda.$$</p>
+            <p><strong>验算 $P$ 可逆</strong>：$|P|=1\cdot(0\cdot1-1\cdot(-1))-1\cdot((-1)\cdot1-1\cdot0)+1\cdot((-1)(-1)-0)=1+1+1=3\ne0$ ✓。</p>
+            <p><strong>验算对角化等式</strong>：$AP=(A\xi_1,A\xi_2,A\xi_3)=(\xi_1,\xi_2,4\xi_3)=P\Lambda$，这正是 $P^{-1}AP=\Lambda$ 的等价写法，逐列验证即：$A\xi_1=\xi_1$ ✓，$A\xi_2=\xi_2$ ✓，$A\xi_3=4\xi_3$ ✓。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定义与性质 5.3　相似矩阵</div>
+        <p><span class="thm-name">定义</span>　设 $A,B$ 都是 $n$ 阶方阵。若存在<strong>可逆</strong>矩阵 $P$，使</p>
+        <p>$$P^{-1}AP=B,$$</p>
+        <p>则称 $A$ 与 $B$ <span class="term">相似</span>，记作 $A\sim B$，$P$ 称为相似变换矩阵。</p>
+        <p><span class="thm-name">相似矩阵的共同点（"相似不变量"）</span>　若 $A\sim B$，则</p>
+        <ul>
+          <li>特征多项式相同（因而<strong>特征值完全相同</strong>、特征值之和与之积都相同）；</li>
+          <li>$\mathrm{tr}(A)=\mathrm{tr}(B)$；</li>
+          <li>$|A|=|B|$；</li>
+          <li>$R(A)=R(B)$；</li>
+          <li>更进一步，$A$ 与 $B$ 的<strong>任意多项式</strong> $f(A)\sim f(B)$，$A^{-1}\sim B^{-1}$，$A^*\sim B^*$（只要它们有意义）。</li>
+        </ul>
+        <p><strong>注意方向</strong>：以上都是<em>必要</em>条件，不是充分条件。"特征值相同"推不出"相似"（见例 5.4 与易错点清单）。</p>
+        <p><span class="thm-name">相似关系的三条性质</span>　相似是一种<strong>等价关系</strong>：</p>
+        <ul>
+          <li><strong>反身性</strong>：$A\sim A$（取 $P=E$）。</li>
+          <li><strong>对称性</strong>：$A\sim B\Rightarrow B\sim A$（取 $P^{-1}$ 即可）。</li>
+          <li><strong>传递性</strong>：$A\sim B,\ B\sim C\Rightarrow A\sim C$。</li>
+        </ul>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">PROP 5.3</span>
+             <strong>Similar Matrices: Definition and Properties.</strong></p>
+          <p><strong>Definition.</strong> Let $A$ and $B$ be $n\times n$ matrices. If there exists an
+             <strong>invertible</strong> matrix $P$ such that</p>
+          <p>$$P^{-1}AP=B,$$</p>
+          <p>then $A$ is said to be <span class="en-term">similar</span> to $B$, written $A\sim B$, and
+             $P$ is called the similarity transformation matrix.</p>
+          <p><strong>What similar matrices share (similarity invariants).</strong> If $A\sim B$, then</p>
+          <ul>
+            <li>they have the same characteristic polynomial (hence <strong>exactly the same
+                eigenvalues</strong>, and the same sum and product of eigenvalues);</li>
+            <li>$\mathrm{tr}(A)=\mathrm{tr}(B)$;</li>
+            <li>$|A|=|B|$;</li>
+            <li>$R(A)=R(B)$;</li>
+            <li>more generally, $f(A)\sim f(B)$ for <strong>every polynomial</strong> $f$, and
+                $A^{-1}\sim B^{-1}$, $A^*\sim B^*$ whenever these make sense.</li>
+          </ul>
+          <p><strong>Mind the direction:</strong> all of the above are <em>necessary</em> conditions,
+             not sufficient ones. "Same eigenvalues" does not imply "similar".</p>
+          <p><strong>Similarity is an equivalence relation:</strong></p>
+          <ul>
+            <li><strong>Reflexive:</strong> $A\sim A$ (take $P=E$).</li>
+            <li><strong>Symmetric:</strong> $A\sim B\Rightarrow B\sim A$ (take $P^{-1}$).</li>
+            <li><strong>Transitive:</strong> $A\sim B,\ B\sim C\Rightarrow A\sim C$.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.4</span> 不能对角化的典型例子
+          <span class="lv">易错</span>
+        </div>
+        <div class="example-body">
+          <p>判断 $A=\begin{pmatrix}-1&1&0\\-4&3&0\\1&0&2\end{pmatrix}$ 能否对角化。若不能，说明理由。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，求特征值。</strong>注意第三列只有一个非零元 $a_{33}=2-\lambda$，按第三列展开最省力：</p>
+            <p>$$|A-\lambda E|=(2-\lambda)\begin{vmatrix}-1-\lambda&1\\-4&3-\lambda\end{vmatrix}=(2-\lambda)\big[(-1-\lambda)(3-\lambda)+4\big].$$</p>
+            <p>而 $(-1-\lambda)(3-\lambda)=\lambda^2-2\lambda-3$，加 $4$ 得 $\lambda^2-2\lambda+1=(\lambda-1)^2$。所以</p>
+            <p>$$|A-\lambda E|=(2-\lambda)(\lambda-1)^2.$$</p>
+            <p>特征值为 $\lambda_1=\lambda_2=1$（二重），$\lambda_3=2$。</p>
+            <p><strong>验算</strong>：$\mathrm{tr}(A)=-1+3+2=4=1+1+2$ ✓；$|A|=2\cdot1\cdot1=2$，按第三列展开直接算 $|A|=2\cdot\begin{vmatrix}-1&1\\-4&3\end{vmatrix}=2(-3+4)=2$ ✓。</p>
+            <p><strong>第二步，检查二重特征值 $\lambda=1$ 的几何重数。</strong></p>
+            <p>$$A-E=\begin{pmatrix}-2&1&0\\-4&2&0\\1&0&1\end{pmatrix}.$$</p>
+            <p>第二行是第一行的 $2$ 倍，故秩至多为 $2$；第一行 $(-2,1,0)$ 与第三行 $(1,0,1)$ 显然不成比例，故 $R(A-E)=2$。</p>
+            <p>于是线性无关的特征向量个数 $=n-R(A-E)=3-2=1$，而重数是 $2$。因为 $1\lt2$，几何重数小于代数重数，所以 $A$ <strong>不能对角化</strong>。</p>
+            <p><strong>补充：为什么"几何重数少于代数重数"就完了？</strong>对角化要求有 $3$ 个线性无关的特征向量。$\lambda=1$ 最多贡献 $1$ 个，$\lambda=2$ 最多贡献 $3-R(A-2E)=3-2=1$ 个，合起来最多 $2$ 个，凑不满 $3$ 个，因此不可能找到可逆的 $P$。</p>
+            <p>（$A$ 对应 $\lambda=1$ 的特向可取 $\xi=\begin{pmatrix}1\\2\\-1\end{pmatrix}$，对应 $\lambda=2$ 的取 $\begin{pmatrix}0\\0\\1\end{pmatrix}$。只有这两个。）</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 5.4　矩阵可对角化的充要条件</div>
+        <p><span class="thm-name">定理 5.4（充要条件）</span>　$n$ 阶矩阵 $A$ 可对角化 $\iff$ $A$ 有 $n$ 个线性无关的特征向量。</p>
+        <p><span class="thm-name">定理 5.5（定量判据，做小题最快）</span>　$n$ 阶矩阵 $A$ 可对角化 $\iff$ 对 $A$ 的<strong>每一个</strong> $k$ 重特征值 $\lambda$，都成立</p>
+        <p>$$n-R(A-\lambda E)=k.$$</p>
+        <p>左边的 $n-R(A-\lambda E)$ 叫 $\lambda$ 的<span class="term">几何重数</span>（对应特征子空间的维数），$k$ 叫<span class="term">代数重数</span>。一般矩阵永远只有</p>
+        <p>$$n-R(A-\lambda E)\le k,$$</p>
+        <p>"几何重数 $\le$ 代数重数"，等号全部成立时才可以对角化。</p>
+        <p><span class="thm-name">定理 5.6（充分条件，最常用）</span>　若 $A$ 有 $n$ 个<strong>互不相同</strong>的特征值，则 $A$ 必可对角化。</p>
+        <p><strong>注意这是充分不必要条件</strong>：$A=E$ 只有特征值 $1$（$n$ 重），却本身就是对角矩阵。反着用会出错。</p>
+        <p><span class="thm-name">为什么不同特征值的特征向量一定无关</span>　设 $\lambda_1\ne\lambda_2$，$x_1,x_2$ 是各自对应的特征向量。若 $k_1x_1+k_2x_2=0$，左乘 $A$ 得 $k_1\lambda_1x_1+k_2\lambda_2x_2=0$；再与 $k_1x_1+k_2x_2=0$ 乘以 $\lambda_2$ 相减，得 $k_1(\lambda_1-\lambda_2)x_1=0$。因 $\lambda_1\ne\lambda_2$、$x_1\ne0$，故 $k_1=0$，进而 $k_2=0$。多个特征值的情形用归纳法同理可证。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 5.4</span>
+             <strong>Necessary and Sufficient Condition for Diagonalizability.</strong>
+             An $n\times n$ matrix $A$ is <span class="en-term">diagonalizable</span> $\iff$ $A$ has
+             $n$ linearly independent eigenvectors.</p>
+          <p><span class="bi-en-label">THM 5.5</span>
+             <strong>Multiplicity Criterion (fastest for short questions).</strong>
+             $A$ is diagonalizable $\iff$ for <strong>every</strong> eigenvalue $\lambda$ of
+             multiplicity $k$,</p>
+          <p>$$n-R(A-\lambda E)=k.$$</p>
+          <p>The left-hand side $n-R(A-\lambda E)$ is the <span class="en-term">geometric
+             multiplicity</span> of $\lambda$ (the dimension of its eigenspace), and $k$ is its
+             <span class="en-term">algebraic multiplicity</span>. For every matrix,</p>
+          <p>$$n-R(A-\lambda E)\le k,$$</p>
+          <p>i.e. the geometric multiplicity never exceeds the algebraic multiplicity; $A$ is
+             diagonalizable exactly when equality holds for all eigenvalues.</p>
+          <p><span class="bi-en-label">THM 5.6</span>
+             <strong>Sufficient Condition (the most frequently used).</strong>
+             If $A$ has $n$ <strong>distinct</strong> eigenvalues, then $A$ is diagonalizable.</p>
+          <p><strong>This is sufficient but not necessary</strong>: $A=E$ has only the eigenvalue $1$
+             (of multiplicity $n$) and is already a diagonal matrix.</p>
+          <p><strong>Why eigenvectors for distinct eigenvalues are independent.</strong> Let
+             $\lambda_1\ne\lambda_2$ with eigenvectors $x_1,x_2$. If $k_1x_1+k_2x_2=0$, multiplying by
+             $A$ gives $k_1\lambda_1x_1+k_2\lambda_2x_2=0$; subtracting $\lambda_2$ times
+             $k_1x_1+k_2x_2=0$ gives $k_1(\lambda_1-\lambda_2)x_1=0$. Since $\lambda_1\ne\lambda_2$ and
+             $x_1\ne0$, we get $k_1=0$, and then $k_2=0$. The case of several eigenvalues follows by
+             induction.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：把矩阵对角化的标准流程</div>
+        <ol>
+          <li><strong>求全部特征值</strong> $\lambda_1,\dots,\lambda_n$（按重数计共 $n$ 个）。</li>
+          <li><strong>对每个特征值</strong> $\lambda_i$ 求 $(A-\lambda_iE)x=0$ 的基础解系，得到 $n-R(A-\lambda_iE)$ 个线性无关的特征向量。</li>
+          <li><strong>先判断</strong>：把各特征值贡献的向量个数加起来。若总数小于 $n$，立即停手写"不能对角化"；若等于 $n$，继续。</li>
+          <li><strong>拼装</strong> $P=(\xi_1,\xi_2,\dots,\xi_n)$，每一列是一个特征向量。</li>
+          <li><strong>写出结论</strong> $P^{-1}AP=\Lambda=\mathrm{diag}(\lambda_1,\lambda_2,\dots,\lambda_n)$。<strong>关键：第 $i$ 列特征向量对应的特征值，必须写在第 $i$ 个对角元上。</strong>顺序错了，整个答案就错了。</li>
+          <li><strong>回代验证</strong>：$AP=P\Lambda$ 是最省事的检验方式（逐列看 $A\xi_i=\lambda_i\xi_i$）。</li>
+        </ol>
+        <p><strong>用途：算 $A^k$。</strong>一旦 $A=P\Lambda P^{-1}$，就有</p>
+        <p>$$A^k=(P\Lambda P^{-1})^k=P\Lambda^kP^{-1}=P\,\mathrm{diag}(\lambda_1^k,\dots,\lambda_n^k)\,P^{-1}.$$</p>
+        <p>对角矩阵的方幂只要把对角元各自求幂，这让"求 $100$ 次方"变成一道算术题。这是对角化最重要的应用，也是考研大题的常见收尾。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD 5.2</span>
+             <strong>Diagonalizing a Matrix: Standard Procedure.</strong></p>
+          <ol>
+            <li><strong>Find all eigenvalues</strong> $\lambda_1,\dots,\lambda_n$ (counted with
+                multiplicity, $n$ of them in total).</li>
+            <li><strong>For each eigenvalue</strong> $\lambda_i$, find a basis of the nullspace of
+                $(A-\lambda_iE)x=0$, which gives $n-R(A-\lambda_iE)$ linearly independent
+                eigenvectors.</li>
+            <li><strong>Check first:</strong> add up the numbers of eigenvectors contributed by all
+                eigenvalues. If the total is less than $n$, stop and write "$A$ is not
+                diagonalizable"; if it equals $n$, continue.</li>
+            <li><strong>Assemble</strong> $P=(\xi_1,\xi_2,\dots,\xi_n)$, one eigenvector per
+                column.</li>
+            <li><strong>State the conclusion</strong>
+                $P^{-1}AP=\Lambda=\mathrm{diag}(\lambda_1,\lambda_2,\dots,\lambda_n)$.
+                <strong>The eigenvalue belonging to the eigenvector in column $i$ must be placed in
+                the $i$-th diagonal entry</strong> — a wrong order makes the whole answer wrong.</li>
+            <li><strong>Verify by substitution:</strong> $AP=P\Lambda$ is the cheapest check (go
+                column by column through $A\xi_i=\lambda_i\xi_i$).</li>
+          </ol>
+          <p><strong>Application: computing $A^k$.</strong> Once $A=P\Lambda P^{-1}$,</p>
+          <p>$$A^k=(P\Lambda P^{-1})^k=P\Lambda^kP^{-1}=P\,\mathrm{diag}(\lambda_1^k,\dots,\lambda_n^k)\,P^{-1}.$$</p>
+          <p>Powers of a diagonal matrix are taken entry by entry, which turns "compute the $100$-th
+             power" into an arithmetic exercise. This is the most important application of
+             diagonalization.</p>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.5</span> 抽象矩阵：由特征值推算 $f(A)$、$A^*$ 的特征值与行列式
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $3$ 阶矩阵 $A$ 的特征值为 $1,2,3$。求：(1) $|A|$；(2) $\mathrm{tr}(A^2-2A+3E)$；(3) $|A^*+E|$。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>(1)</strong> 由"特征值之积等于行列式"：</p>
+            <p>$$|A|=1\times2\times3=6.$$</p>
+            <p>因为 $|A|=6\ne0$，$A$ 可逆（这也保证了后面 $A^*$ 的公式可用）。</p>
+            <p><strong>(2)</strong> 设 $\lambda$ 是 $A$ 的特征值、$x$ 是对应特征向量，则 $A^2x=\lambda^2x$，于是</p>
+            <p>$$(A^2-2A+3E)x=(\lambda^2-2\lambda+3)x.$$</p>
+            <p>所以 $A^2-2A+3E$ 的特征值为 $f(\lambda)=\lambda^2-2\lambda+3$ 在 $\lambda=1,2,3$ 处的值：</p>
+            <p>$$f(1)=1-2+3=2,\quad f(2)=4-4+3=3,\quad f(3)=9-6+3=6.$$</p>
+            <p>由"特征值之和等于迹"：</p>
+            <p>$$\mathrm{tr}(A^2-2A+3E)=2+3+6=11.$$</p>
+            <p><strong>独立验算</strong>：$\mathrm{tr}(A^2)=\lambda_1^2+\lambda_2^2+\lambda_3^2=1+4+9=14$；$\mathrm{tr}(A)=\lambda_1+\lambda_2+\lambda_3=6$；$\mathrm{tr}(E)=3$。于是 $\mathrm{tr}(A^2-2A+3E)=14-2\times6+3\times3=14-12+9=11$ ✓。</p>
+            <p><strong>(3)</strong> 由 $A^*=|A|A^{-1}=6A^{-1}$。因 $A^{-1}$ 的特征值是 $1/\lambda$，所以 $A^*$ 的特征值是</p>
+            <p>$$\frac{6}{1}=6,\qquad \frac{6}{2}=3,\qquad \frac{6}{3}=2.$$</p>
+            <p>再加 $E$，$A^*+E$ 的特征值为</p>
+            <p>$$6+1=7,\qquad 3+1=4,\qquad 2+1=3.$$</p>
+            <p>所以</p>
+            <p>$$|A^*+E|=7\times4\times3=84.$$</p>
+            <p><strong>用另一条路验算</strong>：$A^*$ 的特征值之积应等于 $|A^*|=|A|^{n-1}=6^{2}=36$，而 $6\times3\times2=36$ ✓。另外 $\mathrm{tr}(A^*)=11=6+3+2$ ✓。</p>
+            <p><strong>一句话套路</strong>：只要题目给的是"特征值"，问的是 $f(A)$、$A^{-1}$、$A^*$ 的行列式、迹、特征值，就<strong>不要真去算矩阵</strong>——把 $A$ 换成 $\lambda$ 逐个运算，再把结果乘起来（求行列式）或加起来（求迹）。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.6</span> 用对角化求矩阵的高次幂 $A^k$
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $A=\begin{pmatrix}0&1\\-2&3\end{pmatrix}$，求 $A^k$（$k$ 为正整数）。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，求特征值。</strong></p>
+            <p>$$|A-\lambda E|=\begin{vmatrix}-\lambda&1\\-2&3-\lambda\end{vmatrix}=-\lambda(3-\lambda)+2=\lambda^2-3\lambda+2=(\lambda-1)(\lambda-2).$$</p>
+            <p>故 $\lambda_1=1,\lambda_2=2$。<strong>验算</strong>：和为 $3=\mathrm{tr}(A)=0+3$ ✓；积为 $2=|A|=0\times3-1\times(-2)=2$ ✓。</p>
+            <p>两个特征值互不相同，由定理 5.6，$A$ 可对角化。</p>
+            <p><strong>第二步，求特征向量。</strong></p>
+            <p>$\lambda_1=1$：$A-E=\begin{pmatrix}-1&1\\-2&2\end{pmatrix}\to\begin{pmatrix}1&-1\\0&0\end{pmatrix}$，得 $x_1=x_2$，取 $\xi_1=\begin{pmatrix}1\\1\end{pmatrix}$。</p>
+            <p>$\lambda_2=2$：$A-2E=\begin{pmatrix}-2&1\\-2&1\end{pmatrix}\to\begin{pmatrix}-2&1\\0&0\end{pmatrix}$，得 $2x_1=x_2$，取 $\xi_2=\begin{pmatrix}1\\2\end{pmatrix}$。</p>
+            <p><strong>第三步，组装并求逆。</strong></p>
+            <p>$$P=\begin{pmatrix}1&1\\1&2\end{pmatrix},\qquad P^{-1}AP=\begin{pmatrix}1&0\\0&2\end{pmatrix}=\Lambda.$$</p>
+            <p>$|P|=1\times2-1\times1=1$，所以 $P^{-1}=\begin{pmatrix}2&-1\\-1&1\end{pmatrix}$。（二阶用 $\begin{pmatrix}a&b\\c&d\end{pmatrix}^{-1}=\frac{1}{ad-bc}\begin{pmatrix}d&-b\\-c&a\end{pmatrix}$ 最快，注意主对角互换、副对角变号。）</p>
+            <p><strong>第四步，求幂。</strong></p>
+            <p>$$A^k=P\Lambda^kP^{-1}=\begin{pmatrix}1&1\\1&2\end{pmatrix}\begin{pmatrix}1&0\\0&2^k\end{pmatrix}\begin{pmatrix}2&-1\\-1&1\end{pmatrix}.$$</p>
+            <p>先算前两个：$\begin{pmatrix}1&1\\1&2\end{pmatrix}\begin{pmatrix}1&0\\0&2^k\end{pmatrix}=\begin{pmatrix}1&2^k\\1&2^{k+1}\end{pmatrix}$。再乘 $P^{-1}$：</p>
+            <p>$$A^k=\begin{pmatrix}2-2^k&2^k-1\\2-2^{k+1}&2^{k+1}-1\end{pmatrix}.$$</p>
+            <p><strong>验算（务必做）</strong>：令 $k=1$，得 $\begin{pmatrix}0&1\\-2&3\end{pmatrix}=A$ ✓；令 $k=2$，得 $\begin{pmatrix}-2&3\\-6&7\end{pmatrix}$，而直接算 $A^2=\begin{pmatrix}0&1\\-2&3\end{pmatrix}^2=\begin{pmatrix}-2&3\\-6&7\end{pmatrix}$ ✓；令 $k=0$ 应得 $E$，代入得 $\begin{pmatrix}2-2^0&2^0-1\\2-2^1&2^1-1\end{pmatrix}=\begin{pmatrix}1&0\\0&1\end{pmatrix}=E$ ✓（公式对 $k\ge0$ 都成立）。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box app-box">
+        <div class="box-title"><span class="ico">🔧</span>工程联系：叶片盘的固有频率与振型就是特征值问题</div>
+        <p>航空发动机转子上的叶片盘（bladed disk）做无阻尼自由振动时，有限元离散后的运动方程是</p>
+        <p>$$M\ddot{x}+Kx=0,$$</p>
+        <p>其中 $M$ 是质量矩阵（对称正定），$K$ 是刚度矩阵（对称）。设 $x=\phi\,e^{\mathrm{i}\omega t}$，代入得</p>
+        <p>$$K\phi=\omega^2M\phi.$$</p>
+        <p>这就是<span class="term">广义特征值问题</span>：$\lambda=\omega^2$ 是特征值，$\phi$ 是特征向量（<strong>振型 / 模态</strong>），$\omega$ 是<strong>固有频率</strong>。工程上叫"模态分析"。</p>
+        <p>为什么工程师这么在意它？</p>
+        <ul>
+          <li><strong>共振判据</strong>：当激振频率（转速乘以叶片数、或气流的某个谐波频率）接近某一阶 $\omega_i$ 时，振幅会被放大几十倍，是叶片高周疲劳断裂的主因。所以设计时必须先算出前若干阶固有频率，把工作转速区间"躲开"它们（Campbell 图）。</li>
+          <li><strong>模态叠加法</strong>：把物理坐标 $x$ 用特征向量展开 $x=\sum q_i(t)\phi_i$。因为特征向量之间（对 $M$、$K$ 加权）正交，原本互相耦合的成千上万个方程会<strong>解耦成一堆独立的一元方程</strong> $\ddot{q}_i+\omega_i^2q_i=0$。这正是"对角化"在工程里的字面含义——把耦合系统化成对角系统。整个过程能成立，靠的就是第 5-2 节要讲的"实对称矩阵一定可以正交对角化"。</li>
+          <li><strong>规模</strong>：真实叶盘的有限元模型自由度可达 $10^6$ 量级，工程上不会去展开特征多项式，而是用 Lanczos 迭代、子空间迭代法只求前几十阶特征对（因为高频模态几乎不被激发）。</li>
+        </ul>
+        <p>另外，若结构有阻尼或陀螺效应（转动的转子），$M^{-1}K$ 不再对称，特征值可能变成复数——实部对应衰减率，虚部对应频率。这也解释了为什么"实对称"这个条件在工程上如此珍贵：它保证频率是实数、振型可以选成互相正交的。</p>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点：这一节在考研数一里怎么考</div>
+        <ul>
+          <li><span class="tag">大题</span><span class="tag">高频</span><strong>"求特征值、特征向量，判断可否对角化，求可逆矩阵 $P$"</strong>——这是本章最标准的 11 分大题。看到"求可逆矩阵 $P$ 使 $P^{-1}AP=\Lambda$"，思路固定：求特征值 → 求基础解系 → 检查向量个数是否为 $n$ → 拼 $P$。<strong>最后一定回代验算 $AP=P\Lambda$</strong>。</li>
+          <li><span class="tag">高频</span><span class="tag">小题</span><strong>抽象矩阵求特征值</strong>。题干给的是矩阵等式（如 $A^2=A$、$A^2-3A+2E=O$、$A^2+2A=O$），问特征值的可能取值。套路：设 $Ax=\lambda x$（$x\ne0$），把等式两边作用在 $x$ 上，得到关于 $\lambda$ 的多项式方程。看到 $f(A)=O$ 立刻想到"$A$ 的特征值都是 $f(\lambda)=0$ 的根"。</li>
+          <li><span class="tag">高频</span><span class="tag">小题</span><strong>相似的必要条件反求参数</strong>。题设"$A$ 与 $B$ 相似"，立刻列出三条方程：$\mathrm{tr}(A)=\mathrm{tr}(B)$、$|A|=|B|$、$R(A)=R(B)$（有时还要用"$\lambda$ 是 $A$ 的特征值 $\iff$ $|A-\lambda E|=0$"）。两个未知数一般用前两条就够。</li>
+          <li><span class="tag">必考</span><strong>$f(A)$、$A^{-1}$、$A^*$ 的特征值综合运算。</strong>题干常写"设 3 阶矩阵 $A$ 的特征值为 $\dots$，求 $|A^*+2E|$ 或 $\mathrm{tr}(A^2-2A+3E)$"。记住三条：$f(A)\to f(\lambda)$，$A^{-1}\to1/\lambda$，$A^*\to|A|/\lambda$；然后求行列式就相乘、求迹就相加。<strong>千万别把 $|f(A)|$ 拆成 $f(|A|)$</strong>——行列式对加法不可拆。</li>
+          <li><span class="tag">小题</span><span class="tag">易错</span><strong>由 $R(A-\lambda E)$ 反推参数或判断可对角化</strong>。核心公式 $n-R(A-\lambda E)=k$（$k$ 是重数）必须能双向使用：给 $R$ 判可对角化，或给"可对角化"反求参数范围。</li>
+          <li><span class="tag">小题</span><strong>"每行元素之和相等"型</strong>。题干出现"$A$ 的每行元素之和都是 $a$"，立刻写 $A(1,1,1)^T=a(1,1,1)^T$，即 $a$ 是特征值、$(1,1,1)^T$ 是特征向量。这是判卷老师最爱的送分点，也是最容易漏看的条件。</li>
+          <li><span class="tag">易错</span>选择题高频陷阱：①"$A+B$ 的特征值等于两者特征值之和"——错；②"$A^T$ 与 $A$ 特征向量相同"——错，只有特征值相同；③"有 $n$ 个特征值就可对角化"——错，$n$ 阶矩阵永远有 $n$ 个特征值；④"特征值相同就相似"——错，还要看几何重数。</li>
+        </ul>
+      </div>
+
+      <div class="box model-box">
+        <div class="box-title"><span class="ico">🧩</span>典型模型题</div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 1</span>由 $f(A)=O$ 定特征值范围<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              题干给出一个矩阵多项式等式 $f(A)=O$（如 $A^2-4A+3E=O$、$A^2=A$、$A^2+2A=O$），要你求特征值、求迹、求行列式，或者反过来求参数。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 设 $Ax=\lambda x$（$x\ne0$），把等式两边作用在 $x$ 上，得到 $f(\lambda)=0$——这只能说明"$A$ 的特征值一定是 $f$ 的根"，<strong>不能</strong>反过来说 $f$ 的每个根都是 $A$ 的特征值；② 解出候选值；③ 用"阶数 $n$"配合 $\sum\lambda_i=\mathrm{tr}(A)$、$\prod\lambda_i=|A|$ 定下每个候选值的重数；④ 若要 $A^{-1}$，把等式整理成 $A\cdot(\text{关于 }A\text{ 的多项式})=kE$，两边除以 $k$。</div>
+            <p><strong>例</strong>　设 3 阶矩阵 $A$ 满足 $A^2-4A+3E=O$，且 $|A|=3$。求：(1) $A$ 的特征值的全部可能取值；(2) $\mathrm{tr}(A)$ 与 $|A+E|$；(3) 证明 $A$ 可逆，并求 $A^{-1}$。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>(1) 把等式作用在特征向量上。</strong>设 $Ax=\lambda x$（$x\ne0$），则 $A^2x=\lambda^2x$、$Ex=x$，代入原式得</p>
+              <p>$$(A^2-4A+3E)x=(\lambda^2-4\lambda+3)x=0.$$</p>
+              <p>因为 $x\ne0$，故 $\lambda^2-4\lambda+3=0$，即 $(\lambda-1)(\lambda-3)=0$，所以 $A$ 的特征值只能是 $1$ 或 $3$。</p>
+              <p><strong>(2) 用 $|A|$ 定重数。</strong>$A$ 是 3 阶矩阵，按重数计恰有 3 个特征值，每个都是 $1$ 或 $3$。设其中有 $a$ 个 $1$、$b$ 个 $3$（$a+b=3$），由 $\prod\lambda_i=|A|$ 得</p>
+              <p>$$1^a\cdot3^b=3\ \Longrightarrow\ b=1,\quad a=2,$$</p>
+              <p>即三个特征值为 $1,1,3$。于是</p>
+              <p>$$\mathrm{tr}(A)=1+1+3=5,\qquad |A+E|=(1+1)(1+1)(3+1)=2\times2\times4=16.$$</p>
+              <p><strong>验算</strong>：$|A|=1\times1\times3=3$ ✓，与题设一致；取 $A=\mathrm{diag}(1,1,3)$ 代回，$A^2-4A+3E=\mathrm{diag}(0,0,9-12+3)=O$ ✓，说明这样的 $A$ 确实存在。注意 $|A+E|$ 要用 $A+E$ 的<strong>三个</strong>特征值 $2,2,4$ 相乘，漏掉二重根是本题最常见的错。</p>
+              <p><strong>(3) 求 $A^{-1}$。</strong>$|A|=3\ne0$，$A$ 可逆。由 $A^2-4A+3E=O$ 得 $A^2-4A=-3E$，即</p>
+              <p>$$A(A-4E)=-3E\ \Longrightarrow\ A\cdot\left[-\frac13(A-4E)\right]=E\ \Longrightarrow\ A^{-1}=-\frac13(A-4E)=\frac13(4E-A).$$</p>
+              <p><strong>验算 $A^{-1}$</strong>：由 $A^2=4A-3E$ 得</p>
+              <p>$$A\cdot\frac13(4E-A)=\frac13(4A-A^2)=\frac13\big[4A-(4A-3E)\big]=\frac13\cdot3E=E\ ✓$$</p>
+              <p class="solution-label">易错提醒</p>
+              <p>① $f(\lambda)=0$ 给出的只是<strong>候选值</strong>，必须再用阶数、迹、行列式定重数，否则第 (2) 问答不出来；② 求 $A^{-1}$ 的关键是整理成"$A$ 乘一个关于 $A$ 的多项式 $=kE$"，两边除以 $k$，那个常数不能漏；③ 每算完一组特征值，都用 $\sum\lambda_i=\mathrm{tr}(A)$ 与 $\prod\lambda_i=|A|$ 验算一遍。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 2</span>由特征值（相似）反求参数<span class="lv">中等</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              题干说"$A$ 的特征值为 $\dots$"或"$A$ 与某对角矩阵相似"，而矩阵里带着待定参数 $a,b$，要求把这些参数定出来。</div>
+            <div class="model-route"><b>标准套路</b>
+              先别展开特征多项式，先写出两条<strong>必然成立</strong>的方程：$\sum\lambda_i=\mathrm{tr}(A)$ 与 $\prod\lambda_i=|A|$（若给的是"$A$ 与 $B$ 相似"，则用 $\mathrm{tr}(A)=\mathrm{tr}(B)$、$|A|=|B|$）。两个未知数用这两条一般就够，解完必须回代验算。</div>
+            <p><strong>例</strong>　设 3 阶矩阵 $A=\begin{pmatrix}2&0&1\\0&a&0\\1&0&2\end{pmatrix}$ 与 $B=\mathrm{diag}(1,2,b)$ 相似，求 $a,b$。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：相似能白拿两条方程。</strong>相似矩阵有相同的迹与相同的行列式：</p>
+              <p>$$\mathrm{tr}(A)=\mathrm{tr}(B):\qquad 2+a+2=1+2+b\ \Longrightarrow\ a-b=-1.$$</p>
+              <p>再算行列式。按第 2 行展开最省力（该行只有一个非零元 $a$）：</p>
+              <p>$$|A|=a\cdot\begin{vmatrix}2&1\\1&2\end{vmatrix}=a(4-1)=3a,\qquad |B|=1\times2\times b=2b,$$</p>
+              <p>故</p>
+              <p>$$3a=2b.$$</p>
+              <p><strong>第二步：解方程组。</strong>由 $a=b-1$ 代入 $3a=2b$：$3(b-1)=2b$，得 $b=3$，进而 $a=2$。所以</p>
+              <p>$$a=2,\qquad b=3.$$</p>
+              <p><strong>第三步：回代验算。</strong>把 $a=2$ 代回，$A$ 左上角的 $2\times2$ 块是 $\begin{pmatrix}2&1\\1&2\end{pmatrix}$，其特征值为 $3,1$，再加上中间孤立出来的 $a=2$，$A$ 的特征值恰为 $1,2,3$，与 $B=\mathrm{diag}(1,2,3)$ 的对角元完全一致 ✓。再用两个不变量复核：$\mathrm{tr}(A)=2+2+2=6=1+2+3$ ✓；$|A|=3a=6=1\times2\times3$ ✓。</p>
+              <p>（顺带说明：此题中 $a=2$ 时 $A$ 是实对称矩阵，必可正交对角化，$B$ 本身就是对角矩阵，所以两者确实相似——用必要条件解出的参数在这里也满足充分性。）</p>
+              <p class="solution-label">易错提醒</p>
+              <p>① 只用 $\mathrm{tr}(A)=\mathrm{tr}(B)$ 会得到 $a=b-1$ 这样的一整族解，<strong>两条方程都要用</strong>；② 算 $|A|$ 时选对展开的行列能省一半时间（本题按第 2 行展开只剩一项），但别忘了那个因子 $a$。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 3</span>含参数矩阵能否对角化的讨论<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              矩阵里带参数，问"$a$ 取何值时 $A$ 可对角化"。判据只有一条：对<strong>每一个</strong> $k$ 重特征值都要有 $n-R(A-\lambda E)=k$，即几何重数等于代数重数。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 先求特征值并写清各自的重数；② <strong>只有重根需要讨论</strong>，单根自动合格；③ 对重根算 $R(A-\lambda E)$，令 $n-R(A-\lambda E)=$ 重数，解出参数条件；④ 按参数分类把结论写全，再回代验算。</div>
+            <p><strong>例</strong>　设 $A=\begin{pmatrix}2&0&0\\1&1&0\\1&a&2\end{pmatrix}$，问 $a$ 取何值时 $A$ 可对角化？</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：特征值。</strong>$A$ 是下三角矩阵，对角线元素就是特征值：</p>
+              <p>$$\lambda_1=\lambda_2=2\ (\text{二重}),\qquad \lambda_3=1.$$</p>
+              <p><strong>验算</strong>：$\mathrm{tr}(A)=2+1+2=5=2+2+1$ ✓。</p>
+              <p><strong>第二步：只有重根要讨论。</strong>$\lambda=1$ 是单根，一定有 $3-R(A-E)=1$，自动与重数相等，不必细算。关键看二重根 $\lambda=2$：要求 $3-R(A-2E)=2$，即 $R(A-2E)=1$。</p>
+              <p><strong>第三步：算秩。</strong></p>
+              <p>$$A-2E=\begin{pmatrix}0&0&0\\1&-1&0\\1&a&0\end{pmatrix}.$$</p>
+              <p>第一行是零行，剩下两行 $(1,-1,0)$ 与 $(1,a,0)$ 都只有前两个分量可能非零，它们成比例当且仅当 $a=-1$。于是：</p>
+              <ul>
+                <li><strong>$a=-1$ 时</strong>两行相同，$R(A-2E)=1$，几何重数 $=3-1=2=$ 代数重数，$A$ 可对角化；</li>
+                <li><strong>$a\ne-1$ 时</strong>两行不成比例，$R(A-2E)=2$，几何重数 $=3-2=1\lt2$，几何重数小于代数重数，$A$ 不能对角化。</li>
+              </ul>
+              <p><strong>第四步：回代验算（取 $a=-1$）。</strong>此时 $A=\begin{pmatrix}2&0&0\\1&1&0\\1&-1&2\end{pmatrix}$。</p>
+              <p>$\lambda=2$：由 $A-2E=\begin{pmatrix}0&0&0\\1&-1&0\\1&-1&0\end{pmatrix}$ 得 $x_1-x_2=0$，基础解系 $\xi_1=\begin{pmatrix}1\\1\\0\end{pmatrix},\ \xi_2=\begin{pmatrix}0\\0\\1\end{pmatrix}$，正好 $2$ 个。</p>
+              <p>$\lambda=1$：由 $A-E=\begin{pmatrix}1&0&0\\1&0&0\\1&-1&1\end{pmatrix}$ 得 $x_1=0$ 且 $x_2=x_3$，取 $\xi_3=\begin{pmatrix}0\\1\\1\end{pmatrix}$。</p>
+              <p>三个向量线性无关（前两个与 $\xi_3$ 显然不成比例），故可对角化 ✓。逐列验算：$A\xi_1=(2,2,0)^T=2\xi_1$ ✓，$A\xi_2=(0,0,2)^T=2\xi_2$ ✓，$A\xi_3=(0,1,-1+2)^T=(0,1,1)^T=\xi_3$ ✓。</p>
+              <p>再取 $a=0$ 抽查"不能对角化"的一支：$A-2E$ 的第二、三行为 $(1,-1,0)$、$(1,0,0)$，秩为 $2$，由这两行推出 $x_1=x_2=0$，特征向量只剩 $k(0,0,1)^T$ 一个，确实凑不满 3 个 ✗。</p>
+              <p class="solution-label">易错提醒</p>
+              <p>① <strong>只有重根才需要检验</strong>，单根一定合格，把单根也拿去算 $R(A-\lambda E)$ 是白费功夫；② 含参数时不要说"显然 $R=2$"，要用"两行是否成比例"<strong>讨论</strong>；③ 结论必须分类写全（$a=-1$ 与 $a\ne-1$ 两种情形都要写），漏一种就丢分；④ 判断标准是"几何重数 $=$ 代数重数"，不是"有没有重根"——本题 $a=-1$ 时特征值有二重根，照样能对角化。</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="quiz" data-quiz-id="ch5-1" data-title="5-1 特征值与特征向量 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+        <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，$x$ 是 $A$ 对应于特征值 $\lambda$ 的特征向量。下列说法中正确的是（　）。
+           <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix and let $x$ be an eigenvector of $A$ for the eigenvalue $\lambda$. Which of the following statements is correct?</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">对任意 $k\ne0$，$kx$ 仍是 $A$ 对应于 $\lambda$ 的特征向量</span></li>
+        <li><span class="opt-body">特征向量 $x$ 可以取零向量，此时 $\lambda$ 任意</span></li>
+        <li><span class="opt-body">一个特征值 $\lambda$ 恰好只对应一个特征向量</span></li>
+        <li><span class="opt-body">同一个非零向量 $x$ 可以同时是两个不同特征值的特征向量</span></li>
+        </ul>
+        <div class="q-explain">特征向量的定义只要求 $x\ne0$ 且 $Ax=\lambda x$，把 $x$ 换成 $kx$（$k\ne0$）等式照样成立，所以 A 对。<strong>B 错</strong>：若允许 $x=0$，则 $A\cdot0=\lambda\cdot0$ 对任何 $\lambda$ 都成立，特征值将失去意义，所以定义里"非零"两个字不能丢。<strong>C 错</strong>：$\lambda$ 对应的全体特征向量是特征子空间 $\ker(A-\lambda E)$ 去掉零向量，只要 $n-R(A-\lambda E)\ge2$ 就有无穷多个（例如 $\lambda=1$ 对应 $\begin{pmatrix}1\\2\\0\end{pmatrix}$ 与 $\begin{pmatrix}0\\-2\\1\end{pmatrix}$ 都行）。<strong>D 错</strong>：若 $Ax=\lambda_1x=\lambda_2x$ 且 $x\ne0$，则 $(\lambda_1-\lambda_2)x=0$，必有 $\lambda_1=\lambda_2$。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+        <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，则"$A$ 以 $0$ 为特征值"的充要条件是（　）。
+           <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. A necessary and sufficient condition for $A$ to have $0$ as an eigenvalue is ( ).</span></p>
+        <ul class="options">
+        <li><span class="opt-body">$A=O$</span></li>
+        <li data-correct="true"><span class="opt-body">$|A|=0$</span></li>
+        <li><span class="opt-body">$R(A)=1$</span></li>
+        <li><span class="opt-body">$A$ 不能对角化</span></li>
+        </ul>
+        <div class="q-explain">$0$ 是特征值 $\iff|A-0\cdot E|=|A|=0$ $\iff$ $A$ 不可逆，故 B 对。<strong>A 错</strong>：$A=\mathrm{diag}(1,0)$ 有零特征值却显然不是零矩阵。<strong>C 错</strong>：$\mathrm{diag}(1,1,0)$ 的秩是 $2$，同样有零特征值；$R(A)=1$ 只是"零特征值重数至少 $n-1$"的一个特例。<strong>D 错</strong>：零特征值与能否对角化没有必然联系——$\mathrm{diag}(1,0)$ 有零特征值却可对角化，而 $\begin{pmatrix}1&1\\0&1\end{pmatrix}$ 特征值只有 $1$（不为零）却不可对角化。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+        <p class="q-stem">$n$ 阶矩阵 $A$ 可对角化的充要条件是 $A$ 有 $n$ 个特征值。
+           <span class="en-line" lang="en">An $n\times n$ matrix $A$ is diagonalizable if and only if $A$ has $n$ eigenvalues.</span></p>
+        <ul class="options">
+        <li><span class="opt-body">正确</span></li>
+        <li data-correct="true"><span class="opt-body">错误</span></li>
+        </ul>
+        <div class="q-explain">错误。$n$ 阶矩阵的特征多项式是 $n$ 次的，在复数域内按重数计<strong>永远</strong>有 $n$ 个特征值，所以这个条件对任何方阵都成立，等于没说。正确的充要条件是"$A$ 有 $n$ 个<strong>线性无关</strong>的特征向量"。反例：$A=\begin{pmatrix}1&1\\0&1\end{pmatrix}$ 有 2 个特征值（$1$ 是二重根），但 $R(A-E)=1$，只有 $2-1=1$ 个线性无关特征向量，不可对角化。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+        <p class="q-stem">设 $A$ 为 3 阶矩阵，$\alpha_1,\alpha_2,\alpha_3$ 为 3 维非零向量，满足 $A\alpha_1=\alpha_1$，$A\alpha_2=2\alpha_2$，$A\alpha_3=0$，且 $|\alpha_1,\alpha_2,\alpha_3|\ne0$。则 $|A+E|=$（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix and let $\alpha_1,\alpha_2,\alpha_3$ be nonzero $3$-dimensional vectors such that $A\alpha_1=\alpha_1$, $A\alpha_2=2\alpha_2$, $A\alpha_3=0$, and $|\alpha_1,\alpha_2,\alpha_3|\ne0$. Then $|A+E|=$ ( ).</span></p>
+        <ul class="options">
+        <li><span class="opt-body">$0$</span></li>
+        <li><span class="opt-body">$1$</span></li>
+        <li data-correct="true"><span class="opt-body">$6$</span></li>
+        <li><span class="opt-body">$2$</span></li>
+        </ul>
+        <div class="q-explain">由 $|\alpha_1,\alpha_2,\alpha_3|\ne0$ 知三个特征向量线性无关，故 $A$ 可对角化，其特征值就是 $1,2,0$。$A+E$ 的特征值为 $1+1=2$、$2+1=3$、$0+1=1$，故 $|A+E|=2\times3\times1=6$。<strong>A 错</strong>：$A$ 有零特征值不意味着 $A+E$ 有零特征值（$A+E$ 的特征值是 $\lambda+1$，零特征值只会来自 $\lambda=-1$）。<strong>B 错</strong>：把行列式当成可拆的，误用 $|A+E|=|A|+|E|=0+1=1$——行列式对加法<strong>不可拆</strong>。<strong>D 错</strong>：只用了 $\lambda=1$ 这一支（$1+1=2$），漏掉了另外两个特征值。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+        <p class="q-stem">设 $A=\begin{pmatrix}a&1&0\\1&a&0\\0&0&b\end{pmatrix}$ 的特征值为 $1,2,3$，则 $(a,b)=$（　）。
+           <span class="en-line" lang="en">If the eigenvalues of $A=\begin{pmatrix}a&1&0\\1&a&0\\0&0&b\end{pmatrix}$ are $1,2,3$, then $(a,b)=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$(2,2)$</span></li>
+        <li><span class="opt-body">$(2,3)$</span></li>
+        <li><span class="opt-body">$(3,2)$</span></li>
+        <li><span class="opt-body">$(1,2)$</span></li>
+        </ul>
+        <div class="q-explain">$A$ 是分块对角阵，左上 $2\times2$ 块的特征多项式为 $(a-\lambda)^2-1$，根为 $a-1$ 与 $a+1$，第三个特征值是 $b$。所以 $A$ 的特征值集合为 $\{a-1,\ a+1,\ b\}$，其中 $a-1$ 与 $a+1$ 相差 $2$。在 $1,2,3$ 中相差 $2$ 的两数只能是 $1$ 和 $3$，故 $a=2$，剩下 $b=2$。验算：$\mathrm{tr}(A)=2a+b=6=1+2+3$ ✓，$|A|=(a^2-1)b=3\times2=6=1\times2\times3$ ✓。<strong>B 错</strong>：把 $b$ 直接当成最大的特征值 $3$，但没有检查 $a\pm1$ 是否凑得出 $1,3$。<strong>C 错</strong>：把 $a$ 当成了 $a+1$，若 $a=3$ 则特征值为 $2,4,b$，与 $1,2,3$ 不符。<strong>D 错</strong>：只由 $a-1=1$ 解出 $a$ 后没有再定 $b$。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+        <p class="q-stem">设 3 阶矩阵 $A$ 的特征值为 $1,-2,3$，则 $|A^2-2A+3E|=$ ______。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with eigenvalues $1,-2,3$. Then $|A^2-2A+3E|=$ ______.</span></p>
+        <div class="q-answer" data-answer="132"></div>
+        <div class="q-explain">若 $\lambda$ 是 $A$ 的特征值，则 $f(\lambda)=\lambda^2-2\lambda+3$ 是 $f(A)=A^2-2A+3E$ 的特征值。代入三个特征值：$f(1)=1-2+3=2$，$f(-2)=4+4+3=11$，$f(3)=9-6+3=6$。故 $|A^2-2A+3E|=2\times11\times6=132$。注意不能把行列式拆开算：$|A^2-2A+3E|\ne|A|^2-2|A|+3|E|$（那样会得到 $(-6)^2-2(-6)+3=51$，是错的），行列式对加法不可拆。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 $A$ 为 3 阶矩阵，且满足 $A^2-3A+2E=O$，则（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix satisfying $A^2-3A+2E=O$. Then ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$A$ 的特征值只能是 $1$ 或 $2$</span></li>
+        <li><span class="opt-body">$A$ 的特征值只能是 $0$ 或 $1$</span></li>
+        <li><span class="opt-body">$A$ 一定有 3 个互不相同的特征值</span></li>
+        <li><span class="opt-body">$A$ 一定不可对角化</span></li>
+        </ul>
+        <div class="q-explain">设 $Ax=\lambda x$（$x\ne0$），则 $A^2x=\lambda^2x$，代入原式得 $(\lambda^2-3\lambda+2)x=0$；因 $x\ne0$，故 $\lambda^2-3\lambda+2=0$，即 $\lambda=1$ 或 $2$，所以 A 对。<strong>B 错</strong>：$0$ 与 $1$ 是 $A^2=A$（即 $A^2-A=O$）的结论，属于套错公式；把 $A^2-3A+2E$ 因式分解成 $(A-E)(A-2E)$ 就能看出根应当是 $1$ 与 $2$。<strong>C 错</strong>：特征值的重数完全无法确定——$A=E$ 满足条件，特征值是 $1,1,1$；$A=2E$ 也满足条件，特征值是 $2,2,2$，都没有 3 个互不相同的特征值。<strong>D 错</strong>：事实上此时 $A$ <em>一定可以</em>对角化。原因是 $(A-E)(A-2E)=O$ 说明 $A$ 的极小多项式整除 $(\lambda-1)(\lambda-2)$，而它在实数域上已经是互不相同的一次因式之积，故 $A$ 必可对角化（这条判定超纲，了解即可）。选 D 的同学多半是把"特征值只有 1 和 2"误当成了"特征值有重根就一定不能对角化"——能否对角化取决于几何重数是否等于代数重数，而不是有没有重根。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+        <p class="q-stem">设 $A$ 为 3 阶矩阵，则下列条件中能<strong>保证</strong> $A$ 可对角化的有（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix. Which of the following conditions <strong>guarantee</strong> that $A$ is diagonalizable?</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$A$ 有 3 个互不相同的特征值</span></li>
+        <li data-correct="true"><span class="opt-body">$A$ 是实对称矩阵</span></li>
+        <li data-correct="true"><span class="opt-body">$A$ 的每个 $k$ 重特征值 $\lambda$ 都满足 $R(A-\lambda E)=3-k$</span></li>
+        <li><span class="opt-body">$A$ 有 3 个特征值（按重数计）</span></li>
+        <li><span class="opt-body">$A$ 可逆</span></li>
+        </ul>
+        <div class="q-explain">A 对：互异特征值对应的特征向量线性无关，共得 3 个。B 对：这是实对称矩阵的核心定理（下一节详述）。C 对：$R(A-\lambda E)=3-k$ 即 $3-R(A-\lambda E)=k$，几何重数等于代数重数，正是可对角化的充要条件。<strong>D 错</strong>：这是最经典的陷阱——3 阶矩阵的特征多项式是 3 次的，在复数域上<strong>永远</strong>有 3 个特征值（按重数计），它对任何矩阵都成立，不能作判据；反例 $\begin{pmatrix}1&1\\0&1\end{pmatrix}$ 有 2 个特征值却不可对角化。<strong>E 错</strong>：可逆只说明特征值全不为零，与特征向量的个数无关；反例 $\begin{pmatrix}1&1&0\\0&1&0\\0&0&2\end{pmatrix}$ 可逆，但二重特征值 $1$ 只给出 1 个线性无关特征向量，不可对角化。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+        <p class="q-stem">设 3 阶矩阵 $A$ 的特征值为 $1,-1,2$，则下列结论正确的有（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with eigenvalues $1,-1,2$. Which of the following conclusions are correct?</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$|A|=-2$</span></li>
+        <li data-correct="true"><span class="opt-body">$\mathrm{tr}(A^2)=6$</span></li>
+        <li data-correct="true"><span class="opt-body">$|A^*+E|=0$</span></li>
+        <li><span class="opt-body">$A$ 一定不能对角化</span></li>
+        <li><span class="opt-body">$A^T$ 的特征向量与 $A$ 的完全相同</span></li>
+        </ul>
+        <div class="q-explain">A 对：$|A|=\lambda_1\lambda_2\lambda_3=1\times(-1)\times2=-2$。B 对：$A^2$ 的特征值为 $\lambda_i^2$，即 $1,1,4$，其和就是 $\mathrm{tr}(A^2)=6$。C 对：$|A|=-2\ne0$ 故 $A$ 可逆，$A^*=|A|A^{-1}$ 的特征值为 $|A|/\lambda$，即 $-2,\ 2,\ -1$；再加 1 得 $-1,\ 3,\ 0$，行列式 $=0$。<strong>D 错</strong>：三个特征值互不相同，由定理 5.6 知 $A$ 一定<strong>可以</strong>对角化（而且相似于 $\mathrm{diag}(1,-1,2)$）。<strong>E 错</strong>：$A^T$ 与 $A$ 的特征多项式相同，所以特征值一样，但特征向量一般不同。例如 $A=\begin{pmatrix}1&1\\0&2\end{pmatrix}$ 中 $\lambda=1$ 对应 $A$ 的特征向量 $(1,0)^T$，而 $A^T=\begin{pmatrix}1&0\\1&2\end{pmatrix}$ 中 $\lambda=1$ 对应的却是 $(1,-1)^T$。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 3 阶矩阵 $A=\begin{pmatrix}1&0&0\\0&a&1\\0&1&a\end{pmatrix}$ 与 $B=\mathrm{diag}(1,3,5)$ 相似，则 $a=$（　）。
+           <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&0&0\\0&a&1\\0&1&a\end{pmatrix}$ be a $3\times3$ matrix similar to $B=\mathrm{diag}(1,3,5)$. Then $a=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$4$</span></li>
+        <li><span class="opt-body">$-4$</span></li>
+        <li><span class="opt-body">$2$</span></li>
+        <li><span class="opt-body">$3$</span></li>
+        </ul>
+        <div class="q-explain">相似矩阵有相同的迹与相同的行列式。先用迹：$\mathrm{tr}(A)=1+a+a=1+2a$，$\mathrm{tr}(B)=1+3+5=9$，故 $1+2a=9$，得 $a=4$。<strong>再用行列式验算</strong>：按第 1 行展开得 $|A|=1\cdot\begin{vmatrix}a&1\\1&a\end{vmatrix}=a^2-1=16-1=15$，而 $|B|=1\times3\times5=15$ ✓，两条不变量一致。<strong>B 错</strong>：$a=-4$ 时 $|A|=a^2-1=15=|B|$ 也成立，只看行列式会把它当成答案；但此时 $\mathrm{tr}(A)=1+2\times(-4)=-7\ne9$，迹不相等，故不相似（它的特征值是 $1,-3,-5$）。<strong>C 错</strong>：$a=2$ 时 $A$ 的特征值为 $1,3,1$，虽含 $1,3$ 却没有 $5$，且迹为 $5\ne9$。<strong>D 错</strong>：$a=3$ 时特征值为 $1,4,2$，迹为 $7\ne9$，与 $1,3,5$ 不符。（顺带说明：$a=4$ 时 $A$ 是实对称矩阵，特征值 $1,3,5$ 互不相同，必可对角化，因此确实与 $B$ 相似——用不变量解出的参数在这里也满足充分性。）</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 3 阶矩阵 $A$ 满足 $A^2-3A-4E=O$，且 $|A|=-16$，则 $\mathrm{tr}(A)=$（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix satisfying $A^2-3A-4E=O$ with $|A|=-16$. Then $\mathrm{tr}(A)=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$7$</span></li>
+        <li><span class="opt-body">$3$</span></li>
+        <li><span class="opt-body">$-16$</span></li>
+        <li><span class="opt-body">$9$</span></li>
+        </ul>
+        <div class="q-explain">设 $Ax=\lambda x$（$x\ne0$），把等式作用在 $x$ 上得 $(\lambda^2-3\lambda-4)x=0$，故 $\lambda^2-3\lambda-4=(\lambda-4)(\lambda+1)=0$，特征值只能是 $4$ 或 $-1$。再定重数：3 阶矩阵按重数计有 3 个特征值，设其中有 $a$ 个 $4$、$b$ 个 $-1$（$a+b=3$），由 $\prod\lambda_i=|A|$ 得 $4^a(-1)^b=-16$。逐个试：$(a,b)=(3,0)$ 给 $64$，$(2,1)$ 给 $-16$ ✓，$(1,2)$ 给 $4$，$(0,3)$ 给 $-1$。故特征值为 $4,4,-1$，$\mathrm{tr}(A)=4+4-1=7$。<strong>B 错</strong>：$3=4+(-1)$，把两个根直接相加，漏掉了二重根——$f(\lambda)$ 的根只是"候选值"，重数必须由 $|A|$ 定。<strong>C 错</strong>：$-16$ 是 $|A|$，题目问的是迹，两者只在特殊情况下相等。<strong>D 错</strong>：$9=4+4+1$，把 $-1$ 的符号写丢了；若特征值是 $4,4,1$，则 $|A|=16\ne-16$，与题设矛盾。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">下列矩阵中，<strong>不能</strong>对角化的是（　）。
+           <span class="en-line" lang="en">Which of the following matrices is <strong>not</strong> diagonalizable?</span></p>
+        <ul class="options">
+        <li><span class="opt-body">$\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}2&1&1\\0&1&0\\0&0&1\end{pmatrix}$</span></li>
+        <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1&1&0\\0&1&1\\0&0&1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1&1&0\\1&1&0\\0&0&2\end{pmatrix}$</span></li>
+        </ul>
+        <div class="q-explain">判据只有一条：对每个 $k$ 重特征值都要有 $n-R(A-\lambda E)=k$。<strong>C 对（就是答案）</strong>：它是上三角矩阵，对角线元素即特征值，$\lambda=1$ 是<strong>三重</strong>根；$A-E=\begin{pmatrix}0&1&0\\0&0&1\\0&0&0\end{pmatrix}$ 的秩为 $2$，几何重数 $=3-2=1\ne3$，凑不满 3 个线性无关的特征向量，故不能对角化。<strong>A 错（它可以对角化）</strong>：它是实对称矩阵，由定理 5.12 定理 3 一定可正交对角化（它的特征值是 $1,1,4$，$R(A-E)=1$，几何重数 $3-1=2$ 恰等于重数）。<strong>B 错（它可以对角化）</strong>：这是最容易误判的一项——上三角、对角线出现重复元素 $1,1$，看上去像 C，但它的二重根 $\lambda=1$ 满足 $A-E=\begin{pmatrix}1&1&1\\0&0&0\\0&0&0\end{pmatrix}$，秩为 $1$，几何重数 $=3-1=2=$ 代数重数，仍可对角化。<strong>D 错（它可以对角化）</strong>：它是实对称矩阵，必可对角化。这道题说明：不能只看"对角线有没有重复元素"，必须实算 $R(A-\lambda E)$。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：主线是<strong>特征值的定义与性质运算</strong>——前 3 题考定义辨析（特征向量非零、$|A|=0$ 与零特征值等价、可对角化的真正判据），其余各题则转向由特征值反求参数、反求行列式与迹，以及可对角化的判定。它是 5-1 的地基，也是 5-2 与章末综合的全部前提。</p>
+          <p>最容易栽的两处：一是<strong>把行列式当加法拆</strong>，把 $|A+E|$ 写成 $|A|+|E|$，本卷有两题都埋了这个干扰项；二是把"$n$ 阶矩阵有 $n$ 个特征值"当成可对角化判据，而这条件对任何方阵都成立，等于没说——正确判据是"有 $n$ 个<strong>线性无关</strong>的特征向量"。$A^T$ 与 $A$ 特征值相同但特征向量不同的陷阱也考了一道。</p>
+          <p>知识联系上，本节向前接第 4 章的线性无关与基础解系（求特征向量就是解 $(A-\lambda E)x=0$），向后直通 5-2 的实对称矩阵与第 6 章二次型。本章有两个免费的验算工具：$\sum\lambda_i=\mathrm{tr}(A)$ 与 $\prod\lambda_i=|A|$，<strong>每算完一组特征值都必须回代验算</strong>，本卷反求 $a,b$ 一题正是靠它们才敢定案。</p>
+          <p>下一步：定义题失分就回读 5-1 的定理与例 5.1–5.3；计算题失分则重练 $f(A)\to f(\lambda)$、$A^*\to|A|/\lambda$ 这套换算。也可以想象 $A$ 在不断拉伸平面，特征向量就是那些只被拉长、方向不变的方向，带着这个几何直觉进入 5-2。</p>
+        </div>
+
+      </div>
+
+      <h2 id="s5-2" data-hours="4">5-2 对称矩阵的对角化</h2>
+
+      <p><strong>承上启下。</strong>5-1 留下了两个悬而未决的问题：① 一般矩阵在实数范围内可能<em>根本没有</em>特征值（旋转矩阵就是例子），就算有也<em>不一定</em>能对角化；② 就算能对角化，相似变换矩阵 $P$ 也只是一个普通的可逆矩阵，求 $P^{-1}$ 麻烦，数值计算时还容易放大误差。本节引入<strong>内积、正交、正交矩阵</strong>这一套工具，把 $P$ 升级成 $Q$（因为 $Q^{-1}=Q^T$，求逆就是转置），并证明<strong>实对称矩阵恰好就是那类"完美矩阵"</strong>：特征值全为实数、特征向量可以取成两两垂直的、一定可以正交对角化。本节用到的<strong>施密特正交化</strong>，本质上是第 4 章"向量组"思想在带内积空间里的加强版——第 4 章只要求向量组线性无关，这里还要求它们互相垂直；而本节的结果会原封不动地出现在第 6 章"用正交变换化二次型为标准形"里（那里的标准形系数就是本节求出的特征值），也是考研数学一线性代数头号大题的固定考点。本节约 3.5 学时。</p>
+
+      <div class="box link-box">
+        <div class="box-title"><span class="ico">🔗</span>知识关联：正交是"线性无关"的加强版</div>
+        <ul>
+          <li><strong>承上 · 第 4 章（线性无关）</strong>：第 4 章花了大力气判断向量组是否线性无关（算秩、解方程组）。本节的定理 5.9 给出一个<em>免计算</em>的充分条件——<strong>两两正交的非零向量组一定线性无关</strong>，只要算几个内积就能下结论。这是"正交"这个额外结构带来的红利：约束更强，结论更容易得到。</li>
+          <li><strong>承上 · 第 3 章（秩与基础解系）</strong>：求正交矩阵 $Q$ 的每一步都要解齐次方程组 $(A-\lambda E)x=0$，用的还是初等行变换求基础解系那套流程。区别只在于：同一特征值内部的多个基础解向量还要再做一次施密特正交化。</li>
+          <li><strong>横向 · 内积与矩阵乘法的关系</strong>：$(\alpha,\beta)=\alpha^T\beta$ 把内积写成了矩阵乘法，于是"正交矩阵"这个纯几何条件 $A^TA=E$ 可以完全用矩阵语言描述。这正是线性代数"几何问题代数化"的典型手法。</li>
+          <li><strong>启下 · 第 6 章（二次型）</strong>：第 6 章的核心任务是化简 $f(x)=x^TAx$。因为 $A$ 可以取成实对称矩阵，由本节的定理 5.12 就存在正交矩阵 $Q$ 使 $Q^TAQ=\Lambda$；令 $x=Qy$ 代入，$f$ 立刻变成 $\lambda_1y_1^2+\lambda_2y_2^2+\lambda_3y_3^2$——没有交叉项了。第 6 章"正交变换法化标准形"一整节，做的就是本节例 5.9 的那套流程。</li>
+          <li><strong>启下 · 正定性（第 6 章 6-3）</strong>：二次型正定的判据"全部特征值大于零"，用的就是本节的定理 1（实对称矩阵特征值全为实数）。</li>
+        </ul>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>为什么工程师偏爱"正交"</div>
+        <p>上一节的相似对角化 $P^{-1}AP=\Lambda$ 有个不便之处：$P$ 可以是任意可逆矩阵，求 $P^{-1}$ 很麻烦，而且 $P$ 的列向量方向乱七八糟，物理意义不清晰。</p>
+        <p>如果能把 $P$ 换成<strong>正交矩阵</strong> $Q$，一切都会好起来：</p>
+        <ul>
+          <li><strong>求逆免了</strong>：正交矩阵满足 $Q^{-1}=Q^T$，转置一下就行，不用做行变换。</li>
+          <li><strong>数值稳定</strong>：正交变换不放大误差（$\|Qx\|=\|x\|$），计算机做浮点运算时不会累积爆炸。工程软件里所有可靠的特征值算法都尽量用正交变换。</li>
+          <li><strong>几何清晰</strong>：正交变换就是旋转和反射，保持长度和夹角不变。$Q^TAQ$ 相当于"把坐标系转到特征方向上"，在新坐标系里 $A$ 变成对角矩阵。</li>
+          <li><strong>物理含义强</strong>：$Q$ 的列向量是互相垂直的单位向量，正好是主应力方向、主振型方向——它们本来就应该是正交的。</li>
+        </ul>
+        <p>那么问题是：什么样的矩阵能享受这种待遇？答案是<strong>实对称矩阵</strong>，而且只有它（在实数范围内可正交对角化的矩阵恰好就是实对称矩阵）。本节的路线是：先把"垂直"这件事用代数语言（内积）写清楚，再给出施密特正交化的操作流程，最后给出三个核心定理。</p>
+      </div>
+
+      <div class="viz" data-viz="eigen-ellipse" data-matrix="3,1;1,3"></div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 5.7　内积、长度、正交</div>
+        <p>设 $\alpha=(a_1,a_2,\dots,a_n)^T$，$\beta=(b_1,b_2,\dots,b_n)^T$ 是 $n$ 维实向量。</p>
+        <p><span class="thm-name">内积</span>　称数</p>
+        <p>$$(\alpha,\beta)=\alpha^T\beta=a_1b_1+a_2b_2+\cdots+a_nb_n$$</p>
+        <p>为 $\alpha$ 与 $\beta$ 的<span class="term">内积</span>（数量积）。<strong>注意 $\alpha^T\beta$ 是一个数，而 $\alpha\beta^T$ 是一个 $n$ 阶矩阵，两者完全不同。</strong></p>
+        <p><span class="thm-name">长度（范数）</span>　称</p>
+        <p>$$\|\alpha\|=\sqrt{(\alpha,\alpha)}=\sqrt{a_1^2+a_2^2+\cdots+a_n^2}$$</p>
+        <p>为 $\alpha$ 的<span class="term">长度</span>（范数）。$\|\alpha\|=1$ 时称 $\alpha$ 为<span class="term">单位向量</span>。若 $\alpha\ne0$，则 $\dfrac{\alpha}{\|\alpha\|}$ 一定是单位向量，这个过程叫 $\alpha$ 的<span class="term">单位化</span>（或规范化）。</p>
+        <p><span class="thm-name">正交</span>　当 $(\alpha,\beta)=0$ 时，称 $\alpha$ 与 $\beta$ <span class="term">正交</span>，记作 $\alpha\perp\beta$。</p>
+        <p>若一个向量组中<strong>任意两个向量都正交</strong>，且每个向量都是<strong>非零</strong>向量，则称之为<span class="term">正交向量组</span>。若正交向量组中每个向量还是单位向量，则称为<span class="term">标准正交向量组</span>（单位正交组）。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 5.7</span>
+             <strong>Inner Product, Length, Orthogonality.</strong>
+             Let $\alpha=(a_1,a_2,\dots,a_n)^T$ and $\beta=(b_1,b_2,\dots,b_n)^T$ be real
+             $n$-dimensional vectors.</p>
+          <p><strong>Inner product.</strong> The number</p>
+          <p>$$(\alpha,\beta)=\alpha^T\beta=a_1b_1+a_2b_2+\cdots+a_nb_n$$</p>
+          <p>is the <span class="en-term">inner product</span> (dot product) of $\alpha$ and $\beta$.
+             <strong>Note that $\alpha^T\beta$ is a number, whereas $\alpha\beta^T$ is an $n\times n$
+             matrix</strong> — the two are completely different.</p>
+          <p><strong>Length (norm).</strong> The number</p>
+          <p>$$\|\alpha\|=\sqrt{(\alpha,\alpha)}=\sqrt{a_1^2+a_2^2+\cdots+a_n^2}$$</p>
+          <p>is the <span class="en-term">length</span> (norm) of $\alpha$. If $\|\alpha\|=1$, $\alpha$
+             is called a <span class="en-term">unit vector</span>. For $\alpha\ne0$ the vector
+             $\dfrac{\alpha}{\|\alpha\|}$ is always a unit vector; this operation is called
+             normalizing $\alpha$.</p>
+          <p><strong>Orthogonality.</strong> If $(\alpha,\beta)=0$, then $\alpha$ and $\beta$ are
+             <span class="en-term">orthogonal</span>, written $\alpha\perp\beta$.</p>
+          <p>If every two vectors in a set are orthogonal and every vector is
+             <strong>nonzero</strong>, the set is called an <span class="en-term">orthogonal
+             set</span>. If in addition every vector is a unit vector, it is called an
+             <span class="en-term">orthonormal set</span>.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>性质 5.8　内积的三条基本性质</div>
+        <p>对任意 $n$ 维实向量 $\alpha,\beta,\gamma$ 和实数 $k$：</p>
+        <ul>
+          <li><strong>对称性</strong>：$(\alpha,\beta)=(\beta,\alpha)$。（因为实数乘法可交换）</li>
+          <li><strong>线性性</strong>：$(\alpha+\beta,\gamma)=(\alpha,\gamma)+(\beta,\gamma)$；$(k\alpha,\beta)=k(\alpha,\beta)$。（这两条合起来叫双线性）</li>
+          <li><strong>正定性</strong>：$(\alpha,\alpha)\ge0$，且 $(\alpha,\alpha)=0$ 当且仅当 $\alpha=0$。</li>
+        </ul>
+        <p><span class="thm-name">由正定性立即得到</span>　$\|\alpha\|=\sqrt{(\alpha,\alpha)}\ge0$，且 $\|\alpha\|=0\iff\alpha=0$。这正是"长度"应有的性质。</p>
+        <p><span class="thm-name">关于零向量与正交</span>　零向量与任何向量都正交（$0^T\beta=0$），但<strong>零向量不能算作正交向量组中的成员</strong>——因为下面的定理会失效。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">PROP 5.8</span>
+             <strong>Three Basic Properties of the Inner Product.</strong>
+             For any real $n$-dimensional vectors $\alpha,\beta,\gamma$ and any real number $k$:</p>
+          <ul>
+            <li><strong>Symmetry:</strong> $(\alpha,\beta)=(\beta,\alpha)$ (real multiplication
+                commutes).</li>
+            <li><strong>Linearity:</strong> $(\alpha+\beta,\gamma)=(\alpha,\gamma)+(\beta,\gamma)$
+                and $(k\alpha,\beta)=k(\alpha,\beta)$; together these two make the inner product
+                bilinear.</li>
+            <li><strong>Positive definiteness:</strong> $(\alpha,\alpha)\ge0$, and
+                $(\alpha,\alpha)=0$ if and only if $\alpha=0$.</li>
+          </ul>
+          <p><strong>Immediate consequence:</strong> $\|\alpha\|=\sqrt{(\alpha,\alpha)}\ge0$, and
+             $\|\alpha\|=0\iff\alpha=0$ — exactly what a length should satisfy.</p>
+          <p><strong>On the zero vector and orthogonality.</strong> The zero vector is orthogonal to
+             every vector ($0^T\beta=0$), but it <strong>cannot be counted as a member of an
+             orthogonal set</strong>, because the theorem below would then fail.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 5.9　正交向量组必线性无关（必会证明）</div>
+        <p>若 $\alpha_1,\alpha_2,\dots,\alpha_m$ 是一个正交向量组（即两两正交且均为非零向量），则 $\alpha_1,\dots,\alpha_m$ 线性无关。</p>
+        <p><strong>证明</strong>：设</p>
+        <p>$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m=0.$$</p>
+        <p>把上式两边同时与 $\alpha_1$ 作内积。由内积的线性性，左边等于</p>
+        <p>$$k_1(\alpha_1,\alpha_1)+k_2(\alpha_2,\alpha_1)+\cdots+k_m(\alpha_m,\alpha_1).$$</p>
+        <p>由于两两正交，除第一项外全部为 $0$（即 $(\alpha_j,\alpha_1)=0$，$j\ge2$），故左边只剩 $k_1(\alpha_1,\alpha_1)$，而右边为 $(0,\alpha_1)=0$，于是</p>
+        <p>$$k_1(\alpha_1,\alpha_1)=0.$$</p>
+        <p>因为 $\alpha_1\ne0$，由正定性知 $(\alpha_1,\alpha_1)=\|\alpha_1\|^2\gt0$，所以 $k_1=0$。</p>
+        <p>同理，把上式两边分别与 $\alpha_2,\dots,\alpha_m$ 作内积，依次得 $k_2=\cdots=k_m=0$。故 $\alpha_1,\dots,\alpha_m$ 线性无关。$\blacksquare$</p>
+        <p><span class="thm-name">这个定理为什么值钱</span>　它把"验证线性无关"这件麻烦事（要解方程组、算秩）简化成了"两两算内积看是不是 $0$"。工程上构造高阶模态基底时，就是靠正交性来保证线性无关的。</p>
+        <p><span class="thm-name">重要推论</span>　在 $n$ 维空间中，两两正交的非零向量最多只有 $n$ 个。若恰好有 $n$ 个，它们构成一组<strong>正交基</strong>；再单位化就是<strong>标准正交基</strong>。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 5.9</span>
+             <strong>An Orthogonal Set of Nonzero Vectors Is Linearly Independent (proof
+             required).</strong>
+             If $\alpha_1,\alpha_2,\dots,\alpha_m$ is an orthogonal set (pairwise orthogonal, all
+             nonzero), then $\alpha_1,\dots,\alpha_m$ are linearly independent.</p>
+          <p><strong>Proof.</strong> Suppose</p>
+          <p>$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m=0.$$</p>
+          <p>Take the inner product of both sides with $\alpha_1$. By linearity the left-hand side
+             equals</p>
+          <p>$$k_1(\alpha_1,\alpha_1)+k_2(\alpha_2,\alpha_1)+\cdots+k_m(\alpha_m,\alpha_1).$$</p>
+          <p>Since the vectors are pairwise orthogonal, every term except the first vanishes
+             ($(\alpha_j,\alpha_1)=0$ for $j\ge2$), so the left-hand side reduces to
+             $k_1(\alpha_1,\alpha_1)$, while the right-hand side is $(0,\alpha_1)=0$. Hence</p>
+          <p>$$k_1(\alpha_1,\alpha_1)=0.$$</p>
+          <p>Because $\alpha_1\ne0$, positive definiteness gives
+             $(\alpha_1,\alpha_1)=\|\alpha_1\|^2\gt0$, so $k_1=0$. Repeating the same argument with
+             $\alpha_2,\dots,\alpha_m$ gives $k_2=\cdots=k_m=0$. Therefore
+             $\alpha_1,\dots,\alpha_m$ are linearly independent. $\blacksquare$</p>
+          <p><strong>Why this theorem is valuable.</strong> It replaces the tedious test of linear
+             independence (solving systems, computing ranks) by "$m$ inner products, all zero".</p>
+          <p><strong>Corollary.</strong> In an $n$-dimensional space there are at most $n$ pairwise
+             orthogonal nonzero vectors. Exactly $n$ of them form an <strong>orthogonal basis</strong>;
+             normalizing them gives an <strong>orthonormal basis</strong>.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：施密特（Schmidt）正交化与单位化</div>
+        <p>已知线性无关组 $\alpha_1,\alpha_2,\dots,\alpha_m$，要把它变成正交组 $\beta_1,\dots,\beta_m$（再单位化得标准正交组 $\eta_1,\dots,\eta_m$），按下面的公式逐项做：</p>
+        <ol>
+          <li>取 $\beta_1=\alpha_1$。（第一个向量不用动，定下整个方向）</li>
+          <li>$\beta_2=\alpha_2-\dfrac{(\alpha_2,\beta_1)}{(\beta_1,\beta_1)}\beta_1$。（从 $\alpha_2$ 里扣掉它在 $\beta_1$ 方向上的投影，剩下的部分必与 $\beta_1$ 正交）</li>
+          <li>$\beta_3=\alpha_3-\dfrac{(\alpha_3,\beta_1)}{(\beta_1,\beta_1)}\beta_1-\dfrac{(\alpha_3,\beta_2)}{(\beta_2,\beta_2)}\beta_2$。（扣掉在已得各方向上的投影）</li>
+          <li>一般地，$\beta_k=\alpha_k-\displaystyle\sum_{i=1}^{k-1}\dfrac{(\alpha_k,\beta_i)}{(\beta_i,\beta_i)}\beta_i$。</li>
+          <li>最后<strong>单位化</strong>：$\eta_i=\dfrac{\beta_i}{\|\beta_i\|}$，$i=1,2,\dots,m$。此时 $\eta_1,\dots,\eta_m$ 就是标准正交组。</li>
+        </ol>
+        <p><strong>每步都要验算</strong>：算完 $\beta_k$ 后立刻检查 $(\beta_k,\beta_i)=0$（$i\lt k$）。这个检查只需几秒钟，但能拦住所有算术错误。</p>
+        <p><strong>注意</strong>：正交化<strong>对顺序敏感</strong>。换一个 $\alpha_i$ 的排列顺序，得到的正交组不同（但张成的子空间相同）。所以答案不唯一，只要每组内两两正交、且都是单位向量就算对。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD 5.3</span>
+             <strong>The <span class="en-term">Gram-Schmidt process</span>: Orthogonalization and
+             Normalization.</strong>
+             Given a linearly independent set $\alpha_1,\alpha_2,\dots,\alpha_m$, produce an orthogonal
+             set $\beta_1,\dots,\beta_m$ (and then an orthonormal set $\eta_1,\dots,\eta_m$) by the
+             following formulas, applied one vector at a time:</p>
+          <ol>
+            <li>Set $\beta_1=\alpha_1$ (the first vector is kept as it is; it fixes the
+                direction).</li>
+            <li>$\beta_2=\alpha_2-\dfrac{(\alpha_2,\beta_1)}{(\beta_1,\beta_1)}\beta_1$ (subtract
+                from $\alpha_2$ its projection on $\beta_1$; what remains is orthogonal to
+                $\beta_1$).</li>
+            <li>$\beta_3=\alpha_3-\dfrac{(\alpha_3,\beta_1)}{(\beta_1,\beta_1)}\beta_1-\dfrac{(\alpha_3,\beta_2)}{(\beta_2,\beta_2)}\beta_2$
+                (subtract the projections on all directions already found).</li>
+            <li>In general,
+                $\beta_k=\alpha_k-\displaystyle\sum_{i=1}^{k-1}\dfrac{(\alpha_k,\beta_i)}{(\beta_i,\beta_i)}\beta_i$.</li>
+            <li>Finally <strong>normalize</strong>:
+                $\eta_i=\dfrac{\beta_i}{\|\beta_i\|}$, $i=1,2,\dots,m$; then
+                $\eta_1,\dots,\eta_m$ is an orthonormal set.</li>
+          </ol>
+          <p><strong>Check every step:</strong> right after computing $\beta_k$, verify
+             $(\beta_k,\beta_i)=0$ for $i\lt k$. This takes a few seconds and catches every arithmetic
+             error.</p>
+          <p><strong>Note:</strong> orthogonalization is <strong>sensitive to the order</strong> of the
+             input vectors. A different ordering gives a different orthogonal set (spanning the same
+             subspaces), so the answer is not unique: any set that is pairwise orthogonal with all
+             vectors of length $1$ is correct.</p>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.7</span> 施密特正交化与单位化的完整演算
+          <span class="lv">基础</span>
+        </div>
+        <div class="example-body">
+          <p>把线性无关组 $\alpha_1=\begin{pmatrix}1\\-1\\0\end{pmatrix},\ \alpha_2=\begin{pmatrix}1\\0\\-1\end{pmatrix},\ \alpha_3=\begin{pmatrix}1\\1\\1\end{pmatrix}$ 化为标准正交组。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，正交化。</strong></p>
+            <p>取 $\beta_1=\alpha_1=\begin{pmatrix}1\\-1\\0\end{pmatrix}$，则 $(\beta_1,\beta_1)=1+1+0=2$。</p>
+            <p>算 $\beta_2$：先求 $(\alpha_2,\beta_1)=1\times1+0\times(-1)+(-1)\times0=1$。于是</p>
+            <p>$$\beta_2=\alpha_2-\frac{(\alpha_2,\beta_1)}{(\beta_1,\beta_1)}\beta_1=\begin{pmatrix}1\\0\\-1\end{pmatrix}-\frac{1}{2}\begin{pmatrix}1\\-1\\0\end{pmatrix}=\begin{pmatrix}1/2\\1/2\\-1\end{pmatrix}.$$</p>
+            <p><strong>验算</strong>：$(\beta_2,\beta_1)=\frac12\times1+\frac12\times(-1)+(-1)\times0=0$ ✓，正交。</p>
+            <p>算 $\beta_3$：$(\beta_2,\beta_2)=\frac14+\frac14+1=\frac32$。</p>
+            <p>$$(\alpha_3,\beta_1)=1\times1+1\times(-1)+1\times0=0,$$</p>
+            <p>$$(\alpha_3,\beta_2)=1\times\frac12+1\times\frac12+1\times(-1)=\frac12+\frac12-1=0.$$</p>
+            <p>两个投影系数都是 $0$，所以</p>
+            <p>$$\beta_3=\alpha_3-0\cdot\beta_1-0\cdot\beta_2=\begin{pmatrix}1\\1\\1\end{pmatrix}.$$</p>
+            <p><strong>验算</strong>：$(\beta_3,\beta_1)=1-1+0=0$ ✓，$(\beta_3,\beta_2)=\frac12+\frac12-1=0$ ✓。</p>
+            <p>（这个例子很典型：$\alpha_3$ 恰好本来就与前两个正交，所以第三步什么都没扣。做题时遇到这种情况不要怀疑自己算错，按公式走就行。）</p>
+            <p><strong>第二步，单位化。</strong></p>
+            <p>$\|\beta_1\|=\sqrt2$，$\|\beta_2\|=\sqrt{3/2}=\dfrac{\sqrt6}{2}$，$\|\beta_3\|=\sqrt3$。于是</p>
+            <p>$$\eta_1=\frac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix},\qquad \eta_2=\frac{2}{\sqrt6}\begin{pmatrix}1/2\\1/2\\-1\end{pmatrix}=\frac{1}{\sqrt6}\begin{pmatrix}1\\1\\-2\end{pmatrix},\qquad \eta_3=\frac{1}{\sqrt3}\begin{pmatrix}1\\1\\1\end{pmatrix}.$$</p>
+            <p><strong>最终验算（三件事都要查）</strong>：</p>
+            <ul>
+              <li>长度：$\|\eta_1\|^2=\frac{1+1}{2}=1$ ✓，$\|\eta_2\|^2=\frac{1+1+4}{6}=1$ ✓，$\|\eta_3\|^2=\frac{1+1+1}{3}=1$ ✓。</li>
+              <li>正交：$(\eta_1,\eta_2)=\frac{1-1+0}{\sqrt{12}}=0$ ✓，$(\eta_1,\eta_3)=\frac{1-1+0}{\sqrt6}=0$ ✓，$(\eta_2,\eta_3)=\frac{1+1-2}{\sqrt{18}}=0$ ✓。</li>
+              <li>所以 $\eta_1,\eta_2,\eta_3$ 是 $\mathbb{R}^3$ 的一组标准正交基。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义 5.10　正交矩阵</div>
+        <p>设 $A$ 是 $n$ 阶实矩阵。若满足</p>
+        <p>$$A^TA=E,$$</p>
+        <p>则称 $A$ 为<span class="term">正交矩阵</span>（orthogonal matrix）。</p>
+        <p><span class="thm-name">等价说法（做题最常用）</span>　$A$ 是正交矩阵 $\iff$ $A$ 可逆且 $A^{-1}=A^T$ $\iff$ $A$ 的<strong>列向量组</strong>是标准正交向量组 $\iff$ $A$ 的<strong>行向量组</strong>也是标准正交向量组。</p>
+        <p>最后一条的理由：$A^TA=E$ 的第 $(i,j)$ 元就是"第 $i$ 列与第 $j$ 列的内积"，它等于 $\delta_{ij}$ 正是"两两正交且长度都是 $1$"。把 $A^TA=E$ 两边取转置得 $A^TA=(A^TA)^T=AA^T$，所以 $AA^T=E$ 也成立，即行向量同样标准正交。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">DEF 5.10</span>
+             <strong><span class="en-term">Orthogonal Matrix</span>.</strong>
+             Let $A$ be a real $n\times n$ matrix. If</p>
+          <p>$$A^TA=E,$$</p>
+          <p>then $A$ is called an orthogonal matrix.</p>
+          <p><strong>Equivalent statements (the ones used in practice).</strong>
+             $A$ is orthogonal $\iff$ $A$ is invertible with $A^{-1}=A^T$ $\iff$ the
+             <strong>columns</strong> of $A$ form an orthonormal set $\iff$ the <strong>rows</strong>
+             of $A$ also form an orthonormal set.</p>
+          <p>Why the last one: the $(i,j)$ entry of $A^TA$ is the inner product of column $i$ and
+             column $j$, and it equals $\delta_{ij}$ exactly when the columns are pairwise orthogonal
+             and all of length $1$. Taking transposes in $A^TA=E$ gives $AA^T=E$, so the rows are
+             orthonormal as well.</p>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>性质 5.11　正交矩阵的三组常用性质</div>
+        <p><span class="thm-name">(1) 行列式</span>　若 $A$ 是正交矩阵，则 $|A|=1$ 或 $|A|=-1$。</p>
+        <p>证明：$|A^TA|=|E|$，而 $|A^TA|=|A^T||A|=|A|^2$，故 $|A|^2=1$，即 $|A|=\pm1$。$\blacksquare$</p>
+        <p><span class="thm-name">(2) 封闭性</span>　若 $A,B$ 都是 $n$ 阶正交矩阵，则 $AB$ 也是正交矩阵；且 $A^{-1}=A^T$ 也是正交矩阵。</p>
+        <p>证明：$(AB)^T(AB)=B^TA^TAB=B^TEB=B^TB=E$。$\blacksquare$ （注意：正交矩阵的<strong>和</strong> $A+B$ 一般不再是正交矩阵，别类推。）</p>
+        <p><span class="thm-name">(3) 保内积、保长度</span>　设 $A$ 是正交矩阵，则对任意向量 $\alpha,\beta$：</p>
+        <p>$$(A\alpha,A\beta)=(\alpha,\beta),\qquad \|A\alpha\|=\|\alpha\|.$$</p>
+        <p>证明：$(A\alpha,A\beta)=(A\alpha)^T(A\beta)=\alpha^TA^TA\beta=\alpha^T\beta=(\alpha,\beta)$。令 $\beta=\alpha$ 即得保长度。$\blacksquare$</p>
+        <p><span class="thm-name">几何意义</span>　保长度的线性变换只能是<strong>旋转</strong>或<strong>反射</strong>（以及它们的复合）。$|A|=1$ 对应纯旋转（如 $\begin{pmatrix}\cos\theta&-\sin\theta\\\sin\theta&\cos\theta\end{pmatrix}$），$|A|=-1$ 对应含反射的变换（如 $\begin{pmatrix}1&0\\0&-1\end{pmatrix}$）。</p>
+        <p><span class="thm-name">重要陷阱</span>　正交矩阵满足 $A^TA=E$，<strong>不是</strong> $A^2=E$。只有既正交又对称的矩阵才满足 $A^2=E$（这类矩阵叫"反射矩阵"，几何上对应镜面反射）。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">PROP 5.11</span>
+             <strong>Three Groups of Properties of Orthogonal Matrices.</strong></p>
+          <p><strong>(1) Determinant.</strong> If $A$ is orthogonal, then $|A|=1$ or $|A|=-1$.</p>
+          <p>Proof: $|A^TA|=|E|$, and $|A^TA|=|A^T||A|=|A|^2$, so $|A|^2=1$, i.e.
+             $|A|=\pm1$. $\blacksquare$</p>
+          <p><strong>(2) Closure.</strong> If $A$ and $B$ are orthogonal $n\times n$ matrices, then
+             $AB$ is orthogonal; and $A^{-1}=A^T$ is orthogonal as well.</p>
+          <p>Proof: $(AB)^T(AB)=B^TA^TAB=B^TEB=B^TB=E$. $\blacksquare$ (Note that the
+             <strong>sum</strong> $A+B$ is in general no longer orthogonal.)</p>
+          <p><strong>(3) Preserving inner products and lengths.</strong> If $A$ is orthogonal, then
+             for any vectors $\alpha,\beta$:</p>
+          <p>$$(A\alpha,A\beta)=(\alpha,\beta),\qquad \|A\alpha\|=\|\alpha\|.$$</p>
+          <p>Proof: $(A\alpha,A\beta)=(A\alpha)^T(A\beta)=\alpha^TA^TA\beta=\alpha^T\beta=(\alpha,\beta)$;
+             putting $\beta=\alpha$ gives the length statement. $\blacksquare$</p>
+          <p><strong>Geometric meaning.</strong> A length-preserving linear transformation can only be
+             a <strong>rotation</strong> or a <strong>reflection</strong> (or a composition of them).
+             $|A|=1$ corresponds to a pure rotation, $|A|=-1$ to a transformation that contains a
+             reflection.</p>
+          <p><strong>Important trap.</strong> An orthogonal matrix satisfies $A^TA=E$,
+             <strong>not</strong> $A^2=E$. Only a matrix that is both orthogonal and symmetric
+             satisfies $A^2=E$ (such matrices are called reflection matrices).</p>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.8</span> 正交矩阵的判定与性质证明
+          <span class="lv">中等</span>
+        </div>
+        <div class="example-body">
+          <p>(1) 证明：正交矩阵的行列式只能是 $\pm1$。</p>
+          <p>(2) 判断 $A=\dfrac13\begin{pmatrix}1&2&2\\2&1&-2\\2&-2&1\end{pmatrix}$ 是否为正交矩阵。</p>
+          <p>(3) 证明：两个正交矩阵的乘积仍是正交矩阵。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>(1)</strong> 设 $A$ 为正交矩阵，即 $A^TA=E$。两边取行列式：</p>
+            <p>$$|A^TA|=|E|=1.$$</p>
+            <p>由行列式的乘法性质 $|A^TA|=|A^T|\cdot|A|$，又 $|A^T|=|A|$，所以</p>
+            <p>$$|A|^2=1\ \Longrightarrow\ |A|=1\ \text{或}\ |A|=-1. \blacksquare$$</p>
+            <p><strong>反过来不成立</strong>：$|A|=1$ 的矩阵未必是正交矩阵（如 $\begin{pmatrix}2&1\\1&1\end{pmatrix}$ 行列式为 $1$，但两列的长度分别是 $\sqrt5$ 和 $\sqrt2$，都不为 $1$）。这一点是做判断题的常考点。</p>
+            <p><strong>(2)</strong> 设 $A$ 的三个列向量分别为</p>
+            <p>$$c_1=\frac13\begin{pmatrix}1\\2\\2\end{pmatrix},\qquad c_2=\frac13\begin{pmatrix}2\\1\\-2\end{pmatrix},\qquad c_3=\frac13\begin{pmatrix}2\\-2\\1\end{pmatrix}.$$</p>
+            <p>因为三个列的长度相同（都是 $\sqrt{1+4+4}=3$），公共因子 $1/3$ 使它们的长度恰好为 $1$：</p>
+            <p>$$\|c_1\|=\|c_2\|=\|c_3\|=\frac{\sqrt9}{3}=1\ ✓$$</p>
+            <p>再算两两内积（注意 $1/3$ 要平方，即除以 $9$）：</p>
+            <p>$$(c_1,c_2)=\frac{1\cdot2+2\cdot1+2\cdot(-2)}{9}=\frac{2+2-4}{9}=0\ ✓$$</p>
+            <p>$$(c_1,c_3)=\frac{1\cdot2+2\cdot(-2)+2\cdot1}{9}=\frac{2-4+2}{9}=0\ ✓$$</p>
+            <p>$$(c_2,c_3)=\frac{2\cdot2+1\cdot(-2)+(-2)\cdot1}{9}=\frac{4-2-2}{9}=0\ ✓$$</p>
+            <p>三个列向量两两正交且都是单位向量，构成标准正交向量组，故 $A$ 是正交矩阵。</p>
+            <p><strong>交叉验算行列式</strong>：去掉因子，$\left|\begin{matrix}1&2&2\\2&1&-2\\2&-2&1\end{matrix}\right|=1(1-4)-2(2+4)+2(-4-2)=-3-12-12=-27$，而 $|A|=\left(\frac13\right)^3\times(-27)=-1$，确实是 $\pm1$ ✓（也可以从行向量同样标准正交来验算）。</p>
+            <p><strong>(3)</strong> 设 $A,B$ 都是 $n$ 阶正交矩阵，即 $A^TA=E$，$B^TB=E$。则</p>
+            <p>$$(AB)^T(AB)=B^TA^TAB=B^T(A^TA)B=B^TEB=B^TB=E.$$</p>
+            <p>所以 $AB$ 也是正交矩阵。$\blacksquare$</p>
+            <p><strong>提醒</strong>：这里用了 $(AB)^T=B^TA^T$，顺序必须反——写成 $A^TB^T$ 就错了，这是本章最常见的书写错误之一。另外，正交矩阵的<strong>和</strong> $A+B$ 一般不满足 $(A+B)^T(A+B)=E$（如 $A=E$，$B=E$ 时 $2E$ 显然不正交），所以"正交矩阵集合"对乘法封闭，对加法不封闭。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理 5.12　实对称矩阵的三个核心定理（本章必背）</div>
+        <p>设 $A$ 是 $n$ 阶实对称矩阵（即 $A^T=A$），则：</p>
+        <p><span class="thm-name">定理 1</span>　$A$ 的特征值<strong>全是实数</strong>。</p>
+        <p>（回忆上一节的反例：旋转矩阵的特征值是 $\pm\mathrm{i}$，不是实数——正因为它不对称。实对称性把复特征值"逼"回了实轴。）</p>
+        <p><span class="thm-name">定理 2</span>　$A$ 的<strong>不同特征值对应的特征向量相互正交</strong>。</p>
+        <p>证明（只需两行，务必会写）：设 $A\xi_1=\lambda_1\xi_1$，$A\xi_2=\lambda_2\xi_2$，$\lambda_1\ne\lambda_2$。由 $A$ 对称，</p>
+        <p>$$\lambda_1(\xi_1,\xi_2)=(\lambda_1\xi_1,\xi_2)=(A\xi_1,\xi_2)=(A\xi_1)^T\xi_2=\xi_1^TA^T\xi_2=\xi_1^TA\xi_2=(\xi_1,A\xi_2)=(\xi_1,\lambda_2\xi_2)=\lambda_2(\xi_1,\xi_2).$$</p>
+        <p>于是 $(\lambda_1-\lambda_2)(\xi_1,\xi_2)=0$。因为 $\lambda_1\ne\lambda_2$，故 $(\xi_1,\xi_2)=0$，即 $\xi_1\perp\xi_2$。$\blacksquare$</p>
+        <p><strong>注意"不同"两个字</strong>：<em>同一个</em>特征值对应的多个特征向量之间<strong>不一定</strong>正交（例 5.9 中 $\lambda=1$ 的两个特征向量就不正交），需要自己做施密特正交化。这是选择题的高频陷阱。</p>
+        <p><span class="thm-name">定理 3（本章主定理）</span>　$A$ <strong>一定可以对角化</strong>，而且可以<strong>用正交矩阵对角化</strong>：必存在 $n$ 阶正交矩阵 $Q$，使</p>
+        <p>$$Q^{-1}AQ=Q^TAQ=\Lambda=\mathrm{diag}(\lambda_1,\dots,\lambda_n).$$</p>
+        <p>这里 $\lambda_1,\dots,\lambda_n$ 是 $A$ 的全部特征值，$Q$ 的<strong>第 $i$ 列</strong>是 $A$ 对应于 $\lambda_i$ 的单位特征向量。</p>
+        <p><span class="thm-name">定理 3 的意义</span>　它同时解决了"能不能对角化"和"能不能正交对角化"两个问题。等价的说法是：<strong>实对称矩阵的每个 $k$ 重特征值都恰好有 $k$ 个线性无关的特征向量</strong>（几何重数 $=$ 代数重数），因此总共有 $n$ 个，再施密特正交化并单位化就得到 $Q$。</p>
+        <p><span class="thm-name">反过来的结论（选择题常考）</span>　若一个<strong>实</strong>矩阵 $A$ 能正交对角化，则 $A$ 必为实对称矩阵。证明：由 $Q^TAQ=\Lambda$ 得 $A=Q\Lambda Q^T$，于是 $A^T=(Q\Lambda Q^T)^T=Q\Lambda^TQ^T=Q\Lambda Q^T=A$。所以"实对称"与"可用正交矩阵对角化"是<strong>等价</strong>的。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">THM 5.12</span>
+             <strong>Three Core Theorems on Real Symmetric Matrices (must be memorized).</strong>
+             Let $A$ be a real symmetric $n\times n$ matrix (that is, $A^T=A$). Then:</p>
+          <p><strong>Theorem 1.</strong> All eigenvalues of $A$ are <strong>real numbers</strong>.</p>
+          <p>(Recall the counterexample from the previous section: the rotation matrix has eigenvalues
+             $\pm\mathrm{i}$, which are not real — precisely because it is not symmetric. Symmetry
+             forces complex eigenvalues back onto the real axis.)</p>
+          <p><strong>Theorem 2.</strong> Eigenvectors corresponding to <strong>different</strong>
+             eigenvalues are mutually <strong>orthogonal</strong>.</p>
+          <p>Proof (only two lines, but you must be able to write it). Let
+             $A\xi_1=\lambda_1\xi_1$, $A\xi_2=\lambda_2\xi_2$ with $\lambda_1\ne\lambda_2$. Since
+             $A^T=A$,</p>
+          <p>$$\lambda_1(\xi_1,\xi_2)=(\lambda_1\xi_1,\xi_2)=(A\xi_1,\xi_2)=(A\xi_1)^T\xi_2=\xi_1^TA^T\xi_2=\xi_1^TA\xi_2=(\xi_1,A\xi_2)=(\xi_1,\lambda_2\xi_2)=\lambda_2(\xi_1,\xi_2).$$</p>
+          <p>Hence $(\lambda_1-\lambda_2)(\xi_1,\xi_2)=0$. Since $\lambda_1\ne\lambda_2$, we get
+             $(\xi_1,\xi_2)=0$, i.e. $\xi_1\perp\xi_2$. $\blacksquare$</p>
+          <p><strong>Mind the word "different":</strong> several eigenvectors belonging to the
+             <em>same</em> eigenvalue need <strong>not</strong> be orthogonal to one another; they
+             must be orthogonalized by hand. This is a frequent trap in multiple-choice questions.</p>
+          <p><strong>Theorem 3 (the main theorem of this section).</strong> $A$ is <strong>always
+             diagonalizable</strong>, and it can be diagonalized by an <strong>orthogonal</strong>
+             matrix: there always exists an orthogonal matrix $Q$ such that</p>
+          <p>$$Q^{-1}AQ=Q^TAQ=\Lambda=\mathrm{diag}(\lambda_1,\dots,\lambda_n).$$</p>
+          <p>Here $\lambda_1,\dots,\lambda_n$ are all the eigenvalues of $A$, and
+             <strong>column $i$</strong> of $Q$ is a unit eigenvector of $A$ for $\lambda_i$.</p>
+          <p><strong>Meaning of Theorem 3.</strong> It settles both "can it be diagonalized" and "can
+             it be orthogonally diagonalized". Equivalently: <strong>every eigenvalue of multiplicity
+             $k$ of a real symmetric matrix has exactly $k$ linearly independent eigenvectors</strong>
+             (geometric multiplicity $=$ algebraic multiplicity), so there are $n$ of them in total;
+             orthogonalize and normalize them to obtain $Q$.</p>
+          <p><strong>The converse (often tested).</strong> If a <strong>real</strong> matrix $A$ can be
+             diagonalized by an orthogonal matrix, then $A$ is real symmetric. Proof: from
+             $Q^TAQ=\Lambda$ we get $A=Q\Lambda Q^T$, hence
+             $A^T=(Q\Lambda Q^T)^T=Q\Lambda^TQ^T=Q\Lambda Q^T=A$. So "real symmetric" and
+             "orthogonally diagonalizable" are <strong>equivalent</strong>.</p>
+        </div>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>方法：用正交矩阵对角化实对称矩阵</div>
+        <ol>
+          <li><strong>求全部特征值</strong>：解 $|A-\lambda E|=0$，得到 $\lambda_1,\dots,\lambda_n$（含重数）。</li>
+          <li><strong>对每个特征值求基础解系</strong>：解 $(A-\lambda_iE)x=0$，得该特征值对应的线性无关特征向量。</li>
+          <li><strong>同一特征值内部做施密特正交化</strong>：如果某个特征值 $\lambda$ 是 $k$ 重（$k\ge2$），它有 $k$ 个特征向量，把它们按施密特流程化成正交组。<strong>不同特征值之间的向量由定理 2 自动正交，不用管。</strong></li>
+          <li><strong>全部单位化</strong>：把上一步得到的每个正交向量除以自己的长度，得到 $\eta_1,\dots,\eta_n$。</li>
+          <li><strong>拼成正交矩阵</strong> $Q=(\eta_1,\dots,\eta_n)$，则 $Q^TAQ=\mathrm{diag}(\lambda_1,\dots,\lambda_n)$。列与对角元的配对顺序同样必须一一对应。</li>
+          <li><strong>三步验证</strong>：① 每列长度为 $1$；② 任意两列内积为 $0$；③ 回代 $A\eta_i=\lambda_i\eta_i$（最有效的一步，能同时查出特征值和对特征向量算没算错）。</li>
+        </ol>
+        <p><strong>实用简化</strong>：若你不做施密特正交化，直接对同一特征值的特征向量取正交组合也可以。例如对 $\lambda=1$ 的两个特征向量 $\xi_1,\xi_2$，可改取 $\xi_1$ 与 $\xi_2-\frac{(\xi_2,\xi_1)}{(\xi_1,\xi_1)}\xi_1$——这与施密特完全一样。此外，若同一特征值的特征子空间维数是 $2$，在平面内任取一组正交方向即可。</p>
+
+        <div class="bi-en" lang="en">
+          <p><span class="bi-en-label">METHOD 5.4</span>
+             <strong>Diagonalizing a Real Symmetric Matrix by an Orthogonal Matrix.</strong></p>
+          <ol>
+            <li><strong>Find all eigenvalues:</strong> solve $|A-\lambda E|=0$ for
+                $\lambda_1,\dots,\lambda_n$ (with multiplicities).</li>
+            <li><strong>For each eigenvalue, find a basis of its nullspace:</strong> solve
+                $(A-\lambda_iE)x=0$ to get the linearly independent eigenvectors of
+                $\lambda_i$.</li>
+            <li><strong>Orthogonalize inside each eigenvalue:</strong> if $\lambda$ has multiplicity
+                $k\ge2$, apply the Gram-Schmidt process to its $k$ eigenvectors. <strong>Vectors
+                belonging to different eigenvalues are automatically orthogonal by Theorem 2 — leave
+                them alone.</strong></li>
+            <li><strong>Normalize everything:</strong> divide each orthogonal vector by its own length
+                to obtain $\eta_1,\dots,\eta_n$.</li>
+            <li><strong>Assemble the orthogonal matrix</strong> $Q=(\eta_1,\dots,\eta_n)$, so that
+                $Q^TAQ=\mathrm{diag}(\lambda_1,\dots,\lambda_n)$. The pairing of columns with diagonal
+                entries must again be one-to-one and in order.</li>
+            <li><strong>Three checks:</strong> (i) every column has length $1$; (ii) the inner product
+                of any two columns is $0$; (iii) substitute back, $A\eta_i=\lambda_i\eta_i$ — the most
+                effective single check, since it catches errors in both the eigenvalues and the
+                eigenvectors.</li>
+          </ol>
+          <p><strong>Practical shortcut:</strong> instead of running Gram-Schmidt you may simply pick
+             an orthogonal combination inside the same eigenspace. For two eigenvectors $\xi_1,\xi_2$
+             of $\lambda=1$, take $\xi_1$ together with
+             $\xi_2-\frac{(\xi_2,\xi_1)}{(\xi_1,\xi_1)}\xi_1$ — this is exactly Gram-Schmidt. Also, if
+             the eigenspace of one eigenvalue is $2$-dimensional, any two orthogonal directions in
+             that plane will do.</p>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.9</span> 完整流程：求正交矩阵 $Q$ 使 $Q^TAQ=\Lambda$（含施密特正交化）
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $A=\begin{pmatrix}2&2&-2\\2&5&-4\\-2&-4&5\end{pmatrix}$，求正交矩阵 $Q$，使 $Q^TAQ=\Lambda$。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，求特征值。</strong>先看 $A$ 是否对称：$a_{12}=a_{21}=2$，$a_{13}=a_{31}=-2$，$a_{23}=a_{32}=-4$，确实对称，所以一定可以正交对角化。</p>
+            <p>$$|A-\lambda E|=\begin{vmatrix}2-\lambda&2&-2\\2&5-\lambda&-4\\-2&-4&5-\lambda\end{vmatrix}.$$</p>
+            <p>按第一行展开：</p>
+            <p>$$=(2-\lambda)\big[(5-\lambda)^2-16\big]-2\big[2(5-\lambda)-8\big]+(-2)\big[-8+2(5-\lambda)\big].$$</p>
+            <p>逐项化简。第一项：$(5-\lambda)^2-16=\lambda^2-10\lambda+9=(\lambda-1)(\lambda-9)$，故为 $(2-\lambda)(\lambda-1)(\lambda-9)$。第二项：$2(5-\lambda)-8=2-2\lambda$，故为 $-2(2-2\lambda)=-4+4\lambda$。第三项：$-8+2(5-\lambda)=2-2\lambda$，故为 $-2(2-2\lambda)=-4+4\lambda$。</p>
+            <p>合并：</p>
+            <p>$$(2-\lambda)(\lambda-1)(\lambda-9)+8\lambda-8=(\lambda-1)\big[(2-\lambda)(\lambda-9)+8\big].$$</p>
+            <p>而 $(2-\lambda)(\lambda-9)+8=-\lambda^2+11\lambda-10=-(\lambda-1)(\lambda-10)$，所以</p>
+            <p>$$|A-\lambda E|=-(\lambda-1)^2(\lambda-10).$$</p>
+            <p>特征值为 $\lambda_1=\lambda_2=1$（二重），$\lambda_3=10$。</p>
+            <p><strong>验算</strong>：$\mathrm{tr}(A)=2+5+5=12=1+1+10$ ✓。$|A|=1\times1\times10=10$，直接算：$2(25-16)-2(10-8)+(-2)(-8+10)=18-4-4=10$ ✓。两个检验都过。</p>
+            <p><strong>第二步，对 $\lambda=1$ 求基础解系。</strong></p>
+            <p>$$A-E=\begin{pmatrix}1&2&-2\\2&4&-4\\-2&-4&4\end{pmatrix}.$$</p>
+            <p>第二行是第一行的 $2$ 倍，第三行是第一行的 $-2$ 倍，所以 $R(A-E)=1$，方程组只有一个独立方程：</p>
+            <p>$$x_1+2x_2-2x_3=0.$$</p>
+            <p>自由变量是 $x_2,x_3$，基础解系含 $3-1=2$ 个向量。（这与重数 $2$ 相符，符合实对称矩阵的定理。）取</p>
+            <p>$$(x_2,x_3)=(1,0)\Rightarrow \xi_1=\begin{pmatrix}-2\\1\\0\end{pmatrix};\qquad (x_2,x_3)=(0,1)\Rightarrow \xi_2=\begin{pmatrix}2\\0\\1\end{pmatrix}.$$</p>
+            <p><strong>第三步，在同一特征值内部做施密特正交化。</strong>先检查 $\xi_1,\xi_2$ 是否已正交：</p>
+            <p>$$(\xi_1,\xi_2)=(-2)\times2+1\times0+0\times1=-4\ne0.$$</p>
+            <p><strong>不正交，必须正交化</strong>（这一步就是本题的得分点）。令</p>
+            <p>$$\beta_1=\xi_1=\begin{pmatrix}-2\\1\\0\end{pmatrix},\qquad (\beta_1,\beta_1)=4+1=5.$$</p>
+            <p>$$(\xi_2,\beta_1)=2\times(-2)+0\times1+1\times0=-4.$$</p>
+            <p>$$\beta_2=\xi_2-\frac{(\xi_2,\beta_1)}{(\beta_1,\beta_1)}\beta_1=\begin{pmatrix}2\\0\\1\end{pmatrix}-\frac{-4}{5}\begin{pmatrix}-2\\1\\0\end{pmatrix}=\begin{pmatrix}2\\0\\1\end{pmatrix}+\frac45\begin{pmatrix}-2\\1\\0\end{pmatrix}=\begin{pmatrix}2/5\\4/5\\1\end{pmatrix}.$$</p>
+            <p><strong>验算正交性</strong>：$(\beta_2,\beta_1)=\frac25\times(-2)+\frac45\times1+1\times0=-\frac45+\frac45=0$ ✓。</p>
+            <p><strong>第四步，对 $\lambda=10$ 求特征向量。</strong>由定理 2，它自动与 $\xi_1,\xi_2$（因而与 $\beta_1,\beta_2$）正交，直接解 $(A-10E)x=0$ 或利用对称性猜：</p>
+            <p>$$A\begin{pmatrix}1\\2\\-2\end{pmatrix}=\begin{pmatrix}2+4+4\\2+10+8\\-2-8-10\end{pmatrix}=\begin{pmatrix}10\\20\\-20\end{pmatrix}=10\begin{pmatrix}1\\2\\-2\end{pmatrix}\ ✓$$</p>
+            <p>故取 $\xi_3=\begin{pmatrix}1\\2\\-2\end{pmatrix}$，即 $\beta_3=\xi_3$。</p>
+            <p><strong>交叉验证</strong>：$(\xi_3,\beta_1)=1\times(-2)+2\times1+(-2)\times0=0$ ✓；$(\xi_3,\beta_2)=1\times\frac25+2\times\frac45+(-2)\times1=\frac25+\frac85-2=0$ ✓。不同特征值自动正交，果然如此。</p>
+            <p><strong>第五步，全部单位化。</strong></p>
+            <p>$\|\beta_1\|=\sqrt5$，$\|\beta_2\|=\sqrt{\frac{4}{25}+\frac{16}{25}+1}=\sqrt{\frac{45}{25}}=\frac{3}{\sqrt5}$，$\|\beta_3\|=\sqrt{1+4+4}=3$。于是</p>
+            <p>$$\eta_1=\frac{1}{\sqrt5}\begin{pmatrix}-2\\1\\0\end{pmatrix},\qquad \eta_2=\frac{\sqrt5}{3}\begin{pmatrix}2/5\\4/5\\1\end{pmatrix}=\begin{pmatrix}2\sqrt5/15\\4\sqrt5/15\\\sqrt5/3\end{pmatrix},\qquad \eta_3=\frac13\begin{pmatrix}1\\2\\-2\end{pmatrix}.$$</p>
+            <p>（长度验算：$\|\eta_2\|^2=\frac{20}{225}+\frac{80}{225}+\frac{5}{9}=\frac{20+80+125}{225}=1$ ✓。）</p>
+            <p><strong>第六步，组装并给出结论。</strong></p>
+            <p>$$Q=(\eta_1,\eta_2,\eta_3)=\begin{pmatrix}-\frac{2}{\sqrt5}&\frac{2\sqrt5}{15}&\frac13\\[2pt]\frac{1}{\sqrt5}&\frac{4\sqrt5}{15}&\frac23\\[2pt]0&\frac{\sqrt5}{3}&-\frac23\end{pmatrix},\qquad Q^TAQ=\begin{pmatrix}1&&\\&1&\\&&10\end{pmatrix}=\Lambda.$$</p>
+            <p><strong>最终验证（阅卷时这三条都要能答出来）</strong>：</p>
+            <ul>
+              <li><strong>每列是单位向量</strong>：$\|\eta_1\|^2=\frac{4+1}{5}=1$ ✓；$\|\eta_2\|^2=1$ ✓（上面算过）；$\|\eta_3\|^2=\frac{1+4+4}{9}=1$ ✓。</li>
+              <li><strong>两两正交</strong>：$(\eta_1,\eta_2)=\frac{1}{\sqrt5}\cdot\frac{\sqrt5}{3}\left[(-2)\cdot\frac25+1\cdot\frac45+0\right]=\frac13\left(-\frac45+\frac45\right)=0$ ✓；$(\eta_1,\eta_3)=\frac{1}{3\sqrt5}(-2+2+0)=0$ ✓；$(\eta_2,\eta_3)=\frac{\sqrt5}{3}\cdot\frac13\left(\frac25+\frac85-2\right)=0$ ✓。故 $Q$ 是正交矩阵。</li>
+              <li><strong>对角化关系</strong>：等价于逐列验证 $A\eta_i=\lambda_i\eta_i$。已验 $\beta_1,\xi_3$ 是特征向量；对 $\beta_2$ 补验：$A\beta_2=\left(2\cdot\frac25+2\cdot\frac45-2,\ 2\cdot\frac25+5\cdot\frac45-4,\ -2\cdot\frac25-4\cdot\frac45+5\right)^T=\left(\frac25,\ \frac45,\ 1\right)^T=\beta_2$ ✓，对应 $\lambda=1$。</li>
+            </ul>
+            <p>所以 $Q$ 的列顺序与 $\Lambda$ 的对角元顺序对应为 $1,1,10$，全部正确。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head">
+          <span class="badge">例 5.10</span> 由特征值与特征向量反求实对称矩阵
+          <span class="lv">考研</span>
+        </div>
+        <div class="example-body">
+          <p>设 $A$ 为 3 阶实对称矩阵，其特征值为 $\lambda_1=\lambda_2=1$（二重），$\lambda_3=-1$。已知对应的特征向量分别为</p>
+          <p>$$\xi_1=\begin{pmatrix}1\\1\\1\end{pmatrix},\qquad \xi_2=\begin{pmatrix}1\\-1\\0\end{pmatrix},\qquad \xi_3=\begin{pmatrix}1\\1\\-2\end{pmatrix},$$</p>
+          <p>求 $A$。</p>
+          <div class="solution">
+            <p class="solution-label">解</p>
+            <p><strong>第一步，检查这三个向量是否可以同时作为实对称矩阵的特征向量。</strong>先看它们两两之间的内积（用定理 2，不同特征值对应的特征向量必须正交）：</p>
+            <p>$$(\xi_1,\xi_2)=1-1+0=0\ ✓,\qquad (\xi_1,\xi_3)=1+1-2=0\ ✓,\qquad (\xi_2,\xi_3)=1-1+0=0\ ✓.$$</p>
+            <p>三向量两两正交且都非零，由定理 5.9 自动线性无关，确实可以构成一组正交基。（这一步很关键：如果题目给的向量不正交，说明题目本身或者你的理解有问题。）</p>
+            <p><strong>第二步，写出正交矩阵。</strong>把三个向量单位化：$\|\xi_1\|=\sqrt3$，$\|\xi_2\|=\sqrt2$，$\|\xi_3\|=\sqrt6$。令</p>
+            <p>$$\eta_1=\frac{1}{\sqrt3}\begin{pmatrix}1\\1\\1\end{pmatrix},\qquad \eta_2=\frac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix},\qquad \eta_3=\frac{1}{\sqrt6}\begin{pmatrix}1\\1\\-2\end{pmatrix},$$</p>
+            <p>则 $Q=(\eta_1,\eta_2,\eta_3)$ 是正交矩阵，且 $Q^TAQ=\mathrm{diag}(1,1,-1)$。</p>
+            <p><strong>第三步，反解 $A$。</strong>由 $Q^TAQ=\Lambda$ 得 $A=Q\Lambda Q^T$。用列向量写开，这就是最省力的形式：</p>
+            <p>$$A=Q\Lambda Q^T=\lambda_1\eta_1\eta_1^T+\lambda_2\eta_2\eta_2^T+\lambda_3\eta_3\eta_3^T.$$</p>
+            <p>（为什么可以这样写？因为 $Q\Lambda Q^T$ 展开后，第 $i$ 项就是 $\lambda_i\eta_i\eta_i^T$，而 $\eta_i\eta_i^T$ 是秩 $1$ 的 $3\times3$ 矩阵。）</p>
+            <p>逐项计算，注意 $\eta_i\eta_i^T$ 的系数里的平方：</p>
+            <p>$$1\cdot\frac{1}{3}\begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}+1\cdot\frac{1}{2}\begin{pmatrix}1&-1&0\\-1&1&0\\0&0&0\end{pmatrix}+(-1)\cdot\frac{1}{6}\begin{pmatrix}1&1&-2\\1&1&-2\\-2&-2&4\end{pmatrix}.$$</p>
+            <p>逐元素相加：</p>
+            <p>$$a_{11}=\frac13+\frac12-\frac16=\frac{4}{6}=\frac23,\qquad a_{12}=\frac13-\frac12-\frac16=\frac{-2}{6}=-\frac13,\qquad a_{13}=\frac13+0+\frac{2}{6}=\frac23,$$</p>
+            <p>$$a_{22}=\frac13+\frac12-\frac16=\frac23,\qquad a_{23}=\frac13+0+\frac{2}{6}=\frac23,\qquad a_{33}=\frac13+0-\frac46=-\frac13.$$</p>
+            <p>所以</p>
+            <p>$$A=\frac13\begin{pmatrix}2&-1&2\\-1&2&2\\2&2&-1\end{pmatrix}.$$</p>
+            <p><strong>第四步，回代验证。</strong></p>
+            <p>$$A\xi_1=\frac13\begin{pmatrix}2-1+2\\-1+2+2\\2+2-1\end{pmatrix}=\frac13\begin{pmatrix}3\\3\\3\end{pmatrix}=\begin{pmatrix}1\\1\\1\end{pmatrix}=1\cdot\xi_1\ ✓$$</p>
+            <p>$$A\xi_2=\frac13\begin{pmatrix}2+1+0\\-1-2+0\\2-2+0\end{pmatrix}=\frac13\begin{pmatrix}3\\-3\\0\end{pmatrix}=\begin{pmatrix}1\\-1\\0\end{pmatrix}=1\cdot\xi_2\ ✓$$</p>
+            <p>$$A\xi_3=\frac13\begin{pmatrix}2-1-4\\-1+2-4\\2+2+2\end{pmatrix}=\frac13\begin{pmatrix}-3\\-3\\6\end{pmatrix}=\begin{pmatrix}-1\\-1\\2\end{pmatrix}=-1\cdot\xi_3\ ✓$$</p>
+            <p>另外 $\mathrm{tr}(A)=\frac{2+2-1}{3}=1=1+1+(-1)$ ✓，$A$ 显然对称 ✓。答案无误。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>易错点清单</div>
+        <ul>
+          <li><strong>"同一特征值的特征向量也两两正交"——错。</strong>只有<em>不同</em>特征值之间才由定理 2 自动正交。同一特征值内部的多个特征向量是同一个子空间的基，需要自己施密特正交化（例 5.9 里 $(\xi_1,\xi_2)=-4\ne0$ 就是明证）。漏了这一步，$Q$ 就不是正交矩阵。</li>
+          <li><strong>把"列向量两两正交"当成正交矩阵的定义。</strong>还要求每列<strong>长度为 $1$</strong>。例如 $\begin{pmatrix}1&1\\1&-1\end{pmatrix}$ 的两列正交，但长度都是 $\sqrt2$，它<strong>不是</strong>正交矩阵（除以 $\sqrt2$ 之后才是）。</li>
+          <li><strong>正交化算完不验算。</strong>每算出一个 $\beta_k$，立刻用内积检查它与前面所有 $\beta_i$ 是否正交。几秒钟的事，却能拦住全部符号错误。</li>
+          <li><strong>单位化的时候忘记"整体除以长度"作用于每一个分量。</strong>$\frac{1}{\sqrt5}\begin{pmatrix}-2\\1\\0\end{pmatrix}$ 的分量是 $-\frac{2}{\sqrt5},\frac{1}{\sqrt5},0$，不是 $-2,\ 1,\ 0$。</li>
+          <li><strong>误用 $(AB)^T=A^TB^T$。</strong>转置要反序：$(AB)^T=B^TA^T$。证明 $A^TA=E$ 相关结论时这个错误最致命。</li>
+          <li><strong>把 $A^TA=E$ 记成 $A^2=E$。</strong>旋转矩阵 $\begin{pmatrix}\cos\theta&-\sin\theta\\\sin\theta&\cos\theta\end{pmatrix}$ 是正交矩阵，但 $A^2=E$ 只有当 $\theta=0$ 或 $\pi$ 时才成立。</li>
+          <li><strong>忘记"实对称"是前提。</strong>"不同特征值的特征向量正交""一定可正交对角化"这两条对一般矩阵都不成立。做题时先确认题目是否给了对称条件。</li>
+        </ul>
+      </div>
+
+      <div class="box app-box">
+        <div class="box-title"><span class="ico">🔧</span>工程联系：主应力与主方向——实对称矩阵正交对角化的物理原型</div>
+        <p>航空发动机的涡轮盘、叶片根部、机匣，做强度分析时第一步都是算"一点处的应力状态"。它由 $3\times3$ 的 Cauchy 应力张量 $\sigma$ 描述。由力矩平衡可以证明 $\sigma^T=\sigma$，即<strong>应力张量一定是实对称矩阵</strong>。</p>
+        <p>寻找这样一个方向 $n$：在垂直于 $n$ 的截面上<strong>只有正应力、没有剪应力</strong>。设该正应力为 $\sigma_i$，则条件正是</p>
+        <p>$$\sigma n=\sigma_i n.$$</p>
+        <p>——这就是特征值问题。$\sigma_i$ 叫<strong>主应力</strong>，$n$ 叫<strong>主方向</strong>。</p>
+        <p>实对称矩阵的三个定理在这里全部有了物理对应：</p>
+        <ul>
+          <li><strong>定理 1（特征值全为实数）</strong>：主应力是真实可测的物理量，当然不能是复数。如果应力张量不对称（例如考虑了力偶应力），主应力就可能出现复数——那说明所建立的力学模型有问题。</li>
+          <li><strong>定理 2（不同特征值的特征向量正交）</strong>：三个主方向互相垂直。这一点非常不平凡：无论构件形状多复杂、载荷多任意，总能找到三个互相垂直的面，在这三个面上剪应力同时为零。</li>
+          <li><strong>定理 3（存在正交矩阵 $Q$ 使 $Q^T\sigma Q=\mathrm{diag}(\sigma_1,\sigma_2,\sigma_3)$）</strong>：$Q$ 就是从全局坐标系到主轴坐标系的旋转矩阵。$Q^T\sigma Q$ 就是"把应力张量转到主轴坐标系下表示"，转过去之后它变成对角矩阵——三个方向互不耦合。</li>
+        </ul>
+        <p>工程上的后续步骤全建立在此之上：</p>
+        <ul>
+          <li><strong>强度校核</strong>：材料是否屈服取决于 $\sigma_1,\sigma_2,\sigma_3$ 的组合。例如 von Mises 等效应力
+          $$\sigma_{\mathrm{eq}}=\sqrt{\tfrac12\big[(\sigma_1-\sigma_2)^2+(\sigma_2-\sigma_3)^2+(\sigma_3-\sigma_1)^2\big]},$$
+          它只用到三个主应力，与坐标系无关（这正是"不变量"的含义：特征值不随坐标系旋转而改变）。</li>
+          <li><strong>失效模式判断</strong>：最大主应力 $\sigma_1$ 控制脆性开裂方向（裂纹面垂直于 $\sigma_1$），最大剪应力 $(\sigma_1-\sigma_3)/2$ 控制塑性滑移。涡轮盘破裂分析中，工程师会直接画主应力迹线来判断裂纹路径。</li>
+          <li><strong>热应力与模态分析的桥梁</strong>：模态分析里的刚度矩阵 $K$、质量矩阵 $M$ 同样是对称的，广义特征值问题 $K\phi=\omega^2M\phi$（本页 5-1 的工程联系块）在数学上与这里"正交对角化一个对称矩阵"是同一回事——先把 $M$ 正交对角化消掉它，问题就退化成普通对称矩阵的特征值问题。</li>
+        </ul>
+        <p>一句话总结：<strong>工程师每天用的"转到主轴坐标系""按振型分解"，在数学上就是"求实对称矩阵的特征向量"与"用正交矩阵对角化"。</strong></p>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考察要点：这一节在考研数一里怎么考</div>
+        <ul>
+          <li><span class="tag">大题</span><span class="tag">高频</span><strong>"求正交矩阵 $Q$ 使 $Q^TAQ=\Lambda$"</strong>——这是考研数一线性代数的头号大题（近二十年反复出现）。满分答案必须包含：特征值 → 每个特征值的基础解系 → <strong>同一特征值内部施密特正交化</strong> → 单位化 → 拼 $Q$ → 写出 $\Lambda$。评分细则里，"重根的正交化"和"单位化"各占独立分值，<strong>跳过正交化直接拼 $Q$ 会扣掉一大半分</strong>。</li>
+          <li><span class="tag">高频</span><span class="tag">小题</span><strong>由特征值/特征向量反求实对称矩阵。</strong>看到"$A$ 是实对称矩阵，已知特征值与部分特征向量，求 $A$"，思路是：① 若某个特征值对应的特征向量没给全，利用"与已知特征向量正交"把它解出来（解一个齐次方程组）；② 单位化得到 $Q$；③ 用 $A=\sum\lambda_i\eta_i\eta_i^T$ 或 $A=Q\Lambda Q^T$ 写出 $A$。</li>
+          <li><span class="tag">小题</span><span class="tag">易错</span><strong>选择题里的"正交矩阵"辨析。</strong>高频四个陷阱：① 正交矩阵满足 $A^TA=E$ 而非 $A^2=E$；② $|A|=\pm1$，但 $|A|=\pm1$ 推不出正交；③ 列向量两两正交还不够，必须都是单位向量；④ $A+B$ 一般不是正交矩阵。另外要能秒答：正交矩阵的<strong>乘积</strong>、<strong>逆</strong>、<strong>转置</strong>仍是正交矩阵。</li>
+          <li><span class="tag">小题</span><strong>正交向量组与线性无关的关系。</strong>常考"若 $\alpha_1,\alpha_2,\alpha_3$ 两两正交且均为非零向量，则它们线性无关"（正确），以及"线性无关组一定两两正交吗"（错误）。也可能考"零向量与任何向量正交，但零向量不能算正交向量组的成员"。</li>
+          <li><span class="tag">易错</span><span class="tag">小题</span><strong>"同一特征值的特征向量也正交"是错误命题。</strong>这句话几乎每几年就出现一次。要能立刻举出例 5.9 中的反例（$\lambda=1$ 的两个特征向量内积为 $-4$）。</li>
+          <li><span class="tag">大题</span><strong>跨章节综合。</strong>实对称矩阵的正交对角化常与第 6 章二次型合并出题（求正交变换把二次型化为标准形），也常与"求 $A^k$"或"求 $A^n$ 的极限"结合。本题的核心步骤（正确求出 $Q$ 与 $\Lambda$）是后面所有内容的前提，务必练到闭着眼也不出错。</li>
+        </ul>
+      </div>
+
+      <div class="box model-box">
+        <div class="box-title"><span class="ico">🧩</span>典型模型题</div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 1</span>用（正交）对角化求 $A^k$<span class="lv">中等</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              题干给出一个具体的方阵 $A$，要求 $A^k$ 或 $A^{100}$（$k$ 为正整数）。硬乘是死路，必须走 $A=P\Lambda P^{-1}$；若 $A$ 是<strong>实对称矩阵</strong>，还可以把 $P$ 取成正交矩阵 $Q$，此时 $Q^{-1}=Q^T$，连求逆都省了。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 求特征值 $\lambda_1,\dots,\lambda_n$；② 求每个特征值的基础解系（对称矩阵还要正交化、单位化）；③ 拼 $P$ 或 $Q$，写出 $P^{-1}AP=\Lambda$；④ 用 $A^k=P\Lambda^kP^{-1}$ 展开，$\Lambda^k$ 只要把对角元各自求幂；⑤ 用 $k=1,2$ 回代验算。</div>
+            <p><strong>例</strong>　设 $A=\begin{pmatrix}1&2\\2&1\end{pmatrix}$，求 $A^k$（$k$ 为正整数）。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：特征值。</strong>$A$ 是实对称矩阵，一定可以正交对角化。</p>
+              <p>$$|A-\lambda E|=\begin{vmatrix}1-\lambda&2\\2&1-\lambda\end{vmatrix}=(1-\lambda)^2-4=\lambda^2-2\lambda-3=(\lambda-3)(\lambda+1),$$</p>
+              <p>故 $\lambda_1=3,\ \lambda_2=-1$。<strong>验算</strong>：和为 $2=\mathrm{tr}(A)=1+1$ ✓；积为 $-3=|A|=1\times1-2\times2=-3$ ✓。</p>
+              <p><strong>第二步：特征向量。</strong></p>
+              <p>$\lambda_1=3$：$A-3E=\begin{pmatrix}-2&2\\2&-2\end{pmatrix}\to\begin{pmatrix}1&-1\\0&0\end{pmatrix}$，得 $x_1=x_2$，取 $\xi_1=\begin{pmatrix}1\\1\end{pmatrix}$。</p>
+              <p>$\lambda_2=-1$：$A+E=\begin{pmatrix}2&2\\2&2\end{pmatrix}\to\begin{pmatrix}1&1\\0&0\end{pmatrix}$，得 $x_1=-x_2$，取 $\xi_2=\begin{pmatrix}1\\-1\end{pmatrix}$。</p>
+              <p>（两个特征值不同，由定理 5.12 定理 2，$\xi_1\perp\xi_2$ 自动成立，不用正交化；核验 $(\xi_1,\xi_2)=1-1=0$ ✓。）</p>
+              <p><strong>第三步：单位化并拼正交矩阵。</strong>$\|\xi_1\|=\|\xi_2\|=\sqrt2$，故</p>
+              <p>$$Q=(\eta_1,\eta_2)=\frac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix},\qquad Q^{-1}=Q^T=Q,\qquad Q^TAQ=\begin{pmatrix}3&0\\0&-1\end{pmatrix}=\Lambda.$$</p>
+              <p><strong>第四步：求幂。</strong>由 $Q^TAQ=\Lambda$ 得 $A=Q\Lambda Q^T$，于是</p>
+              <p>$$A^k=Q\Lambda^kQ^T=\frac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}\begin{pmatrix}3^k&0\\0&(-1)^k\end{pmatrix}\frac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}=\frac12\begin{pmatrix}3^k+(-1)^k&3^k-(-1)^k\\3^k-(-1)^k&3^k+(-1)^k\end{pmatrix}.$$</p>
+              <p><strong>第五步：回代验算（必做）。</strong></p>
+              <ul>
+                <li>$k=1$：得 $\frac12\begin{pmatrix}3-1&3+1\\3+1&3-1\end{pmatrix}=\begin{pmatrix}1&2\\2&1\end{pmatrix}=A$ ✓</li>
+                <li>$k=2$：得 $\frac12\begin{pmatrix}10&8\\8&10\end{pmatrix}=\begin{pmatrix}5&4\\4&5\end{pmatrix}$，而 $A^2=\begin{pmatrix}1&2\\2&1\end{pmatrix}^2=\begin{pmatrix}5&4\\4&5\end{pmatrix}$ ✓</li>
+                <li>$k=0$：得 $\frac12\begin{pmatrix}2&0\\0&2\end{pmatrix}=E$ ✓</li>
+              </ul>
+              <p class="solution-label">易错提醒</p>
+              <p>① 只有 $P$ 是<strong>正交矩阵</strong>时才可以用 $P^T$ 代替 $P^{-1}$。如果特征向量没有单位化，$Q$ 就不是正交矩阵，写 $A^k=Q\Lambda^kQ^T$ 直接算错，这时必须老老实实求 $P^{-1}$。② 求 $A^k$ 一定要验算 $k=1$（应得 $A$）和 $k=2$（应得 $A^2$），这两步能拦住全部符号与系数错误。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 2</span>实对称矩阵正交对角化的全流程<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              题干出现"实对称矩阵""求正交矩阵 $Q$ 使 $Q^TAQ=\Lambda$"。这是本章分值最高的大题，评分细则是分步给分的：特征值、基础解系、<strong>重根内部的正交化</strong>、单位化、拼 $Q$ 各有独立分值。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 求全部特征值（含重数）；② 对每个特征值解 $(A-\lambda E)x=0$ 取基础解系；③ <strong>同一个重根内部的向量做施密特正交化</strong>（不同特征值的向量自动正交，不用管）；④ 全部单位化；⑤ 按列拼 $Q$，列序与 $\Lambda$ 对角元一一对应；⑥ 三条验证：每列长为 $1$、两两内积为 $0$、回代 $A\eta_i=\lambda_i\eta_i$。</div>
+            <p><strong>例</strong>　设 $A=\begin{pmatrix}0&1&1\\1&0&1\\1&1&0\end{pmatrix}$，求正交矩阵 $Q$ 使 $Q^TAQ=\Lambda$。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：确认对称并求特征值。</strong>$a_{12}=a_{21}=1$，$a_{13}=a_{31}=1$，$a_{23}=a_{32}=1$，$A$ 实对称，一定可以正交对角化。</p>
+              <p>把第 2、3 行加到第 1 行上，第 1 行变成 $(2-\lambda,2-\lambda,2-\lambda)$，提出公因子：</p>
+              <p>$$|A-\lambda E|=(2-\lambda)\begin{vmatrix}1&1&1\\1&-\lambda&1\\1&1&-\lambda\end{vmatrix}.$$</p>
+              <p>再把第 1 列分别乘 $-1$ 加到第 2、3 列：</p>
+              <p>$$=(2-\lambda)\begin{vmatrix}1&0&0\\1&-\lambda-1&0\\1&0&-\lambda-1\end{vmatrix}=(2-\lambda)(\lambda+1)^2.$$</p>
+              <p>故特征值为 $\lambda_1=2$，$\lambda_2=\lambda_3=-1$（二重）。</p>
+              <p><strong>验算</strong>：$\mathrm{tr}(A)=0=2+(-1)+(-1)$ ✓；$|A|=2\times(-1)\times(-1)=2$，而直接展开 $0(0-1)-1(0-1)+1(1-0)=2$ ✓。</p>
+              <p><strong>第二步：$\lambda=2$ 的特征向量。</strong></p>
+              <p>$$A-2E=\begin{pmatrix}-2&1&1\\1&-2&1\\1&1&-2\end{pmatrix},\qquad R(A-2E)=2,$$</p>
+              <p>（三行之和为零，任意两行不成比例）。由前两个方程相减得 $x_1=x_2$，同理 $x_2=x_3$，故取</p>
+              <p>$$\xi_3=\begin{pmatrix}1\\1\\1\end{pmatrix}.$$</p>
+              <p><strong>第三步：$\lambda=-1$ 的基础解系。</strong>$A+E=\begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$，秩为 $1$，方程只有一个：$x_1+x_2+x_3=0$，自由变量两个，基础解系含 $3-1=2$ 个向量（与重数 $2$ 相符）：</p>
+              <p>$$\xi_1=\begin{pmatrix}1\\-1\\0\end{pmatrix},\qquad \xi_2=\begin{pmatrix}1\\0\\-1\end{pmatrix}.$$</p>
+              <p><strong>第四步：重根内部施密特正交化（本题的得分点）。</strong>先检查：$(\xi_1,\xi_2)=1\times1+(-1)\times0+0\times(-1)=1\ne0$，<strong>不正交，必须正交化</strong>。</p>
+              <p>取 $\beta_1=\xi_1=\begin{pmatrix}1\\-1\\0\end{pmatrix}$，$(\beta_1,\beta_1)=1+1=2$；又 $(\xi_2,\beta_1)=1\times1+0\times(-1)+(-1)\times0=1$，故</p>
+              <p>$$\beta_2=\xi_2-\frac{(\xi_2,\beta_1)}{(\beta_1,\beta_1)}\beta_1=\begin{pmatrix}1\\0\\-1\end{pmatrix}-\frac12\begin{pmatrix}1\\-1\\0\end{pmatrix}=\begin{pmatrix}1/2\\1/2\\-1\end{pmatrix}.$$</p>
+              <p><strong>验算正交性</strong>：$(\beta_2,\beta_1)=\frac12\times1+\frac12\times(-1)+(-1)\times0=0$ ✓。</p>
+              <p><strong>第五步：全部单位化。</strong>$\|\beta_1\|=\sqrt2$，$\|\beta_2\|=\sqrt{\frac14+\frac14+1}=\sqrt{\frac32}=\frac{\sqrt6}{2}$，$\|\xi_3\|=\sqrt3$，于是</p>
+              <p>$$\eta_1=\frac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix},\qquad \eta_2=\frac{2}{\sqrt6}\begin{pmatrix}1/2\\1/2\\-1\end{pmatrix}=\frac{1}{\sqrt6}\begin{pmatrix}1\\1\\-2\end{pmatrix},\qquad \eta_3=\frac{1}{\sqrt3}\begin{pmatrix}1\\1\\1\end{pmatrix}.$$</p>
+              <p><strong>第六步：拼 $Q$ 并写出结论。</strong></p>
+              <p>$$Q=(\eta_1,\eta_2,\eta_3)=\begin{pmatrix}\frac{1}{\sqrt2}&\frac{1}{\sqrt6}&\frac{1}{\sqrt3}\\-\frac{1}{\sqrt2}&\frac{1}{\sqrt6}&\frac{1}{\sqrt3}\\0&-\frac{2}{\sqrt6}&\frac{1}{\sqrt3}\end{pmatrix},\qquad Q^TAQ=\begin{pmatrix}-1&&\\&-1&\\&&2\end{pmatrix}=\Lambda.$$</p>
+              <p><strong>第七步：三条验证。</strong></p>
+              <ul>
+                <li><strong>每列长为 $1$</strong>：$\|\eta_1\|^2=\frac{1+1}{2}=1$ ✓，$\|\eta_2\|^2=\frac{1+1+4}{6}=1$ ✓，$\|\eta_3\|^2=\frac{1+1+1}{3}=1$ ✓。</li>
+                <li><strong>两两正交</strong>：$(\eta_1,\eta_2)=\frac{1-1+0}{\sqrt{12}}=0$ ✓，$(\eta_1,\eta_3)=\frac{1-1+0}{\sqrt6}=0$ ✓，$(\eta_2,\eta_3)=\frac{1+1-2}{\sqrt{18}}=0$ ✓，故 $Q$ 是正交矩阵。</li>
+                <li><strong>回代 $A\eta_i=\lambda_i\eta_i$</strong>：$A\eta_1=(-1,1,0)^T=-\eta_1$ ✓；$A\eta_3=(2,2,2)^T=2\eta_3$ ✓；对 $\eta_2$ 补验 $A(1,1,-2)^T=(-1,-1,2)^T=-(1,1,-2)^T$ ✓。</li>
+              </ul>
+              <p class="solution-label">易错提醒</p>
+              <p>① <strong>同一特征值的特征向量不一定正交</strong>，漏掉施密特正交化这一步，$Q$ 就不是正交矩阵，考试直接扣掉一大半分；② 单位化时要<strong>每个分量都除以长度</strong>，$\frac{1}{\sqrt5}\begin{pmatrix}-2\\1\\0\end{pmatrix}$ 的分量是 $-\frac{2}{\sqrt5},\frac{1}{\sqrt5},0$；③ $Q$ 的列序必须与 $\Lambda$ 的对角元一一对应，本题 $\eta_1,\eta_2$ 都对应 $-1$，可以互换，但 $\eta_3$ 必须对应 $2$。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-item">
+          <div class="model-head"><span class="m-badge">模型 3</span>由特征值与特征向量反求实对称矩阵<span class="lv">考研</span></div>
+          <div class="model-body">
+            <div class="model-signal"><b>识别标志</b>
+              "设 $A$ 为 3 阶实对称矩阵，已知特征值、以及<strong>部分</strong>特征向量，求 $A$"。缺的那几个特征向量不用解 $(A-\lambda E)x=0$（$A$ 还未知，也解不了），而是用<strong>正交性</strong>反推。</div>
+            <div class="model-route"><b>标准套路</b>
+              ① 已知特征向量 $\alpha$ 属于某个特征值时，其余特征向量必与 $\alpha$ 正交，解齐次方程组 $\alpha^Tx=0$ 即得其余特征子空间；② 同一特征值内若有多个向量，先施密特正交化再全部单位化；③ 拼正交矩阵 $Q$，并用</div>
+            <p>$$A=Q\Lambda Q^T=\lambda_1\eta_1\eta_1^T+\lambda_2\eta_2\eta_2^T+\lambda_3\eta_3\eta_3^T$$</p>
+            <p>逐项相加得到 $A$（$\eta_i\eta_i^T$ 是秩 $1$ 矩阵，比矩阵乘法好算得多）；④ 回代 $A\xi_i=\lambda_i\xi_i$ 验算。</p>
+            <p><strong>例</strong>　设 3 阶实对称矩阵 $A$ 的特征值为 $\lambda_1=\lambda_2=1$（二重），$\lambda_3=-1$，已知 $\lambda_3$ 对应的特征向量为 $\alpha_3=\begin{pmatrix}1\\1\\1\end{pmatrix}$，求 $A$。</p>
+            <div class="solution">
+              <p class="solution-label">解</p>
+              <p><strong>第一步：用正交性找回缺失的特征向量。</strong>由定理 5.12 定理 2，$\lambda=1$ 的两个特征向量 $\xi_1,\xi_2$ 都必须与 $\alpha_3$ 正交，即</p>
+              <p>$$(\alpha_3,x)=x_1+x_2+x_3=0.$$</p>
+              <p>解这个齐次方程组（秩为 $1$，基础解系含 $3-1=2$ 个向量，与重数 $2$ 相符）：</p>
+              <p>$$\xi_1=\begin{pmatrix}1\\-1\\0\end{pmatrix},\qquad \xi_2=\begin{pmatrix}1\\0\\-1\end{pmatrix}.$$</p>
+              <p><strong>第二步：重根内部正交化。</strong>$(\xi_1,\xi_2)=1\ne0$，不正交。取 $\beta_1=\xi_1$，$(\beta_1,\beta_1)=2$，$(\xi_2,\beta_1)=1$，则</p>
+              <p>$$\beta_2=\xi_2-\frac{(\xi_2,\beta_1)}{(\beta_1,\beta_1)}\beta_1=\begin{pmatrix}1\\0\\-1\end{pmatrix}-\frac12\begin{pmatrix}1\\-1\\0\end{pmatrix}=\begin{pmatrix}1/2\\1/2\\-1\end{pmatrix}.$$</p>
+              <p><strong>验算</strong>：$(\beta_2,\beta_1)=\frac12-\frac12+0=0$ ✓。</p>
+              <p><strong>第三步：单位化。</strong>$\|\beta_1\|=\sqrt2$，$\|\beta_2\|=\sqrt{\frac14+\frac14+1}=\frac{\sqrt6}{2}$，$\|\alpha_3\|=\sqrt3$，于是</p>
+              <p>$$\eta_1=\frac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix},\qquad \eta_2=\frac{1}{\sqrt6}\begin{pmatrix}1\\1\\-2\end{pmatrix},\qquad \eta_3=\frac{1}{\sqrt3}\begin{pmatrix}1\\1\\1\end{pmatrix}.$$</p>
+              <p>（三个向量两两正交、都是单位向量，$Q=(\eta_1,\eta_2,\eta_3)$ 是正交矩阵，且 $Q^TAQ=\mathrm{diag}(1,1,-1)$。）</p>
+              <p><strong>第四步：反解 $A$。</strong>由 $Q^TAQ=\Lambda$ 得 $A=Q\Lambda Q^T=\eta_1\eta_1^T+\eta_2\eta_2^T-\eta_3\eta_3^T$。逐项算秩 $1$ 矩阵：</p>
+              <p>$$1\cdot\frac12\begin{pmatrix}1&-1&0\\-1&1&0\\0&0&0\end{pmatrix}+1\cdot\frac16\begin{pmatrix}1&1&-2\\1&1&-2\\-2&-2&4\end{pmatrix}-1\cdot\frac13\begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}.$$</p>
+              <p>逐元素相加：</p>
+              <p>$$a_{11}=\frac12+\frac16-\frac13=\frac13,\qquad a_{12}=-\frac12+\frac16-\frac13=-\frac23,\qquad a_{13}=0-\frac26-\frac13=-\frac23,$$</p>
+              <p>$$a_{22}=\frac12+\frac16-\frac13=\frac13,\qquad a_{23}=0-\frac26-\frac13=-\frac23,\qquad a_{33}=0+\frac46-\frac13=\frac13.$$</p>
+              <p>所以</p>
+              <p>$$A=\frac13\begin{pmatrix}1&-2&-2\\-2&1&-2\\-2&-2&1\end{pmatrix}.$$</p>
+              <p><strong>第五步：回代验算。</strong></p>
+              <p>$$A\alpha_3=\frac13\begin{pmatrix}1-2-2\\-2+1-2\\-2-2+1\end{pmatrix}=\frac13\begin{pmatrix}-3\\-3\\-3\end{pmatrix}=-\begin{pmatrix}1\\1\\1\end{pmatrix}=-1\cdot\alpha_3\ ✓$$</p>
+              <p>$$A\xi_1=\frac13\begin{pmatrix}1+2\\-2-1\\-2+2\end{pmatrix}=\frac13\begin{pmatrix}3\\-3\\0\end{pmatrix}=\begin{pmatrix}1\\-1\\0\end{pmatrix}=1\cdot\xi_1\ ✓$$</p>
+              <p>另外 $|A|=\frac{1}{27}\times(-27)=-1=1\times1\times(-1)$ ✓（行列式 $=\lambda_1\lambda_2\lambda_3$），$\mathrm{tr}(A)=\frac{1+1+1}{3}=1=1+1-1$ ✓，且 $A$ 显然对称 ✓。答案无误。</p>
+              <p class="solution-label">易错提醒</p>
+              <p>① 已知的那个特征向量属于<strong>单根</strong>（或已知某特征值的全部特征向量）时，其余向量的求法只有一句话："与已知向量正交"，即解 $\alpha^Tx=0$，不要试图去解 $(A-\lambda E)x=0$；② 反解 $A$ 用 $A=\sum\lambda_i\eta_i\eta_i^T$ 最省力，但 $\eta_i$ 必须是<strong>单位</strong>向量，忘了单位化会使结果整体差一个倍数；③ 最后一定要回代 $A\xi_i=\lambda_i\xi_i$，这是唯一能同时检查特征值和 $A$ 的验算。</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="quiz" data-quiz-id="ch5-2" data-title="5-2 对称矩阵的对角化 · 自测" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+        <p class="q-stem">设 $\alpha,\beta$ 为 $n$ 维实向量，下列说法中正确的是（　）。
+           <span class="en-line" lang="en">Let $\alpha,\beta$ be real $n$-dimensional vectors. Which of the following statements is correct?</span></p>
+        <ul class="options">
+        <li><span class="opt-body">零向量不能与任何向量正交</span></li>
+        <li><span class="opt-body">若 $(\alpha,\beta)=0$，则必有 $\alpha=0$ 或 $\beta=0$</span></li>
+        <li data-correct="true"><span class="opt-body">由非零向量组成的正交向量组一定线性无关</span></li>
+        <li><span class="opt-body">若 $\alpha\perp\beta$，则 $\|\alpha+\beta\|=\|\alpha\|+\|\beta\|$</span></li>
+        </ul>
+        <div class="q-explain">C 是定理 5.9：设 $k_1\alpha_1+\cdots+k_m\alpha_m=0$，与 $\alpha_i$ 作内积得 $k_i(\alpha_i,\alpha_i)=0$，因 $\alpha_i\ne0$ 故 $k_i=0$。<strong>A 错</strong>：$(\alpha,0)=0$ 对任何 $\alpha$ 成立，零向量与任何向量都正交；只是它<strong>不能</strong>被放进正交向量组（否则上面的证明失效，非零条件被破坏）。<strong>B 错</strong>：如 $\alpha=(1,0)$，$\beta=(0,1)$，内积为 $0$ 但两者都非零。<strong>D 错</strong>：正交时应是勾股定理 $\|\alpha+\beta\|^2=\|\alpha\|^2+\|\beta\|^2$；把它写成 $\|\alpha+\beta\|=\|\alpha\|+\|\beta\|$ 是把它当成了同向共线的情形。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="基础">
+        <p class="q-stem">下列矩阵中，是正交矩阵的是（　）。
+           <span class="en-line" lang="en">Which of the following matrices is an orthogonal matrix?</span></p>
+        <ul class="options">
+        <li><span class="opt-body">$\begin{pmatrix}1&1\\1&-1\end{pmatrix}$</span></li>
+        <li data-correct="true"><span class="opt-body">$\dfrac12\begin{pmatrix}\sqrt3&1\\-1&\sqrt3\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1&2\\2&1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}0&1\\0&1\end{pmatrix}$</span></li>
+        </ul>
+        <div class="q-explain">B 的两列是 $\frac12(\sqrt3,-1)^T$ 与 $\frac12(1,\sqrt3)^T$，长度都是 $\frac{\sqrt{3+1}}{2}=1$，内积是 $\frac{\sqrt3\cdot1+(-1)\cdot\sqrt3}{4}=0$，故为正交矩阵（它其实是旋转 $30^\circ$ 的矩阵，也等于 $\begin{pmatrix}\cos30^\circ&-\sin30^\circ\\\sin30^\circ&\cos30^\circ\end{pmatrix}$ 的转置，$|B|=1$）。<strong>A 错</strong>：两列 $(1,1)^T,(1,-1)^T$ 确实正交，但长度都是 $\sqrt2$ 而不是 $1$，单位化之前不是正交矩阵——这正是本节最经典的陷阱。<strong>C 错</strong>：两列内积 $1\times2+2\times1=4\ne0$，且长度都是 $\sqrt5$。<strong>D 错</strong>：两列相同，内积为 $2$，且矩阵不可逆（$|D|=0$），正交矩阵必须可逆。</div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="基础">
+        <p class="q-stem">设 $\alpha=\begin{pmatrix}1\\2\\2\end{pmatrix}$，则 $\|\alpha\|=$ ______。
+           <span class="en-line" lang="en">Let $\alpha=\begin{pmatrix}1\\2\\2\end{pmatrix}$. Then $\|\alpha\|=$ ______.</span></p>
+        <div class="q-answer" data-answer="3|3.0"></div>
+        <div class="q-explain">$\|\alpha\|=\sqrt{(\alpha,\alpha)}=\sqrt{1^2+2^2+2^2}=\sqrt{1+4+4}=\sqrt9=3$。常见错误：忘记开方写成 $9$；或把 $\|\alpha\|$ 与内积 $(\alpha,\alpha)$ 混为一谈。顺便记住 $\alpha$ 的单位化向量是 $\frac13(1,2,2)^T$，即 $(1/3,2/3,2/3)^T$——这个向量在第 6 章与正交对角化的题里出现频率极高。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+        <p class="q-stem">设 $\alpha_1=\begin{pmatrix}1\\1\\0\end{pmatrix}$，$\alpha_2=\begin{pmatrix}1\\0\\1\end{pmatrix}$，将它们正交化得 $\beta_1,\beta_2$（$\beta_1=\alpha_1$），则 $\beta_2=$（　）。
+           <span class="en-line" lang="en">Let $\alpha_1=\begin{pmatrix}1\\1\\0\end{pmatrix}$ and $\alpha_2=\begin{pmatrix}1\\0\\1\end{pmatrix}$. Orthogonalize them to get $\beta_1,\beta_2$ (with $\beta_1=\alpha_1$). Then $\beta_2=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1/2\\-1/2\\1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1\\0\\1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1/2\\1/2\\1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}3/2\\-1/2\\1\end{pmatrix}$</span></li>
+        </ul>
+        <div class="q-explain">按公式 $\beta_2=\alpha_2-\dfrac{(\alpha_2,\beta_1)}{(\beta_1,\beta_1)}\beta_1$。其中 $(\alpha_2,\beta_1)=1\times1+0\times1+1\times0=1$，$(\beta_1,\beta_1)=1+1+0=2$，故 $\beta_2=\begin{pmatrix}1\\0\\1\end{pmatrix}-\frac12\begin{pmatrix}1\\1\\0\end{pmatrix}=\begin{pmatrix}1/2\\-1/2\\1\end{pmatrix}$，且 $(\beta_2,\beta_1)=\frac12-\frac12+0=0$ ✓。<strong>B 错</strong>：这是原封不动的 $\alpha_2$，根本没做正交化，$(\alpha_2,\alpha_1)=1\ne0$。<strong>C 错</strong>：把减号写成了加号，这样的向量与 $\beta_1$ 的内积是 $\frac12+\frac12=1\ne0$。<strong>D 错</strong>：符号取反成 $2\alpha_2-\frac12\beta_1$，与 $\beta_1$ 的内积为 $\frac32-\frac12=1\ne0$，并不正交——正交化的关键是"减去投影"，不是"加上投影的相反数再补一份"。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+        <p class="q-stem">实对称矩阵的同一特征值对应的特征向量一定两两正交。
+           <span class="en-line" lang="en">For a real symmetric matrix, eigenvectors belonging to the same eigenvalue are necessarily pairwise orthogonal.</span></p>
+        <ul class="options">
+        <li><span class="opt-body">正确</span></li>
+        <li data-correct="true"><span class="opt-body">错误</span></li>
+        </ul>
+        <div class="q-explain">错误。定理 5.12 中的"特征向量相互正交"只对<strong>不同</strong>特征值成立。同一特征值 $\lambda$ 对应的全体特征向量构成特征子空间 $\ker(A-\lambda E)$，只要它的维数 $\ge2$，就一定能找到不正交的两个（随便取一组基通常就不正交，例如例 5.9 中 $\lambda=1$ 的两个特征向量 $(-2,1,0)^T$ 与 $(2,0,1)^T$，内积为 $-4$）。不过好消息是：可以通过施密特正交化把同一特征子空间内的基换成正交基，这也正是求正交矩阵 $Q$ 时必须做的一步。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+        <p class="q-stem">设 $A$ 为 $n$ 阶正交矩阵，则下列结论正确的有（　）。
+           <span class="en-line" lang="en">Let $A$ be an $n\times n$ orthogonal matrix. Which of the following conclusions are correct?</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$A^TA=E$</span></li>
+        <li data-correct="true"><span class="opt-body">$A$ 可逆，且 $A^{-1}=A^T$</span></li>
+        <li data-correct="true"><span class="opt-body">$|A|=1$ 或 $|A|=-1$</span></li>
+        <li data-correct="true"><span class="opt-body">$A$ 的列向量构成标准正交向量组</span></li>
+        <li><span class="opt-body">$A^2=E$</span></li>
+        </ul>
+        <div class="q-explain">前四条都是正交矩阵的定义或直接推论：$A^TA=E$ 即定义；两边取行列式得 $|A|^2=1$（用了 $|A^T|=|A|$）；$A^TA=E$ 说明 $A$ 可逆且逆就是 $A^T$；$A^TA$ 的第 $(i,j)$ 元恰是第 $i$ 列与第 $j$ 列的内积，它等于 $\delta_{ij}$ 正是"两两正交且长度为 $1$"。<strong>E 错</strong>：正交矩阵满足的是 $A^TA=E$，不是 $A^2=E$。反例：旋转矩阵 $A=\begin{pmatrix}\cos\theta&-\sin\theta\\\sin\theta&\cos\theta\end{pmatrix}$ 是正交矩阵，但 $A^2=\begin{pmatrix}\cos2\theta&-\sin2\theta\\\sin2\theta&\cos2\theta\end{pmatrix}\ne E$（只要 $\theta\ne0,\pi$）。$A^2=E$ 是"正交且对称"的矩阵（反射矩阵）的特殊性质，不能当作正交矩阵的通性。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 $A=\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$，则存在正交矩阵 $Q$ 使 $Q^TAQ=\Lambda$，其中 $\Lambda$ 可以是（　）。
+           <span class="en-line" lang="en">Let $A=\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$. Then there exists an orthogonal matrix $Q$ with $Q^TAQ=\Lambda$, where $\Lambda$ can be ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$\mathrm{diag}(1,1,4)$</span></li>
+        <li><span class="opt-body">$\mathrm{diag}(1,2,3)$</span></li>
+        <li><span class="opt-body">$\mathrm{diag}(0,3,3)$</span></li>
+        <li><span class="opt-body">$\mathrm{diag}(2,2,2)$</span></li>
+        </ul>
+        <div class="q-explain">$A$ 是实对称矩阵，故一定可正交对角化，$\Lambda$ 的对角元就是 $A$ 的全部特征值。$|A-\lambda E|=\begin{vmatrix}2-\lambda&1&1\\1&2-\lambda&1\\1&1&2-\lambda\end{vmatrix}=(1-\lambda)^2(4-\lambda)$，特征值为 $1,1,4$，故 A 对。<strong>用 $\mathrm{tr}$ 和 $|A|$ 快速排除其余选项</strong>：$\mathrm{tr}(A)=6$，$|A|=4$。B 的迹是 $6$ 但行列式是 $6\ne4$，排除；C 的迹是 $6$ 但行列式是 $0\ne4$，排除；D 的迹是 $6$ 但行列式是 $8\ne4$，排除。这个"两验算定答案"的做法在考场上能把四选一压缩成验算题。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+        <p class="q-stem">设 $A$ 为 3 阶实对称矩阵，则下列结论正确的有（　）。
+           <span class="en-line" lang="en">Let $A$ be a real $3\times3$ symmetric matrix. Which of the following conclusions are correct?</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$A$ 的特征值全是实数</span></li>
+        <li data-correct="true"><span class="opt-body">$A$ 的不同特征值对应的特征向量相互正交</span></li>
+        <li data-correct="true"><span class="opt-body">存在正交矩阵 $Q$ 使 $Q^{-1}AQ$ 为对角矩阵</span></li>
+        <li><span class="opt-body">$A$ 一定可逆</span></li>
+        <li data-correct="true"><span class="opt-body">若 $\lambda$ 是 $A$ 的 $k$ 重特征值，则 $\lambda$ 恰有 $k$ 个线性无关的特征向量</span></li>
+        </ul>
+        <div class="q-explain">A、B、C 是实对称矩阵的三个核心定理。E 也正确，而且是 C 成立的根本原因：实对称矩阵的几何重数恒等于代数重数（一般矩阵只有"几何重数 $\le$ 代数重数"），所以每个特征值都能贡献足额的特征向量，加起来正好 $n$ 个，正交化后就是 $Q$。<strong>D 错</strong>：实对称与可逆毫无关系——零矩阵 $O$ 是实对称的但不可逆，$\mathrm{diag}(1,0,2)$ 也是实对称且不可逆。判断可逆要看 $|A|=\prod\lambda_i$ 是否为零，而不是看对称性。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 $A$ 为 3 阶实对称矩阵，$\lambda=1$ 是二重特征值，对应的特征向量为 $\xi_1=\begin{pmatrix}1\\1\\0\end{pmatrix},\ \xi_2=\begin{pmatrix}1\\0\\1\end{pmatrix}$。则 $\lambda=2$ 对应的特征向量可取为（　）。
+           <span class="en-line" lang="en">Let $A$ be a real $3\times3$ symmetric matrix for which $\lambda=1$ is a double eigenvalue with eigenvectors $\xi_1=\begin{pmatrix}1\\1\\0\end{pmatrix},\ \xi_2=\begin{pmatrix}1\\0\\1\end{pmatrix}$. Then an eigenvector for $\lambda=2$ can be taken as ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1\\-1\\-1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1\\1\\-2\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}-1\\1\\0\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1\\-1\\1\end{pmatrix}$</span></li>
+        </ul>
+        <div class="q-explain">由定理 2，$\lambda=2$ 的特征向量必与 $\xi_1,\xi_2$ 都正交。设 $\xi_3=(x_1,x_2,x_3)^T$，则 $x_1+x_2=0$ 且 $x_1+x_3=0$，即 $x_2=x_3=-x_1$，取 $x_1=1$ 得 $(1,-1,-1)^T$ ✓（验算：$1-1+0=0$，$1+0-1=0$）。<strong>B 错</strong>：$(\xi_3,\xi_1)=1+1+0=2\ne0$，只与 $\xi_2$ 正交（$1+0-2=-1\ne0$，其实两个都不正交）。<strong>C 错</strong>：这是典型的"只满足一半条件"——$(\xi_3,\xi_1)=-1+1+0=0$ ✓，但 $(\xi_3,\xi_2)=-1+0+0=-1\ne0$ ✗，说明它落在 $\lambda=1$ 的特征子空间里，根本不是 $\lambda=2$ 的特征向量。<strong>D 错</strong>：$(\xi_3,\xi_1)=1-1+0=0$ ✓，但 $(\xi_3,\xi_2)=1+0+1=2\ne0$ ✗，同样只满足一半。做这类题必须<strong>对每一个已知特征向量都验证正交</strong>。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$，$k$ 为正整数，则 $A^k=$（　）。
+           <span class="en-line" lang="en">Let $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$ and let $k$ be a positive integer. Then $A^k=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$\dfrac12\begin{pmatrix}3^k+1&3^k-1\\3^k-1&3^k+1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\dfrac12\begin{pmatrix}3^k-1&3^k+1\\3^k+1&3^k-1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}3^k&0\\0&1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\dfrac12\begin{pmatrix}3^k+1&-3^k+1\\-3^k+1&3^k+1\end{pmatrix}$</span></li>
+        </ul>
+        <div class="q-explain">$A$ 是实对称矩阵，先正交对角化。$|A-\lambda E|=(2-\lambda)^2-1=\lambda^2-4\lambda+3=(\lambda-3)(\lambda-1)$，特征值为 $3,1$（验算 $\mathrm{tr}(A)=4=3+1$ ✓，$|A|=4-1=3=3\times1$ ✓）。对应的单位特征向量是 $\frac{1}{\sqrt2}(1,1)^T$ 与 $\frac{1}{\sqrt2}(1,-1)^T$，拼成正交矩阵 $Q=\frac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}$，则 $Q^TAQ=\mathrm{diag}(3,1)$。由 $A=Q\Lambda Q^T$ 得
+        $$A^k=Q\begin{pmatrix}3^k&0\\0&1\end{pmatrix}Q^T=\frac12\begin{pmatrix}3^k+1&3^k-1\\3^k-1&3^k+1\end{pmatrix}.$$
+        验算：$k=1$ 得 $\frac12\begin{pmatrix}4&2\\2&4\end{pmatrix}=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A$ ✓；$k=2$ 得 $\begin{pmatrix}5&4\\4&5\end{pmatrix}$，而 $A^2=\begin{pmatrix}5&4\\4&5\end{pmatrix}$ ✓。<strong>B 错</strong>：$k=1$ 时它给出 $\begin{pmatrix}1&2\\2&1\end{pmatrix}$，是对角元写反了（$3^k$ 与 $1$ 的位置互换）。<strong>C 错</strong>：这是对角化之后的 $\Lambda^k$，不是 $A^k$——$k=1$ 时它是 $\mathrm{diag}(3,1)$，而 $A$ 的非对角元是 $1$，明显不符。选择它说明忘掉了"还原"这一步 $A^k=Q\Lambda^kQ^T$。<strong>D 错</strong>：$k=1$ 时得 $\begin{pmatrix}2&-1\\-1&2\end{pmatrix}$，副对角元符号反了，它对应的特征值是 $-1$ 和 $3$（来自把某个投影系数的符号算错）。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 $A=\begin{pmatrix}4&2&2\\2&4&2\\2&2&4\end{pmatrix}$，$Q$ 为正交矩阵使 $Q^TAQ=\mathrm{diag}(8,2,2)$。若 $Q$ 的第 1 列取 $\dfrac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix}$，则 $Q$ 的第 2 列可以是（　）。
+           <span class="en-line" lang="en">Let $A=\begin{pmatrix}4&2&2\\2&4&2\\2&2&4\end{pmatrix}$ and let $Q$ be an orthogonal matrix with $Q^TAQ=\mathrm{diag}(8,2,2)$. If the first column of $Q$ is taken as $\dfrac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix}$, then the second column of $Q$ can be ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$\dfrac{1}{\sqrt6}\begin{pmatrix}1\\1\\-2\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\dfrac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\dfrac{1}{\sqrt3}\begin{pmatrix}1\\1\\1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\dfrac{1}{\sqrt6}\begin{pmatrix}1\\1\\2\end{pmatrix}$</span></li>
+        </ul>
+        <div class="q-explain">先看清 $\Lambda$ 的对角元顺序：$\mathrm{diag}(8,2,2)$ 要求第 1、2 列都对应 $\lambda=2$，第 3 列对应 $\lambda=8$。解 $(A-2E)x=0$：$A-2E=\begin{pmatrix}2&2&2\\2&2&2\\2&2&2\end{pmatrix}$，即 $x_1+x_2+x_3=0$，题给的第 1 列 $(1,-1,0)^T$ 确实落在这个平面内。第 2 列还必须与第 1 列<strong>正交</strong>（否则 $Q$ 不是正交矩阵），于是联立 $x_1+x_2+x_3=0$ 与 $x_1-x_2=0$，得 $x_1=x_2,\ x_3=-2x_1$，取 $(1,1,-2)$ 再单位化得 $\frac{1}{\sqrt6}(1,1,-2)$ ✓。验算：$A(1,1,-2)^T=(2,2,-4)^T=2(1,1,-2)^T$ ✓，且与第 1 列内积 $\frac{1}{\sqrt2\cdot\sqrt6}(1-1+0)=0$ ✓。<strong>B 错</strong>：它与第 1 列完全相同，内积为 $1$，两列不正交，$Q$ 就不是正交矩阵。<strong>C 错</strong>：$(1,1,1)^T$ 是 $\lambda=8$ 的特征向量（$A(1,1,1)^T=(8,8,8)^T$），它确实与第 1 列正交，但 $\mathrm{diag}(8,2,2)$ 要求前两列都对应 $\lambda=2$，把它放第 2 列会让对角元变成 $8$——"只验正交、不验特征值"是本题最典型的错法。<strong>D 错</strong>：它是单位向量、也与第 1 列正交，但 $1+1+2=4\ne0$，不在 $x_1+x_2+x_3=0$ 内；$A(1,1,2)^T=(10,10,12)^T$ 与 $(1,1,2)^T$ 不平行，根本不是特征向量。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 3 阶实对称矩阵 $A$ 的特征值为 $2,2,-1$，且 $\lambda=-1$ 对应的特征向量为 $\alpha=\begin{pmatrix}1\\1\\1\end{pmatrix}$，则 $A=$（　）。
+           <span class="en-line" lang="en">Let $A$ be a real $3\times3$ symmetric matrix with eigenvalues $2,2,-1$, and let $\alpha=\begin{pmatrix}1\\1\\1\end{pmatrix}$ be an eigenvector for $\lambda=-1$. Then $A=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1&-1&-1\\-1&1&-1\\-1&-1&1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}2&-1&-1\\-1&2&-1\\-1&-1&2\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}0&-1&-1\\-1&0&-1\\-1&-1&0\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$</span></li>
+        </ul>
+        <div class="q-explain">由定理 5.12 定理 2，$\lambda=2$ 的两个特征向量必与 $\alpha$ 正交，即都在平面 $x_1+x_2+x_3=0$ 内；把这三个互相正交的方向单位化后拼成正交矩阵 $Q$，则 $A=Q\Lambda Q^T=2(\eta_1\eta_1^T+\eta_2\eta_2^T)-1\cdot\eta_3\eta_3^T$，其中 $\eta_3=\frac{1}{\sqrt3}(1,1,1)^T$。关键一步：$\lambda=2$ 是二重根，$\eta_1\eta_1^T+\eta_2\eta_2^T=E-\eta_3\eta_3^T$（三个 $\eta_i\eta_i^T$ 加起来正好是 $E$），于是
+        $$A=2\left(E-\frac13J\right)-\frac13J=2E-J,$$
+        其中 $J$ 是全 $1$ 矩阵，即对角元 $2-1=1$、非对角元 $0-1=-1$，答案 A。验算：$A\alpha=(1-1-1,\ -1+1-1,\ -1-1+1)^T=-(1,1,1)^T$ ✓；$\mathrm{tr}(A)=3=2+2-1$ ✓；$|A|=2\times2\times(-1)=-4$，直接算 $1(1-1)-(-1)(-1-1)+(-1)(1+1)=0-2-2=-4$ ✓。<strong>B 错</strong>：$3E-J$ 的特征值是 $0,3,3$（迹为 $6$），与 $2,2,-1$ 不符——它来自把 $\eta_3\eta_3^T$ 的系数写成 $-1$ 而不是 $-3$。<strong>C 错</strong>：$E-J$ 的特征值是 $-2,1,1$，迹为 $0$。<strong>D 错</strong>：$J$ 的特征值是 $3,0,0$；它的迹虽然也是 $3$，但 $|A|=0$，而正确答案的行列式必须是 $-4$。做这类选择题不必真的把 $A$ 算出来，用"迹、行列式、把 $\alpha$ 回代"三条中的任意两条就能快速筛掉错项。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：主线是<strong>内积 → 正交 → 正交矩阵 → 实对称矩阵的正交对角化</strong>这一条链。开头几题练内积、正交向量组与正交矩阵的基本功，中间两题专挑"同一特征值的特征向量不一定正交"和施密特正交化的细节，卷末的考研题则直接落在考研大题的核心结论上。</p>
+          <p>最经典的错法有三个。① 只看两列正交就选正交矩阵，忘了还要求<strong>长度为 1</strong>。② 以为"实对称矩阵的特征向量两两正交"，而定理只保证<strong>不同</strong>特征值的特征向量正交；同一特征值内部必须自己做施密特正交化，这正是求 $Q$ 时不能省的一步。③ 反求特征向量时只对一个已知向量验证正交，本卷第 9 题的 C、D 两项就是"只满足一半"。</p>
+          <p>知识联系上，本节把第 4 章的"线性无关"升级成"两两正交"——约束更强，结论反而更易得到；求 $Q$ 的每一步又要回到第 3 章解 $(A-\lambda E)x=0$ 的流程。向后，它原封不动地成为第 6 章"用正交变换化二次型为标准形"的算法。</p>
+          <p>下一步：把例 5.9 那套"特征值 → 基础解系 → 同一特征值内正交化 → 单位化 → 拼 $Q$"完整默写一遍，特征值算完先用 $\sum\lambda_i=\mathrm{tr}(A)$ 与 $\prod\lambda_i=|A|$ 验算。评分细则里正交化与单位化各占独立分值，跳过必扣分。</p>
+        </div>
+
+      </div>
+
+      <!-- ======== 小节内容结束 ======== -->
+
+      <h2 id="final">第 5 章 · 综合测验</h2>
+      <p>本卷 10 题全部对标<strong>考研数学一</strong>难度，其中多道题是跨小节综合题，需要同时用到"特征值之和等于迹""$f(A)$ 与 $A^*$ 的特征值""实对称矩阵必可正交对角化""相似与等价的辨析"等多处结论。做题时请先想清楚该用哪条性质，再动笔算，不要在草稿纸上硬展开行列式。</p>
+
+      <div class="quiz" data-quiz-id="ch5-final" data-title="第 5 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="fill" data-level="基础">
+        <p class="q-stem">设 $A=\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$，则 $|A+E|=$ ______。
+           <span class="en-line" lang="en">Let $A=\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$. Then $|A+E|=$ ______.</span></p>
+        <div class="q-answer" data-answer="20|20.0"></div>
+        <div class="q-explain">$A$ 是实对称矩阵，其特征值全为实数。由 $|A-\lambda E|=(1-\lambda)^2(4-\lambda)$ 得特征值为 $1,1,4$（用 $\mathrm{tr}(A)=6=1+1+4$、$|A|=4=1\times1\times4$ 可双重验算）。$A+E$ 的特征值为每个特征值加 $1$，即 $2,2,5$，故 $|A+E|=2\times2\times5=20$。常见错误：① 直接对 $A+E$ 的九个元素硬展开行列式，容易算错；② 误用 $|A+E|=|A|+|E|=4+1=5$——行列式对加法不可拆；③ 漏掉二重特征值只乘一次，算成 $2\times5=10$。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+        <p class="q-stem">设 $A=\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$，$Q$ 是正交矩阵使 $Q^TAQ=\mathrm{diag}(1,1,4)$，则 $Q$ 的第 3 列（对应特征值 $4$）可以是（　）。
+           <span class="en-line" lang="en">Let $A=\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$ and let $Q$ be an orthogonal matrix with $Q^TAQ=\mathrm{diag}(1,1,4)$. Then the third column of $Q$ (corresponding to the eigenvalue $4$) can be ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$\dfrac{1}{\sqrt3}\begin{pmatrix}1\\1\\1\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\dfrac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\dfrac{1}{\sqrt6}\begin{pmatrix}1\\1\\-2\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\dfrac{1}{\sqrt3}\begin{pmatrix}1\\1\\-1\end{pmatrix}$</span></li>
+        </ul>
+        <div class="q-explain">$Q$ 的第 3 列必须是 $\lambda=4$ 对应的<strong>单位</strong>特征向量。解 $A-4E=\begin{pmatrix}-2&1&1\\1&-2&1\\1&1&-2\end{pmatrix}$，三行之和为零且任意两行不成比例，$R(A-4E)=2$，基础解系只含 $1$ 个向量；由 $x_1=x_2=x_3$ 取 $(1,1,1)^T$，单位化得 $\frac{1}{\sqrt3}(1,1,1)^T$。<strong>B 错</strong>：$(1,-1,0)^T$ 满足 $x_1+x_2+x_3=0$，是 $\lambda=1$ 的特征向量（$A(1,-1,0)^T=(1,-1,0)^T$），放在第 3 列会让对角元变成 $1$ 而不是 $4$。<strong>C 错</strong>：同理 $(1,1,-2)^T$ 也是 $\lambda=1$ 的特征向量（$A(1,1,-2)^T=(1,1,-2)^T$），只因为它与 $(1,1,1)^T$ 正交就选它，是把"正交"当成了"同属一个特征值"。<strong>D 错</strong>：$\frac{1}{\sqrt3}(1,1,-1)^T$ 确实是单位向量，但它根本不是特征向量——$A(1,1,-1)^T=(2,2,0)^T$，与 $(1,1,-1)^T$ 不平行。选特征向量必须先解 $(A-\lambda E)x=0$，不能只看"是不是单位向量、是不是与别的向量正交"。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+        <p class="q-stem">设 $A$ 为 3 阶矩阵，满足 $A^2=A$ 且 $R(A)=2$，则 $\mathrm{tr}(A)=$（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $A^2=A$ and $R(A)=2$. Then $\mathrm{tr}(A)=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$2$</span></li>
+        <li><span class="opt-body">$1$</span></li>
+        <li><span class="opt-body">$3$</span></li>
+        <li><span class="opt-body">$0$</span></li>
+        </ul>
+        <div class="q-explain">设 $Ax=\lambda x$（$x\ne0$），由 $A^2=A$ 得 $\lambda^2=\lambda$，故 $\lambda$ 只能是 $0$ 或 $1$。又 $A^2=A$ 说明 $A$ 是幂等矩阵，必可对角化（因 $A$ 相似于 $\mathrm{diag}(1,\dots,1,0,\dots,0)$，其中 $1$ 的个数就是 $R(A)$）。于是 $A$ 的特征值中有 $R(A)=2$ 个 $1$、其余为 $0$，即 $1,1,0$，故 $\mathrm{tr}(A)=1+1+0=2$。<strong>B 错</strong>：把"1 的个数"当成了 $1$ 个，忽略了 $R(A)=2$。<strong>C 错</strong>：以为 3 阶矩阵的特征值全是 $1$（那对应 $A=E$，此时 $R(A)=3$ 而非 $2$）。<strong>D 错</strong>：把它当成幂零矩阵；若特征值全为 $0$，则 $A$ 与 $O$ 相似进而 $A=O$，$R(A)=0$，与 $R(A)=2$ 矛盾。</div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="中等">
+        <p class="q-stem">若同阶矩阵 $A$ 与 $B$ 有相同的特征值，则 $A$ 与 $B$ 一定相似。
+           <span class="en-line" lang="en">If square matrices $A$ and $B$ of the same order have the same eigenvalues, then $A$ and $B$ are necessarily similar.</span></p>
+        <ul class="options">
+        <li><span class="opt-body">正确</span></li>
+        <li data-correct="true"><span class="opt-body">错误</span></li>
+        </ul>
+        <div class="q-explain">错误。"特征值相同"只是相似的<strong>必要</strong>条件，不是充分条件。反例：$A=\begin{pmatrix}1&0\\0&1\end{pmatrix}$ 与 $B=\begin{pmatrix}1&1\\0&1\end{pmatrix}$ 的特征值都是 $1,1$（$B$ 是上三角，对角线元素即特征值），但 $A$ 可对角化而 $B$ 不可对角化，故二者不相似。正确的是：$A\sim B$ 当且仅当它们有相同的 Jordan 标准形——对 2 阶而言，还需比较"能否对角化"这一信息。（顺便提醒一个易混点：$A$ 与 $A^T$ 的确一定相似，但理由是另一套推导，不能用"特征值相同"来证明。）</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 3 阶矩阵 $A$ 的每行元素之和均为 $2$，且 $\mathrm{tr}(A)=5$，$|A|=2$。则 $\mathrm{tr}(A^2)=$（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix whose rows each add up to $2$, with $\mathrm{tr}(A)=5$ and $|A|=2$. Then $\mathrm{tr}(A^2)=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$11$</span></li>
+        <li><span class="opt-body">$13$</span></li>
+        <li><span class="opt-body">$7$</span></li>
+        <li><span class="opt-body">$25$</span></li>
+        </ul>
+        <div class="q-explain">"每行元素之和均为 $2$" 等价于 $A(1,1,1)^T=2(1,1,1)^T$，即 $\lambda_1=2$ 是特征值。设另两个特征值为 $\lambda_2,\lambda_3$：由 $\mathrm{tr}(A)=5$ 得 $\lambda_2+\lambda_3=5-2=3$；由 $|A|=2$ 得 $2\lambda_2\lambda_3=2$，即 $\lambda_2\lambda_3=1$。于是 $\mathrm{tr}(A^2)=\lambda_1^2+\lambda_2^2+\lambda_3^2=4+[(\lambda_2+\lambda_3)^2-2\lambda_2\lambda_3]=4+(9-2)=11$。<strong>B 错</strong>：$13=4+9$，直接把 $(\lambda_2+\lambda_3)^2=9$ 当成了 $\lambda_2^2+\lambda_3^2$，漏掉交叉项 $-2\lambda_2\lambda_3$。<strong>C 错</strong>：$7=(\lambda_2+\lambda_3)^2-2\lambda_2\lambda_3=9-2$，算出了 $\lambda_2^2+\lambda_3^2$ 却忘了再加上 $\lambda_1^2=4$。<strong>D 错</strong>：$25=(\mathrm{tr}A)^2$，把 $\mathrm{tr}(A^2)$ 与 $(\mathrm{tr}A)^2$ 混为一谈，二者一般不相等（只有当矩阵可正交对角化且特征值同号时才可能相等，这里是 $11\ne25$）。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 3 阶矩阵 $A$ 与 $B=\mathrm{diag}(1,2,3)$ 相似，则 $|A^*+2E|=$（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix similar to $B=\mathrm{diag}(1,2,3)$. Then $|A^*+2E|=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$160$</span></li>
+        <li><span class="opt-body">$44$</span></li>
+        <li><span class="opt-body">$36$</span></li>
+        <li><span class="opt-body">$17$</span></li>
+        </ul>
+        <div class="q-explain">相似矩阵有相同的特征值，故 $A$ 的特征值为 $1,2,3$，$|A|=1\times2\times3=6\ne0$，$A$ 可逆。由 $A^*=|A|A^{-1}$ 知 $A^*$ 的特征值为 $\frac{|A|}{\lambda}$，即 $6,\ 3,\ 2$；再加 $2E$ 得 $8,\ 5,\ 4$。所以 $|A^*+2E|=8\times5\times4=160$。<strong>B 错</strong>：$44=36+8$，即把行列式拆成 $|A^*|+|2E|=|A|^{3-1}+2^3$，行列式对加法<strong>不可拆</strong>。<strong>C 错</strong>：$36=|A|^{n-1}=6^2$，这是 $|A^*|$，忘了题目问的是 $A^*+2E$；注意 $|A^*+2E|\ne|A^*|+|2E|$。<strong>D 错</strong>：$17=8+5+4$，把 $A^*+2E$ 的特征值相加当成了行列式，而"特征值之和"是迹不是行列式（这里 $\mathrm{tr}(A^*+2E)=17$ 恰好也算对了，但答非所问）。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+        <p class="q-stem">设 $A$ 为 3 阶实对称矩阵，$Q$ 为正交矩阵，且 $Q^TAQ=\mathrm{diag}(1,2,3)$，则下列命题正确的有（　）。
+           <span class="en-line" lang="en">Let $A$ be a real symmetric $3\times3$ matrix and let $Q$ be an orthogonal matrix with $Q^TAQ=\mathrm{diag}(1,2,3)$. Which of the following statements are correct?</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$A$ 的三个特征值为 $1,2,3$，且 $A$ 可逆</span></li>
+        <li data-correct="true"><span class="opt-body">$Q$ 的第 2 列是 $A$ 的属于特征值 $2$ 的单位特征向量</span></li>
+        <li data-correct="true"><span class="opt-body">把 $Q$ 的第 1 列与第 3 列对调，得到的矩阵仍正交，且对应的对角矩阵变成 $\mathrm{diag}(3,2,1)$</span></li>
+        <li data-correct="true"><span class="opt-body">$\mathrm{tr}(A)=6$ 且 $|A|=6$</span></li>
+        <li><span class="opt-body">把 $Q$ 换成 $-Q$，则 $Q^TAQ$ 变成 $\mathrm{diag}(-1,-2,-3)$</span></li>
+        </ul>
+        <div class="q-explain"><strong>A 对</strong>：$A$ 是实对称矩阵，由定理 5.12 一定可正交对角化，$Q^TAQ$ 的对角元就是 $A$ 的全部特征值；三个特征值 $1,2,3$ 全不为零，故 $|A|=1\times2\times3=6\ne0$，$A$ 可逆。<strong>B 对</strong>：$Q^TAQ=\Lambda$ 等价于 $AQ=Q\Lambda$，比较第 2 列得 $Aq_2=2q_2$，即 $q_2$ 是 $\lambda=2$ 的特征向量；又 $Q$ 正交，每列长度为 $1$，故 $q_2$ 是单位向量。<strong>C 对</strong>：设 $P$ 是交换第 1、3 列的初等矩阵，则 $P$ 也是正交矩阵，$(QP)^TA(QP)=P^T\Lambda P$，正是把 $\Lambda$ 的第 1、3 两个对角元也对调，即 $\mathrm{diag}(3,2,1)$；正交矩阵的乘积仍正交。<strong>D 对</strong>：相似变换保持迹与行列式，而 $Q^TAQ$ 与 $A$ 相似（$Q^{-1}=Q^T$），故 $\mathrm{tr}(A)=\mathrm{tr}(\Lambda)=1+2+3=6$、$|A|=|\Lambda|=6$（也就是"特征值之和等于迹、之积等于行列式"）。<strong>E 错</strong>：$(-Q)^TA(-Q)=Q^TAQ=\Lambda$，负号出现两次正好抵消，对角矩阵不变。这是最常见的符号陷阱——正交矩阵乘 $-1$ 仍是正交矩阵，对 $A$ 的作用却完全一样。</div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="考研">
+        <p class="q-stem">设 $A$ 为 3 阶矩阵，则下列条件中，能保证 $A$ 可对角化的有（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix. Which of the following conditions guarantee that $A$ is diagonalizable?</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$A$ 有 3 个互不相同的特征值</span></li>
+        <li data-correct="true"><span class="opt-body">$A$ 是实对称矩阵</span></li>
+        <li data-correct="true"><span class="opt-body">$A$ 的每个 $k$ 重特征值 $\lambda$ 都满足 $R(A-\lambda E)=3-k$</span></li>
+        <li><span class="opt-body">$A$ 有 3 个特征值（按重数计）</span></li>
+        <li><span class="opt-body">$A$ 可逆</span></li>
+        </ul>
+        <div class="q-explain">前三项都对：第一项是定理 5.6（互异特征值对应的特征向量线性无关，共得 3 个）；第二项是实对称矩阵的核心定理；第三项 $R(A-\lambda E)=3-k$ 等价于 $3-R(A-\lambda E)=k$，即"几何重数 = 代数重数"，正是可对角化的充要条件（定理 5.5），注意它要求对<strong>每一个</strong>特征值都成立，只验一部分不够。<strong>第四项错</strong>：这是最经典的陷阱——$n$ 阶矩阵的特征多项式是 $n$ 次的，在复数域内按重数计<strong>永远</strong>有 $n$ 个特征值，这个条件对任何方阵都成立，等于什么都没说；正确说法是"有 $n$ 个<strong>线性无关</strong>的特征向量"，反例 $\begin{pmatrix}1&1\\0&1\end{pmatrix}$。<strong>第五项错</strong>：可逆 $\iff|A|\ne0\iff$ 特征值全不为零，这只约束特征值的<em>取值</em>，不约束特征向量的<em>个数</em>。反例 $\begin{pmatrix}1&1&0\\0&1&0\\0&0&2\end{pmatrix}$：它可逆（特征值 $1,1,2$），但 $\lambda=1$ 是二重根而 $R(A-E)=2$，只给出 $3-2=1$ 个线性无关特征向量，不可对角化。（顺带说明：它的特征值 $1,1,2$ 全为实数，所以"特征值全为实数"同样推不出可对角化。）</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 3 阶矩阵 $A$ 满足 $A^2-5A+6E=O$，且 $|A|=12$，则 $|A+E|=$（　）。
+           <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix satisfying $A^2-5A+6E=O$ with $|A|=12$. Then $|A+E|=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$36$</span></li>
+        <li><span class="opt-body">$12$</span></li>
+        <li><span class="opt-body">$13$</span></li>
+        <li><span class="opt-body">$27$</span></li>
+        </ul>
+        <div class="q-explain">设 $Ax=\lambda x$（$x\ne0$），把等式作用在 $x$ 上得 $(\lambda^2-5\lambda+6)x=0$，故 $\lambda^2-5\lambda+6=(\lambda-2)(\lambda-3)=0$，特征值只能是 $2$ 或 $3$。再定重数：设 3 个特征值中有 $a$ 个 $2$、$b$ 个 $3$（$a+b=3$），由 $\prod\lambda_i=|A|$ 得 $2^a3^b=12=2^2\cdot3$，故 $a=2,\ b=1$，三个特征值为 $2,2,3$。于是 $A+E$ 的特征值为 $2+1=3$、$2+1=3$、$3+1=4$，所以 $|A+E|=3\times3\times4=36$。<strong>B 错</strong>：$12=3\times4$，只把 $2,3$ 两个根各加 $1$ 后相乘，漏掉了二重根——$f(\lambda)$ 的根只是候选值，重数必须用 $|A|$ 或 $\mathrm{tr}(A)$ 定下来。<strong>C 错</strong>：$13=|A|+|E|=12+1$，把行列式当成对加法可拆，而 $|A+E|\ne|A|+|E|$。<strong>D 错</strong>：$27=3\times3\times3$，误以为 $A+E$ 的三个特征值全是 $3$（等价于误以为 $A$ 的特征值全是 $2$，但那时 $|A|=8\ne12$）。</div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+        <p class="q-stem">设 $A=\begin{pmatrix}1&1\\0&2\end{pmatrix}$，$k$ 为正整数，则 $A^k=$（　）。
+           <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&1\\0&2\end{pmatrix}$ and let $k$ be a positive integer. Then $A^k=$ ( ).</span></p>
+        <ul class="options">
+        <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1&2^k-1\\0&2^k\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1&2^k\\0&2^k\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1&0\\0&2^k\end{pmatrix}$</span></li>
+        <li><span class="opt-body">$\begin{pmatrix}1&2^k-1\\0&1\end{pmatrix}$</span></li>
+        </ul>
+        <div class="q-explain">$A$ 是上三角矩阵，对角线元素就是特征值：$\lambda_1=1,\lambda_2=2$，两者互不相同，故 $A$ 可对角化。求特征向量：$\lambda=1$ 时 $A-E=\begin{pmatrix}0&1\\0&1\end{pmatrix}$，由 $x_2=0$ 取 $\xi_1=\begin{pmatrix}1\\0\end{pmatrix}$；$\lambda=2$ 时 $A-2E=\begin{pmatrix}-1&1\\0&0\end{pmatrix}$，由 $x_1=x_2$ 取 $\xi_2=\begin{pmatrix}1\\1\end{pmatrix}$。于是 $P=\begin{pmatrix}1&1\\0&1\end{pmatrix}$，$P^{-1}=\begin{pmatrix}1&-1\\0&1\end{pmatrix}$（$|P|=1$），且 $P^{-1}AP=\begin{pmatrix}1&0\\0&2\end{pmatrix}=\Lambda$。故
+        $$A^k=P\Lambda^kP^{-1}=\begin{pmatrix}1&1\\0&1\end{pmatrix}\begin{pmatrix}1&0\\0&2^k\end{pmatrix}\begin{pmatrix}1&-1\\0&1\end{pmatrix}=\begin{pmatrix}1&2^k-1\\0&2^k\end{pmatrix}.$$
+        验算：$k=1$ 得 $\begin{pmatrix}1&1\\0&2\end{pmatrix}=A$ ✓；$k=2$ 得 $\begin{pmatrix}1&3\\0&4\end{pmatrix}$，而 $A^2=\begin{pmatrix}1&1\\0&2\end{pmatrix}^2=\begin{pmatrix}1&1+2\\0&4\end{pmatrix}=\begin{pmatrix}1&3\\0&4\end{pmatrix}$ ✓。<strong>B 错</strong>：$k=1$ 时是 $\begin{pmatrix}1&2\\0&2\end{pmatrix}\ne A$，右上角少减了 $1$（化简 $P\Lambda^kP^{-1}$ 时漏掉 $P^{-1}$ 右上角的 $-1$）。<strong>C 错</strong>：这是 $P^{-1}AP$ 的结果 $\Lambda^k$，不是 $A^k$——忘了"还原"这一步，$k=1$ 时它给出 $\mathrm{diag}(1,2)$，与 $A$ 的右上角元素 $1$ 明显不符。<strong>D 错</strong>：$k=1$ 时是 $\begin{pmatrix}1&1\\0&1\end{pmatrix}\ne A$，把右下角的 $2^k$ 写丢了（只对第一个对角元求了幂）。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这是整章的收官卷，$10$ 道题全部对标考研数学一。主线是<strong>把矩阵问题翻译成数的问题</strong>——求 $|f(A)|$、求 $\mathrm{tr}(A^2)$、判断可对角化、比较相似与等价，四类题共用一套换算：$\lambda$ 是 $A$ 的特征值，则 $f(\lambda)$ 是 $f(A)$ 的特征值、$|A|/\lambda$ 是 $A^*$ 的特征值，而 $\sum\lambda_i=\mathrm{tr}(A)$、$\prod\lambda_i=|A|$ 恒成立。</p>
+          <p>最常见的错法出在"拆"与"混"上：把 $|A+E|$ 拆成 $|A|+|E|$、把 $|A^*+2E|$ 拆成 $|A^*|+|2E|$，本卷两题都埋了这类干扰项；把 $\mathrm{tr}(A^2)$ 与 $(\mathrm{tr}A)^2$ 混为一谈，或在 $(\lambda_2+\lambda_3)^2$ 中漏掉交叉项；还有把"特征值相同"当成相似——要记住<strong>相似一定等价（同秩），等价却推不出相似</strong>：$\begin{pmatrix}1&0\\0&0\end{pmatrix}$ 与 $\begin{pmatrix}2&0\\0&0\end{pmatrix}$ 秩都是 $1$，等价但不相似。</p>
+          <p>学完本章，你应当能做到三件事：用对角化求 $A^k$、按"几何重数是否等于代数重数"判断可否对角化、对实对称矩阵作正交对角化。最后一件正是第 6 章的入口——令 $x=Qy$ 代入 $x^TAx$，交叉项立刻消失，得到标准形。</p>
+          <p>下一步：凡有失分，先回到"求特征值"那一步重算，并用 $\sum\lambda_i=\mathrm{tr}(A)$ 与 $\prod\lambda_i=|A|$ 双验算，这是本章唯一免费的检查手段。之后带着"$A$ 在不断拉伸平面、特征向量是方向不变的那些方向"的几何图像进入第 6 章，二次型的许多结论会立刻变得直观。</p>
+        </div>
+
+      </div>
+
+            <!-- SHELL:BOTTOMNAV -->
+      <nav class="chapter-nav">
+        <a class="prev" href="la4.html"><span class="dir">← 上一页</span><span class="ttl">第 4 章 向量组与解的结构</span></a>
+        <a class="next" href="la6.html"><span class="dir">下一页 →</span><span class="ttl">第 6 章 二次型</span></a>
+      </nav>
+      <!-- /SHELL:BOTTOMNAV -->
+
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <p><strong>线性代数学习站</strong> · 按「一高数」课程顺序编排</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="../assets/js/plot.js"></script>
+<script src="../assets/js/videos.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script src="../assets/js/course-data.js"></script>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/theme.js"></script>
+
+</body>
+</html>
