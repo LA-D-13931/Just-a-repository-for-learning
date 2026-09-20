@@ -71,6 +71,31 @@
 
 ---
 
+## 三·补、多科目结构（第 35-37 节：线性代数并入）
+
+本站现在是**双科目**站点，两个科目**共用**同一套外壳 / 引擎 / 样式 / 数据源。
+
+| 科目 | 章节 | 入口 | 语言 |
+|---|---|---|---|
+| 高等数学 | `chapters/ch1..ch12.html`、`supp1.html`（13 章 82 节） | 顶层 `chapters` | 中英对照（`lang: "both"`） |
+| 线性代数 | `chapters/la1..la6.html`（6 章 21 节） | `subjects[linearAlgebra].chapters` | **纯中文**（`lang: "zh"`；源项目正文为中英混排，类名适配待做） |
+
+**关键约定**
+
+1. **命名不碰撞**：线代页 `data-page` 用 `la1..la6`，高数用 `ch1..ch12`。
+   两者若同名，`currentChapter()` 会把线代页误判成高数页，
+   「已掌握」按钮与进度统计会错乱。
+2. **科目感知**：`site.js` 的 `COURSE` 按 `<body data-subject>` 解析；
+   未标者回退顶层 `chapters`（= 高数）。
+3. **进度隔离**：高数用 `advmath.*` 键，线代用 `linalg.*` 键，互不污染。
+4. **切换入口**：顶栏品牌区（`setupSubjectSwitcher()`），列表来自 `COURSE_DATA.subjects`，
+   不硬编码；`ready:false` 的科目显示「待并入」且不做无效跳转。
+
+**当前未做**：线代的 `index.html` / `cheatsheet.html` / `exam.html` 尚未并入；
+线代页的中英切换类名适配（源项目用 `.bi-en`，高数用 `.en`/`.zh`）尚未做。
+
+---
+
 ## 四、数据流
 
 ```
