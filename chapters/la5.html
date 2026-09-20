@@ -17,6 +17,57 @@
 </script>
 <script id="MathJax-script" async src="../assets/js/vendor/tex-svg.js"></script>
 <script>
+/* 第 5 章图：特征向量的几何直观（5-1 节）。
+   矩阵 A=[[3,1],[1,3]] 的两个特征方向 (1,1)、(1,-1)，特征值 4、2；
+   对照方向 (1,0) 被拧成 (3,1)。verify 校验 A·v = λv，防止画成示意图。 */
+(function () {
+  'use strict';
+  var tries = 0;
+  function ready(fn) {
+    if (window.Plot) { fn(); return; }
+    if (++tries > 80) return;
+    setTimeout(function () { ready(fn); }, 50);
+  }
+  ready(function () {
+    var host = document.getElementById('fig-eigen-explore');
+    if (!host) return;
+    Plot.render(host, {
+      aria: '特征向量的几何直观：两个特征方向在矩阵作用下方向不变只被伸缩',
+      width: 560, height: 400, maxWidth: 700,
+      x: [-1.4, 5.0], y: [-2.0, 4.6],
+      axes: { x: { step: 1, label: 'x' }, y: { step: 1, label: 'y' } },
+      padding: { l: 46, r: 30, t: 26, b: 44 },
+      legend: [ { c: 'brand', t: '特征方向（方向不变）' },
+                { c: 'soft', t: '普通方向（方向被拧）' } ],
+      legendOutside: 'bottom',
+      elements: [
+        /* 两个特征方向：A·(1,1)=4(1,1)、A·(1,-1)=2(1,-1) */
+        { type: 'vector', from: [0,0], to: [1,1], color: 'brand', width: 2.4 },
+        { type: 'vector', from: [0,0], to: [4,4], color: 'brand', width: 2.4, dash: true },
+        { type: 'label', at: [4.12, 4.05], text: '(1,1) 放大 4 倍', color: 'brand' },
+        { type: 'vector', from: [0,0], to: [1,-1], color: 'brand', width: 2.4 },
+        { type: 'vector', from: [0,0], to: [2,-2], color: 'brand', width: 2.4, dash: true },
+        { type: 'label', at: [2.12, -1.95], text: '(1,-1) 放大 2 倍', color: 'brand' },
+        /* 非特征方向作对照：A·(1,0)=(3,1)，方向变了 */
+        { type: 'vector', from: [0,0], to: [1,0], color: 'soft', width: 2.0 },
+        { type: 'vector', from: [0,0], to: [3,1], color: 'soft', width: 2.0, dash: true },
+        { type: 'label', at: [3.1, 1.02], text: '(1,0) → (3,1) 方向变了', color: 'soft' },
+        { type: 'point', at: [4,4], color: 'brand', r: 3.5 },
+        { type: 'point', at: [2,-2], color: 'brand', r: 3.5 },
+        { type: 'point', at: [3,1], color: 'soft', r: 3.5 }
+      ],
+      /* 校验 A·v = λv：两个特征方向必须严格同向 */
+      verify: function () {
+        var A = function (v) { return [3*v[0] + 1*v[1], 1*v[0] + 3*v[1]]; };
+        var v1 = A([1,1]), v2 = A([1,-1]);
+        if (Math.abs(v1[0] - 4) > 1e-9 || Math.abs(v1[1] - 4) > 1e-9) throw new Error('特征方向 (1,1) 校验失败');
+        if (Math.abs(v2[0] - 2) > 1e-9 || Math.abs(v2[1] + 2) > 1e-9) throw new Error('特征方向 (1,-1) 校验失败');
+      }
+    });
+  });
+})();
+</script>
+<script>
   (function () {
     /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
     if (/[?&]eager=1/.test(location.search)) return;
@@ -200,7 +251,10 @@
         <p>注意一个反直觉的事实：<strong>特征向量不一定存在（实数意义下）</strong>。旋转矩阵 $\begin{pmatrix}0&-1\\1&0\end{pmatrix}$ 把每个非零向量都转 $90^\circ$，没有任何方向能保持不变——所以它在实数域内没有特征值。这正是下一节要专门讨论"实对称矩阵"的原因：实对称矩阵一定有实特征值，而且特征方向还互相垂直。</p>
       </div>
 
-      <div class="viz" data-viz="eigen-explore" data-matrix="3,1;1,3" data-vec="1,0.5"></div>
+      <figure class="plot-figure">
+        <div id="fig-eigen-explore"></div>
+        <figcaption>图 1　特征向量的几何直观。取 $A=\begin{pmatrix}3&1\\ 1&3\end{pmatrix}$，画三条过原点的方向：方向 $(1,1)$ 被 $A$ 作用后仍是 $(1,1)$ 方向，只放大 $4$ 倍；方向 $(1,-1)$ 只放大 $2$ 倍；而方向 $(1,0)$ 被"拧"成了 $(3,1)$，方向变了。前两条就是特征方向（特征值分别为 $4$、$2$），第三条不是——这正是"特征向量 = 矩阵作用下最听话的方向"。</figcaption>
+      </figure>
 
       <div class="box link-box">
         <div class="box-title"><span class="ico">🔗</span>知识关联：这一节把前四章串了起来</div>
