@@ -1131,12 +1131,12 @@
             "en": "Determinants"
           },
           "sections": [
-            "s1-1",
-            "s1-2",
-            "s1-3",
-            "s1-4",
-            "s1-5",
-            "s1-6"
+            "la-s1-1",
+            "la-s1-2",
+            "la-s1-3",
+            "la-s1-4",
+            "la-s1-5",
+            "la-s1-6"
           ],
           "sectionHours": [
             1.9,
@@ -1195,10 +1195,10 @@
             "en": "Matrices"
           },
           "sections": [
-            "s2-1",
-            "s2-2",
-            "s2-3",
-            "s2-4"
+            "la-s2-1",
+            "la-s2-2",
+            "la-s2-3",
+            "la-s2-4"
           ],
           "sectionHours": [
             2.9,
@@ -1245,9 +1245,9 @@
             "en": "Systems of Linear Equations and Elementary Transformations"
           },
           "sections": [
-            "s3-1",
-            "s3-2",
-            "s3-3"
+            "la-s3-1",
+            "la-s3-2",
+            "la-s3-3"
           ],
           "sectionHours": [
             1.9,
@@ -1288,9 +1288,9 @@
             "en": "Vector Groups and Structure of Solutions"
           },
           "sections": [
-            "s4-1",
-            "s4-2",
-            "s4-3"
+            "la-s4-1",
+            "la-s4-2",
+            "la-s4-3"
           ],
           "sectionHours": [
             2.9,
@@ -1331,8 +1331,8 @@
             "en": "Eigenvalues and Diagonalization of Matrices"
           },
           "sections": [
-            "s5-1",
-            "s5-2"
+            "la-s5-1",
+            "la-s5-2"
           ],
           "sectionHours": [
             5.0,
@@ -1367,9 +1367,9 @@
             "en": "Quadratic Forms"
           },
           "sections": [
-            "s6-1",
-            "s6-2",
-            "s6-3"
+            "la-s6-1",
+            "la-s6-2",
+            "la-s6-3"
           ],
           "sectionHours": [
             2.4,

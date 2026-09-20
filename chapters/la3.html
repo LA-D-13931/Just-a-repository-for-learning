@@ -145,6 +145,8 @@
         </div>
         <div class="toc-group">
           <div class="toc-title">工具</div>
+          <a class="toc-chapter" href="../cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter" href="../exam.html">综合自测卷</a>
         </div>
       </aside>
       <!-- /SHELL:SIDEBAR -->
@@ -160,7 +162,11 @@
 
       <!-- ======== 以下为小节内容 ======== -->
 
-      <h2 id="s3-1" data-hours="1.9">3-1 克拉默法则</h2>
+      <h2 id="la-s3-1" data-hours="1.9"
+          data-video-map="la-s3-1"
+          data-video-title="《线性代数》全程教学视频（一高数）">3-1 克拉默法则</h2>
+
+      <div data-video-entry="la-s3-1" data-video-pos="top"></div>
 
       <p>第 1 章我们把 $n$ 阶行列式算得很熟，第 2 章又建立了矩阵语言，但这两样工具还没有真正解决过一个方程组。本节给出第一个答案：当方程个数恰好等于未知量个数、且系数矩阵的行列式不为零时，方程组有唯一解，而且每个未知数都能用两个行列式的商显式写出来。这个结论的价值不在「算得快」，而在于它第一次把「解是否存在、是否唯一」变成了一个可以用行列式判定的问题。它的局限同样明显——只认方阵、只认 $D\ne0$——把这个局限补掉，正是 3-2 节的任务。</p>
 
@@ -186,8 +192,8 @@
         为 <span class="term">n 元线性方程组</span>。其中 $a_{ij}$ 称为<span class="term">系数</span>，$b_i$ 称为<span class="term">常数项</span>。若常数项 $b_1=b_2=\cdots=b_n=0$，则称为<span class="term">齐次线性方程组</span>；否则称为<span class="term">非齐次线性方程组</span>。</p>
         <p>记系数矩阵为 $A=(a_{ij})_{n\times n}$，常数项列向量 $b=(b_1,\ldots,b_n)^T$，则方程组可写成矩阵形式 $Ax=b$。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 3.1</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 3.1</span>
              <strong>Standard Form of a Linear System.</strong>
              A system consisting of $n$ equations in the $n$ unknowns $x_1,x_2,\ldots,x_n$, written as
              $$\begin{cases} a_{11}x_1 + a_{12}x_2 + \cdots + a_{1n}x_n = b_1 \\ a_{21}x_1 + a_{22}x_2 + \cdots + a_{2n}x_n = b_2 \\ \qquad \vdots \\ a_{n1}x_1 + a_{n2}x_2 + \cdots + a_{nn}x_n = b_n \end{cases}$$
@@ -196,7 +202,7 @@
              <span class="en-term">constant terms</span>. If $b_1=b_2=\cdots=b_n=0$ the system is called
              <span class="en-term">homogeneous</span>; otherwise it is called a
              <span class="en-term">nonhomogeneous system</span>.</p>
-          <p>Writing $A=(a_{ij})_{n\times n}$ for the coefficient matrix and $b=(b_1,\ldots,b_n)^T$ for the column
+          <p class="en">Writing $A=(a_{ij})_{n\times n}$ for the coefficient matrix and $b=(b_1,\ldots,b_n)^T$ for the column
              vector of constant terms, the system can be written in matrix form as $Ax=b$.</p>
         </div>
       </div>
@@ -204,26 +210,26 @@
       <div class="box thm-box">
         <div class="box-title"><span class="ico">📐</span>定理 3.1　克拉默（Cramer）法则</div>
         <p><span class="thm-name">定理 3.1</span>　设 $n$ 元线性方程组 $Ax=b$ 的<strong>系数行列式</strong></p>
-        <p>$$D=|A|=\begin{vmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{vmatrix} \ne 0$$</p>
+        <p class="en">$$D=|A|=\begin{vmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{vmatrix} \ne 0$$</p>
         <p>则方程组<strong>有唯一解</strong>，且</p>
-        <p>$$x_j = \frac{D_j}{D}, \qquad j = 1, 2, \ldots, n$$</p>
+        <p class="en">$$x_j = \frac{D_j}{D}, \qquad j = 1, 2, \ldots, n$$</p>
         <p>其中 $D_j$ 是把 $D$ 的<strong>第 $j$ 列</strong>换成常数项 $b_1,b_2,\ldots,b_n$（其余各列保持原样、原顺序）后得到的 $n$ 阶行列式。例如</p>
-        <p>$$D_1=\begin{vmatrix} b_1 & a_{12} & \cdots & a_{1n} \\ b_2 & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ b_n & a_{n2} & \cdots & a_{nn} \end{vmatrix},\qquad D_2=\begin{vmatrix} a_{11} & b_1 & \cdots & a_{1n} \\ a_{21} & b_2 & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & b_n & \cdots & a_{nn} \end{vmatrix}$$</p>
+        <p class="en">$$D_1=\begin{vmatrix} b_1 & a_{12} & \cdots & a_{1n} \\ b_2 & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ b_n & a_{n2} & \cdots & a_{nn} \end{vmatrix},\qquad D_2=\begin{vmatrix} a_{11} & b_1 & \cdots & a_{1n} \\ a_{21} & b_2 & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & b_n & \cdots & a_{nn} \end{vmatrix}$$</p>
         <p><strong>适用条件</strong>（缺一不可）：① 方程个数 $=$ 未知数个数（$A$ 必须是方阵）；② $D \ne 0$。两条都不满足或只满足一条时，克拉默法则<strong>不能使用</strong>。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 3.1</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 3.1</span>
              <strong>Cramer's Rule.</strong>
              Suppose that the linear system $Ax=b$ in $n$ unknowns has a nonzero
              <span class="en-term">coefficient determinant</span></p>
-          <p>$$D=|A|=\begin{vmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{vmatrix} \ne 0$$</p>
-          <p>Then the system has <strong>exactly one solution</strong>, given by</p>
-          <p>$$x_j = \frac{D_j}{D}, \qquad j = 1, 2, \ldots, n$$</p>
-          <p>where $D_j$ is the determinant of order $n$ obtained from $D$ by replacing its
+          <p class="en">$$D=|A|=\begin{vmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{vmatrix} \ne 0$$</p>
+          <p class="en">Then the system has <strong>exactly one solution</strong>, given by</p>
+          <p class="en">$$x_j = \frac{D_j}{D}, \qquad j = 1, 2, \ldots, n$$</p>
+          <p class="en">where $D_j$ is the determinant of order $n$ obtained from $D$ by replacing its
              <strong>$j$-th column</strong> with the constant terms $b_1,b_2,\ldots,b_n$, all the remaining
              columns keeping their original positions and order. For example,</p>
-          <p>$$D_1=\begin{vmatrix} b_1 & a_{12} & \cdots & a_{1n} \\ b_2 & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ b_n & a_{n2} & \cdots & a_{nn} \end{vmatrix},\qquad D_2=\begin{vmatrix} a_{11} & b_1 & \cdots & a_{1n} \\ a_{21} & b_2 & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & b_n & \cdots & a_{nn} \end{vmatrix}$$</p>
-          <p><strong>Conditions of validity</strong> (both are indispensable):
+          <p class="en">$$D_1=\begin{vmatrix} b_1 & a_{12} & \cdots & a_{1n} \\ b_2 & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ b_n & a_{n2} & \cdots & a_{nn} \end{vmatrix},\qquad D_2=\begin{vmatrix} a_{11} & b_1 & \cdots & a_{1n} \\ a_{21} & b_2 & \cdots & a_{2n} \\ \vdots & \vdots & & \vdots \\ a_{n1} & b_n & \cdots & a_{nn} \end{vmatrix}$$</p>
+          <p class="en"><strong>Conditions of validity</strong> (both are indispensable):
              ① the number of equations equals the number of unknowns (so that $A$ is square);
              ② $D \ne 0$. If neither condition holds, or only one of them does, Cramer's rule
              <strong>cannot be used</strong>.</p>
@@ -239,19 +245,19 @@
         <p>$$Ax=0 \text{ 有非零解} \iff D=|A| = 0 \iff R(A) \&lt; n$$</p>
         <p>注意 $x=0$ 永远是齐次方程组的解，所以「有没有非零解」才是唯一值得讨论的问题。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">PROP 3.1</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">PROP 3.1</span>
              <strong>The Homogeneous System $Ax=0$.</strong>
              Let $A$ be an $n\times n$ matrix and consider the
              <span class="en-term">homogeneous</span> linear system $Ax=0$.</p>
-          <p><span class="bi-en-label">PROP 3.1</span>
+          <p class="en"><span class="bi-en-label">PROP 3.1</span>
              If $D=|A| \ne 0$, then $Ax=0$ has <strong>only the zero solution</strong> $x=0$.</p>
-          <p><span class="bi-en-label">PROP 3.2</span>
+          <p class="en"><span class="bi-en-label">PROP 3.2</span>
              If $Ax=0$ has a <strong>nonzero solution</strong>, then necessarily $D=|A| = 0$.
              Conversely, when $D=0$ the system $Ax=0$ certainly does have a nonzero solution.</p>
-          <p>Combining the two gives the single most important statement:</p>
-          <p>$$Ax=0 \text{ has a nonzero solution} \iff D=|A| = 0 \iff R(A) \&lt; n$$</p>
-          <p>Note that $x=0$ is always a solution of a homogeneous system, so the only question worth
+          <p class="en">Combining the two gives the single most important statement:</p>
+          <p class="en">$$Ax=0 \text{ has a nonzero solution} \iff D=|A| = 0 \iff R(A) \&lt; n$$</p>
+          <p class="en">Note that $x=0$ is always a solution of a homogeneous system, so the only question worth
              discussing is whether a <em>nonzero</em> solution exists.</p>
         </div>
       </div>
@@ -271,17 +277,17 @@
           <li>写出 $x_j = D_j/D$，即为唯一解。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span>
              <strong>Solving a Linear System by Cramer's Rule.</strong></p>
           <ol>
-            <li>Check that the number of equations equals the number of unknowns ($A$ is square) and write
+            <li class="en">Check that the number of equations equals the number of unknowns ($A$ is square) and write
                 down the coefficient determinant $D=|A|$.</li>
-            <li>Compute $D$. If $D \ne 0$, go on. If $D=0$, Cramer's rule <strong>fails</strong> —
+            <li class="en">Compute $D$. If $D \ne 0$, go on. If $D=0$, Cramer's rule <strong>fails</strong> —
                 switch to the elimination method of &sect;3-2.</li>
-            <li>For each $j=1,2,\ldots,n$, replace the $j$-th column of $D$ by $b$ and compute $D_j$
+            <li class="en">For each $j=1,2,\ldots,n$, replace the $j$-th column of $D$ by $b$ and compute $D_j$
                 (this means evaluating $n$ determinants of order $n$).</li>
-            <li>Write $x_j = D_j/D$; this is the unique solution.</li>
+            <li class="en">Write $x_j = D_j/D$; this is the unique solution.</li>
           </ol>
         </div>
       </div>
@@ -297,18 +303,18 @@
           <div class="solution">
             <p class="solution-label">解</p>
             <p><strong>第一步：算系数行列式 $D$。</strong>按第一行展开：</p>
-            <p>$$D=\begin{vmatrix} 2 & 1 & 1 \\ 1 & -1 & 2 \\ 3 & 1 & -1 \end{vmatrix} = 2\begin{vmatrix}-1&2\\1&-1\end{vmatrix} - 1\begin{vmatrix}1&2\\3&-1\end{vmatrix} + 1\begin{vmatrix}1&-1\\3&1\end{vmatrix}$$</p>
+            <p class="en">$$D=\begin{vmatrix} 2 & 1 & 1 \\ 1 & -1 & 2 \\ 3 & 1 & -1 \end{vmatrix} = 2\begin{vmatrix}-1&2\\1&-1\end{vmatrix} - 1\begin{vmatrix}1&2\\3&-1\end{vmatrix} + 1\begin{vmatrix}1&-1\\3&1\end{vmatrix}$$</p>
             <p>$$= 2\big[(-1)(-1)-2\cdot 1\big] - 1\big[1\cdot(-1)-2\cdot 3\big] + 1\big[1\cdot 1-(-1)\cdot 3\big]$$</p>
             <p>$$= 2(1-2) - (-1-6) + (1+3) = -2 + 7 + 4 = 9 \ne 0$$</p>
             <p>因为 $D \ne 0$，方程组有唯一解，可以用克拉默法则。</p>
             <p><strong>第二步：算 $D_1$（第 1 列换成常数项 $3,-3,6$）。</strong></p>
-            <p>$$D_1=\begin{vmatrix} 3 & 1 & 1 \\ -3 & -1 & 2 \\ 6 & 1 & -1 \end{vmatrix} = 3(1-2) - 1(3-12) + 1(-3+6) = -3 + 9 + 3 = 9$$</p>
+            <p class="en">$$D_1=\begin{vmatrix} 3 & 1 & 1 \\ -3 & -1 & 2 \\ 6 & 1 & -1 \end{vmatrix} = 3(1-2) - 1(3-12) + 1(-3+6) = -3 + 9 + 3 = 9$$</p>
             <p>所以 $x_1 = \dfrac{D_1}{D} = \dfrac{9}{9} = 1$。</p>
             <p><strong>第三步：算 $D_2$（第 2 列换成常数项）。</strong></p>
-            <p>$$D_2=\begin{vmatrix} 2 & 3 & 1 \\ 1 & -3 & 2 \\ 3 & 6 & -1 \end{vmatrix} = 2(3-12) - 3(-1-6) + 1(6+9) = -18 + 21 + 15 = 18$$</p>
+            <p class="en">$$D_2=\begin{vmatrix} 2 & 3 & 1 \\ 1 & -3 & 2 \\ 3 & 6 & -1 \end{vmatrix} = 2(3-12) - 3(-1-6) + 1(6+9) = -18 + 21 + 15 = 18$$</p>
             <p>所以 $x_2 = \dfrac{D_2}{D} = \dfrac{18}{9} = 2$。</p>
             <p><strong>第四步：算 $D_3$（第 3 列换成常数项）。</strong></p>
-            <p>$$D_3=\begin{vmatrix} 2 & 1 & 3 \\ 1 & -1 & -3 \\ 3 & 1 & 6 \end{vmatrix} = 2(-6+3) - 1(6+9) + 3(1+3) = -6 - 15 + 12 = -9$$</p>
+            <p class="en">$$D_3=\begin{vmatrix} 2 & 1 & 3 \\ 1 & -1 & -3 \\ 3 & 1 & 6 \end{vmatrix} = 2(-6+3) - 1(6+9) + 3(1+3) = -6 - 15 + 12 = -9$$</p>
             <p>所以 $x_3 = \dfrac{D_3}{D} = \dfrac{-9}{9} = -1$。</p>
             <p><strong>第五步：验算。</strong>把 $(1,2,-1)$ 代回：$2+2-1=3$ ✓，$1-2-2=-3$ ✓，$3+2+1=6$ ✓。所以唯一解为 $x=(1,2,-1)^T$。</p>
           </div>
@@ -328,13 +334,13 @@
             <p class="solution-label">解</p>
             <p><strong>思路：</strong>这是 3 个方程 3 个未知数的齐次方程组，$A$ 是 3 阶方阵。由推论 3.2，「有非零解 $\iff$ 系数行列式 $D=0$」，所以条件就是一个关于 $\lambda$ 的三次方程。</p>
             <p><strong>第一步：算 $D$。</strong>把第 2、3 行都减去第 1 行（行列式的性质：某行加上另一行的 $k$ 倍，行列式不变）：</p>
-            <p>$$D=\begin{vmatrix} \lambda & 1 & 1 \\ 1 & \lambda & 1 \\ 1 & 1 & \lambda \end{vmatrix} = \begin{vmatrix} \lambda & 1 & 1 \\ 1-\lambda & \lambda-1 & 0 \\ 1-\lambda & 0 & \lambda-1 \end{vmatrix}$$</p>
+            <p class="en">$$D=\begin{vmatrix} \lambda & 1 & 1 \\ 1 & \lambda & 1 \\ 1 & 1 & \lambda \end{vmatrix} = \begin{vmatrix} \lambda & 1 & 1 \\ 1-\lambda & \lambda-1 & 0 \\ 1-\lambda & 0 & \lambda-1 \end{vmatrix}$$</p>
             <p>按第 3 列展开：</p>
-            <p>$$D = 1\cdot\begin{vmatrix} 1-\lambda & \lambda-1 \\ 1-\lambda & 0 \end{vmatrix} + \lambda\cdot\begin{vmatrix} \lambda & 1 \\ 1-\lambda & \lambda-1 \end{vmatrix}$$</p>
+            <p class="en">$$D = 1\cdot\begin{vmatrix} 1-\lambda & \lambda-1 \\ 1-\lambda & 0 \end{vmatrix} + \lambda\cdot\begin{vmatrix} \lambda & 1 \\ 1-\lambda & \lambda-1 \end{vmatrix}$$</p>
             <p>第一项：$(1-\lambda)\cdot 0 - (\lambda-1)(1-\lambda) = -(1-\lambda)^2\cdot(-1)$，即 $(\lambda-1)(1-\lambda)$……为避免符号出错，改用更稳的算法——把第 2、3 行加到第 1 行上：</p>
-            <p>$$D=\begin{vmatrix} \lambda+2 & \lambda+2 & \lambda+2 \\ 1 & \lambda & 1 \\ 1 & 1 & \lambda \end{vmatrix} = (\lambda+2)\begin{vmatrix} 1 & 1 & 1 \\ 1 & \lambda & 1 \\ 1 & 1 & \lambda \end{vmatrix}$$</p>
+            <p class="en">$$D=\begin{vmatrix} \lambda+2 & \lambda+2 & \lambda+2 \\ 1 & \lambda & 1 \\ 1 & 1 & \lambda \end{vmatrix} = (\lambda+2)\begin{vmatrix} 1 & 1 & 1 \\ 1 & \lambda & 1 \\ 1 & 1 & \lambda \end{vmatrix}$$</p>
             <p>再把后两行减去第一行：</p>
-            <p>$$D=(\lambda+2)\begin{vmatrix} 1 & 1 & 1 \\ 0 & \lambda-1 & 0 \\ 0 & 0 & \lambda-1 \end{vmatrix} = (\lambda+2)(\lambda-1)^2$$</p>
+            <p class="en">$$D=(\lambda+2)\begin{vmatrix} 1 & 1 & 1 \\ 0 & \lambda-1 & 0 \\ 0 & 0 & \lambda-1 \end{vmatrix} = (\lambda+2)(\lambda-1)^2$$</p>
             <p>（最后一步用了上三角行列式等于主对角线元素之积。）</p>
             <p><strong>第二步：解 $D=0$。</strong></p>
             <p>$$(\lambda+2)(\lambda-1)^2 = 0 \quad\Longrightarrow\quad \lambda = -2 \ \text{ 或 }\ \lambda = 1$$</p>
@@ -353,7 +359,7 @@
           <div class="solution">
             <p class="solution-label">证明</p>
             <p>因为 $|A|=\pm 1 \ne 0$，满足克拉默法则的两个条件，所以方程组有唯一解且</p>
-            <p>$$x_j = \frac{D_j}{D} = \frac{D_j}{\pm 1}, \qquad j=1,2,\ldots,n$$</p>
+            <p class="en">$$x_j = \frac{D_j}{D} = \frac{D_j}{\pm 1}, \qquad j=1,2,\ldots,n$$</p>
             <p>下面说明 $D_j$ 一定是整数。由定义，$n$ 阶行列式是 $n!$ 项的代数和，其中每一项都是「取自不同行不同列的 $n$ 个元素之积」再乘 $\pm 1$。$D_j$ 是由 $A$ 的 $n-1$ 列与 $b$ 拼成的，元素全为整数，所以每一项都是整数之积，仍是整数；整数相加仍是整数，故 $D_j \in \mathbb{Z}$。</p>
             <p>于是 $x_j = \pm D_j \in \mathbb{Z}$，即每个未知量的值都是整数。证毕。</p>
             <p><strong>点评：</strong>本题不需要真的把 $x_j$ 算出来，只需要「$x_j=D_j/D$ 是一个显式表达式」这个事实。这正是克拉默法则相对于消元法的优势——它给出的不是算法，而是<strong>解析表达式</strong>，可以用来做定性推理。</p>
@@ -402,7 +408,7 @@
             <div class="solution">
               <p class="solution-label">解</p>
               <p><strong>第一步：算 $D$ 并分解因式。</strong>用对角线法则，正三项 $a\cdot a\cdot 2+1+1=2a^2+2$，负三项 $1\cdot a\cdot1+a\cdot1\cdot1+1\cdot1\cdot2=2a+2$：</p>
-              <p>$$D=\begin{vmatrix} a & 1 & 1 \\ 1 & a & 1 \\ 1 & 1 & 2 \end{vmatrix}=2a^2+2-2a-2=2a^2-2a=2a(a-1)$$</p>
+              <p class="en">$$D=\begin{vmatrix} a & 1 & 1 \\ 1 & a & 1 \\ 1 & 1 & 2 \end{vmatrix}=2a^2+2-2a-2=2a^2-2a=2a(a-1)$$</p>
               <p><strong>第二步：$D\ne 0$ 的情形。</strong>$a\ne 0$ 且 $a\ne 1$ 时 $D\ne 0$，由克拉默法则，方程组有<strong>唯一解</strong>。</p>
               <p><strong>第三步：逐个根代回。</strong></p>
               <ul>
@@ -451,7 +457,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $n$ 元线性方程组 $Ax=b$ 的系数行列式 $D=|A| \ne 0$，则（　）。
-             <span class="en-line" lang="en">Let $Ax=b$ be a linear system in $n$ unknowns whose coefficient determinant is $D=|A| \ne 0$. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $Ax=b$ be a linear system in $n$ unknowns whose coefficient determinant is $D=|A| \ne 0$. Then (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">方程组无解</span></li>
             <li><span class="opt-body">方程组有无穷多解</span></li>
@@ -463,7 +469,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 为 $n$ 阶方阵，则齐次线性方程组 $Ax=0$ 有非零解的充要条件是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. A necessary and sufficient condition for the homogeneous system $Ax=0$ to have a nonzero solution is (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix. A necessary and sufficient condition for the homogeneous system $Ax=0$ to have a nonzero solution is (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">$|A| \ne 0$</span></li>
             <li data-correct="true"><span class="opt-body">$|A| = 0$</span></li>
@@ -475,14 +481,14 @@
 
         <div class="q" data-type="fill" data-level="基础">
           <p class="q-stem">已知 3 元线性方程组 $Ax=b$ 满足 $|A|=2$，$|A_1|=4$，$|A_3|=-6$，其中 $A_j$ 是把 $A$ 的第 $j$ 列换成常数项向量 $b$ 后得到的矩阵，则 $x_1 + x_3 = $ ______。
-             <span class="en-line" lang="en">A linear system $Ax=b$ in 3 unknowns satisfies $|A|=2$, $|A_1|=4$ and $|A_3|=-6$, where $A_j$ is the matrix obtained from $A$ by replacing its $j$-th column with the constant vector $b$. Then $x_1 + x_3 = $ ______.</span></p>
+             <span class="q-stem-en" lang="en">A linear system $Ax=b$ in 3 unknowns satisfies $|A|=2$, $|A_1|=4$ and $|A_3|=-6$, where $A_j$ is the matrix obtained from $A$ by replacing its $j$-th column with the constant vector $b$. Then $x_1 + x_3 = $ ______.</span></p>
           <div class="q-answer" data-answer="-1|−1"></div>
           <div class="q-explain">由克拉默法则 $x_j=D_j/D$：$x_1=4/2=2$，$x_3=(-6)/2=-3$，所以 $x_1+x_3=2-3=-1$。注意 $|A_3|=-6$ 中的负号必须带进计算，符号丢失会得到 $3$ 或 $5$ 之类的错误答案。</div>
         </div>
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，且 $|A|=0$，则下列命题正确的是（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=0$. Which of the following statements is correct? (　)</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=0$. Which of the following statements is correct? (　)</span></p>
           <ul class="options">
             <li><span class="opt-body">$A$ 的每一行都能由其余两行经加、减与数乘得到</span></li>
             <li data-correct="true"><span class="opt-body">齐次线性方程组 $Ax=0$ 有非零解</span></li>
@@ -494,7 +500,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，下列条件中与「$Ax=0$ 只有零解」等价的是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. Which of the following conditions is equivalent to "$Ax=0$ has only the zero solution"? (　)</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix. Which of the following conditions is equivalent to "$Ax=0$ has only the zero solution"? (　)</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$|A| \ne 0$</span></li>
             <li data-correct="true"><span class="opt-body">$R(A) = n$</span></li>
@@ -506,7 +512,7 @@
 
         <div class="q" data-type="judge" data-level="中等">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，若 $|A|=0$，则对任意 $n$ 维列向量 $b$，方程组 $Ax=b$ 都无解。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. If $|A|=0$, then for every $n$-dimensional column vector $b$ the system $Ax=b$ has no solution.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix. If $|A|=0$, then for every $n$-dimensional column vector $b$ the system $Ax=b$ has no solution.</span></p>
           <ul class="options">
             <li><span class="opt-body">正确</span></li>
             <li data-correct="true"><span class="opt-body">错误</span></li>
@@ -516,7 +522,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$|A|=2$，$A^*$ 为 $A$ 的伴随矩阵，$b$ 为 3 维非零列向量，则方程组 $A^*x=b$ 的解为（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$, let $A^*$ be the adjugate matrix of $A$, and let $b$ be a nonzero 3-dimensional column vector. Then the solution of the system $A^*x=b$ is (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$, let $A^*$ be the adjugate matrix of $A$, and let $b$ be a nonzero 3-dimensional column vector. Then the solution of the system $A^*x=b$ is (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\dfrac12 Ab$</span></li>
             <li><span class="opt-body">$2Ab$</span></li>
@@ -528,7 +534,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">若齐次线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + ax_3 = 0 \\ x_1 + 4x_2 + a^2x_3 = 0 \end{cases}$ 只有零解，则 $a$ 满足（　）。
-             <span class="en-line" lang="en">If the homogeneous system $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + ax_3 = 0 \\ x_1 + 4x_2 + a^2x_3 = 0 \end{cases}$ has only the zero solution, then $a$ satisfies (　).</span></p>
+             <span class="q-stem-en" lang="en">If the homogeneous system $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + ax_3 = 0 \\ x_1 + 4x_2 + a^2x_3 = 0 \end{cases}$ has only the zero solution, then $a$ satisfies (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$a \ne 1$ 且 $a \ne 2$</span></li>
             <li><span class="opt-body">$a \ne 1$</span></li>
@@ -540,7 +546,7 @@
 
         <div class="q" data-type="multi" data-level="考研">
           <p class="q-stem">设 $A$ 为 4 阶矩阵，且 $A$ 的所有 3 阶子式全为零，则（　）。
-             <span class="en-line" lang="en">Let $A$ be a $4\times4$ matrix all of whose minors of order $3$ are zero. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times4$ matrix all of whose minors of order $3$ are zero. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(A) \le 2$</span></li>
             <li data-correct="true"><span class="opt-body">$R(A) &lt; 4$</span></li>
@@ -552,7 +558,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">当 $a$ 取何值时，线性方程组 $\begin{cases} a x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 1 \\ x_1 + x_2 + 2x_3 = 1 \end{cases}$ 有无穷多解？（　）
-             <span class="en-line" lang="en">For which value of $a$ does the linear system $\begin{cases} a x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 1 \\ x_1 + x_2 + 2x_3 = 1 \end{cases}$ have infinitely many solutions? (　)</span></p>
+             <span class="q-stem-en" lang="en">For which value of $a$ does the linear system $\begin{cases} a x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 1 \\ x_1 + x_2 + 2x_3 = 1 \end{cases}$ have infinitely many solutions? (　)</span></p>
           <ul class="options">
             <li><span class="opt-body">$a = 0$</span></li>
             <li data-correct="true"><span class="opt-body">$a = 1$</span></li>
@@ -564,7 +570,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 2 \\ x_1 + 2x_2 + a x_3 = b \\ 2x_1 + 3x_2 + 3x_3 = 5 \end{cases}$ 有无穷多解，且 $\eta=(1,1,0)^T$ 是它的一个解，则（　）。
-             <span class="en-line" lang="en">The linear system $\begin{cases} x_1 + x_2 + x_3 = 2 \\ x_1 + 2x_2 + a x_3 = b \\ 2x_1 + 3x_2 + 3x_3 = 5 \end{cases}$ has infinitely many solutions, and $\eta=(1,1,0)^T$ is one of them. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">The linear system $\begin{cases} x_1 + x_2 + x_3 = 2 \\ x_1 + 2x_2 + a x_3 = b \\ 2x_1 + 3x_2 + 3x_3 = 5 \end{cases}$ has infinitely many solutions, and $\eta=(1,1,0)^T$ is one of them. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$a = 2,\ b = 3$</span></li>
             <li><span class="opt-body">$a = 2,\ b = 1$</span></li>
@@ -576,7 +582,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">若齐次线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + 4x_3 = 0 \\ x_1 + 3x_2 + a x_3 = 0 \end{cases}$ 有非零解，则其通解为（　）。
-             <span class="en-line" lang="en">If the homogeneous system $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + 4x_3 = 0 \\ x_1 + 3x_2 + a x_3 = 0 \end{cases}$ has a nonzero solution, then its general solution is (　).</span></p>
+             <span class="q-stem-en" lang="en">If the homogeneous system $\begin{cases} x_1 + x_2 + x_3 = 0 \\ x_1 + 2x_2 + 4x_3 = 0 \\ x_1 + 3x_2 + a x_3 = 0 \end{cases}$ has a nonzero solution, then its general solution is (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$x = c(2,-3,1)^T,\ c\in\mathbb{R}$</span></li>
             <li><span class="opt-body">$x = c(2,3,1)^T,\ c\in\mathbb{R}$</span></li>
@@ -595,7 +601,11 @@
 
       </div>
 
-      <h2 id="s3-2" data-hours="4.5">3-2 线性方程组</h2>
+      <h2 id="la-s3-2" data-hours="4.5"
+          data-video-map="la-s3-2"
+          data-video-title="《线性代数》全程教学视频（一高数）">3-2 线性方程组</h2>
+
+      <div data-video-entry="la-s3-2" data-video-pos="top"></div>
 
       <p>上一节我们用克拉默法则解决了「方程个数 $=$ 未知量个数且 $|A|\ne0$」这一种最好的情形，但真实问题里方程个数往往不等于未知量个数，$|A|=0$ 时克拉默法则更是直接失效。本节引入<strong>初等行变换</strong>这个通用工具：它不挑方程个数、不需要 $|A|\ne0$，能把任意线性方程组的解一次性判清楚——有解还是无解、唯一还是无穷多、无穷多时通解长什么样。这套方法后面求逆矩阵、求秩、求基础解系都要反复使用，是整门课出现频率最高的技术。本节也是全章的重点，值得投入 4 小时。</p>
 
@@ -623,27 +633,27 @@
         <p>含有 $n$ 个未知量 $x_1,\ldots,x_n$、由 $m$ 个方程组成的线性方程组的一般形式为</p>
         <p>$$\begin{cases} a_{11}x_1 + a_{12}x_2 + \cdots + a_{1n}x_n = b_1 \\ a_{21}x_1 + a_{22}x_2 + \cdots + a_{2n}x_n = b_2 \\ \qquad \vdots \\ a_{m1}x_1 + a_{m2}x_2 + \cdots + a_{mn}x_n = b_m \end{cases}$$</p>
         <p>记</p>
-        <p>$$A=\begin{pmatrix} a_{11} & \cdots & a_{1n} \\ \vdots & & \vdots \\ a_{m1} & \cdots & a_{mn} \end{pmatrix}_{m\times n},\quad x=\begin{pmatrix}x_1\\\vdots\\x_n\end{pmatrix},\quad b=\begin{pmatrix}b_1\\\vdots\\b_m\end{pmatrix}$$</p>
+        <p class="en">$$A=\begin{pmatrix} a_{11} & \cdots & a_{1n} \\ \vdots & & \vdots \\ a_{m1} & \cdots & a_{mn} \end{pmatrix}_{m\times n},\quad x=\begin{pmatrix}x_1\\\vdots\\x_n\end{pmatrix},\quad b=\begin{pmatrix}b_1\\\vdots\\b_m\end{pmatrix}$$</p>
         <p>$A$ 称为<span class="term">系数矩阵</span>；把 $b$ 添到 $A$ 的最后一列得到的 $m\times(n+1)$ 矩阵</p>
         <p>$$\bar A = (A \mid b)=\begin{pmatrix} a_{11} & \cdots & a_{1n} & b_1 \\ \vdots & & \vdots & \vdots \\ a_{m1} & \cdots & a_{mn} & b_m \end{pmatrix}$$</p>
         <p>称为<span class="term">增广矩阵</span>。方程组等价于矩阵方程</p>
         <p>$$Ax=b$$</p>
         <p>当 $b=0$ 时称为<span class="term">齐次线性方程组</span>，记作 $Ax=0$；当 $b\ne 0$ 时称为<span class="term">非齐次线性方程组</span>。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 3.2</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 3.2</span>
              <strong>General Linear System and its Matrix Form.</strong>
              A linear system of $m$ equations in $n$ unknowns $x_1,\ldots,x_n$ has the general form</p>
           <p>$$\begin{cases} a_{11}x_1 + a_{12}x_2 + \cdots + a_{1n}x_n = b_1 \\ a_{21}x_1 + a_{22}x_2 + \cdots + a_{2n}x_n = b_2 \\ \qquad \vdots \\ a_{m1}x_1 + a_{m2}x_2 + \cdots + a_{mn}x_n = b_m \end{cases}$$</p>
           <p>Write</p>
-          <p>$$A=\begin{pmatrix} a_{11} & \cdots & a_{1n} \\ \vdots & & \vdots \\ a_{m1} & \cdots & a_{mn} \end{pmatrix}_{m\times n},\quad x=\begin{pmatrix}x_1\\\vdots\\x_n\end{pmatrix},\quad b=\begin{pmatrix}b_1\\\vdots\\b_m\end{pmatrix}$$</p>
-          <p>$A$ is called the <span class="en-term">coefficient matrix</span>. Appending $b$ as an extra last
+          <p class="en">$$A=\begin{pmatrix} a_{11} & \cdots & a_{1n} \\ \vdots & & \vdots \\ a_{m1} & \cdots & a_{mn} \end{pmatrix}_{m\times n},\quad x=\begin{pmatrix}x_1\\\vdots\\x_n\end{pmatrix},\quad b=\begin{pmatrix}b_1\\\vdots\\b_m\end{pmatrix}$$</p>
+          <p class="en">$A$ is called the <span class="en-term">coefficient matrix</span>. Appending $b$ as an extra last
              column of $A$ gives the $m\times(n+1)$ matrix</p>
           <p>$$\bar A = (A \mid b)=\begin{pmatrix} a_{11} & \cdots & a_{1n} & b_1 \\ \vdots & & \vdots & \vdots \\ a_{m1} & \cdots & a_{mn} & b_m \end{pmatrix}$$</p>
-          <p>called the <span class="en-term">augmented matrix</span>. The system is equivalent to the matrix
+          <p class="en">called the <span class="en-term">augmented matrix</span>. The system is equivalent to the matrix
              equation</p>
           <p>$$Ax=b$$</p>
-          <p>When $b=0$ it is called a <span class="en-term">homogeneous</span> system and written $Ax=0$;
+          <p class="en">When $b=0$ it is called a <span class="en-term">homogeneous</span> system and written $Ax=0$;
              when $b\ne 0$ it is called a <span class="en-term">nonhomogeneous system</span>.</p>
         </div>
       </div>
@@ -672,26 +682,26 @@
         <p>所以：<strong>对增广矩阵 $\bar A$ 作初等行变换，得到的新矩阵所对应的方程组与原方程组同解。</strong>这就是消元法的矩阵语言。</p>
         <p>操作时把 $m$ 个方程、$n$ 个未知量连同常数项一起写成一张表 $\bar A=(A\mid b)$，然后对这张表做行变换——这比反复抄写 $x_1,x_2,\ldots$ 高效得多，也不容易抄错。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span>
              <strong>Elimination Written as Elementary Row Operations.</strong>
              In school we solve a system by <em>elimination</em>: adding a multiple of one equation to
              another, thereby removing an unknown. This process <strong>does not change the solution set at
              all</strong>, because it only rewrites the same constraints in another form.</p>
-          <p>Abstracting "equation" into "row" gives the three <span class="en-term">elementary row
+          <p class="en">Abstracting "equation" into "row" gives the three <span class="en-term">elementary row
              operations</span>:</p>
           <ol>
-            <li><strong>Interchange two rows</strong> $r_i \leftrightarrow r_j$: this corresponds to swapping
+            <li class="en"><strong>Interchange two rows</strong> $r_i \leftrightarrow r_j$: this corresponds to swapping
                 two equations; the solution set is unchanged.</li>
-            <li><strong>Multiply a row by a nonzero constant $k$</strong> $r_i \times k\ (k\ne 0)$: this
+            <li class="en"><strong>Multiply a row by a nonzero constant $k$</strong> $r_i \times k\ (k\ne 0)$: this
                 corresponds to multiplying both sides of an equation by $k$; the solution set is unchanged.</li>
-            <li><strong>Add $k$ times one row to another row</strong> $r_j + k\,r_i$: this corresponds to adding
+            <li class="en"><strong>Add $k$ times one row to another row</strong> $r_j + k\,r_i$: this corresponds to adding
                 two equations and replacing one of them; the solution set is unchanged.</li>
           </ol>
-          <p>Hence: <strong>applying elementary row operations to the augmented matrix $\bar A$ produces a new
+          <p class="en">Hence: <strong>applying elementary row operations to the augmented matrix $\bar A$ produces a new
              matrix whose system has exactly the same solutions as the original one.</strong> This is
              elimination written in the language of matrices.</p>
-          <p>In practice we write the $m$ equations, the $n$ unknowns and the constant terms as one table
+          <p class="en">In practice we write the $m$ equations, the $n$ unknowns and the constant terms as one table
              $\bar A=(A\mid b)$ and then work on that table — far more efficient, and far less error-prone,
              than repeatedly copying $x_1,x_2,\ldots$</p>
         </div>
@@ -714,8 +724,8 @@
         <p>例如 $\begin{pmatrix} 1 & 0 & -1 & 0 \\ 0 & 1 & 2 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}$ 是行最简形。</p>
         <p><strong>一眼分辨：</strong>把主元圈出来。若主元下方有非零元，它还不是阶梯形；若主元上方还有非零元，或主元不是 $1$，它只是阶梯形而不是最简形。<strong>只有主元是 $1$、且主元上下全是 $0$，才是行最简形。</strong></p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 3.3</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 3.3</span>
              <strong>Row Echelon Form and Reduced Row Echelon Form.</strong>
              A matrix is in <span class="en-term">row echelon form</span> if:</p>
           <ul>
@@ -725,17 +735,17 @@
                 <span class="en-term">pivot</span> of that row — lies strictly to the <strong>right</strong> of
                 the pivot of the row above it.</li>
           </ul>
-          <p>For example $\begin{pmatrix} 1 & 2 & 3 & 4 \\ 0 & 1 & 2 & 1 \\ 0 & 0 & 0 & 3 \\ 0 & 0 & 0 & 0 \end{pmatrix}$
+          <p class="en">For example $\begin{pmatrix} 1 & 2 & 3 & 4 \\ 0 & 1 & 2 & 1 \\ 0 & 0 & 0 & 3 \\ 0 & 0 & 0 & 0 \end{pmatrix}$
              is in row echelon form: its shape is that of a staircase, and its pivots are $1,1,3$.</p>
-          <p>A matrix is in <span class="en-term">reduced row echelon form (RREF)</span> if:</p>
+          <p class="en">A matrix is in <span class="en-term">reduced row echelon form (RREF)</span> if:</p>
           <ul>
             <li>① it is in row echelon form;</li>
             <li>② every pivot equals $1$;</li>
             <li>③ every <strong>other</strong> entry in a pivot column is $0$.</li>
           </ul>
-          <p>For example $\begin{pmatrix} 1 & 0 & -1 & 0 \\ 0 & 1 & 2 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}$
+          <p class="en">For example $\begin{pmatrix} 1 & 0 & -1 & 0 \\ 0 & 1 & 2 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}$
              is in reduced row echelon form.</p>
-          <p><strong>Telling them apart at a glance.</strong> Circle the pivots. If some pivot has a nonzero
+          <p class="en"><strong>Telling them apart at a glance.</strong> Circle the pivots. If some pivot has a nonzero
              entry below it, the matrix is not yet in echelon form; if some pivot has a nonzero entry above
              it, or a pivot is not $1$, the matrix is only in echelon form, not in reduced form.
              <strong>Only when every pivot is $1$ and everything above and below the pivots is $0$ is the
@@ -758,8 +768,8 @@
         </div>
         <p>注意第一行与后两行的关系：<strong>有解当且仅当 $R(A)=R(\bar A)$</strong>。所以判定的正确顺序永远是——先看两个秩是否相等（有没有解），再看这个公共的秩与 $n$ 谁大（有几个解）。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 3.2</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 3.2</span>
              <strong>Solvability and Number of Solutions of a Linear System.</strong>
              Let $A$ be an $m\times n$ matrix, let $\bar A=(A\mid b)$ be the augmented matrix, and let $n$ be
              the number of unknowns. For the <span class="en-term">nonhomogeneous system</span> $Ax=b$:</p>
@@ -773,7 +783,7 @@
               </tbody>
             </table>
           </div>
-          <p>Note how the first row relates to the other two: <strong>the system is consistent if and only if
+          <p class="en">Note how the first row relates to the other two: <strong>the system is consistent if and only if
              $R(A)=R(\bar A)$</strong>. So the correct order of testing is always — first compare the two ranks
              (is there a solution at all?), and only then compare that common rank with $n$ (how many
              solutions are there?).</p>
@@ -789,23 +799,23 @@
         <p>特别地，当 $m &lt; n$（方程个数少于未知量个数）时，必有 $R(A) \le m &lt; n$，所以<strong>方程个数少于未知量个数的齐次方程组必有非零解</strong>。</p>
         <p>另外，$A$ 为 $n$ 阶方阵时 $R(A)=n \iff |A|\ne 0$，此时性质 3.3 就退化成 3-1 的推论 3.2，两条线索在这里汇合。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 3.3</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 3.3</span>
              <strong>Solutions of the Homogeneous System $Ax=0$.</strong>
              Let $A$ be an $m\times n$ matrix.</p>
-          <p><span class="bi-en-label">PROP 3.1</span>
+          <p class="en"><span class="bi-en-label">PROP 3.1</span>
              $Ax=0$ <strong>always has a solution</strong>: $x=0$ is one, called the
              <span class="en-term">zero solution</span>. A homogeneous system can therefore never be
              inconsistent; the only question is whether a nonzero solution exists.</p>
-          <p><span class="bi-en-label">PROP 3.2</span>
+          <p class="en"><span class="bi-en-label">PROP 3.2</span>
              $Ax=0$ has only the zero solution $\iff R(A) = n$.</p>
-          <p><span class="bi-en-label">PROP 3.3</span>
+          <p class="en"><span class="bi-en-label">PROP 3.3</span>
              $Ax=0$ has a nonzero solution $\iff R(A) &lt; n$; in that case it has infinitely many solutions,
              with $n - R(A)$ <span class="en-term">free variables</span>.</p>
-          <p>In particular, when $m &lt; n$ (fewer equations than unknowns) we always have
+          <p class="en">In particular, when $m &lt; n$ (fewer equations than unknowns) we always have
              $R(A) \le m &lt; n$, so <strong>a homogeneous system with fewer equations than unknowns must have
              a nonzero solution</strong>.</p>
-          <p>Moreover, when $A$ is $n\times n$ we have $R(A)=n \iff |A|\ne 0$, and then Property 3.3 reduces
+          <p class="en">Moreover, when $A$ is $n\times n$ we have $R(A)=n \iff |A|\ne 0$, and then Property 3.3 reduces
              to Corollary 3.2 of &sect;3-1 — the two threads meet here.</p>
         </div>
       </div>
@@ -838,30 +848,30 @@
           <li><strong>验算。</strong>把特解代回原方程组至少验算一个方程；若是有参数的情形，检查是否漏掉了使某一步除法失效的参数值。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span>
              <strong>The Complete Procedure for Solving a Linear System.</strong></p>
           <ol>
-            <li><strong>Write the augmented matrix.</strong> Put the $m$ equations in the order
+            <li class="en"><strong>Write the augmented matrix.</strong> Put the $m$ equations in the order
                 "coefficients of the unknowns $\mid$ constant term" as $\bar A=(A\mid b)$, and write $0$ for
                 every missing unknown (this is where terms get dropped, so keep the columns aligned).</li>
-            <li><strong>Reduce to RREF.</strong> Apply <strong>elementary row operations</strong> only, working
+            <li class="en"><strong>Reduce to RREF.</strong> Apply <strong>elementary row operations</strong> only, working
                 on $\bar A$: use row 1 to clear the entries below the first pivot, then row 2 to clear below the
                 second, and so on downwards, to reach row echelon form; then work upwards, make each pivot
                 equal to $1$, and clear the remaining entries of each pivot column.</li>
-            <li><strong>Read off the ranks.</strong> Count the nonzero rows of $A$ and of $\bar A$ (that count is
+            <li class="en"><strong>Read off the ranks.</strong> Count the nonzero rows of $A$ and of $\bar A$ (that count is
                 the rank). If $R(A) &lt; R(\bar A)$, write down "no solution" and stop. Otherwise let $r$ be the
                 common value.</li>
-            <li><strong>Write the equivalent system.</strong> Keep the unknowns whose columns contain pivots on
+            <li class="en"><strong>Write the equivalent system.</strong> Keep the unknowns whose columns contain pivots on
                 the left, and move all the other unknowns (the <span class="en-term">free variables</span>) to
                 the right together with the constants. There are $n-r$ free variables.</li>
-            <li><strong>Give the free variables parameters.</strong> Assign to the $n-r$ free variables
+            <li class="en"><strong>Give the free variables parameters.</strong> Assign to the $n-r$ free variables
                 independent arbitrary constants, usually $x_{k_1}=c_1,\ \ldots,\ x_{k_{n-r}}=c_{n-r}$.</li>
-            <li><strong>Write the general solution.</strong> Express the pivot unknowns in terms of those
+            <li class="en"><strong>Write the general solution.</strong> Express the pivot unknowns in terms of those
                 constants and write the answer as a column vector. Setting all constants to $0$ gives a
                 <span class="en-term">particular solution</span>; the constant-free part is the general solution
                 of the associated homogeneous system.</li>
-            <li><strong>Check.</strong> Substitute the particular solution back into at least one of the original
+            <li class="en"><strong>Check.</strong> Substitute the particular solution back into at least one of the original
                 equations; in a problem with parameters, check that no value that makes some division invalid
                 has been missed.</li>
           </ol>
@@ -959,7 +969,7 @@
           <div class="solution">
             <p class="solution-label">解</p>
             <p><strong>第一步：写系数矩阵并化行最简形。</strong>齐次方程组的增广矩阵最后一列全是 $0$，行变换后仍然是 $0$，所以只需对系数矩阵 $A$ 作变换。</p>
-            <p>$$A=\begin{pmatrix} 1 & 1 & 1 & 1 \\ 1 & 2 & 3 & 4 \\ 2 & 3 & 4 & 5 \end{pmatrix}\xrightarrow{\ r_2-r_1,\ r_3-2r_1\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 3 \\ 0 & 1 & 2 & 3 \end{pmatrix}\xrightarrow{\ r_3-r_2\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 3 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
+            <p class="en">$$A=\begin{pmatrix} 1 & 1 & 1 & 1 \\ 1 & 2 & 3 & 4 \\ 2 & 3 & 4 & 5 \end{pmatrix}\xrightarrow{\ r_2-r_1,\ r_3-2r_1\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 3 \\ 0 & 1 & 2 & 3 \end{pmatrix}\xrightarrow{\ r_3-r_2\ }\begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 1 & 2 & 3 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
             <p>再作 $r_1-r_2$：</p>
             <p>$$\xrightarrow{\ r_1-r_2\ }\begin{pmatrix} 1 & 0 & -1 & -2 \\ 0 & 1 & 2 & 3 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
             <p>这是行最简形，主元在第 1、2 列。</p>
@@ -989,8 +999,8 @@
             <p><strong>第一步：交换第 1、3 行，把含 $\lambda$ 最少的行提到第一行。</strong></p>
             <p>$$\bar A=\begin{pmatrix} \lambda & 1 & 1 & 1 \\ 1 & \lambda & 1 & \lambda \\ 1 & 1 & \lambda & \lambda^2 \end{pmatrix}\xrightarrow{\ r_1\leftrightarrow r_3\ }\begin{pmatrix} 1 & 1 & \lambda & \lambda^2 \\ 1 & \lambda & 1 & \lambda \\ \lambda & 1 & 1 & 1 \end{pmatrix}$$</p>
             <p><strong>第二步：消去第 1 列下方。</strong>作 $r_2-r_1$ 与 $r_3-\lambda r_1$：</p>
-            <p>$$r_2-r_1 = \big(0,\ \lambda-1,\ 1-\lambda \mid \lambda-\lambda^2\big) = (\lambda-1)\big(0,\ 1,\ -1 \mid -\lambda\big)$$</p>
-            <p>$$r_3-\lambda r_1 = \big(0,\ 1-\lambda,\ 1-\lambda^2 \mid 1-\lambda^3\big) = (1-\lambda)\big(0,\ 1,\ 1+\lambda \mid 1+\lambda+\lambda^2\big)$$</p>
+            <p class="en">$$r_2-r_1 = \big(0,\ \lambda-1,\ 1-\lambda \mid \lambda-\lambda^2\big) = (\lambda-1)\big(0,\ 1,\ -1 \mid -\lambda\big)$$</p>
+            <p class="en">$$r_3-\lambda r_1 = \big(0,\ 1-\lambda,\ 1-\lambda^2 \mid 1-\lambda^3\big) = (1-\lambda)\big(0,\ 1,\ 1+\lambda \mid 1+\lambda+\lambda^2\big)$$</p>
             <p>（这里用了 $1-\lambda^2=(1-\lambda)(1+\lambda)$，$1-\lambda^3=(1-\lambda)(1+\lambda+\lambda^2)$。）</p>
             <p><strong>第三步：分情况讨论。</strong></p>
             <p><strong>情形 1：$\lambda \ne 1$。</strong>此时 $\lambda-1\ne 0$，$1-\lambda \ne 0$，可以把第 2 行除以 $\lambda-1$、第 3 行除以 $1-\lambda$（这是<strong>非零常数</strong>乘某一行，属于初等行变换，不改变解集）：</p>
@@ -1002,7 +1012,7 @@
             <p>由第 1 行：$x_1 + x_2 + \lambda x_3 = \lambda^2 \Rightarrow x_1 = \lambda^2 - x_2 - \lambda x_3 = \dfrac{\lambda^2(\lambda+2) - 1 - \lambda(\lambda+1)^2}{\lambda+2}$。</p>
             <p>分子 $=\lambda^3+2\lambda^2-1-\lambda(\lambda^2+2\lambda+1) = \lambda^3+2\lambda^2-1-\lambda^3-2\lambda^2-\lambda = -(\lambda+1)$。</p>
             <p>所以 $x_1 = -\dfrac{\lambda+1}{\lambda+2}$。唯一解为</p>
-            <p>$$x_1 = -\frac{\lambda+1}{\lambda+2},\qquad x_2 = \frac{1}{\lambda+2},\qquad x_3 = \frac{(\lambda+1)^2}{\lambda+2}$$</p>
+            <p class="en">$$x_1 = -\frac{\lambda+1}{\lambda+2},\qquad x_2 = \frac{1}{\lambda+2},\qquad x_3 = \frac{(\lambda+1)^2}{\lambda+2}$$</p>
             <p><strong>情形 1b：$\lambda = -2$。</strong>此时 $\lambda \ne 1$ 仍成立，上面的行阶梯形可代入：第 3 行变为 $[0\ 0\ 0 \mid (-2+1)^2]=[0\ 0\ 0\mid 1]$。于是 $R(A)=2$，$R(\bar A)=3$，$R(A) &lt; R(\bar A)$，方程组<strong>无解</strong>。</p>
             <p><strong>情形 2：$\lambda = 1$。</strong>此时不能除以 $\lambda-1$，回到原增广矩阵直接代入：三个方程都变成 $x_1+x_2+x_3=1$，即</p>
             <p>$$\bar A \to \begin{pmatrix} 1 & 1 & 1 & 1 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
@@ -1029,7 +1039,7 @@
             <p>$$n - R(A) = 4 - 2 = 2$$</p>
             <p>也就是说，通解中应当恰好含 <strong>2 个</strong>独立任意常数，我们需要找出 $Ax=0$ 的 2 个非零解 $\xi_1,\xi_2$，使 $Ax=0$ 的每个解都能写成 $c_1\xi_1+c_2\xi_2$ 的形式——也就是这 2 个解互不成比例，各自贡献一个独立方向。</p>
             <p><strong>第二步：由非齐次解构造齐次解。</strong>利用「$A\eta_i=b$ 对每个 $i$ 都成立」这一条件：</p>
-            <p>$$A(\eta_i - \eta_j) = A\eta_i - A\eta_j = b - b = 0$$</p>
+            <p class="en">$$A(\eta_i - \eta_j) = A\eta_i - A\eta_j = b - b = 0$$</p>
             <p>所以任意两个非齐次解的<strong>差</strong>都是齐次方程组 $Ax=0$ 的解。取</p>
             <p>$$\xi_1 = \eta_1 - \eta_2 = (1,-1,0,0)^T,\qquad \xi_2 = \eta_1 - \eta_3 = (1,0,-1,0)^T$$</p>
             <p>则 $\xi_1,\xi_2$ 都满足 $A\xi_1=0,\ A\xi_2=0$。</p>
@@ -1037,7 +1047,7 @@
             <p>$$k_1(1,-1,0,0)^T + k_2(1,0,-1,0)^T = (k_1+k_2,\ -k_1,\ -k_2,\ 0)^T = (0,0,0,0)^T$$</p>
             <p>由第 2 个分量 $-k_1=0$ 得 $k_1=0$；由第 3 个分量 $-k_2=0$ 得 $k_2=0$。这说明 $k_1\xi_1+k_2\xi_2=0$ 只有 $k_1=k_2=0$ 这一种可能，$\xi_1,\xi_2$ 互不成比例，通解中的两个任意常数都是必需的。</p>
             <p><strong>第四步：写出通解。</strong>$Ax=0$ 的自由未知量个数是 $4-R(A)=2$，而 $\xi_1,\xi_2$ 是它两个互不成比例的非零解，恰好充当通解中的 2 个独立方向（即 $Ax=0$ 的一组基础解）。于是 $Ax=b$ 的通解为</p>
-            <p>$$x = \eta_1 + c_1\xi_1 + c_2\xi_2 = \begin{pmatrix}1\\0\\0\\0\end{pmatrix} + c_1\begin{pmatrix}1\\-1\\0\\0\end{pmatrix} + c_2\begin{pmatrix}1\\0\\-1\\0\end{pmatrix},\qquad c_1,c_2\in\mathbb{R}$$</p>
+            <p class="en">$$x = \eta_1 + c_1\xi_1 + c_2\xi_2 = \begin{pmatrix}1\\0\\0\\0\end{pmatrix} + c_1\begin{pmatrix}1\\-1\\0\\0\end{pmatrix} + c_2\begin{pmatrix}1\\0\\-1\\0\end{pmatrix},\qquad c_1,c_2\in\mathbb{R}$$</p>
             <p><strong>第五步：验算（一定要回到原条件核对）。</strong></p>
             <p>取 $c_1=-1,\ c_2=0$：$x = (1,0,0,0)^T - (1,-1,0,0)^T = (0,1,0,0)^T = \eta_2$ ✓ ——通解确实能表示出题目给出的另一个解。</p>
             <p>取 $c_1=0,\ c_2=-1$：$x = (1,0,0,0)^T - (1,0,-1,0)^T = (0,0,1,0)^T = \eta_3$ ✓。</p>
@@ -1138,12 +1148,12 @@
               <p>$$n-R(A)=3-1=2$$</p>
               <p>也就是说，通解中恰含 <strong>2 个</strong>独立任意常数，需要造 $Ax=0$ 的 2 个互不成比例（各自贡献一个独立方向）的齐次解。</p>
               <p><strong>第二步：由非齐次解造齐次解。</strong>对任意 $i,j$，</p>
-              <p>$$A(\eta_i-\eta_j)=A\eta_i-A\eta_j=b-b=0$$</p>
+              <p class="en">$$A(\eta_i-\eta_j)=A\eta_i-A\eta_j=b-b=0$$</p>
               <p>所以非齐次解的<strong>差</strong>一定是 $Ax=0$ 的解。取</p>
               <p>$$\xi_1=\eta_2-\eta_1=(1,0,0)^T,\qquad \xi_2=\eta_3-\eta_1=(0,1,1)^T$$</p>
               <p><strong>第三步：验证 $\xi_1,\xi_2$ 各自贡献一个独立方向。</strong>设 $k_1\xi_1+k_2\xi_2=(k_1,\ k_2,\ k_2)^T=(0,0,0)^T$。由第 1 个分量得 $k_1=0$，由第 2 个分量得 $k_2=0$，故 $\xi_1,\xi_2$ 互不成比例，通解中的两个任意常数缺一不可。</p>
               <p><strong>第四步：写出通解。</strong>$Ax=0$ 的自由未知量个数是 $3-R(A)=2$，而 $\xi_1,\xi_2$ 是它两个互不成比例的非零解，恰好是 $Ax=0$ 的一组基础解。于是</p>
-              <p>$$x=\eta_1+c_1\xi_1+c_2\xi_2=\begin{pmatrix}1\\2\\3\end{pmatrix}+c_1\begin{pmatrix}1\\0\\0\end{pmatrix}+c_2\begin{pmatrix}0\\1\\1\end{pmatrix},\qquad c_1,c_2\in\mathbb{R}$$</p>
+              <p class="en">$$x=\eta_1+c_1\xi_1+c_2\xi_2=\begin{pmatrix}1\\2\\3\end{pmatrix}+c_1\begin{pmatrix}1\\0\\0\end{pmatrix}+c_2\begin{pmatrix}0\\1\\1\end{pmatrix},\qquad c_1,c_2\in\mathbb{R}$$</p>
               <p><strong>第五步：核对题目给出的另外两个解。</strong>取 $c_1=1,c_2=0$ 得 $(2,2,3)^T=\eta_2$ ✓；取 $c_1=0,c_2=1$ 得 $(1,3,4)^T=\eta_3$ ✓。两个已知解都被通解包含，答案正确。</p>
               <p class="solution-label">易错提醒</p>
               <p>三处最容易错。<strong>一是把 $\eta_i$ 本身当成齐次解</strong>——$\eta_1$ 代入 $A$ 得到的是 $b\ne 0$，只有它们的<strong>差</strong>才满足 $A\xi=0$。<strong>二是只造出 1 个齐次解就收笔</strong>——$n-R(A)$ 是几就必须造几个，本题是 2 个。<strong>三是忘了写特解</strong>，只写 $c_1\xi_1+c_2\xi_2$，那是 $Ax=0$ 的通解而不是 $Ax=b$ 的。</p>
@@ -1185,7 +1195,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，则非齐次线性方程组 $Ax=b$ 有解的充要条件是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix. A necessary and sufficient condition for the nonhomogeneous system $Ax=b$ to be consistent is (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix. A necessary and sufficient condition for the nonhomogeneous system $Ax=b$ to be consistent is (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(A) = R(\bar A)$</span></li>
             <li><span class="opt-body">$R(A) = R(\bar A) = n$</span></li>
@@ -1197,7 +1207,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$R(A) = R(\bar A) = r &lt; n$，则 $Ax=b$（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix with $R(A) = R(\bar A) = r &lt; n$. Then $Ax=b$ (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix with $R(A) = R(\bar A) = r &lt; n$. Then $Ax=b$ (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">无解</span></li>
             <li><span class="opt-body">有唯一解</span></li>
@@ -1209,7 +1219,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 4 元非齐次线性方程组 $Ax=b$ 的通解为 $x=(1,0,1,0)^T + c_1(1,1,0,0)^T + c_2(0,0,1,1)^T$（$c_1,c_2$ 为任意常数），则 $R(A)=$（　）。
-             <span class="en-line" lang="en">The general solution of a nonhomogeneous system $Ax=b$ in 4 unknowns is $x=(1,0,1,0)^T + c_1(1,1,0,0)^T + c_2(0,0,1,1)^T$, where $c_1,c_2$ are arbitrary constants. Then $R(A)=$ (　).</span></p>
+             <span class="q-stem-en" lang="en">The general solution of a nonhomogeneous system $Ax=b$ in 4 unknowns is $x=(1,0,1,0)^T + c_1(1,1,0,0)^T + c_2(0,0,1,1)^T$, where $c_1,c_2$ are arbitrary constants. Then $R(A)=$ (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">$1$</span></li>
             <li data-correct="true"><span class="opt-body">$2$</span></li>
@@ -1221,7 +1231,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$b$ 为 $m$ 维列向量。下列命题正确的是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and $b$ an $m$-dimensional column vector. Which of the following statements are correct? (　)</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix and $b$ an $m$-dimensional column vector. Which of the following statements are correct? (　)</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">若 $R(A) = R(\bar A)$，则 $Ax=b$ 有解</span></li>
             <li data-correct="true"><span class="opt-body">若 $Ax=b$ 有无穷多解，则 $R(A) &lt; n$</span></li>
@@ -1233,7 +1243,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $\eta_1,\eta_2$ 是 4 元非齐次线性方程组 $Ax=b$ 的两个不同的解，且 $R(A)=2$，则（　）。
-             <span class="en-line" lang="en">Let $\eta_1,\eta_2$ be two distinct solutions of a nonhomogeneous system $Ax=b$ in 4 unknowns, and let $R(A)=2$. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $\eta_1,\eta_2$ be two distinct solutions of a nonhomogeneous system $Ax=b$ in 4 unknowns, and let $R(A)=2$. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$Ax=0$ 有非零解</span></li>
             <li data-correct="true"><span class="opt-body">$Ax=b$ 有无穷多解</span></li>
@@ -1245,7 +1255,7 @@
 
         <div class="q" data-type="judge" data-level="中等">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵。若 $R(A) = R(\bar A)$，则方程组 $Ax=b$ 有唯一解。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix. If $R(A) = R(\bar A)$, then the system $Ax=b$ has a unique solution.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix. If $R(A) = R(\bar A)$, then the system $Ax=b$ has a unique solution.</span></p>
           <ul class="options">
             <li><span class="opt-body">正确</span></li>
             <li data-correct="true"><span class="opt-body">错误</span></li>
@@ -1255,7 +1265,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $m\times n$ 实矩阵，则方程组 $Ax=0$ 与 $A^TAx=0$ 的解集（　）。
-             <span class="en-line" lang="en">Let $A$ be a real $m\times n$ matrix. Then the solution sets of the systems $Ax=0$ and $A^TAx=0$ are (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a real $m\times n$ matrix. Then the solution sets of the systems $Ax=0$ and $A^TAx=0$ are (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">前者是后者的真子集</span></li>
             <li><span class="opt-body">后者是前者的真子集</span></li>
@@ -1267,14 +1277,14 @@
 
         <div class="q" data-type="fill" data-level="考研">
           <p class="q-stem">设 $A$ 为 4 阶矩阵，$A^*$ 为其伴随矩阵，且 $R(A)=3$，则 $R(A^*) = $ ______。
-             <span class="en-line" lang="en">Let $A$ be a $4\times4$ matrix and $A^*$ its adjugate matrix, with $R(A)=3$. Then $R(A^*) = $ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times4$ matrix and $A^*$ its adjugate matrix, with $R(A)=3$. Then $R(A^*) = $ ______.</span></p>
           <div class="q-answer" data-answer="1"></div>
           <div class="q-explain">伴随矩阵的秩是分段结论：$R(A)=n$ 时 $R(A^*)=n$；$R(A)=n-1$ 时 $R(A^*)=1$；$R(A)\le n-2$ 时 $R(A^*)=0$。这里 $n=4$、$R(A)=3=n-1$，故 $R(A^*)=1$。<br>推导：$R(A)=3$ 说明 $A$ 至少有一个 3 阶非零子式，于是 $A^*\ne O$，$R(A^*)\ge1$；又 $|A|=0$ 使 $A^*A=|A|E=O$，由 $AB=O\Rightarrow R(A)+R(B)\le n$（见 3-3 节的性质 3.5）得 $R(A^*)+R(A)\le4$，即 $R(A^*)\le1$。两边夹逼得 $R(A^*)=1$。<br>常见错误答案是 3——直觉上「$A$ 的秩只比满秩差一级」，$A^*$ 的秩似乎也该只差一级，实际上它直接掉到了 1。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">已知线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + 2x_2 + ax_3 = 2 \\ x_1 + 4x_2 + a^2x_3 = b \end{cases}$ 有无穷多解，则（　）。
-             <span class="en-line" lang="en">The linear system $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + 2x_2 + ax_3 = 2 \\ x_1 + 4x_2 + a^2x_3 = b \end{cases}$ has infinitely many solutions. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">The linear system $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + 2x_2 + ax_3 = 2 \\ x_1 + 4x_2 + a^2x_3 = b \end{cases}$ has infinitely many solutions. Then (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">$a = 1$ 且 $b = 4$</span></li>
             <li><span class="opt-body">$a = 2$ 且 $b = 4$</span></li>
@@ -1286,7 +1296,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">若线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 2 \\ x_1 + x_2 + a^2 x_3 = 1 \end{cases}$ 有无穷多解，则 $a=$（　）。
-             <span class="en-line" lang="en">If the linear system $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 2 \\ x_1 + x_2 + a^2 x_3 = 1 \end{cases}$ has infinitely many solutions, then $a=$ (　).</span></p>
+             <span class="q-stem-en" lang="en">If the linear system $\begin{cases} x_1 + x_2 + x_3 = 1 \\ x_1 + a x_2 + x_3 = 2 \\ x_1 + x_2 + a^2 x_3 = 1 \end{cases}$ has infinitely many solutions, then $a=$ (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">$1$</span></li>
             <li data-correct="true"><span class="opt-body">$-1$</span></li>
@@ -1298,7 +1308,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$R(A)=1$，且 $\eta_1=(1,1,0)^T$、$\eta_2=(2,1,1)^T$、$\eta_3=(1,2,1)^T$ 都是非齐次线性方程组 $Ax=b$ 的解，则 $Ax=b$ 的通解为（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=1$, and let $\eta_1=(1,1,0)^T$, $\eta_2=(2,1,1)^T$, $\eta_3=(1,2,1)^T$ all be solutions of the nonhomogeneous system $Ax=b$. Then the general solution of $Ax=b$ is (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=1$, and let $\eta_1=(1,1,0)^T$, $\eta_2=(2,1,1)^T$, $\eta_3=(1,2,1)^T$ all be solutions of the nonhomogeneous system $Ax=b$. Then the general solution of $Ax=b$ is (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$x=(1,1,0)^T+c_1(1,0,1)^T+c_2(0,1,1)^T,\quad c_1,c_2\in\mathbb{R}$</span></li>
             <li><span class="opt-body">$x=(1,1,0)^T+c(1,1,0)^T,\quad c\in\mathbb{R}$</span></li>
@@ -1310,7 +1320,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">已知方程组 (Ⅰ) $\begin{cases} x_1 + 2x_2 + x_3 = 0 \\ x_1 + x_2 - x_3 = 0 \end{cases}$ 与方程组 (Ⅱ) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 2x_1 + x_2 + b x_3 = 0 \end{cases}$ 同解，则（　）。
-             <span class="en-line" lang="en">The system (I) $\begin{cases} x_1 + 2x_2 + x_3 = 0 \\ x_1 + x_2 - x_3 = 0 \end{cases}$ and the system (II) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 2x_1 + x_2 + b x_3 = 0 \end{cases}$ have the same solutions. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">The system (I) $\begin{cases} x_1 + 2x_2 + x_3 = 0 \\ x_1 + x_2 - x_3 = 0 \end{cases}$ and the system (II) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 2x_1 + x_2 + b x_3 = 0 \end{cases}$ have the same solutions. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$a = 2,\ b = -4$</span></li>
             <li><span class="opt-body">$a = -4,\ b = 2$</span></li>
@@ -1329,7 +1339,11 @@
 
       </div>
 
-      <h2 id="s3-3" data-hours="2.9">3-3 初等变换与秩</h2>
+      <h2 id="la-s3-3" data-hours="2.9"
+          data-video-map="la-s3-3"
+          data-video-title="《线性代数》全程教学视频（一高数）">3-3 初等变换与秩</h2>
+
+      <div data-video-entry="la-s3-3" data-video-pos="top"></div>
 
       <p>3-2 节的判定定理把「方程组有没有解、有几个解」全部归结为比较 $R(A)$ 与 $R(\bar A)$，可是我们始终回避了一个问题：<strong>秩到底怎么算？</strong>按定义去数非零子式的最高阶数，一个 $5\times5$ 矩阵就有 $100$ 个 3 阶子式，穷举根本不可行。本节补上这块地基：先把初等变换写成矩阵乘法（初等矩阵），证明它不改变秩，于是求秩就有了唯一实用的办法——化行阶梯形、数非零行。本节还要把秩这个贯穿全书的量彻底讲清楚，它后面会在第 4 章（极大线性无关组）、第 5 章（可对角化的判定）反复出现。</p>
 
@@ -1360,8 +1374,8 @@
         <p>把上述定义中的「行」全部换成「列」，就得到<span class="term">初等列变换</span>：$c_i \leftrightarrow c_j$、$c_i\times k\ (k\ne0)$、$c_j + k c_i$。初等行变换与初等列变换统称为<span class="term">初等变换</span>。</p>
         <p>若矩阵 $A$ 经过有限次初等变换变成 $B$，则称 $A$ 与 $B$ <span class="term">等价</span>，记作 $A \cong B$。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 3.4</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 3.4</span>
              <strong>Elementary Transformations.</strong>
              The following three operations performed on the <strong>rows</strong> of a matrix are called
              <span class="en-term">elementary row operations</span>:</p>
@@ -1371,11 +1385,11 @@
             <li>③ <strong>add $k$ times one row to another row</strong>: $r_j + k\,r_i$ ($k$ may be zero, in
                 which case nothing changes).</li>
           </ul>
-          <p>Replacing "row" by "column" throughout gives the
+          <p class="en">Replacing "row" by "column" throughout gives the
              <span class="en-term">elementary column operations</span>: $c_i \leftrightarrow c_j$,
              $c_i\times k\ (k\ne0)$, $c_j + k c_i$. Row operations and column operations together are called
              <span class="en-term">elementary transformations</span>.</p>
-          <p>If $A$ can be changed into $B$ by finitely many elementary transformations, we say $A$ and $B$ are
+          <p class="en">If $A$ can be changed into $B$ by finitely many elementary transformations, we say $A$ and $B$ are
              <span class="en-term">equivalent</span> and write $A \cong B$.</p>
         </div>
       </div>
@@ -1409,8 +1423,8 @@
           </table>
         </div>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 3.5</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 3.5</span>
              <strong>Elementary Matrices.</strong>
              A matrix obtained by performing <strong>one single</strong> elementary transformation on the
              $n\times n$ identity matrix $E$ is called an <span class="en-term">elementary matrix</span> of
@@ -1450,31 +1464,31 @@
         <p>记忆口诀：<strong>左乘行变换，右乘列变换</strong>。这个规律不是巧合——矩阵乘法 $PA$ 的每一行都是把 $A$ 的各行<strong>按系数相加</strong>得到的，所以左乘只能「重新组合行」；而 $AQ$ 的每一列都是把 $A$ 的各列<strong>按系数相加</strong>得到的，所以右乘只能「重新组合列」。</p>
         <p>以 $A=\begin{pmatrix}1&amp;2\\3&amp;4\end{pmatrix}$ 与互换两行的初等矩阵 $E(1,2)=\begin{pmatrix}0&amp;1\\1&amp;0\end{pmatrix}$ 为例：$E(1,2)A=\begin{pmatrix}3&amp;4\\1&amp;2\end{pmatrix}$ 正是互换 $A$ 的两行，而 $AE(1,2)=\begin{pmatrix}2&amp;1\\4&amp;3\end{pmatrix}$ 却是互换 $A$ 的两列。同一个矩阵，左乘与右乘的效果完全不同——这就是「左行右列」这四个字的全部内容。</p>
         <p><span class="thm-name">性质 3.4</span>　初等矩阵都可逆，且其逆矩阵仍是<strong>同类型</strong>的初等矩阵：</p>
-        <p>$$E(i,j)^{-1}=E(i,j),\qquad E(i(k))^{-1}=E\!\left(i\!\left(\tfrac1k\right)\right),\qquad E(i,j(k))^{-1}=E(i,j(-k))$$</p>
+        <p class="en">$$E(i,j)^{-1}=E(i,j),\qquad E(i(k))^{-1}=E\!\left(i\!\left(\tfrac1k\right)\right),\qquad E(i,j(k))^{-1}=E(i,j(-k))$$</p>
         <p>直观理解：互换两行做两次就还原；某行乘 $k$ 再乘 $1/k$ 就还原；某行加 $k$ 倍再加 $-k$ 倍就还原。既然逆矩阵还是初等矩阵，那么「初等变换」这个操作<strong>完全可以反向撤销</strong>，所以它不丢失信息、不改变秩。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 3.4</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 3.4</span>
              <strong>Left Multiplication Acts on Rows, Right Multiplication on Columns.</strong>
              Let $A$ be an $m\times n$ matrix. Multiplying $A$ on the <strong>left</strong> by an elementary
              matrix of order $m$ performs <strong>one corresponding elementary row operation</strong> on $A$;
              multiplying $A$ on the <strong>right</strong> by an elementary matrix of order $n$ performs
              <strong>one corresponding elementary column operation</strong> on $A$.</p>
-          <p>Mnemonic: <strong>left multiplication $\to$ row operation, right multiplication $\to$ column
+          <p class="en">Mnemonic: <strong>left multiplication $\to$ row operation, right multiplication $\to$ column
              operation</strong>. This is no accident — every row of the product $PA$ is obtained by adding the rows of
              the rows of $A$, so left multiplication can only "recombine rows"; every column of $AQ$ is a
              similarly obtained from the columns of $A$, so right multiplication can only "recombine columns".</p>
-          <p>Take $A=\begin{pmatrix}1&amp;2\\3&amp;4\end{pmatrix}$ and the row-interchange elementary matrix
+          <p class="en">Take $A=\begin{pmatrix}1&amp;2\\3&amp;4\end{pmatrix}$ and the row-interchange elementary matrix
              $E(1,2)=\begin{pmatrix}0&amp;1\\1&amp;0\end{pmatrix}$. Then
              $E(1,2)A=\begin{pmatrix}3&amp;4\\1&amp;2\end{pmatrix}$ interchanges the two rows of $A$, whereas
              $AE(1,2)=\begin{pmatrix}2&amp;1\\4&amp;3\end{pmatrix}$ interchanges the two columns. The same
              matrix, multiplied on the left or on the right, has completely different effects — that is the
              whole content of the phrase "left rows, right columns".</p>
-          <p><span class="bi-en-label">PROP 3.4</span>
+          <p class="en"><span class="bi-en-label">PROP 3.4</span>
              Every elementary matrix is invertible, and its inverse is again an elementary matrix of the
              <strong>same type</strong>:</p>
-          <p>$$E(i,j)^{-1}=E(i,j),\qquad E(i(k))^{-1}=E\!\left(i\!\left(\tfrac1k\right)\right),\qquad E(i,j(k))^{-1}=E(i,j(-k))$$</p>
-          <p>Intuitively: interchanging two rows twice restores the matrix; multiplying a row by $k$ and then
+          <p class="en">$$E(i,j)^{-1}=E(i,j),\qquad E(i(k))^{-1}=E\!\left(i\!\left(\tfrac1k\right)\right),\qquad E(i,j(k))^{-1}=E(i,j(-k))$$</p>
+          <p class="en">Intuitively: interchanging two rows twice restores the matrix; multiplying a row by $k$ and then
              by $1/k$ restores it; adding $k$ times a row and then $-k$ times that row restores it. Since the
              inverse is again an elementary matrix, an elementary transformation can always be
              <strong>undone</strong>; it loses no information and does not change the rank.</p>
@@ -1487,24 +1501,24 @@
         <p>$$PAQ = B$$</p>
         <p>道理很简单：每一次初等行变换 $=$ 左乘一个初等矩阵，每一次初等列变换 $=$ 右乘一个初等矩阵。把这一串初等矩阵乘起来（初等矩阵都可逆，可逆矩阵之积仍可逆）就得到了 $P$ 与 $Q$。</p>
         <p><span class="thm-name">定理 3.6</span>　若 $A$ 为 $m\times n$ 矩阵且 $R(A)=r$，则 $A$ 必等价于如下的<span class="term">等价标准形</span>：</p>
-        <p>$$A \cong \begin{pmatrix} E_r & O \\ O & O \end{pmatrix}_{m\times n}$$</p>
+        <p class="en">$$A \cong \begin{pmatrix} E_r & O \\ O & O \end{pmatrix}_{m\times n}$$</p>
         <p>其中 $E_r$ 是 $r$ 阶单位矩阵，$O$ 是相应阶数的零矩阵。这个标准形是<strong>唯一的</strong>——换句话说，$r$ 是等价关系下唯一的不变量：<strong>两个同型矩阵等价 $\iff$ 它们的秩相等</strong>。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 3.5</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 3.5</span>
              <strong>Equivalent Matrices and the Canonical Form.</strong>
              $A \cong B$ (that is, $A$ is equivalent to $B$) $\iff$ there exist invertible matrices $P$ (of
              order $m$) and $Q$ (of order $n$) such that</p>
           <p>$$PAQ = B$$</p>
-          <p>The reason is simple: every elementary row operation is left multiplication by an elementary
+          <p class="en">The reason is simple: every elementary row operation is left multiplication by an elementary
              matrix, and every elementary column operation is right multiplication by an elementary matrix.
              Multiplying that whole chain together (elementary matrices are invertible, and a product of
              invertible matrices is invertible) produces $P$ and $Q$.</p>
-          <p><span class="bi-en-label">THM 3.6</span>
+          <p class="en"><span class="bi-en-label">THM 3.6</span>
              If $A$ is an $m\times n$ matrix with $R(A)=r$, then $A$ is necessarily equivalent to the following
              <span class="en-term">canonical form</span>:</p>
-          <p>$$A \cong \begin{pmatrix} E_r & O \\ O & O \end{pmatrix}_{m\times n}$$</p>
-          <p>where $E_r$ is the identity matrix of order $r$ and $O$ denotes zero matrices of the appropriate
+          <p class="en">$$A \cong \begin{pmatrix} E_r & O \\ O & O \end{pmatrix}_{m\times n}$$</p>
+          <p class="en">where $E_r$ is the identity matrix of order $r$ and $O$ denotes zero matrices of the appropriate
              orders. This canonical form is <strong>unique</strong> — in other words, $r$ is the only invariant
              of the equivalence relation: <strong>two matrices of the same size are equivalent if and only if
              they have the same rank</strong>.</p>
@@ -1522,30 +1536,30 @@
           <li><strong>证明</strong>用定义一：要说「$R(A)\ge r$」就构造一个 $r$ 阶非零子式；要说「$R(A)\le r$」就说所有 $r+1$ 阶子式全为零。这是秩的证明题的标准打法。</li>
         </ul>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 3.6</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 3.6</span>
              <strong>The Rank of a Matrix (Two Equivalent Definitions).</strong></p>
-          <p><strong>Definition 1 (by minors; used for proofs).</strong> In an $m\times n$ matrix $A$, choose
+          <p class="en"><strong>Definition 1 (by minors; used for proofs).</strong> In an $m\times n$ matrix $A$, choose
              any $k$ rows and any $k$ columns; the determinant of order $k$ formed by the $k^2$ entries at the
              intersections of those rows and columns, kept in their original positions, is called a
              <span class="en-term">minor of order $k$</span> of $A$. If $A$ has a minor of order $r$ that is
              nonzero while every minor of order $r+1$ (if such minors exist) is zero, then $r$ is called the
              <span class="en-term">rank</span> of $A$, written $R(A)$. The rank of the zero matrix is defined to
              be $0$.</p>
-          <p>Equivalently: <strong>$R(A)=r \iff$ there exists a nonzero minor of order $r$, and all minors of
+          <p class="en">Equivalently: <strong>$R(A)=r \iff$ there exists a nonzero minor of order $r$, and all minors of
              order $r+1$ are zero.</strong> (When $r=\min\{m,n\}$ no minor of order $r+1$ exists, and only the
              first half is needed.) In other words, $R(A)$ is the <strong>highest order of a nonzero
              minor</strong>.</p>
-          <p><strong>Definition 2 (by echelon form; used for computation).</strong> $R(A)$ equals the
+          <p class="en"><strong>Definition 2 (by echelon form; used for computation).</strong> $R(A)$ equals the
              <strong>number of nonzero rows</strong> in a row echelon form of $A$.</p>
-          <p><strong>The two definitions are equivalent</strong>; this is guaranteed by "elementary
+          <p class="en"><strong>The two definitions are equivalent</strong>; this is guaranteed by "elementary
              transformations do not change the rank" together with "the number of nonzero rows of a matrix in
              row echelon form is the highest order of its nonzero minors". In examinations the division of
              labour is completely clear:</p>
           <ul>
-            <li><strong>For computation</strong> use Definition 2: reduce to row echelon form and count the
+            <li class="en"><strong>For computation</strong> use Definition 2: reduce to row echelon form and count the
                 nonzero rows.</li>
-            <li><strong>For proofs</strong> use Definition 1: to show $R(A)\ge r$, exhibit one nonzero minor of
+            <li class="en"><strong>For proofs</strong> use Definition 1: to show $R(A)\ge r$, exhibit one nonzero minor of
                 order $r$; to show $R(A)\le r$, show that all minors of order $r+1$ are zero. This is the
                 standard way to attack a proof problem about rank.</li>
           </ul>
@@ -1573,8 +1587,8 @@
           <li>⑧ 若 $A$ 为 $m\times n$、$B$ 为 $n\times s$ 矩阵且 $AB=O$，则 $R(A)+R(B)\le n$。（理由：$B$ 的每一列都是 $Ax=0$ 的解，而该齐次方程组的<strong>自由未知量个数</strong>为 $n-R(A)$。这个结论考研中常反过来用。）</li>
         </ul>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">PROP 3.5</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">PROP 3.5</span>
              <strong>Basic Properties of the Rank.</strong>
              Let $A$ be an $m\times n$ matrix.</p>
           <ul>
@@ -1599,18 +1613,18 @@
           <li>若矩阵含参数，则在消元过程中每遇到需要除以含参数的式子，就分情况讨论，最后对每个临界参数值单独求出秩。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span>
              <strong>Finding the Rank by Elementary Row Operations.</strong></p>
           <ol>
-            <li>Apply <strong>elementary transformations</strong> to $A$ (both row and column operations are
+            <li class="en">Apply <strong>elementary transformations</strong> to $A$ (both row and column operations are
                 allowed, since neither changes the rank; but for compatibility with solving systems later we
                 habitually use row operations only).</li>
-            <li>The goal is <strong>row echelon form</strong>: working downwards, use row 1 to clear the entries
+            <li class="en">The goal is <strong>row echelon form</strong>: working downwards, use row 1 to clear the entries
                 below the first pivot, then row 2 to clear below the second, and so on.</li>
-            <li>Count the <strong>nonzero rows</strong> of the echelon form; that is $R(A)$. There is no need to
+            <li class="en">Count the <strong>nonzero rows</strong> of the echelon form; that is $R(A)$. There is no need to
                 continue to reduced row echelon form (for finding the rank, echelon form is enough).</li>
-            <li>If the matrix contains parameters, then whenever the elimination would divide by an expression
+            <li class="en">If the matrix contains parameters, then whenever the elimination would divide by an expression
                 containing a parameter, split into cases; finally compute the rank separately for each critical
                 value of the parameter.</li>
           </ol>
@@ -1627,21 +1641,21 @@
           <li>求完建议验算：算一两个位置上的 $AA^{-1}$ 的元素，或验证 $|A|\cdot|A^{-1}|=1$。$n=3$ 时完整验算 $AA^{-1}=E$ 也很快，强烈建议做。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span>
              <strong>Finding an Inverse Matrix by Elementary Transformations.</strong></p>
           <ol>
-            <li>Form the block matrix $(A \mid E)$, where $A$ is an $n\times n$ matrix. The justification is
+            <li class="en">Form the block matrix $(A \mid E)$, where $A$ is an $n\times n$ matrix. The justification is
                 "$A$ is invertible $\iff A\cong E$".</li>
-            <li>Apply <strong>elementary row operations only</strong> to $(A \mid E)$ (never column
+            <li class="en">Apply <strong>elementary row operations only</strong> to $(A \mid E)$ (never column
                 operations), aiming to turn the left half into $E$. Doing so is equivalent to multiplying on
                 the left by a chain of elementary matrices; let $P$ be their product, so that
                 $P(A\mid E) = (PA \mid PE)$.</li>
-            <li>If the left half can be turned into $E$, that is $PA=E$, then necessarily $P=A^{-1}$, so the
+            <li class="en">If the left half can be turned into $E$, that is $PA=E$, then necessarily $P=A^{-1}$, so the
                 right half automatically becomes $A^{-1}$ and the result is $(E \mid A^{-1})$.</li>
-            <li>If a <strong>zero row</strong> appears in the left half, then $R(A) &lt; n$ and $A$ is not
+            <li class="en">If a <strong>zero row</strong> appears in the left half, then $R(A) &lt; n$ and $A$ is not
                 invertible; stop at once and state the conclusion "$A$ is not invertible".</li>
-            <li>Always check the answer afterwards: compute a couple of entries of $AA^{-1}$, or verify
+            <li class="en">Always check the answer afterwards: compute a couple of entries of $AA^{-1}$, or verify
                 $|A|\cdot|A^{-1}|=1$. For $n=3$ a full check of $AA^{-1}=E$ is quick and strongly
                 recommended.</li>
           </ol>
@@ -1660,7 +1674,7 @@
             <p><strong>第一步：化行阶梯形。</strong>用第 1 行消去第 1 列下方的元素（$r_3-2r_1$，$r_4-r_1$，第 2 行第 1 列已是 $0$，不用动）：</p>
             <p>$$r_3-2r_1 = (2,0,3,-1,3)-(2,2,4,4,2)=(0,-2,-1,-5,1)$$</p>
             <p>$$r_4-r_1 = (1,1,0,4,-1)-(1,1,2,2,1)=(0,0,-2,2,-2)$$</p>
-            <p>$$A \to \begin{pmatrix} 1 & 1 & 2 & 2 & 1 \\ 0 & 2 & 1 & 5 & -1 \\ 0 & -2 & -1 & -5 & 1 \\ 0 & 0 & -2 & 2 & -2 \end{pmatrix}$$</p>
+            <p class="en">$$A \to \begin{pmatrix} 1 & 1 & 2 & 2 & 1 \\ 0 & 2 & 1 & 5 & -1 \\ 0 & -2 & -1 & -5 & 1 \\ 0 & 0 & -2 & 2 & -2 \end{pmatrix}$$</p>
             <p>再用第 2 行消去第 2 列下方：$r_3+r_2 = (0,0,0,0,0)$，正好是零行。</p>
             <p>$$\to \begin{pmatrix} 1 & 1 & 2 & 2 & 1 \\ 0 & 2 & 1 & 5 & -1 \\ 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & -2 & 2 & -2 \end{pmatrix}\xrightarrow{\ r_3\leftrightarrow r_4\ }\begin{pmatrix} 1 & 1 & 2 & 2 & 1 \\ 0 & 2 & 1 & 5 & -1 \\ 0 & 0 & -2 & 2 & -2 \\ 0 & 0 & 0 & 0 & 0 \end{pmatrix}$$</p>
             <p>（把零行换到最下方，这才是标准的行阶梯形。）</p>
@@ -1700,7 +1714,7 @@
             <p>$$r_1-2r_2 = (1,0,0 \mid -2+3,\ -3+6,\ 3-5) = (1,0,0\mid 1,3,-2)$$</p>
             <p>$$\to\begin{pmatrix} 1 & 0 & 0 & 1 & 3 & -2 \\ 0 & 1 & 0 & -\frac32 & -3 & \frac52 \\ 0 & 0 & 1 & 1 & 1 & -1 \end{pmatrix}=(E\mid A^{-1})$$</p>
             <p>所以</p>
-            <p>$$A^{-1}=\begin{pmatrix} 1 & 3 & -2 \\ -\frac32 & -3 & \frac52 \\ 1 & 1 & -1 \end{pmatrix}$$</p>
+            <p class="en">$$A^{-1}=\begin{pmatrix} 1 & 3 & -2 \\ -\frac32 & -3 & \frac52 \\ 1 & 1 & -1 \end{pmatrix}$$</p>
             <p><strong>第三步：验算 $AA^{-1}=E$。</strong>$A$ 的第 1 行 $(1,2,3)$ 与 $A^{-1}$ 的三列对应项相乘再相加：$1-3+3=1$ ✓，$3-6+3=0$ ✓，$-2+5-3=0$ ✓。第 2 行 $(2,2,1)$：$2-3+1=0$ ✓，$6-6+1=1$ ✓，$-4+5-1=0$ ✓。第 3 行 $(3,4,3)$：$3-6+3=0$ ✓，$9-12+3=0$ ✓，$-6+10-3=1$ ✓。九个元素全部符合，计算正确。</p>
           </div>
         </div>
@@ -1716,7 +1730,7 @@
           <div class="solution">
             <p class="solution-label">解</p>
             <p><strong>第一步：作初等行变换。</strong>用第 1 行消去第 1 列下方（$r_2-r_1$，$r_3-r_1$）：</p>
-            <p>$$A\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & 1 & a-1 \\ 0 & 3 & a^2-1 \end{pmatrix}$$</p>
+            <p class="en">$$A\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & 1 & a-1 \\ 0 & 3 & a^2-1 \end{pmatrix}$$</p>
             <p>再用第 2 行消去第 3 行第 2 列（$r_3-3r_2$）：</p>
             <p>$$\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & 1 & a-1 \\ 0 & 0 & (a^2-1)-3(a-1) \end{pmatrix}$$</p>
             <p>计算最后一个元素：$(a^2-1)-3(a-1) = a^2-3a+2 = (a-1)(a-2)$。</p>
@@ -1812,10 +1826,10 @@
               <p>$$|A|=\begin{vmatrix} 1 & 1 & 1 \\ 1 & a & 2 \\ 1 & 2 & a \end{vmatrix}=a^2+4-2a-4=a^2-2a=a(a-2)$$</p>
               <p>所以只有 $a=0$ 与 $a=2$ 可能使秩小于 $3$；$a\ne 0$ 且 $a\ne 2$ 时 $|A|\ne 0$，$R(A)=3$。</p>
               <p><strong>第二步：用初等行变换求 $a=0$ 时的秩。</strong>此时 $A=\begin{pmatrix}1&1&1\\1&0&2\\1&2&0\end{pmatrix}$，作 $r_2-r_1$、$r_3-r_1$：</p>
-              <p>$$A\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & -1 & 1 \\ 0 & 1 & -1 \end{pmatrix}\xrightarrow{\ r_3+r_2\ }\begin{pmatrix} 1 & 1 & 1 \\ 0 & -1 & 1 \\ 0 & 0 & 0 \end{pmatrix}$$</p>
+              <p class="en">$$A\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & -1 & 1 \\ 0 & 1 & -1 \end{pmatrix}\xrightarrow{\ r_3+r_2\ }\begin{pmatrix} 1 & 1 & 1 \\ 0 & -1 & 1 \\ 0 & 0 & 0 \end{pmatrix}$$</p>
               <p>只有 2 个非零行，且第 2 行 $(0,-1,1)$ 与第 1 行 $(1,1,1)$ 不成比例，故 $R(A)=2$。</p>
               <p><strong>第三步：求 $a=2$ 时的秩。</strong>此时 $A=\begin{pmatrix}1&1&1\\1&2&2\\1&2&2\end{pmatrix}$，第 2、3 两行完全相同，作 $r_3-r_2$ 得零行：</p>
-              <p>$$A\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & 1 & 1 \\ 0 & 0 & 0 \end{pmatrix}$$</p>
+              <p class="en">$$A\to\begin{pmatrix} 1 & 1 & 1 \\ 0 & 1 & 1 \\ 0 & 0 & 0 \end{pmatrix}$$</p>
               <p>2 个非零行，故 $R(A)=2$。</p>
               <p><strong>第四步：$R(A)$ 能等于 $1$ 吗？</strong>若 $R(A)=1$，则第 1 行 $(1,1,1)$ 与第 2 行 $(1,a,2)$ 必须成比例：由第 1 个分量得比例系数为 $1$，于是第 2 个分量应有 $a=1$，第 3 个分量应有 $2=1$，矛盾。所以<strong>对任何 $a$ 都有 $R(A)\ge 2$，$R(A)=1$ 不可能出现</strong>。</p>
               <p><strong>答案：</strong>$a\ne 0$ 且 $a\ne 2$ 时 $R(A)=3$；$a=0$ 或 $a=2$ 时 $R(A)=2$；不存在使 $R(A)=1$ 的 $a$。</p>
@@ -1831,7 +1845,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">用初等变换求逆矩阵时，应对分块矩阵 $(A\mid E)$ 作（　）。
-             <span class="en-line" lang="en">When finding an inverse matrix by elementary transformations, one should apply to the block matrix $(A\mid E)$ (　).</span></p>
+             <span class="q-stem-en" lang="en">When finding an inverse matrix by elementary transformations, one should apply to the block matrix $(A\mid E)$ (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">只作初等行变换</span></li>
             <li><span class="opt-body">只作初等列变换</span></li>
@@ -1843,7 +1857,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$R(A)=r$，则下列刻画正确的是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix with $R(A)=r$. Which of the following characterizations is correct? (　)</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix with $R(A)=r$. Which of the following characterizations is correct? (　)</span></p>
           <ul class="options">
             <li><span class="opt-body">$A$ 的所有 $r$ 阶子式都不为零</span></li>
             <li data-correct="true"><span class="opt-body">$A$ 存在 $r$ 阶非零子式，且所有 $r+1$ 阶子式全为零</span></li>
@@ -1855,7 +1869,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$P,Q$ 分别为 $m$ 阶与 $n$ 阶可逆矩阵，则（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and let $P$, $Q$ be invertible matrices of orders $m$ and $n$ respectively. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix and let $P$, $Q$ be invertible matrices of orders $m$ and $n$ respectively. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(PAQ) = R(A)$</span></li>
             <li><span class="opt-body">$R(PAQ) = R(A)$ 仅当 $P,Q$ 都是初等矩阵时成立</span></li>
@@ -1867,7 +1881,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$B$ 为 $n\times s$ 矩阵，则下列不等式一定成立的是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix. Which of the following inequalities always holds? (　)</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix. Which of the following inequalities always holds? (　)</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(AB) \le \min\{R(A),\,R(B)\}$</span></li>
             <li><span class="opt-body">$R(AB) \ge \min\{R(A),\,R(B)\}$</span></li>
@@ -1879,7 +1893,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A,B$ 均为 $n$ 阶矩阵，且 $AB=O$，则（　）。
-             <span class="en-line" lang="en">Let $A$ and $B$ be $n\times n$ matrices with $AB=O$. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ and $B$ be $n\times n$ matrices with $AB=O$. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(A) + R(B) \le n$</span></li>
             <li><span class="opt-body">$R(A) + R(B) \ge n$</span></li>
@@ -1891,14 +1905,14 @@
 
         <div class="q" data-type="fill" data-level="中等">
           <p class="q-stem">设 $A$ 为 $3\times 4$ 矩阵，$B$ 为 $4\times 3$ 矩阵，且 $R(AB)=3$，则 $R(A) = $ ______。
-             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times3$ matrix with $R(AB)=3$. Then $R(A) = $ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times3$ matrix with $R(AB)=3$. Then $R(A) = $ ______.</span></p>
           <div class="q-answer" data-answer="3"></div>
           <div class="q-explain">由 $R(AB)\le\min\{R(A),R(B)\}$ 得 $R(A)\ge R(AB)=3$；又 $A$ 只有 3 行，故 $R(A)\le 3$。两边夹逼得 $R(A)=3$（同理 $R(B)=3$，因为 $B$ 是 $4\times3$、只有 3 <strong>列</strong>，故 $R(B)\le 3$，且 $R(B)\ge R(AB)=3$）。<br>这类「由乘积的秩反推因子的秩」是考研常考的小题，关键是把不等式两个方向都用上：下界来自 $R(AB)\le R(A)$，上界来自矩阵本身的形状。</div>
         </div>
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A,B$ 为 $n$ 阶矩阵，则下列结论正确的是（　）。
-             <span class="en-line" lang="en">Let $A$ and $B$ be $n\times n$ matrices. Which of the following conclusions are correct? (　)</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ and $B$ be $n\times n$ matrices. Which of the following conclusions are correct? (　)</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(A+B) \le R(A) + R(B)$</span></li>
             <li data-correct="true"><span class="opt-body">$R(AB) \le \min\{R(A),\,R(B)\}$</span></li>
@@ -1910,7 +1924,7 @@
 
         <div class="q" data-type="multi" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，满足 $A^2 - 3A + 2E = O$，则（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2 - 3A + 2E = O$. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2 - 3A + 2E = O$. Then (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">$A = E$ 或 $A = 2E$</span></li>
             <li data-correct="true"><span class="opt-body">$R(A-E) + R(A-2E) \le n$</span></li>
@@ -1922,7 +1936,7 @@
 
         <div class="q" data-type="judge" data-level="考研">
           <p class="q-stem">设 $A$ 为 4 阶矩阵，$A^*$ 是 $A$ 的伴随矩阵。若 $R(A)=3$，则 $R(A^*)=3$。
-             <span class="en-line" lang="en">Let $A$ be a $4\times4$ matrix and $A^*$ its adjugate matrix. If $R(A)=3$, then $R(A^*)=3$.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times4$ matrix and $A^*$ its adjugate matrix. If $R(A)=3$, then $R(A^*)=3$.</span></p>
           <ul class="options">
             <li><span class="opt-body">正确</span></li>
             <li data-correct="true"><span class="opt-body">错误</span></li>
@@ -1932,7 +1946,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，且 $A^2 = E$，则（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix with $A^2 = E$. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix with $A^2 = E$. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(A-E) + R(A+E) = n$</span></li>
             <li><span class="opt-body">$R(A-E) + R(A+E) \le n$，但等号不一定成立</span></li>
@@ -1944,7 +1958,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A=\begin{pmatrix} 1 & 1 & 1 \\ 1 & a & 3 \\ 1 & 3 & a \end{pmatrix}$，则 $R(A)=2$ 的充要条件是（　）。
-             <span class="en-line" lang="en">Let $A=\begin{pmatrix} 1 & 1 & 1 \\ 1 & a & 3 \\ 1 & 3 & a \end{pmatrix}$. A necessary and sufficient condition for $R(A)=2$ is (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=\begin{pmatrix} 1 & 1 & 1 \\ 1 & a & 3 \\ 1 & 3 & a \end{pmatrix}$. A necessary and sufficient condition for $R(A)=2$ is (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">$a = 3$</span></li>
             <li><span class="opt-body">$a = -1$</span></li>
@@ -1956,7 +1970,7 @@
 
         <div class="q" data-type="fill" data-level="考研">
           <p class="q-stem">设 $A$ 为 $3\times 4$ 矩阵，$B$ 为 $4\times 3$ 矩阵，且 $AB=O$，则 $R(A) + R(B)$ 的最大值为 ______。
-             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times3$ matrix with $AB=O$. Then the maximum value of $R(A) + R(B)$ is ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times3$ matrix with $AB=O$. Then the maximum value of $R(A) + R(B)$ is ______.</span></p>
           <div class="q-answer" data-answer="4"></div>
           <div class="q-explain">由 $AB=O \Rightarrow R(A)+R(B)\le n$（性质 3.5 ⑧），这里的「$n$」是乘积 $AB$ 的<strong>中间维数</strong>，即 $A$ 的列数、也是 $B$ 的行数，故 $n=4$，于是 $R(A)+R(B)\le 4$。<br>上界 4 能否取到？取 $A=\begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\end{pmatrix}$（$R(A)=3$）与 $B=\begin{pmatrix}0&0&0\\0&0&0\\0&0&0\\1&0&0\end{pmatrix}$（$R(B)=1$）。$A$ 的第 4 列全为零，而 $B$ 只有第 4 行第 1 列一个非零元，故 $AB=O$，且 $R(A)+R(B)=3+1=4$。所以最大值就是 4。<br>常见错答有两个。答 <strong>3</strong> 是把「$R(A)+R(B)$」与「$R(A)$ 的上界 $\min\{m,n\}=3$」混为一谈，忘了 $R(B)$ 也要计入。答 <strong>6</strong> 是分别取了 $R(A)\le3$、$R(B)\le3$ 再把两个上界相加，而 $AB=O$ 恰恰把两者之和压到了 4 以内——这正是本题的关键。另外，$R(A)+R(B)\le\min\{m,s\}=\min\{3,3\}=3$ 也是错的，中间维数 $n=4$ 才是正确的上界来源。</div>
         </div>
@@ -1978,14 +1992,14 @@
 
         <div class="q" data-type="fill" data-level="基础">
           <p class="q-stem">设 4 元非齐次线性方程组 $Ax=b$ 有两个不同的解 $\eta_1,\eta_2$，且 $R(A)=2$，则 $Ax=b$ 的通解中含有的独立任意常数个数为 ______。
-             <span class="en-line" lang="en">A nonhomogeneous system $Ax=b$ in 4 unknowns has two distinct solutions $\eta_1,\eta_2$, and $R(A)=2$. Then the general solution of $Ax=b$ contains ______ independent arbitrary constants.</span></p>
+             <span class="q-stem-en" lang="en">A nonhomogeneous system $Ax=b$ in 4 unknowns has two distinct solutions $\eta_1,\eta_2$, and $R(A)=2$. Then the general solution of $Ax=b$ contains ______ independent arbitrary constants.</span></p>
           <div class="q-answer" data-answer="2"></div>
           <div class="q-explain">$\eta_1$ 是解说明方程组有解，故 $R(\bar A)=R(A)=2&lt;n=4$，方程组有无穷多解，自由未知量个数为 $n-R(A)=4-2=2$，所以通解中含 2 个独立任意常数。<br>注意不要被 $\eta_1,\eta_2$ 干扰：它们只提供 1 个齐次解 $\eta_1-\eta_2$，剩下的齐次解要靠「自由未知量个数为 2」这一信息来补足。这类「已知两个非齐次解加秩，求通解结构」的题目，考查的正是 $n-R(A)$ 公式与「非齐次解之差是齐次解」这两条。</div>
         </div>
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$R(A)=2$，$\eta_1=(1,1,1)^T$ 与 $\eta_2=(2,3,4)^T$ 都是非齐次线性方程组 $Ax=b$ 的解，则 $Ax=b$ 的通解为（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=2$, and let $\eta_1=(1,1,1)^T$ and $\eta_2=(2,3,4)^T$ both be solutions of the nonhomogeneous system $Ax=b$. Then the general solution of $Ax=b$ is (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=2$, and let $\eta_1=(1,1,1)^T$ and $\eta_2=(2,3,4)^T$ both be solutions of the nonhomogeneous system $Ax=b$. Then the general solution of $Ax=b$ is (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$x=(1,1,1)^T + c(1,2,3)^T,\ c\in\mathbb{R}$</span></li>
             <li><span class="opt-body">$x=(1,1,1)^T + c(2,3,4)^T,\ c\in\mathbb{R}$</span></li>
@@ -1997,7 +2011,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$B$ 为 $n\times s$ 矩阵，且 $AB=O$，则（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix with $AB=O$. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix with $AB=O$. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(A) + R(B) \le n$</span></li>
             <li><span class="opt-body">$R(A) + R(B) \le m$</span></li>
@@ -2009,7 +2023,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$A^*$ 是 $A$ 的伴随矩阵，则（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix and $A^*$ its adjugate matrix. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix and $A^*$ its adjugate matrix. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">若 $R(A)=3$，则 $R(A^*)=3$</span></li>
             <li data-correct="true"><span class="opt-body">若 $R(A)=2$，则 $R(A^*)=1$</span></li>
@@ -2021,7 +2035,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$A^*$ 为其伴随矩阵，且 $R(A)=2$，则齐次线性方程组 $A^*x=0$ 的自由未知量个数为（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix and $A^*$ its adjugate matrix, with $R(A)=2$. Then the number of free variables of the homogeneous system $A^*x=0$ is (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix and $A^*$ its adjugate matrix, with $R(A)=2$. Then the number of free variables of the homogeneous system $A^*x=0$ is (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">$0$</span></li>
             <li><span class="opt-body">$1$</span></li>
@@ -2033,7 +2047,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">若线性方程组 $\begin{cases} x_1 + x_2 + x_3 = 1 \\ 2x_1 + 3x_2 + ax_3 = 3 \\ x_1 + ax_2 + 3x_3 = 2 \end{cases}$ 无解，则 $a = $（　）。
-             <span class="en-line" lang="en">If the linear system $\begin{cases} x_1 + x_2 + x_3 = 1 \\ 2x_1 + 3x_2 + ax_3 = 3 \\ x_1 + ax_2 + 3x_3 = 2 \end{cases}$ has no solution, then $a = $ (　).</span></p>
+             <span class="q-stem-en" lang="en">If the linear system $\begin{cases} x_1 + x_2 + x_3 = 1 \\ 2x_1 + 3x_2 + ax_3 = 3 \\ x_1 + ax_2 + 3x_3 = 2 \end{cases}$ has no solution, then $a = $ (　).</span></p>
           <ul class="options">
             <li><span class="opt-body">$0$</span></li>
             <li><span class="opt-body">$3$</span></li>
@@ -2045,7 +2059,7 @@
 
         <div class="q" data-type="multi" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，则下列说法正确的是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. Which of the following statements are correct? (　)</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix. Which of the following statements are correct? (　)</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">若 $R(A)=n$，则对任意 $n$ 维列向量 $b$，$Ax=b$ 都有唯一解</span></li>
             <li data-correct="true"><span class="opt-body">若 $|A|=0$，则存在 $n$ 维列向量 $b$，使 $Ax=b$ 无解</span></li>
@@ -2057,7 +2071,7 @@
 
         <div class="q" data-type="judge" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，$R(A)=n-1$，则 $A^*$ 的每一列都是齐次线性方程组 $Ax=0$ 的解。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix with $R(A)=n-1$. Then every column of $A^*$ is a solution of the homogeneous system $Ax=0$.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix with $R(A)=n-1$. Then every column of $A^*$ is a solution of the homogeneous system $Ax=0$.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
@@ -2067,7 +2081,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">已知方程组 (Ⅰ) $\begin{cases} x_1 + x_2 + x_3 = 0 \\ 2x_1 + x_2 - x_3 = 0 \end{cases}$ 与方程组 (Ⅱ) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 3x_1 + x_2 + b x_3 = 0 \end{cases}$ 同解，则（　）。
-             <span class="en-line" lang="en">The system (I) $\begin{cases} x_1 + x_2 + x_3 = 0 \\ 2x_1 + x_2 - x_3 = 0 \end{cases}$ and the system (II) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 3x_1 + x_2 + b x_3 = 0 \end{cases}$ have the same solutions. Then (　).</span></p>
+             <span class="q-stem-en" lang="en">The system (I) $\begin{cases} x_1 + x_2 + x_3 = 0 \\ 2x_1 + x_2 - x_3 = 0 \end{cases}$ and the system (II) $\begin{cases} x_1 + a x_2 + x_3 = 0 \\ 3x_1 + x_2 + b x_3 = 0 \end{cases}$ have the same solutions. Then (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$a = 1,\ b = -3$</span></li>
             <li><span class="opt-body">$a = -3,\ b = 1$</span></li>
@@ -2079,7 +2093,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $3\times 4$ 矩阵，$R(A)=2$，且 $\eta_1=(1,0,0,1)^T$、$\eta_2=(0,1,0,2)^T$、$\eta_3=(0,0,1,3)^T$ 都是非齐次线性方程组 $Ax=b$ 的解，则 $Ax=b$ 的通解为（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix with $R(A)=2$, and let $\eta_1=(1,0,0,1)^T$, $\eta_2=(0,1,0,2)^T$, $\eta_3=(0,0,1,3)^T$ all be solutions of the nonhomogeneous system $Ax=b$. Then the general solution of $Ax=b$ is (　).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times4$ matrix with $R(A)=2$, and let $\eta_1=(1,0,0,1)^T$, $\eta_2=(0,1,0,2)^T$, $\eta_3=(0,0,1,3)^T$ all be solutions of the nonhomogeneous system $Ax=b$. Then the general solution of $Ax=b$ is (　).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$x=(1,0,0,1)^T+c_1(1,-1,0,-1)^T+c_2(1,0,-1,-2)^T,\quad c_1,c_2\in\mathbb{R}$</span></li>
             <li><span class="opt-body">$x=(1,0,0,1)^T+c_1(0,1,0,2)^T+c_2(0,0,1,3)^T,\quad c_1,c_2\in\mathbb{R}$</span></li>
@@ -2120,6 +2134,6 @@
 <script src="../assets/js/course-data.js"></script>
 <script src="../assets/js/site.js"></script>
 <script src="../assets/js/theme.js"></script>
-
 </body>
+
 </html>

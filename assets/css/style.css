@@ -1400,7 +1400,12 @@ body.math-failed .math-fallback-note { display: block; }
    切换开关在顶栏，状态存在 <html data-lang>（由 theme.js 写入、首屏同步脚本预设）。 */
 [data-lang="zh"] .en,
 [data-lang="zh"] .q-stem-en,
-[data-lang="zh"] .en-inline { display: none !important; }
+[data-lang="zh"] .en-inline,
+/* 线性代数页的英文标签/术语（源项目类名，第 37 节接入）——
+   纯中文模式下它们随所属的 .en 容器一起隐藏，否则会漏出英文单词 */
+[data-lang="zh"] .bi-en-label,
+[data-lang="zh"] .bi-en-term,
+[data-lang="zh"] .en-term { display: none !important; }
 
 /* 纯中文模式下，英文段组消失后中英之间的额外下边距也不需要了 */
 [data-lang="zh"] .bi > .zh:last-child { margin-bottom: 0; }

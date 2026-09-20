@@ -226,6 +226,14 @@
       note: '未匹配小节的补充资源（2026-09-18 用户审核通过）。UP 主：考研数学李烈老师。',
       source: 'https://api.bilibili.com/x/web-interface/view?bvid=BV1hW4y1D7ow',
     },
+    'BV1Et421E7jk': {
+      title: '《线性代数》全程教学视频（一高数）',
+      url: 'https://www.bilibili.com/video/BV1Et421E7jk',
+      platform: 'bilibili',
+      parts: 22,
+      note: '线性代数科目主来源。P1 为「一高数指南」，P2–P22 依次对应 6 章 21 节。',
+      source: 'https://api.bilibili.com/x/player/pagelist?bvid=BV1Et421E7jk',
+    },
   };
 
   /* ---------------- 章节 → 视频对应表 ----------------
@@ -524,7 +532,73 @@
     's12-8': [
       { video: 'BV1144y1K7HE', part: null, partLabel: '主 ｜ 25分钟搞懂傅里叶级数', duration: '24:16', verified: true, section: '12.7', role: 'primary', external: true },
       { video: 'BV1zv4y1U7gd', part: null, partLabel: '备 ｜ 数学分析：傅里叶级数（最易懂讲法）', duration: '34:49', verified: true, section: '12.7', role: 'backup', external: true },
-    ],  };
+    ],
+
+    /* ---- 线性代数（BV1Et421E7jk，P2–P22 一一对应；分P号与时长取自 B 站官方接口）---- */
+    'la-s1-1': [
+      { video: 'BV1Et421E7jk', part: 2, partLabel: '二三阶行列式', duration: '19:59', verified: true, section: '1-1' },
+    ],
+    'la-s1-2': [
+      { video: 'BV1Et421E7jk', part: 3, partLabel: '全排列和对换', duration: '20:28', verified: true, section: '1-2' },
+    ],
+    'la-s1-3': [
+      { video: 'BV1Et421E7jk', part: 4, partLabel: '行列式的定义', duration: '23:29', verified: true, section: '1-3' },
+    ],
+    'la-s1-4': [
+      { video: 'BV1Et421E7jk', part: 5, partLabel: '行列式的性质', duration: '25:17', verified: true, section: '1-4' },
+    ],
+    'la-s1-5': [
+      { video: 'BV1Et421E7jk', part: 6, partLabel: '行列式按行(列)展开', duration: '31:13', verified: true, section: '1-5' },
+    ],
+    'la-s1-6': [
+      { video: 'BV1Et421E7jk', part: 7, partLabel: '行列式的计算', duration: '45:19', verified: true, section: '1-6' },
+    ],
+    'la-s2-1': [
+      { video: 'BV1Et421E7jk', part: 8, partLabel: '矩阵与其运算', duration: '39:34', verified: true, section: '2-1' },
+    ],
+    'la-s2-2': [
+      { video: 'BV1Et421E7jk', part: 9, partLabel: '逆矩阵', duration: '22:56', verified: true, section: '2-2' },
+    ],
+    'la-s2-3': [
+      { video: 'BV1Et421E7jk', part: 10, partLabel: '矩阵的公式', duration: '9:22', verified: true, section: '2-3' },
+    ],
+    'la-s2-4': [
+      { video: 'BV1Et421E7jk', part: 11, partLabel: '分块矩阵', duration: '11:18', verified: true, section: '2-4' },
+    ],
+    'la-s3-1': [
+      { video: 'BV1Et421E7jk', part: 12, partLabel: '克拉默法则', duration: '6:39', verified: true, section: '3-1' },
+    ],
+    'la-s3-2': [
+      { video: 'BV1Et421E7jk', part: 13, partLabel: '线性方程组', duration: '61:34', verified: true, section: '3-2' },
+    ],
+    'la-s3-3': [
+      { video: 'BV1Et421E7jk', part: 14, partLabel: '初等变换与秩', duration: '32:12', verified: true, section: '3-3' },
+    ],
+    'la-s4-1': [
+      { video: 'BV1Et421E7jk', part: 15, partLabel: '向量组及其线性组合', duration: '29:20', verified: true, section: '4-1' },
+    ],
+    'la-s4-2': [
+      { video: 'BV1Et421E7jk', part: 16, partLabel: '向量组的线性相关性', duration: '29:16', verified: true, section: '4-2' },
+    ],
+    'la-s4-3': [
+      { video: 'BV1Et421E7jk', part: 17, partLabel: '方程组解的结构', duration: '34:02', verified: true, section: '4-3' },
+    ],
+    'la-s5-1': [
+      { video: 'BV1Et421E7jk', part: 18, partLabel: '特征值与特征向量', duration: '43:52', verified: true, section: '5-1' },
+    ],
+    'la-s5-2': [
+      { video: 'BV1Et421E7jk', part: 19, partLabel: '对称矩阵的对角化', duration: '21:09', verified: true, section: '5-2' },
+    ],
+    'la-s6-1': [
+      { video: 'BV1Et421E7jk', part: 20, partLabel: '二次型及其标准形', duration: '25:47', verified: true, section: '6-1' },
+    ],
+    'la-s6-2': [
+      { video: 'BV1Et421E7jk', part: 21, partLabel: '正交变换及配方法化标准形', duration: '20:40', verified: true, section: '6-2' },
+    ],
+    'la-s6-3': [
+      { video: 'BV1Et421E7jk', part: 22, partLabel: '正定二次型', duration: '11:46', verified: true, section: '6-3' },
+    ],
+  };
 
   /* ---------------- 查询接口（供自检脚本与其它脚本使用） ---------------- */
   function entriesFor(sid) { return MAP[sid] || []; }

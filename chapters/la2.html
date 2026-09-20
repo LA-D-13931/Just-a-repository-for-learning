@@ -145,6 +145,8 @@
         </div>
         <div class="toc-group">
           <div class="toc-title">工具</div>
+          <a class="toc-chapter" href="../cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter" href="../exam.html">综合自测卷</a>
         </div>
       </aside>
       <!-- /SHELL:SIDEBAR -->
@@ -160,7 +162,11 @@
 
       <!-- ======== 以下为小节内容 ======== -->
 
-      <h2 id="s2-1" data-hours="2.9">2-1 矩阵及其运算</h2>
+      <h2 id="la-s2-1" data-hours="2.9"
+          data-video-map="la-s2-1"
+          data-video-title="《线性代数》全程教学视频（一高数）">2-1 矩阵及其运算</h2>
+
+      <div data-video-entry="la-s2-1" data-video-pos="top"></div>
 
       <p>第 1 章我们一直在算行列式：把一张 $n\times n$ 的数表"压"成一个数。但数表本身的信息远不止一个数——它记录的是一组线性关系。本节把数表当成独立的对象来研究，引入<strong>矩阵</strong>这个概念，并规定它的加法、数乘、乘法和转置。其中<strong>矩阵乘法</strong>是整章最关键的定义：它不像加法那样"逐个元素对应操作"，而是"左行右列求和"，因此带来了一连串反直觉的结论（不满足交换律、不满足消去律）。这套运算后面每一章都要用：第 3 章把线性方程组写成 $AX=b$，第 4 章用它表达向量组的线性组合，第 5 章用 $A^k$ 与矩阵多项式讨论特征值。</p>
 
@@ -177,7 +183,7 @@
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 2.1　矩阵</div>
         <p>由 $m\times n$ 个数 $a_{ij}$（$i=1,\dots,m$；$j=1,\dots,n$）排成的 $m$ 行 $n$ 列的矩形数表</p>
-        <p>$$A=\begin{pmatrix}a_{11}&a_{12}&\cdots&a_{1n}\\ a_{21}&a_{22}&\cdots&a_{2n}\\ \vdots&\vdots&&\vdots\\ a_{m1}&a_{m2}&\cdots&a_{mn}\end{pmatrix}$$</p>
+        <p class="en">$$A=\begin{pmatrix}a_{11}&a_{12}&\cdots&a_{1n}\\ a_{21}&a_{22}&\cdots&a_{2n}\\ \vdots&\vdots&&\vdots\\ a_{m1}&a_{m2}&\cdots&a_{mn}\end{pmatrix}$$</p>
         <p>称为一个 <span class="term">$m\times n$ 矩阵</span>，简记为 $A=(a_{ij})_{m\times n}$。数 $a_{ij}$ 称为 $A$ 的第 $i$ 行第 $j$ 列元素（<span class="term">元</span>）。本章只讨论实矩阵。</p>
         <p>下面这些特殊矩阵必须能一眼认出：</p>
         <ul>
@@ -190,34 +196,34 @@
           <li><span class="term">对称矩阵</span>：$A^T=A$，即 $a_{ij}=a_{ji}$；<span class="term">反对称矩阵</span>：$A^T=-A$，即 $a_{ij}=-a_{ji}$，此时主对角线元素必为 $0$。</li>
         </ul>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 2.1</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 2.1</span>
              <strong>Matrix.</strong>
              A rectangular array of $m\times n$ numbers $a_{ij}$ ($i=1,\dots,m$; $j=1,\dots,n$)
              arranged in $m$ rows and $n$ columns is called an
              <span class="en-term">$m\times n$ matrix</span>, written $A=(a_{ij})_{m\times n}$.
              The number $a_{ij}$ is the <span class="en-term">entry</span> of $A$ in row $i$ and
              column $j$. Only real matrices are discussed in this chapter.</p>
-          <p>The following special matrices must be recognized at a glance:</p>
+          <p class="en">The following special matrices must be recognized at a glance:</p>
           <ul>
-            <li><span class="en-term">Square matrix</span>: the number of rows equals the number of
+            <li class="en"><span class="en-term">Square matrix</span>: the number of rows equals the number of
                 columns, $m=n$; it is then called a square matrix of order $n$. Only a square matrix
                 has a determinant, and only a square matrix can have an inverse.</li>
-            <li><span class="en-term">Row vector</span>: a matrix with only one row,
+            <li class="en"><span class="en-term">Row vector</span>: a matrix with only one row,
                 $(a_1,a_2,\dots,a_n)$, that is a $1\times n$ matrix; a
                 <span class="en-term">column vector</span> has only one column, that is an
                 $m\times1$ matrix.</li>
-            <li><span class="en-term">Zero matrix</span> $O$: every entry is $0$. Zero matrices of
+            <li class="en"><span class="en-term">Zero matrix</span> $O$: every entry is $0$. Zero matrices of
                 different shapes are different matrices.</li>
-            <li><span class="en-term">Identity matrix</span> $E$ (written $I$ in some books): every
+            <li class="en"><span class="en-term">Identity matrix</span> $E$ (written $I$ in some books): every
                 entry on the main diagonal is $1$ and all other entries are $0$.</li>
-            <li><span class="en-term">Diagonal matrix</span>
+            <li class="en"><span class="en-term">Diagonal matrix</span>
                 $\Lambda=\mathrm{diag}(\lambda_1,\dots,\lambda_n)$: every off-diagonal entry is $0$;
                 if the diagonal entries are all the same number, it is called a
                 <span class="en-term">scalar matrix</span> $kE$.</li>
-            <li><span class="en-term">Triangular matrix</span>: upper triangular if every entry below
+            <li class="en"><span class="en-term">Triangular matrix</span>: upper triangular if every entry below
                 the main diagonal is $0$, lower triangular if every entry above it is $0$.</li>
-            <li><span class="en-term">Symmetric matrix</span>: $A^T=A$, that is $a_{ij}=a_{ji}$;
+            <li class="en"><span class="en-term">Symmetric matrix</span>: $A^T=A$, that is $a_{ij}=a_{ji}$;
                 <span class="en-term">skew-symmetric matrix</span>: $A^T=-A$, that is
                 $a_{ij}=-a_{ji}$, in which case every diagonal entry must be $0$.</li>
           </ul>
@@ -231,18 +237,18 @@
         <p><strong>数乘</strong>：$(kA)_{ij}=k\,a_{ij}$，即 $k$ 乘遍每一个元素。由此得到负矩阵 $-A=(-1)A$ 与减法 $A-B=A+(-A)$。</p>
         <p>加法和数乘的运算律（交换律、结合律、分配律、$A+O=A$、$1\cdot A=A$ 等）与普通数完全一样，因为它们是<strong>逐元素</strong>定义的。真正的麻烦马上就来——乘法不是逐元素定义的。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 2.2</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 2.2</span>
              <strong>Equality, Addition and Scalar Multiplication.</strong></p>
-          <p><strong>Equality.</strong> $A=(a_{ij})$ and $B=(b_{ij})$ are equal if and only if they
+          <p class="en"><strong>Equality.</strong> $A=(a_{ij})$ and $B=(b_{ij})$ are equal if and only if they
              have the <strong>same shape</strong> (the same number of rows and the same number of
              columns) and all corresponding entries are equal.</p>
-          <p><strong>Addition.</strong> Only matrices of the same shape can be added; $C=A+B$ is
+          <p class="en"><strong>Addition.</strong> Only matrices of the same shape can be added; $C=A+B$ is
              defined by $c_{ij}=a_{ij}+b_{ij}$.</p>
-          <p><strong>Scalar multiplication.</strong> $(kA)_{ij}=k\,a_{ij}$, that is, $k$ multiplies
+          <p class="en"><strong>Scalar multiplication.</strong> $(kA)_{ij}=k\,a_{ij}$, that is, $k$ multiplies
              every entry. This gives the negative matrix $-A=(-1)A$ and subtraction
              $A-B=A+(-A)$.</p>
-          <p>The laws of addition and scalar multiplication (commutative law, associative law,
+          <p class="en">The laws of addition and scalar multiplication (commutative law, associative law,
              distributive law, $A+O=A$, $1\cdot A=A$, and so on) are exactly the same as for ordinary
              numbers, because these operations are defined <strong>entry by entry</strong>. The real
              trouble starts at once: multiplication is <em>not</em> defined entry by entry.</p>
@@ -256,16 +262,16 @@
         <p>用一句话记住算法：<strong>$C$ 的第 $i$ 行第 $j$ 列元素 = $A$ 的第 $i$ 行与 $B$ 的第 $j$ 列对应相乘再求和</strong>（左行右列）。</p>
         <p><strong>可乘条件</strong>：<span class="term">左矩阵的列数必须等于右矩阵的行数</span>。即 $A_{m\times n}\cdot B_{n\times s}$ 才有意义，结果型为 $m\times s$。口诀："<strong>内标相同才能乘，外标决定结果型</strong>"。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 2.3</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 2.3</span>
              <strong>Matrix Multiplication.</strong>
              Let $A=(a_{ij})$ be an $m\times n$ matrix and $B=(b_{ij})$ an $n\times s$ matrix.
              Then $C=AB$ is defined to be the $m\times s$ matrix with</p>
           <p>$$c_{ij}=\sum_{k=1}^{n}a_{ik}b_{kj}=a_{i1}b_{1j}+a_{i2}b_{2j}+\cdots+a_{in}b_{nj}$$</p>
-          <p>One sentence to remember the rule: <strong>the entry of $C$ in row $i$ and column $j$
+          <p class="en">One sentence to remember the rule: <strong>the entry of $C$ in row $i$ and column $j$
              is the dot product of row $i$ of $A$ with column $j$ of $B$</strong> (row on the left,
              column on the right).</p>
-          <p><strong>Condition for the product to exist</strong>: the number of columns of the left
+          <p class="en"><strong>Condition for the product to exist</strong>: the number of columns of the left
              matrix must equal the number of rows of the right matrix. That is, only
              $A_{m\times n}\cdot B_{n\times s}$ is meaningful, and the result has shape
              $m\times s$.</p>
@@ -290,28 +296,28 @@
         </ul>
         <p>唯一"幸运"的例外：若 $A$ 与 $B$ 可交换（即 $AB=BA$），则二项式定理成立。例如 $A$ 与 $E$、$A$ 与 $A$ 的幂、数量矩阵 $kE$ 与任何同阶矩阵都可交换。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.1</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.1</span>
              <strong>Laws of Matrix Multiplication (which ones hold and which ones fail).</strong></p>
-          <p><strong>Laws that hold</strong> (assuming every product is defined):</p>
+          <p class="en"><strong>Laws that hold</strong> (assuming every product is defined):</p>
           <ul>
-            <li><span class="en-term">Associative law</span>: $(AB)C=A(BC)$. It is because of this
+            <li class="en"><span class="en-term">Associative law</span>: $(AB)C=A(BC)$. It is because of this
                 law that $ABC$ is meaningful and that $A^k$ can be defined.</li>
             <li><span class="en-term">Distributive law</span>: $A(B+C)=AB+AC$, $(A+B)C=AC+BC$.</li>
-            <li>Compatible with scalar multiplication: $k(AB)=(kA)B=A(kB)$.</li>
-            <li>Identity element: $E_mA_{m\times n}=A$, $A_{m\times n}E_n=A$; powers:
+            <li class="en">Compatible with scalar multiplication: $k(AB)=(kA)B=A(kB)$.</li>
+            <li class="en">Identity element: $E_mA_{m\times n}=A$, $A_{m\times n}E_n=A$; powers:
                 $A^kA^l=A^{k+l}$.</li>
           </ul>
-          <p><strong>Laws that fail</strong> (the source of every accident in this chapter):</p>
+          <p class="en"><strong>Laws that fail</strong> (the source of every accident in this chapter):</p>
           <ul>
-            <li>The commutative law fails: in general $AB\ne BA$.</li>
-            <li>The cancellation law fails: $AB=AC$ together with $A\ne O$ does
+            <li class="en">The commutative law fails: in general $AB\ne BA$.</li>
+            <li class="en">The cancellation law fails: $AB=AC$ together with $A\ne O$ does
                 <strong>not</strong> imply $B=C$.</li>
-            <li>There are zero divisors: $AB=O$ does <strong>not</strong> imply $A=O$ or $B=O$.</li>
-            <li>Consequently $(A+B)^2=A^2+AB+BA+B^2$ <strong>cannot</strong> be combined into
+            <li class="en">There are zero divisors: $AB=O$ does <strong>not</strong> imply $A=O$ or $B=O$.</li>
+            <li class="en">Consequently $(A+B)^2=A^2+AB+BA+B^2$ <strong>cannot</strong> be combined into
                 $A^2+2AB+B^2$, and $(AB)^k\ne A^kB^k$.</li>
           </ul>
-          <p>The one lucky exception: if $A$ and $B$ <span class="en-term">commute</span> (that is,
+          <p class="en">The one lucky exception: if $A$ and $B$ <span class="en-term">commute</span> (that is,
              $AB=BA$), then the binomial theorem holds. For example $A$ commutes with $E$, with any
              power of $A$, and a scalar matrix $kE$ commutes with every matrix of the same order.</p>
         </div>
@@ -332,17 +338,17 @@
         <p><strong>多项式</strong>：若 $f(x)=a_mx^m+\cdots+a_1x+a_0$，规定 $f(A)=a_mA^m+\cdots+a_1A+a_0E$。注意常数项 $a_0$ 要写成 $a_0E$——矩阵不能和数直接相加。同一个 $A$ 的两个多项式总可交换：$f(A)g(A)=g(A)f(A)$。</p>
         <p><strong>转置</strong>：把 $A=(a_{ij})_{m\times n}$ 的行与列互换，得到的 $n\times m$ 矩阵称为 $A$ 的<span class="term">转置矩阵</span>，记作 $A^T$，即 $(A^T)_{ij}=a_{ji}$。直观操作是把矩阵沿主对角线"翻面"。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 2.4</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 2.4</span>
              <strong>Powers, Polynomials and the Transpose.</strong></p>
-          <p><strong>Powers.</strong> For a square matrix $A$ of order $n$ we set $A^0=E$ and
+          <p class="en"><strong>Powers.</strong> For a square matrix $A$ of order $n$ we set $A^0=E$ and
              $A^{k}=\underbrace{A\cdots A}_{k\ \text{factors}}$. Only a square matrix has
              powers.</p>
-          <p><strong>Polynomials.</strong> If $f(x)=a_mx^m+\cdots+a_1x+a_0$, we set
+          <p class="en"><strong>Polynomials.</strong> If $f(x)=a_mx^m+\cdots+a_1x+a_0$, we set
              $f(A)=a_mA^m+\cdots+a_1A+a_0E$. Note that the constant term $a_0$ must be written as
              $a_0E$ — a matrix cannot be added to a number directly. Two polynomials in the same
              matrix $A$ always commute: $f(A)g(A)=g(A)f(A)$.</p>
-          <p><strong>Transpose.</strong> Interchanging the rows and columns of $A=(a_{ij})_{m\times n}$
+          <p class="en"><strong>Transpose.</strong> Interchanging the rows and columns of $A=(a_{ij})_{m\times n}$
              gives an $n\times m$ matrix called the <span class="en-term">transpose</span> of $A$,
              written $A^T$, that is $(A^T)_{ij}=a_{ji}$. Visually, the matrix is reflected in its
              main diagonal.</p>
@@ -367,21 +373,21 @@
         </ul>
         <p>特别提醒：$|A+B|\ne|A|+|B|$，行列式对加法<strong>不可拆</strong>。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.2</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.2</span>
              <strong>The Transpose and the Determinant of a Square Matrix.</strong></p>
-          <p><strong>Properties of the transpose</strong> (assuming every operation is defined):</p>
+          <p class="en"><strong>Properties of the transpose</strong> (assuming every operation is defined):</p>
           <ul>
             <li>$(A^T)^T=A$; $(A+B)^T=A^T+B^T$; $(kA)^T=kA^T$</li>
             <li>$(AB)^T=B^TA^T$ — <strong>the order is reversed!</strong></li>
           </ul>
-          <p>Intuition for the last one: $A$ used to be on the left and $B$ on the right; after
+          <p class="en">Intuition for the last one: $A$ used to be on the left and $B$ on the right; after
              transposing, left and right have changed places. A rigorous proof looks at entries:</p>
           <p>$$(AB)^T_{ij}=(AB)_{ji}=\sum_{k}a_{jk}b_{ki}=\sum_{k}(B^T)_{ik}(A^T)_{kj}=(B^TA^T)_{ij}$$</p>
-          <p>More generally $(A_1A_2\cdots A_s)^T=A_s^T\cdots A_2^TA_1^T$. Note that only a
+          <p class="en">More generally $(A_1A_2\cdots A_s)^T=A_s^T\cdots A_2^TA_1^T$. Note that only a
              <em>composite</em> operation reverses the order; identities such as $(A^T)^T=A$ and
              $(A+B)^T=A^T+B^T$ do not.</p>
-          <p><strong>Determinant of a square matrix.</strong> The determinant formed from the entries
+          <p class="en"><strong>Determinant of a square matrix.</strong> The determinant formed from the entries
              of the $n\times n$ matrix $A$ in their original positions is written $|A|$ or
              $\det A$, and it satisfies</p>
           <ul>
@@ -390,7 +396,7 @@
                 taken out $n$ times</strong>)</li>
             <li>$|AB|=|A|\cdot|B|$ (<strong>the determinant splits over a product</strong>)</li>
           </ul>
-          <p>In particular $|A+B|\ne|A|+|B|$: the determinant does <strong>not</strong> split over a
+          <p class="en">In particular $|A+B|\ne|A|+|B|$: the determinant does <strong>not</strong> split over a
              sum.</p>
         </div>
       </div>
@@ -403,20 +409,20 @@
           <li><strong>找规律法</strong>：先算 $A^2,A^3$，观察是"成倍"、"加常数"还是"循环"（如 $A^3=E$），再用归纳法写结论。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 2.1</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 2.1</span>
              <strong>Three Standard Routes to $A^n$.</strong></p>
           <ol>
-            <li><strong>Splitting as $A=\alpha\beta^T$.</strong> If $A=\alpha\beta^T$ (with $\alpha$ an
+            <li class="en"><strong>Splitting as $A=\alpha\beta^T$.</strong> If $A=\alpha\beta^T$ (with $\alpha$ an
                 $m\times1$ and $\beta$ an $n\times1$ column), then $\beta^T\alpha$ is a
                 <strong>number</strong> and can be moved to the front:
                 $A^2=\alpha(\beta^T\alpha)\beta^T=(\beta^T\alpha)A$. Hence
                 $A^n=(\beta^T\alpha)^{n-1}A$.</li>
-            <li><strong>Expanding $E+B$.</strong> If $A=E+B$ and $B$ is nilpotent (some $B^r=O$),
+            <li class="en"><strong>Expanding $E+B$.</strong> If $A=E+B$ and $B$ is nilpotent (some $B^r=O$),
                 then $A$ commutes with $B$, the binomial theorem applies, and the expansion stops at
                 $B^r=O$. This is typical of a triangular matrix whose diagonal entries are all
                 equal.</li>
-            <li><strong>Looking for a pattern.</strong> Compute $A^2,A^3$ first and see whether the
+            <li class="en"><strong>Looking for a pattern.</strong> Compute $A^2,A^3$ first and see whether the
                 powers grow by a constant factor, gain a constant term, or cycle (for example
                 $A^3=E$); then state the result and prove it by induction.</li>
           </ol>
@@ -434,9 +440,9 @@
             <p class="solution-label">解</p>
             <p><strong>第一步：判断可乘性。</strong>$A$ 是 $2\times3$，$B$ 是 $3\times2$。$AB$ 内标 $3=3$，可乘，结果为 $2\times2$；$BA$ 内标 $2=2$，可乘，结果为 $3\times3$。</p>
             <p><strong>第二步：算 $AB$</strong>（$A$ 的每一行与 $B$ 的每一列<strong>对应项相乘再相加</strong>）：</p>
-            <p>$$AB=\begin{pmatrix}1\cdot1+2\cdot0+3\cdot1 & 1\cdot0+2\cdot1+3\cdot1\\ 4\cdot1+5\cdot0+6\cdot1 & 4\cdot0+5\cdot1+6\cdot1\end{pmatrix}=\begin{pmatrix}4&5\\10&11\end{pmatrix}$$</p>
+            <p class="en">$$AB=\begin{pmatrix}1\cdot1+2\cdot0+3\cdot1 & 1\cdot0+2\cdot1+3\cdot1\\ 4\cdot1+5\cdot0+6\cdot1 & 4\cdot0+5\cdot1+6\cdot1\end{pmatrix}=\begin{pmatrix}4&5\\10&11\end{pmatrix}$$</p>
             <p><strong>第三步：算 $BA$</strong>：</p>
-            <p>$$BA=\begin{pmatrix}1\cdot1+0\cdot4 & 1\cdot2+0\cdot5 & 1\cdot3+0\cdot6\\ 0\cdot1+1\cdot4 & 0\cdot2+1\cdot5 & 0\cdot3+1\cdot6\\ 1\cdot1+1\cdot4 & 1\cdot2+1\cdot5 & 1\cdot3+1\cdot6\end{pmatrix}=\begin{pmatrix}1&2&3\\4&5&6\\5&7&9\end{pmatrix}$$</p>
+            <p class="en">$$BA=\begin{pmatrix}1\cdot1+0\cdot4 & 1\cdot2+0\cdot5 & 1\cdot3+0\cdot6\\ 0\cdot1+1\cdot4 & 0\cdot2+1\cdot5 & 0\cdot3+1\cdot6\\ 1\cdot1+1\cdot4 & 1\cdot2+1\cdot5 & 1\cdot3+1\cdot6\end{pmatrix}=\begin{pmatrix}1&2&3\\4&5&6\\5&7&9\end{pmatrix}$$</p>
             <p><strong>结论</strong>：$AB$ 是 $2\times2$，$BA$ 是 $3\times3$，两者连型都不同，$AB\ne BA$。这是"矩阵乘法不满足交换律"最直观的样子。</p>
           </div>
         </div>
@@ -453,9 +459,9 @@
             <p class="solution-label">解</p>
             <p>$A$ 是 $3\times2$，$A^T=\begin{pmatrix}1&3&5\\2&4&6\end{pmatrix}$ 是 $2\times3$。</p>
             <p><strong>$A^TA$</strong>：$2\times3$ 乘 $3\times2$，结果是 $2\times2$：</p>
-            <p>$$A^TA=\begin{pmatrix}1&3&5\\2&4&6\end{pmatrix}\begin{pmatrix}1&2\\3&4\\5&6\end{pmatrix}=\begin{pmatrix}1+9+25 & 2+12+30\\ 2+12+30 & 4+16+36\end{pmatrix}=\begin{pmatrix}35&44\\44&56\end{pmatrix}$$</p>
+            <p class="en">$$A^TA=\begin{pmatrix}1&3&5\\2&4&6\end{pmatrix}\begin{pmatrix}1&2\\3&4\\5&6\end{pmatrix}=\begin{pmatrix}1+9+25 & 2+12+30\\ 2+12+30 & 4+16+36\end{pmatrix}=\begin{pmatrix}35&44\\44&56\end{pmatrix}$$</p>
             <p><strong>$AA^T$</strong>：$3\times2$ 乘 $2\times3$，结果是 $3\times3$：</p>
-            <p>$$AA^T=\begin{pmatrix}1+4&3+8&5+12\\ 3+8&9+16&15+24\\ 5+12&15+24&25+36\end{pmatrix}=\begin{pmatrix}5&11&17\\11&25&39\\17&39&61\end{pmatrix}$$</p>
+            <p class="en">$$AA^T=\begin{pmatrix}1+4&3+8&5+12\\ 3+8&9+16&15+24\\ 5+12&15+24&25+36\end{pmatrix}=\begin{pmatrix}5&11&17\\11&25&39\\17&39&61\end{pmatrix}$$</p>
             <p><strong>结论</strong>：两者型不同（$2\times2$ 与 $3\times3$），当然不相等；但都是<strong>对称矩阵</strong>。这不是巧合：$(A^TA)^T=A^T(A^T)^T=A^TA$。另外两者行列式相等：$|A^TA|=35\times56-44^2=24$，$|AA^T|$ 算出来也是 $24$（一般有 $|A^TA|=|AA^T|$）。$A^TA$ 的这个性质以后会用到：若 $A$ 是实矩阵，则 $A^TAx=0$ 与 $Ax=0$ 等价，这是最小二乘法的基石。</p>
           </div>
         </div>
@@ -472,10 +478,10 @@
           <div class="solution">
             <p class="solution-label">解</p>
             <p><strong>(1)</strong> 两个矩阵都是 $2\times2$，同阶可乘：</p>
-            <p>$$AB=\begin{pmatrix}1\cdot1+1\cdot(-1) & 1\cdot(-1)+1\cdot1\\ 1\cdot1+1\cdot(-1) & 1\cdot(-1)+1\cdot1\end{pmatrix}=\begin{pmatrix}0&0\\0&0\end{pmatrix}=O$$</p>
+            <p class="en">$$AB=\begin{pmatrix}1\cdot1+1\cdot(-1) & 1\cdot(-1)+1\cdot1\\ 1\cdot1+1\cdot(-1) & 1\cdot(-1)+1\cdot1\end{pmatrix}=\begin{pmatrix}0&0\\0&0\end{pmatrix}=O$$</p>
             <p>但 $A\ne O$ 且 $B\ne O$。所以"两个非零矩阵相乘可能得零"，这与数的运算完全不同（数里 $ab=0$ 必有 $a=0$ 或 $b=0$）。</p>
             <p><strong>(2)</strong> $A$ 的第二行全为 $0$，所以乘积的第二行必为 $0$，而乘积的第一行就等于右矩阵的第一行：</p>
-            <p>$$AB=\begin{pmatrix}1&2\\0&0\end{pmatrix},\qquad AC=\begin{pmatrix}1&2\\0&0\end{pmatrix}$$</p>
+            <p class="en">$$AB=\begin{pmatrix}1&2\\0&0\end{pmatrix},\qquad AC=\begin{pmatrix}1&2\\0&0\end{pmatrix}$$</p>
             <p>于是 $AB=AC$ 成立，但 $B=\begin{pmatrix}1&2\\3&4\end{pmatrix}\ne\begin{pmatrix}1&2\\5&6\end{pmatrix}=C$。</p>
             <p><strong>根本原因</strong>：这里 $|A|=0$，$A$ 把不同的矩阵"压"到了同一个像上。只有 $|A|\ne0$ 时，才能从 $AB=AC$ 两边"消去" $A$ 得 $B=C$——这条消去律正是下一节 §2-2 的内容，而它的前提恰恰是 $|A|\ne0$。</p>
           </div>
@@ -494,11 +500,11 @@
             <p class="solution-label">解</p>
             <p><strong>(1)</strong> 先写出 $A=\begin{pmatrix}1\\2\\3\end{pmatrix}\begin{pmatrix}1&2&3\end{pmatrix}=\begin{pmatrix}1&2&3\\2&4&6\\3&6&9\end{pmatrix}$。</p>
             <p>关键是 $\alpha^T\alpha=1^2+2^2+3^2=14$ 是一个 $1\times1$ 的矩阵，也就是<strong>一个数</strong>（而 $\alpha\alpha^T$ 是 $3\times3$ 矩阵，两者天差地别）。用结合律把这个数提出来：</p>
-            <p>$$A^2=(\alpha\alpha^T)(\alpha\alpha^T)=\alpha(\alpha^T\alpha)\alpha^T=14\,\alpha\alpha^T=14A$$</p>
+            <p class="en">$$A^2=(\alpha\alpha^T)(\alpha\alpha^T)=\alpha(\alpha^T\alpha)\alpha^T=14\,\alpha\alpha^T=14A$$</p>
             <p>归纳可得：若 $A^k=14^{k-1}A$，则 $A^{k+1}=14^{k-1}A\cdot A=14^{k-1}\cdot14A=14^kA$。所以对一切正整数 $n$，$A^n=14^{\,n-1}A$。</p>
             <p><strong>验算（$n=2$）</strong>：$A^2$ 的第一行是 $(1,2,3)$ 分别与 $A$ 的三列对应项相乘再相加，得 $1+4+9=14$，$2+8+18=28$，$3+12+27=42$，即 $14(1,2,3)$。同理后两行是 $14(2,4,6)$、$14(3,6,9)$，与 $14A$ 一致。</p>
             <p><strong>(2)</strong> 令 $B=A-E=\begin{pmatrix}0&1&0\\0&0&1\\0&0&0\end{pmatrix}$，则 $A=E+B$。算出 $B^2=\begin{pmatrix}0&0&1\\0&0&0\\0&0&0\end{pmatrix}$，$B^3=O$。因为 $E$ 与 $B$ 可交换，二项式定理成立；又 $B$ 的三次以上幂全为 $O$，展开只剩三项：</p>
-            <p>$$A^n=(E+B)^n=E+nB+\frac{n(n-1)}{2}B^2=\begin{pmatrix}1&n&\frac{n(n-1)}{2}\\0&1&n\\0&0&1\end{pmatrix}$$</p>
+            <p class="en">$$A^n=(E+B)^n=E+nB+\frac{n(n-1)}{2}B^2=\begin{pmatrix}1&n&\frac{n(n-1)}{2}\\0&1&n\\0&0&1\end{pmatrix}$$</p>
             <p><strong>验算（$n=2$）</strong>：公式给出 $\begin{pmatrix}1&2&1\\0&1&2\\0&0&1\end{pmatrix}$。直接平方：第一行为 $(1,2,1)$（其中 $(1,2)=1\cdot1+1\cdot1=2$，$(1,3)=1\cdot1=1$），第二行为 $(0,1,2)$，第三行为 $(0,0,1)$，一致。</p>
           </div>
         </div>
@@ -569,14 +575,14 @@
             <div class="solution">
               <p class="solution-label">解</p>
               <p><strong>第一步：看出"列乘行"结构。</strong>$A$ 的第二行是第一行的 $3$ 倍，两行成比例，所以 $A$ 可以拆成一个列向量乘一个行向量：</p>
-              <p>$$A=\begin{pmatrix}1\\3\end{pmatrix}\begin{pmatrix}1&2\end{pmatrix}=\alpha\beta^T,\qquad \alpha=\begin{pmatrix}1\\3\end{pmatrix},\quad \beta=\begin{pmatrix}1\\2\end{pmatrix}$$</p>
+              <p class="en">$$A=\begin{pmatrix}1\\3\end{pmatrix}\begin{pmatrix}1&2\end{pmatrix}=\alpha\beta^T,\qquad \alpha=\begin{pmatrix}1\\3\end{pmatrix},\quad \beta=\begin{pmatrix}1\\2\end{pmatrix}$$</p>
               <p><strong>第二步：算 $\beta^T\alpha$。</strong></p>
               <p>$$\beta^T\alpha=\begin{pmatrix}1&2\end{pmatrix}\begin{pmatrix}1\\3\end{pmatrix}=1\times1+2\times3=7$$</p>
               <p>注意 $\beta^T\alpha$ 是 $1\times1$ 矩阵，即<strong>一个数</strong> $7$；而 $\alpha\beta^T$ 是 $2\times2$ 矩阵。这一步是本题的关键，两者绝不能混。</p>
               <p><strong>第三步：算 $A^2$，把这个数提出来。</strong></p>
-              <p>$$A^2=(\alpha\beta^T)(\alpha\beta^T)=\alpha(\beta^T\alpha)\beta^T=7\,\alpha\beta^T=7A$$</p>
+              <p class="en">$$A^2=(\alpha\beta^T)(\alpha\beta^T)=\alpha(\beta^T\alpha)\beta^T=7\,\alpha\beta^T=7A$$</p>
               <p><strong>第四步：归纳。</strong>设 $A^k=7^{k-1}A$，则 $A^{k+1}=A^kA=7^{k-1}A\cdot A=7^{k-1}\cdot7A=7^{k}A$。故对一切正整数 $n$：</p>
-              <p>$$A^n=7^{\,n-1}A=7^{\,n-1}\begin{pmatrix}1&2\\3&6\end{pmatrix}$$</p>
+              <p class="en">$$A^n=7^{\,n-1}A=7^{\,n-1}\begin{pmatrix}1&2\\3&6\end{pmatrix}$$</p>
               <p><strong>验算（$n=2$）</strong>：直接乘得 $\begin{pmatrix}1&2\\3&6\end{pmatrix}\begin{pmatrix}1&2\\3&6\end{pmatrix}=\begin{pmatrix}1+6&2+12\\3+18&6+36\end{pmatrix}=\begin{pmatrix}7&14\\21&42\end{pmatrix}=7A$，与公式一致。</p>
               <p><strong>答案：$A^n=7^{\,n-1}\begin{pmatrix}1&2\\3&6\end{pmatrix}$。</strong></p>
             </div>
@@ -614,7 +620,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 是 $3\times4$ 矩阵，$B$ 是 $4\times2$ 矩阵，则 $AB$ 是（　）矩阵。
-             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times2$ matrix. Then $AB$ is a ( ) matrix.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times2$ matrix. Then $AB$ is a ( ) matrix.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$3\times2$</span></li>
             <li><span class="opt-body">$2\times3$</span></li>
@@ -626,7 +632,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A=\begin{pmatrix}1&2\\3&4\end{pmatrix}$，$B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$，则 $(AB)^T=$（　）。
-             <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&2\\3&4\end{pmatrix}$ and $B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$. Then $(AB)^T=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=\begin{pmatrix}1&2\\3&4\end{pmatrix}$ and $B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$. Then $(AB)^T=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}2&4\\1&3\end{pmatrix}$</span></li>
             <li><span class="opt-body">$\begin{pmatrix}2&1\\4&3\end{pmatrix}$</span></li>
@@ -638,7 +644,7 @@
 
         <div class="q" data-type="judge" data-level="基础">
           <p class="q-stem">设 $A,B$ 为 $n$ 阶矩阵，若 $AB=O$，则必有 $|A|=0$ 或 $|B|=0$。
-             <span class="en-line" lang="en">Let $A,B$ be $n\times n$ matrices. If $AB=O$, then necessarily $|A|=0$ or $|B|=0$.</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be $n\times n$ matrices. If $AB=O$, then necessarily $|A|=0$ or $|B|=0$.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
@@ -648,14 +654,14 @@
 
         <div class="q" data-type="fill" data-level="中等">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，且 $A^3=E$，则 $|A|=$ ______。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $A^3=E$. Then $|A|=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $A^3=E$. Then $|A|=$ ______.</span></p>
           <div class="q-answer" data-answer="1|1."></div>
           <div class="q-explain">两边取行列式：$|A^3|=|E|$，即 $|A|^3=1$。在实数范围内 $x^3=1$ 只有实根 $x=1$，所以 $|A|=1$。常见错解是写 $|A|=\pm1$，或漏掉"取行列式"这一步直接断言 $A=E$——$A^3=E$ 并不要求 $A=E$（例如绕原点转 $120^\circ$ 的矩阵满足 $A^3=E$ 而 $A\ne E$）。</div>
         </div>
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A,B$ 为 3 阶矩阵，$|A|=2$，$|B|=-1$，则下列结论正确的是（　）。
-             <span class="en-line" lang="en">Let $A,B$ be $3\times3$ matrices with $|A|=2$ and $|B|=-1$. Which of the following conclusions are correct?</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be $3\times3$ matrices with $|A|=2$ and $|B|=-1$. Which of the following conclusions are correct?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$|AB|=-2$</span></li>
             <li data-correct="true"><span class="opt-body">$|2A^T|=16$</span></li>
@@ -667,7 +673,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A=\begin{pmatrix}1&1&0\\0&1&1\\0&0&1\end{pmatrix}$，则 $A^{10}=$（　）。
-             <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&1&0\\0&1&1\\0&0&1\end{pmatrix}$. Then $A^{10}=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=\begin{pmatrix}1&1&0\\0&1&1\\0&0&1\end{pmatrix}$. Then $A^{10}=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1&10&45\\0&1&10\\0&0&1\end{pmatrix}$</span></li>
             <li><span class="opt-body">$\begin{pmatrix}1&10&100\\0&1&10\\0&0&1\end{pmatrix}$</span></li>
@@ -679,7 +685,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，满足 $A^2=A$，则必有（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2=A$. Then necessarily ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2=A$. Then necessarily ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$|A|=0$ 或 $|A|=1$</span></li>
             <li><span class="opt-body">$A$ 必可逆</span></li>
@@ -691,7 +697,7 @@
 
         <div class="q" data-type="multi" data-level="考研">
           <p class="q-stem">设 $A,B$ 为 $n$ 阶矩阵，下列命题正确的是（　）。
-             <span class="en-line" lang="en">Let $A,B$ be $n\times n$ matrices. Which of the following statements are correct?</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be $n\times n$ matrices. Which of the following statements are correct?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">若 $AB=E$，则 $BA=E$</span></li>
             <li data-correct="true"><span class="opt-body">若 $A$ 可逆且 $AB=O$，则 $B=O$</span></li>
@@ -703,7 +709,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A=\begin{pmatrix}1&3\\2&6\end{pmatrix}$，则 $A^{3}=$（　）。
-             <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&3\\2&6\end{pmatrix}$. Then $A^{3}=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=\begin{pmatrix}1&3\\2&6\end{pmatrix}$. Then $A^{3}=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}49&147\\98&294\end{pmatrix}$</span></li>
             <li><span class="opt-body">$\begin{pmatrix}7&21\\14&42\end{pmatrix}$</span></li>
@@ -715,7 +721,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A=\begin{pmatrix}1&1\\0&1\end{pmatrix}$，则与 $A$ 可交换的全部 $2$ 阶矩阵为（　）。
-             <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&1\\0&1\end{pmatrix}$. The set of all $2\times2$ matrices commuting with $A$ is ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=\begin{pmatrix}1&1\\0&1\end{pmatrix}$. The set of all $2\times2$ matrices commuting with $A$ is ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}a&b\\0&a\end{pmatrix}$（$a,b$ 任意）</span></li>
             <li><span class="opt-body">$\begin{pmatrix}a&0\\0&a\end{pmatrix}$（$a$ 任意）</span></li>
@@ -734,7 +740,11 @@
 
       </div>
 
-      <h2 id="s2-2" data-hours="2.9">2-2 逆矩阵</h2>
+      <h2 id="la-s2-2" data-hours="2.9"
+          data-video-map="la-s2-2"
+          data-video-title="《线性代数》全程教学视频（一高数）">2-2 逆矩阵</h2>
+
+      <div data-video-entry="la-s2-2" data-video-pos="top"></div>
 
       <p>上一节我们发现矩阵没有"除法"，而且正是这个缺失导致了两个反常现象：$AB=O$ 推不出 $A=O$ 或 $B=O$，$AB=AC$ 推不出 $B=C$。这两个现象有一个共同根源——$A$ 对应的变换"丢掉了信息"，没法倒回去。本节就给"能倒回去"的矩阵一个名字：<strong>可逆矩阵</strong>，并解决三个问题：什么样的矩阵可逆（判据 $|A|\ne0$）、逆矩阵怎么算（伴随矩阵法与初等行变换法）、只给等式不给数值时怎么求逆（凑公因式）。逆矩阵是第 3 章解线性方程组 $AX=b$ 的理论依据（当 $|A|\ne0$ 时 $X=A^{-1}b$），也是第 5 章"矩阵可对角化"讨论的前提。</p>
 
@@ -753,18 +763,18 @@
         <p><strong>唯一性</strong>：若 $B,C$ 都是 $A$ 的逆，则 $B=BE=B(AC)=(BA)C=EC=C$。所以"$A$ 的逆"这个说法合法。</p>
         <p><strong>两点说明</strong>：只有<strong>方阵</strong>才谈得上逆矩阵；对同阶方阵而言，只要 $AB=E$ 就自动有 $BA=E$（见定理 2.4 后的说明），所以验证时只算一个也行。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 2.5</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 2.5</span>
              <strong>Invertible Matrix.</strong>
              Let $A$ be a square matrix of order $n$. If there exists a square matrix $B$ of order
              $n$ such that</p>
           <p>$$AB=BA=E$$</p>
-          <p>then $A$ is called <span class="en-term">invertible</span> (nonsingular) and $B$ is
+          <p class="en">then $A$ is called <span class="en-term">invertible</span> (nonsingular) and $B$ is
              called the <span class="en-term">inverse matrix</span> of $A$, written $A^{-1}$. If no
              such $B$ exists, $A$ is called non-invertible (singular).</p>
-          <p><strong>Uniqueness.</strong> If $B$ and $C$ are both inverses of $A$, then
+          <p class="en"><strong>Uniqueness.</strong> If $B$ and $C$ are both inverses of $A$, then
              $B=BE=B(AC)=(BA)C=EC=C$. So the phrase "the inverse of $A$" is legitimate.</p>
-          <p><strong>Two remarks.</strong> Only a <strong>square</strong> matrix can have an inverse;
+          <p class="en"><strong>Two remarks.</strong> Only a <strong>square</strong> matrix can have an inverse;
              and for square matrices of the same order, $AB=E$ alone already forces $BA=E$ (see the
              remark after Theorem 2.4), so it is enough to verify one of the two products.</p>
         </div>
@@ -783,8 +793,8 @@
         </ul>
         <p><strong>必要性</strong>：若 $A$ 可逆，两边取行列式得 $|A|\cdot|A^{-1}|=|AA^{-1}|=|E|=1$，所以 $|A|\ne0$，并且 $|A^{-1}|=\dfrac{1}{|A|}$。<strong>充分性</strong>要用到伴随矩阵，结论是 $A^{-1}=\dfrac{1}{|A|}A^*$（见下）。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.3</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.3</span>
              <strong>Necessary and Sufficient Conditions for Invertibility.</strong>
              Let $A$ be a square matrix of order $n$. The following statements are
              <strong>equivalent</strong>:</p>
@@ -792,11 +802,11 @@
             <li>$A$ is invertible;</li>
             <li>$|A|\ne0$ ($A$ is nonsingular);</li>
             <li>$R(A)=n$ ($A$ has full rank);</li>
-            <li>the rows (columns) of $A$ are linearly independent (developed in Chapter 4);</li>
-            <li>the homogeneous linear system $AX=0$ has only the zero solution;</li>
-            <li>$A$ can be expressed as a product of elementary matrices (developed in Chapter 3).</li>
+            <li class="en">the rows (columns) of $A$ are linearly independent (developed in Chapter 4);</li>
+            <li class="en">the homogeneous linear system $AX=0$ has only the zero solution;</li>
+            <li class="en">$A$ can be expressed as a product of elementary matrices (developed in Chapter 3).</li>
           </ul>
-          <p><strong>Necessity.</strong> If $A$ is invertible, taking determinants of
+          <p class="en"><strong>Necessity.</strong> If $A$ is invertible, taking determinants of
              $AA^{-1}=E$ gives $|A|\cdot|A^{-1}|=1$, so $|A|\ne0$ and
              $|A^{-1}|=\dfrac{1}{|A|}$. <strong>Sufficiency</strong> uses the adjugate matrix and
              yields $A^{-1}=\dfrac{1}{|A|}A^*$ (see below).</p>
@@ -806,18 +816,18 @@
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 2.6　伴随矩阵</div>
         <p>设 $A=(a_{ij})$ 为 $n$ 阶方阵，$A_{ij}$ 是元素 $a_{ij}$ 的<span class="term">代数余子式</span>（划去第 $i$ 行、第 $j$ 列，剩下的 $n-1$ 阶行列式再乘 $(-1)^{i+j}$）。称</p>
-        <p>$$A^*=\begin{pmatrix}A_{11}&A_{21}&\cdots&A_{n1}\\ A_{12}&A_{22}&\cdots&A_{n2}\\ \vdots&\vdots&&\vdots\\ A_{1n}&A_{2n}&\cdots&A_{nn}\end{pmatrix}$$</p>
+        <p class="en">$$A^*=\begin{pmatrix}A_{11}&A_{21}&\cdots&A_{n1}\\ A_{12}&A_{22}&\cdots&A_{n2}\\ \vdots&\vdots&&\vdots\\ A_{1n}&A_{2n}&\cdots&A_{nn}\end{pmatrix}$$</p>
         <p>为 $A$ 的<span class="term">伴随矩阵</span>。请注意下标是<strong>反的</strong>：$A^*$ 的第 $i$ 行写的是 $A_{1i},A_{2i},\dots,A_{ni}$，也就是"代数余子式按原位置排好后还要<strong>转置</strong>一次"。本节先用它求逆，2-3 节再细讲。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 2.6</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 2.6</span>
              <strong>The Adjugate Matrix.</strong>
              Let $A=(a_{ij})$ be a square matrix of order $n$, and let $A_{ij}$ be the
              <span class="en-term">cofactor</span> of the entry $a_{ij}$ (delete row $i$ and column
              $j$, take the determinant of the remaining matrix of order $n-1$, and multiply it by
              $(-1)^{i+j}$). The matrix</p>
-          <p>$$A^*=\begin{pmatrix}A_{11}&A_{21}&\cdots&A_{n1}\\ A_{12}&A_{22}&\cdots&A_{n2}\\ \vdots&\vdots&&\vdots\\ A_{1n}&A_{2n}&\cdots&A_{nn}\end{pmatrix}$$</p>
-          <p>is called the <span class="en-term">adjugate matrix</span> of $A$. Note that the
+          <p class="en">$$A^*=\begin{pmatrix}A_{11}&A_{21}&\cdots&A_{n1}\\ A_{12}&A_{22}&\cdots&A_{n2}\\ \vdots&\vdots&&\vdots\\ A_{1n}&A_{2n}&\cdots&A_{nn}\end{pmatrix}$$</p>
+          <p class="en">is called the <span class="en-term">adjugate matrix</span> of $A$. Note that the
              subscripts are <strong>reversed</strong>: row $i$ of $A^*$ lists
              $A_{1i},A_{2i},\dots,A_{ni}$, that is, the cofactors placed in their original positions
              must then be <strong>transposed</strong>. We use it here to compute inverses and study it
@@ -834,24 +844,24 @@
           <li>用公式 $A^{-1}=\dfrac{1}{|A|}A^*$。</li>
         </ol>
         <p><strong>二阶速算口诀</strong>：若 $A=\begin{pmatrix}a&b\\c&d\end{pmatrix}$，$|A|=ad-bc\ne0$，则</p>
-        <p>$$A^{-1}=\frac{1}{ad-bc}\begin{pmatrix}d&-b\\-c&a\end{pmatrix}$$</p>
+        <p class="en">$$A^{-1}=\frac{1}{ad-bc}\begin{pmatrix}d&-b\\-c&a\end{pmatrix}$$</p>
         <p>口诀"<strong>主对调、副变号、除以行列式</strong>"：主对角线的 $a,d$ 交换位置，副对角线的 $b,c$ 各加负号，最后整体除以 $|A|$。<strong>千万别忘了除以 $|A|$</strong>。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 2.2</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 2.2</span>
              <strong>Inverting a Matrix with the Adjugate.</strong></p>
           <ol>
-            <li>Compute $|A|$ first. If $|A|=0$, stop at once: the conclusion is that $A$ is not
+            <li class="en">Compute $|A|$ first. If $|A|=0$, stop at once: the conclusion is that $A$ is not
                 invertible.</li>
-            <li>Compute the cofactors $A_{ij}$ one by one, watching the sign $(-1)^{i+j}$.</li>
-            <li>Arrange the cofactors in their <strong>original positions</strong>, then
+            <li class="en">Compute the cofactors $A_{ij}$ one by one, watching the sign $(-1)^{i+j}$.</li>
+            <li class="en">Arrange the cofactors in their <strong>original positions</strong>, then
                 <strong>transpose</strong>, to obtain $A^*$.</li>
-            <li>Apply the formula $A^{-1}=\dfrac{1}{|A|}A^*$.</li>
+            <li class="en">Apply the formula $A^{-1}=\dfrac{1}{|A|}A^*$.</li>
           </ol>
-          <p><strong>Quick rule for order 2.</strong> If
+          <p class="en"><strong>Quick rule for order 2.</strong> If
              $A=\begin{pmatrix}a&b\\c&d\end{pmatrix}$ and $|A|=ad-bc\ne0$, then</p>
-          <p>$$A^{-1}=\frac{1}{ad-bc}\begin{pmatrix}d&-b\\-c&a\end{pmatrix}$$</p>
-          <p>Swap the main-diagonal entries $a,d$, change the signs of the anti-diagonal entries
+          <p class="en">$$A^{-1}=\frac{1}{ad-bc}\begin{pmatrix}d&-b\\-c&a\end{pmatrix}$$</p>
+          <p class="en">Swap the main-diagonal entries $a,d$, change the signs of the anti-diagonal entries
              $b,c$, and divide the whole matrix by $|A|$.
              <strong>Never forget the division by $|A|$.</strong></p>
         </div>
@@ -871,27 +881,27 @@
         <p><strong>为什么可以这样做</strong>：对 $(A\mid E)$ 做一系列初等行变换等价于左乘一串初等矩阵 $P=P_s\cdots P_1$。左半变成 $E$ 说明 $PA=E$，于是 $P=A^{-1}$；而右半原来是 $E$，被作用后变成 $PE=P=A^{-1}$。右边的 $E$ 忠实地记录了你做过的所有操作。</p>
         <p><strong>配套用法</strong>：解矩阵方程 $AX=B$ 时用 $(A\mid B)\to(E\mid A^{-1}B)$ 一次搞定，不必先单独求 $A^{-1}$。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 2.3</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 2.3</span>
              <strong>Inverting a Matrix by Elementary Row Operations (the first choice for a numeric
              matrix).</strong></p>
           <ol>
-            <li>Form the $n\times2n$ matrix $(A\mid E)$ by placing $A$ next to the identity matrix
+            <li class="en">Form the $n\times2n$ matrix $(A\mid E)$ by placing $A$ next to the identity matrix
                 $E$ of the same order.</li>
-            <li>Apply only <strong>elementary row operations</strong> to it (swap two rows, multiply a
+            <li class="en">Apply only <strong>elementary row operations</strong> to it (swap two rows, multiply a
                 row by a nonzero number, add a multiple of one row to another), with the goal of
                 turning the left half into $E$.</li>
-            <li>When the left half becomes $E$, the right half has automatically become $A^{-1}$:
+            <li class="en">When the left half becomes $E$, the right half has automatically become $A^{-1}$:
                 $(A\mid E)\to(E\mid A^{-1})$.</li>
-            <li>If a zero row appears on the left, then $|A|=0$, $A$ is not invertible, and there is
+            <li class="en">If a zero row appears on the left, then $|A|=0$, $A$ is not invertible, and there is
                 no need to continue.</li>
           </ol>
-          <p><strong>Why this works.</strong> Performing a sequence of elementary row operations on
+          <p class="en"><strong>Why this works.</strong> Performing a sequence of elementary row operations on
              $(A\mid E)$ amounts to multiplying on the left by a product of elementary matrices
              $P=P_s\cdots P_1$. The left half becoming $E$ means $PA=E$, hence $P=A^{-1}$; the right
              half, originally $E$, becomes $PE=P=A^{-1}$. The $E$ on the right faithfully records
              every operation you performed.</p>
-          <p><strong>Companion use.</strong> To solve the matrix equation $AX=B$, go straight to
+          <p class="en"><strong>Companion use.</strong> To solve the matrix equation $AX=B$, go straight to
              $(A\mid B)\to(E\mid A^{-1}B)$; there is no need to compute $A^{-1}$ separately first.</p>
         </div>
       </div>
@@ -908,8 +918,8 @@
         </ul>
         <p>推广：$(A_1A_2\cdots A_s)^{-1}=A_s^{-1}\cdots A_2^{-1}A_1^{-1}$。另外由 $AB=E$ 可以推出 $BA=E$（同阶方阵时）：两边取行列式得 $|A||B|=1$，故 $|A|\ne0$，$A$ 可逆；对 $AB=E$ 左乘 $A^{-1}$ 得 $B=A^{-1}$，于是 $BA=A^{-1}A=E$。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.4</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.4</span>
              <strong>Properties of the Inverse (watch the reversed order).</strong>
              Let $A,B$ be invertible matrices of the same order and let $k\ne0$. Then</p>
           <ul>
@@ -921,7 +931,7 @@
             <li>$(A^T)^{-1}=(A^{-1})^T$ (transposing and inverting may be interchanged)</li>
             <li>$(A^*)^{-1}=(A^{-1})^*=\dfrac{1}{|A|}A$ (details in Section 2-3)</li>
           </ul>
-          <p>More generally $(A_1A_2\cdots A_s)^{-1}=A_s^{-1}\cdots A_2^{-1}A_1^{-1}$. Also, $AB=E$
+          <p class="en">More generally $(A_1A_2\cdots A_s)^{-1}=A_s^{-1}\cdots A_2^{-1}A_1^{-1}$. Also, $AB=E$
              implies $BA=E$ for square matrices of the same order: taking determinants gives
              $|A||B|=1$, so $|A|\ne0$ and $A$ is invertible; multiplying $AB=E$ on the left by
              $A^{-1}$ gives $B=A^{-1}$, whence $BA=A^{-1}A=E$.</p>
@@ -948,22 +958,22 @@
         </ol>
         <p>关键认识：<strong>求逆不一定要算出具体矩阵</strong>。只要写出 $A\cdot M=E$，$M$ 就是 $A^{-1}$，哪怕 $M$ 里还带着 $A$。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 2.4</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 2.4</span>
              <strong>Inverting an Abstract Matrix (a frequent exam pattern).</strong></p>
           <ol>
-            <li>Rewrite the given identity (for example $A^2-3A-2E=O$) as "a polynomial in $A$
+            <li class="en">Rewrite the given identity (for example $A^2-3A-2E=O$) as "a polynomial in $A$
                 equals $O$".</li>
-            <li><strong>Goal</strong>: rearrange it into the shape
+            <li class="en"><strong>Goal</strong>: rearrange it into the shape
                 $A\cdot(\text{something involving }A)=E$.</li>
-            <li>The technique is to <strong>factor out $A$ on the left</strong>: take one $A$ out of
+            <li class="en">The technique is to <strong>factor out $A$ on the left</strong>: take one $A$ out of
                 every term containing $A$, and move the constant term to the right-hand side.</li>
-            <li>Divide both sides by the constant, and $A^{-1}$ appears.</li>
-            <li>If $(A+kE)^{-1}$ is required, use the given identity to reduce the higher powers of
+            <li class="en">Divide both sides by the constant, and $A^{-1}$ appears.</li>
+            <li class="en">If $(A+kE)^{-1}$ is required, use the given identity to reduce the higher powers of
                 $A$, substitute back, and use <strong>undetermined coefficients</strong> to build
                 $(A+kE)(\alpha A+\beta E)=E$.</li>
           </ol>
-          <p>Key insight: <strong>inverting does not require an explicit matrix</strong>. As soon as
+          <p class="en">Key insight: <strong>inverting does not require an explicit matrix</strong>. As soon as
              you can write $A\cdot M=E$, the matrix $M$ is $A^{-1}$, even if $M$ still contains
              $A$.</p>
         </div>
@@ -980,9 +990,9 @@
             <p class="solution-label">解</p>
             <p><strong>第一步：算行列式。</strong>$|A|=3\times2-1\times4=6-4=2\ne0$，可逆。</p>
             <p><strong>第二步：套口诀</strong>"主对调、副变号、除以行列式"。主对角线 $3,2$ 对调，副对角线 $1,4$ 变号：</p>
-            <p>$$A^{-1}=\frac{1}{2}\begin{pmatrix}2&-1\\-4&3\end{pmatrix}=\begin{pmatrix}1&-\frac12\\-2&\frac32\end{pmatrix}$$</p>
+            <p class="en">$$A^{-1}=\frac{1}{2}\begin{pmatrix}2&-1\\-4&3\end{pmatrix}=\begin{pmatrix}1&-\frac12\\-2&\frac32\end{pmatrix}$$</p>
             <p><strong>第三步：验算</strong>（考场上花不了半分钟，却能救命）：</p>
-            <p>$$AA^{-1}=\begin{pmatrix}3&1\\4&2\end{pmatrix}\begin{pmatrix}1&-\frac12\\-2&\frac32\end{pmatrix}=\begin{pmatrix}3-2&-1.5+1.5\\4-4&-2+3\end{pmatrix}=\begin{pmatrix}1&0\\0&1\end{pmatrix}=E$$</p>
+            <p class="en">$$AA^{-1}=\begin{pmatrix}3&1\\4&2\end{pmatrix}\begin{pmatrix}1&-\frac12\\-2&\frac32\end{pmatrix}=\begin{pmatrix}3-2&-1.5+1.5\\4-4&-2+3\end{pmatrix}=\begin{pmatrix}1&0\\0&1\end{pmatrix}=E$$</p>
             <p>顺便检验：$|A^{-1}|=1\times\frac32-(-2)\times(-\frac12)=\frac32-1=\frac12=\frac{1}{|A|}$，与 $|A^{-1}|=1/|A|$ 一致。</p>
           </div>
         </div>
@@ -1029,11 +1039,11 @@
             <p><strong>准备</strong>：$|A|=2\times1-1\times1=1$，由二阶口诀 $A^{-1}=\begin{pmatrix}1&-1\\-1&2\end{pmatrix}$。验算：$\begin{pmatrix}2&1\\1&1\end{pmatrix}\begin{pmatrix}1&-1\\-1&2\end{pmatrix}=\begin{pmatrix}2-1&-2+2\\1-1&-1+2\end{pmatrix}=E$。</p>
             <p><strong>(1) $AX=B$：$X$ 在右边，用左乘。</strong>两边<strong>左乘</strong> $A^{-1}$：</p>
             <p>$$A^{-1}(AX)=A^{-1}B\Longrightarrow (A^{-1}A)X=A^{-1}B\Longrightarrow X=A^{-1}B$$</p>
-            <p>$$X=\begin{pmatrix}1&-1\\-1&2\end{pmatrix}\begin{pmatrix}1&2\\0&1\end{pmatrix}=\begin{pmatrix}1-0&2-1\\-1+0&-2+2\end{pmatrix}=\begin{pmatrix}1&1\\-1&0\end{pmatrix}$$</p>
+            <p class="en">$$X=\begin{pmatrix}1&-1\\-1&2\end{pmatrix}\begin{pmatrix}1&2\\0&1\end{pmatrix}=\begin{pmatrix}1-0&2-1\\-1+0&-2+2\end{pmatrix}=\begin{pmatrix}1&1\\-1&0\end{pmatrix}$$</p>
             <p><strong>验算</strong>：$AX=\begin{pmatrix}2&1\\1&1\end{pmatrix}\begin{pmatrix}1&1\\-1&0\end{pmatrix}=\begin{pmatrix}2-1&2+0\\1-1&1+0\end{pmatrix}=\begin{pmatrix}1&2\\0&1\end{pmatrix}=B$，正确。</p>
             <p><strong>(2) $XA=B$：$X$ 在左边，用右乘。</strong>两边<strong>右乘</strong> $A^{-1}$：</p>
             <p>$$(XA)A^{-1}=BA^{-1}\Longrightarrow X=BA^{-1}$$</p>
-            <p>$$X=\begin{pmatrix}1&2\\0&1\end{pmatrix}\begin{pmatrix}1&-1\\-1&2\end{pmatrix}=\begin{pmatrix}1-2&-1+4\\0-1&0+2\end{pmatrix}=\begin{pmatrix}-1&3\\-1&2\end{pmatrix}$$</p>
+            <p class="en">$$X=\begin{pmatrix}1&2\\0&1\end{pmatrix}\begin{pmatrix}1&-1\\-1&2\end{pmatrix}=\begin{pmatrix}1-2&-1+4\\0-1&0+2\end{pmatrix}=\begin{pmatrix}-1&3\\-1&2\end{pmatrix}$$</p>
             <p><strong>验算</strong>：$XA=\begin{pmatrix}-1&3\\-1&2\end{pmatrix}\begin{pmatrix}2&1\\1&1\end{pmatrix}=\begin{pmatrix}-2+3&-1+3\\-2+2&-1+2\end{pmatrix}=\begin{pmatrix}1&2\\0&1\end{pmatrix}=B$，正确。</p>
             <p><strong>对比结论</strong>：同一个 $A$、同一个 $B$，两个方程的解完全不同——$A^{-1}B=\begin{pmatrix}1&1\\-1&0\end{pmatrix}$，而 $BA^{-1}=\begin{pmatrix}-1&3\\-1&2\end{pmatrix}$。做题时先看清 $A$ 是<strong>左乘还是右乘</strong> $X$，再决定乘在哪一边。</p>
             <p><strong>延伸</strong>：若方程为 $AXB=C$（$A,B$ 均可逆），先左乘 $A^{-1}$ 得 $XB=A^{-1}C$，再右乘 $B^{-1}$ 得 $X=A^{-1}CB^{-1}$。</p>
@@ -1051,7 +1061,7 @@
           <div class="solution">
             <p class="solution-label">解</p>
             <p><strong>第一步：提取公因式 $A$。</strong>把含 $A$ 的项归到一起，常数项挪到右边：</p>
-            <p>$$A^2-3A=2E\quad\Longrightarrow\quad A(A-3E)=2E$$</p>
+            <p class="en">$$A^2-3A=2E\quad\Longrightarrow\quad A(A-3E)=2E$$</p>
             <p><strong>第二步：把右边的系数变成 1。</strong>两边同除以 $2$：$A\cdot\frac{1}{2}(A-3E)=E$。按定义，$A$ 可逆，且</p>
             <p>$$A^{-1}=\frac{1}{2}(A-3E)$$</p>
             <p>这里 $A^{-1}$ 的表达式中还含有 $A$，完全正常——题目没给 $A$ 的数值，我们只需要"用 $A$ 表示 $A^{-1}$"。</p>
@@ -1161,12 +1171,12 @@
               <p class="solution-label">解</p>
               <p><strong>第一步：算两个逆。</strong>$|A|=1\times1-0\times2=1\ne0$，由二阶口诀 $A^{-1}=\begin{pmatrix}1&-2\\0&1\end{pmatrix}$；$|B|=2\times1-1\times1=1\ne0$，故 $B^{-1}=\begin{pmatrix}1&-1\\-1&2\end{pmatrix}$。</p>
               <p><strong>第二步：先消左边的 $A$。</strong>对 $AXB=E$ 两边<strong>左乘</strong> $A^{-1}$：</p>
-              <p>$$A^{-1}(AXB)=A^{-1}E\ \Longrightarrow\ (A^{-1}A)XB=A^{-1}\ \Longrightarrow\ XB=A^{-1}$$</p>
+              <p class="en">$$A^{-1}(AXB)=A^{-1}E\ \Longrightarrow\ (A^{-1}A)XB=A^{-1}\ \Longrightarrow\ XB=A^{-1}$$</p>
               <p><strong>第三步：再消右边的 $B$。</strong>$X$ 在 $B$ 的左边，所以两边<strong>右乘</strong> $B^{-1}$：</p>
               <p>$$(XB)B^{-1}=A^{-1}B^{-1}\ \Longrightarrow\ X=A^{-1}B^{-1}$$</p>
               <p>顺序不能颠倒：若写成 $X=B^{-1}A^{-1}$，相当于把 $X$ 当成了站在 $A$ 左边的矩阵。这里与 $(AB)^{-1}=B^{-1}A^{-1}$ 是同一个"反序"道理——先脱外层 $A$，所以 $A^{-1}$ 写在最前面。</p>
               <p><strong>第四步：代入数值。</strong></p>
-              <p>$$X=\begin{pmatrix}1&-2\\0&1\end{pmatrix}\begin{pmatrix}1&-1\\-1&2\end{pmatrix}=\begin{pmatrix}1+2&-1-4\\-1&2\end{pmatrix}=\begin{pmatrix}3&-5\\-1&2\end{pmatrix}$$</p>
+              <p class="en">$$X=\begin{pmatrix}1&-2\\0&1\end{pmatrix}\begin{pmatrix}1&-1\\-1&2\end{pmatrix}=\begin{pmatrix}1+2&-1-4\\-1&2\end{pmatrix}=\begin{pmatrix}3&-5\\-1&2\end{pmatrix}$$</p>
               <p><strong>验算</strong>：$AX=\begin{pmatrix}1&2\\0&1\end{pmatrix}\begin{pmatrix}3&-5\\-1&2\end{pmatrix}=\begin{pmatrix}3-2&-5+4\\-1&2\end{pmatrix}=\begin{pmatrix}1&-1\\-1&2\end{pmatrix}=B^{-1}$，再右乘 $B$ 得 $B^{-1}B=E$，正确。</p>
               <p><strong>答案：$X=\begin{pmatrix}3&-5\\-1&2\end{pmatrix}$。</strong></p>
             </div>
@@ -1180,7 +1190,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，则 $A$ 可逆的充分必要条件是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. A necessary and sufficient condition for $A$ to be invertible is ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix. A necessary and sufficient condition for $A$ to be invertible is ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$|A|\ne0$</span></li>
             <li><span class="opt-body">$A\ne O$</span></li>
@@ -1192,7 +1202,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A,B$ 为同阶可逆矩阵，则 $(AB)^{-1}=$（　）。
-             <span class="en-line" lang="en">Let $A,B$ be invertible matrices of the same order. Then $(AB)^{-1}=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be invertible matrices of the same order. Then $(AB)^{-1}=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$B^{-1}A^{-1}$</span></li>
             <li><span class="opt-body">$A^{-1}B^{-1}$</span></li>
@@ -1204,7 +1214,7 @@
 
         <div class="q" data-type="judge" data-level="基础">
           <p class="q-stem">设 $A,B$ 为 $n$ 阶矩阵，若 $AB$ 可逆，则 $A$ 与 $B$ 都可逆。
-             <span class="en-line" lang="en">Let $A,B$ be $n\times n$ matrices. If $AB$ is invertible, then both $A$ and $B$ are invertible.</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be $n\times n$ matrices. If $AB$ is invertible, then both $A$ and $B$ are invertible.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
@@ -1214,7 +1224,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A,B$ 为 $n$ 阶可逆矩阵，$k\ne0$，下列正确的是（　）。
-             <span class="en-line" lang="en">Let $A,B$ be invertible $n\times n$ matrices and let $k\ne0$. Which of the following are correct?</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be invertible $n\times n$ matrices and let $k\ne0$. Which of the following are correct?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$(kA)^{-1}=\frac1kA^{-1}$</span></li>
             <li data-correct="true"><span class="opt-body">$\bigl((AB)^{-1}\bigr)^T=(A^{-1})^T(B^{-1})^T$</span></li>
@@ -1226,7 +1236,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A,B,C$ 均为 $n$ 阶可逆矩阵，下列正确的是（　）。
-             <span class="en-line" lang="en">Let $A,B,C$ all be invertible $n\times n$ matrices. Which of the following are correct?</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B,C$ all be invertible $n\times n$ matrices. Which of the following are correct?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$AXB=C$ 的解为 $X=A^{-1}CB^{-1}$</span></li>
             <li data-correct="true"><span class="opt-body">$XA=C$ 的解为 $X=CA^{-1}$</span></li>
@@ -1238,14 +1248,14 @@
 
         <div class="q" data-type="fill" data-level="中等">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$|A|=\frac12$，则 $|(2A)^{-1}|=$ ______。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=\frac12$. Then $|(2A)^{-1}|=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=\frac12$. Then $|(2A)^{-1}|=$ ______.</span></p>
           <div class="q-answer" data-answer="1/4|0.25"></div>
           <div class="q-explain">$(2A)^{-1}=\frac12A^{-1}$，取行列式得 $\left(\frac12\right)^3|A^{-1}|=\frac18\times\frac{1}{|A|}=\frac18\times2=\frac14$。常见错解一：把 $(2A)^{-1}$ 写成 $2A^{-1}$，得 $2^3\times2=16$。常见错解二：漏掉 $\left(\frac12\right)^3$ 中的立方，得 $\frac12\times2=1$。记住两个指数：数乘求逆系数取倒数，数乘取行列式系数要 $n$ 次方。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，满足 $A^2+A-3E=O$，则 $A^{-1}=$（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2+A-3E=O$. Then $A^{-1}=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2+A-3E=O$. Then $A^{-1}=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\frac13(A+E)$</span></li>
             <li><span class="opt-body">$\frac13(A-E)$</span></li>
@@ -1257,7 +1267,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$|A|=\frac12$，则 $\bigl|(2A)^{-1}-5A^*\bigr|=$（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=\frac12$. Then $\bigl|(2A)^{-1}-5A^*\bigr|=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=\frac12$. Then $\bigl|(2A)^{-1}-5A^*\bigr|=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$-16$</span></li>
             <li><span class="opt-body">$-\frac14$</span></li>
@@ -1269,7 +1279,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，满足 $A^2-A-2E=O$，则 $A^{-1}=$（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2-A-2E=O$. Then $A^{-1}=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2-A-2E=O$. Then $A^{-1}=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\frac12(A-E)$</span></li>
             <li><span class="opt-body">$\frac12(A+E)$</span></li>
@@ -1281,7 +1291,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，满足 $A^2-3A+3E=O$，则 $(A-E)^{-1}=$（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2-3A+3E=O$. Then $(A-E)^{-1}=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2-3A+3E=O$. Then $(A-E)^{-1}=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$2E-A$</span></li>
             <li><span class="opt-body">$A-2E$</span></li>
@@ -1293,7 +1303,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A=\begin{pmatrix}1&2\\0&1\end{pmatrix}$，$B=\begin{pmatrix}1&0\\1&1\end{pmatrix}$，则矩阵方程 $XA=B$ 的解 $X=$（　）。
-             <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&2\\0&1\end{pmatrix}$ and $B=\begin{pmatrix}1&0\\1&1\end{pmatrix}$. Then the solution of $XA=B$ is $X=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=\begin{pmatrix}1&2\\0&1\end{pmatrix}$ and $B=\begin{pmatrix}1&0\\1&1\end{pmatrix}$. Then the solution of $XA=B$ is $X=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1&-2\\1&-1\end{pmatrix}$</span></li>
             <li><span class="opt-body">$\begin{pmatrix}-1&-2\\1&1\end{pmatrix}$</span></li>
@@ -1312,7 +1322,11 @@
 
       </div>
 
-      <h2 id="s2-3" data-hours="2.4">2-3 矩阵的公式（伴随矩阵与秩的不等式）</h2>
+      <h2 id="la-s2-3" data-hours="2.4"
+          data-video-map="la-s2-3"
+          data-video-title="《线性代数》全程教学视频（一高数）">2-3 矩阵的公式（伴随矩阵与秩的不等式）</h2>
+
+      <div data-video-entry="la-s2-3" data-video-pos="top"></div>
 
       <p>上一节求逆时我们反复用到 $A^{-1}=\frac{1}{|A|}A^*$，但伴随矩阵 $A^*$ 当时只是个"中间工具"，它的定义（代数余子式转置排列）看起来也很别扭。本节把它当成独立对象来研究：先讲清它为什么必须那样排，再从唯一的公式 $AA^*=|A|E$ 推出一整串结论（$|A^*|$、$(A^*)^{-1}$、$(AB)^*$、$(A^*)^*$），最后给出它最有价值的应用——<strong>$R(A^*)$ 随 $R(A)$ 分段取值</strong>。同节还要引入三条<strong>秩的不等式</strong>，这是第 4 章方程组解的结构理论（基础解系含 $n-R(A)$ 个向量）和证明题的必备工具。</p>
 
@@ -1331,16 +1345,16 @@
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 2.7　伴随矩阵</div>
         <p>设 $A=(a_{ij})$ 为 $n$ 阶方阵（$n\ge2$），$A_{ij}$ 为元素 $a_{ij}$ 的代数余子式。称</p>
-        <p>$$A^*=\begin{pmatrix}A_{11}&A_{21}&\cdots&A_{n1}\\ A_{12}&A_{22}&\cdots&A_{n2}\\ \vdots&\vdots&&\vdots\\ A_{1n}&A_{2n}&\cdots&A_{nn}\end{pmatrix}$$</p>
+        <p class="en">$$A^*=\begin{pmatrix}A_{11}&A_{21}&\cdots&A_{n1}\\ A_{12}&A_{22}&\cdots&A_{n2}\\ \vdots&\vdots&&\vdots\\ A_{1n}&A_{2n}&\cdots&A_{nn}\end{pmatrix}$$</p>
         <p>为 $A$ 的<span class="term">伴随矩阵</span>。写成通式就是 $(A^*)_{ij}=A_{ji}$——注意下标是<strong>反的</strong>。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 2.7</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 2.7</span>
              <strong>The Adjugate Matrix.</strong>
              Let $A=(a_{ij})$ be a square matrix of order $n$ ($n\ge2$), and let $A_{ij}$ be the
              cofactor of the entry $a_{ij}$. The matrix</p>
-          <p>$$A^*=\begin{pmatrix}A_{11}&A_{21}&\cdots&A_{n1}\\ A_{12}&A_{22}&\cdots&A_{n2}\\ \vdots&\vdots&&\vdots\\ A_{1n}&A_{2n}&\cdots&A_{nn}\end{pmatrix}$$</p>
-          <p>is called the <span class="en-term">adjugate matrix</span> of $A$. In a single formula,
+          <p class="en">$$A^*=\begin{pmatrix}A_{11}&A_{21}&\cdots&A_{n1}\\ A_{12}&A_{22}&\cdots&A_{n2}\\ \vdots&\vdots&&\vdots\\ A_{1n}&A_{2n}&\cdots&A_{nn}\end{pmatrix}$$</p>
+          <p class="en">is called the <span class="en-term">adjugate matrix</span> of $A$. In a single formula,
              $(A^*)_{ij}=A_{ji}$ — note that the subscripts are <strong>reversed</strong>.</p>
         </div>
       </div>
@@ -1354,19 +1368,19 @@
         <p>这正是 $|A|E$ 的 $(i,j)$ 元素。$A^*A=|A|E$ 同理。</p>
         <p><strong>立刻可得</strong>：若 $|A|\ne0$，则 $A\cdot\frac{1}{|A|}A^*=E$，所以 $A^{-1}=\frac{1}{|A|}A^*$；反过来 $A^*=|A|A^{-1}$（$A$ 可逆时）也是常用变形。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.5</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.5</span>
              <strong>The Key Identity (the source of all the other formulas).</strong>
              For every square matrix $A$ of order $n$ (<strong>whether or not it is
              invertible</strong>),</p>
           <p>$$AA^*=A^*A=|A|E$$</p>
-          <p><strong>Proof idea.</strong> Look at the $(i,j)$ entry of $AA^*$. Row $i$ of $A$
+          <p class="en"><strong>Proof idea.</strong> Look at the $(i,j)$ entry of $AA^*$. Row $i$ of $A$
              multiplies column $j$ of $A^*$, and column $j$ of $A^*$ is
              $(A_{j1},A_{j2},\dots,A_{jn})^T$, so</p>
           <p>$$(AA^*)_{ij}=\sum_{k=1}^{n}a_{ik}A_{jk}=\begin{cases}|A|,&i=j\\ 0,&i\ne j\end{cases}$$</p>
-          <p>which is exactly the $(i,j)$ entry of $|A|E$. The identity $A^*A=|A|E$ follows in the
+          <p class="en">which is exactly the $(i,j)$ entry of $|A|E$. The identity $A^*A=|A|E$ follows in the
              same way.</p>
-          <p><strong>Immediate consequences.</strong> If $|A|\ne0$, then
+          <p class="en"><strong>Immediate consequences.</strong> If $|A|\ne0$, then
              $A\cdot\frac{1}{|A|}A^*=E$, so $A^{-1}=\frac{1}{|A|}A^*$; conversely $A^*=|A|A^{-1}$
              whenever $A$ is invertible, which is an equally useful rewriting.</p>
         </div>
@@ -1386,8 +1400,8 @@
         <p><strong>推导示范</strong>：(1) 若 $A$ 可逆，对 $AA^*=|A|E$ 两边取行列式得 $|A|\cdot|A^*|=|A|^n$，约掉 $|A|\ne0$ 即得 $|A^*|=|A|^{n-1}$。(4) 若 $A,B$ 可逆，则 $B^*A^*=(|B|B^{-1})(|A|A^{-1})=|A||B|B^{-1}A^{-1}=|AB|(AB)^{-1}=(AB)^*$。(6) $A$ 可逆时 $(A^*)^*=|A^*|(A^*)^{-1}=|A|^{n-1}\cdot\frac{1}{|A|}A=|A|^{n-2}A$。</p>
         <p><strong>记忆要点</strong>：伴随运算对乘法<strong>反序</strong>（与转置、求逆一个规矩）；伴随运算对加法<strong>没有</strong>性质（$(A+B)^*$ 没有公式）；系数提取是 $k^{n-1}$，比行列式的 $k^n$ 少一次。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.6</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.6</span>
              <strong>All the Standard Formulas for the Adjugate.</strong>
              Let $A$ be a square matrix of order $n$ ($n\ge2$):</p>
           <ul>
@@ -1403,13 +1417,13 @@
                 $n$).</li>
             <li><span class="thm-name">(6)</span> $(A^*)^*=|A|^{\,n-2}A$.</li>
           </ul>
-          <p><strong>Sample derivations.</strong> (1) If $A$ is invertible, take determinants of
+          <p class="en"><strong>Sample derivations.</strong> (1) If $A$ is invertible, take determinants of
              $AA^*=|A|E$: $|A|\cdot|A^*|=|A|^n$, and cancelling the nonzero factor $|A|$ gives
              $|A^*|=|A|^{n-1}$. (4) If $A,B$ are invertible, then
              $B^*A^*=(|B|B^{-1})(|A|A^{-1})=|A||B|B^{-1}A^{-1}=|AB|(AB)^{-1}=(AB)^*$.
              (6) For invertible $A$,
              $(A^*)^*=|A^*|(A^*)^{-1}=|A|^{n-1}\cdot\frac{1}{|A|}A=|A|^{n-2}A$.</p>
-          <p><strong>What to remember.</strong> The adjugate <strong>reverses</strong> the order
+          <p class="en"><strong>What to remember.</strong> The adjugate <strong>reverses</strong> the order
              under multiplication (the same rule as the transpose and the inverse); it has
              <strong>no</strong> property under addition (there is no formula for $(A+B)^*$); and
              pulling out a scalar costs $k^{n-1}$, one power less than the $k^n$ of the
@@ -1443,8 +1457,8 @@
         </div>
         <p><strong>怎么记</strong>：只有 $R(A)=n-1$ 这一档"特殊"，此时伴随矩阵的秩掉到 $1$（<strong>不是 $n-1$</strong>）。其余两档是"要么满、要么零"。口诀："<strong>满则满，差一则一，差二则零</strong>"。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.7</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.7</span>
              <strong>How $R(A^*)$ Depends on $R(A)$ (must be memorized).</strong>
              Let $A$ be a square matrix of order $n$ ($n\ge2$). Then</p>
           <div class="tbl-wrap">
@@ -1457,7 +1471,7 @@
               </tbody>
             </table>
           </div>
-          <p><strong>How to remember it.</strong> Only the case $R(A)=n-1$ is special: there the
+          <p class="en"><strong>How to remember it.</strong> Only the case $R(A)=n-1$ is special: there the
              rank of the adjugate drops to $1$ (<strong>not</strong> $n-1$). The other two cases are
              "either full or zero".</p>
         </div>
@@ -1476,8 +1490,8 @@
         <p><strong>常用特例一</strong>：若 $AB=O$（$A$ 为 $m\times n$，$B$ 为 $n\times s$），则 $R(A)+R(B)\le n$。几何解释是：$B$ 的每一列都是 $AX=0$ 的解，而解空间维数是 $n-R(A)$。</p>
         <p><strong>常用特例二</strong>：若 $P,Q$ 可逆，则 $R(PAQ)=R(A)$。因为 $R(PAQ)\le R(A)\le R\bigl(P^{-1}(PAQ)Q^{-1}\bigr)=R(PAQ)$，两头一夹就相等。这就是"可逆变换不改变秩"，也是第 3 章用初等行变换求秩的理论依据。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.8</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.8</span>
              <strong>Rank Inequalities (the main tool in proofs).</strong>
              Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix. Then</p>
           <ul>
@@ -1491,15 +1505,15 @@
           </ul>
           <p>Combining (2) and (3):
              $\max\{0,\ R(A)+R(B)-n\}\le R(AB)\le\min\{R(A),R(B)\}$.</p>
-          <p><strong>Intuition.</strong> $A$ is a map starting from an $n$-dimensional space, and
+          <p class="en"><strong>Intuition.</strong> $A$ is a map starting from an $n$-dimensional space, and
              $R(A)$ is the dimension of its image; multiplying further by $B$ compresses the image
              once more, so it can only get smaller — that is (2). Sylvester says that the losses on
              the two sides both live in the same $n$-dimensional space, so together they cannot lose
              more than $n$.</p>
-          <p><strong>Useful special case 1.</strong> If $AB=O$ (with $A$ of shape $m\times n$ and $B$
+          <p class="en"><strong>Useful special case 1.</strong> If $AB=O$ (with $A$ of shape $m\times n$ and $B$
              of shape $n\times s$), then $R(A)+R(B)\le n$. Geometrically, every column of $B$ is a
              solution of $AX=0$, whose nullspace has dimension $n-R(A)$.</p>
-          <p><strong>Useful special case 2.</strong> If $P,Q$ are invertible, then $R(PAQ)=R(A)$:
+          <p class="en"><strong>Useful special case 2.</strong> If $P,Q$ are invertible, then $R(PAQ)=R(A)$:
              indeed $R(PAQ)\le R(A)\le R\bigl(P^{-1}(PAQ)Q^{-1}\bigr)=R(PAQ)$, so the two ends
              squeeze to equality. This is "an invertible transformation does not change the rank",
              and it is the theoretical basis for computing rank by elementary row operations in
@@ -1517,21 +1531,21 @@
           <li><strong>遇到 $AB=O$ 或 $R(AB)$ 的证明题</strong>：联想 $R(A)+R(B)\le n$ 或 $R(AB)\le\min\{R(A),R(B)\}$，配合"秩不超过行数、也不超过列数"放缩。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 2.5</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 2.5</span>
              <strong>How to Attack a Problem Involving the Adjugate.</strong></p>
           <ol>
-            <li><strong>To find $|A^*|$</strong>: write down $|A|^{n-1}$ directly; never compute the
+            <li class="en"><strong>To find $|A^*|$</strong>: write down $|A|^{n-1}$ directly; never compute the
                 adjugate itself.</li>
-            <li><strong>To find $A^*$ itself</strong>: honestly compute the $n^2$ cofactors, arrange
+            <li class="en"><strong>To find $A^*$ itself</strong>: honestly compute the $n^2$ cofactors, arrange
                 them in their original positions, and transpose.
                 <strong>The transposition is the step most often forgotten.</strong></li>
-            <li><strong>To find $(A^*)^{-1}$ or a complicated expression containing $A^*$</strong>:
+            <li class="en"><strong>To find $(A^*)^{-1}$ or a complicated expression containing $A^*$</strong>:
                 replace $A^*$ by $|A|A^{-1}$ first, turning every adjugate into an inverse and a
                 determinant; the problem immediately becomes familiar algebra.</li>
-            <li><strong>To find $R(A^*)$</strong>: find $R(A)$ first and then read the table of
+            <li class="en"><strong>To find $R(A^*)$</strong>: find $R(A)$ first and then read the table of
                 Theorem 2.7; never compute $A^*$ by brute force.</li>
-            <li><strong>For a proof involving $AB=O$ or $R(AB)$</strong>: recall
+            <li class="en"><strong>For a proof involving $AB=O$ or $R(AB)$</strong>: recall
                 $R(A)+R(B)\le n$ or $R(AB)\le\min\{R(A),R(B)\}$, and combine them with the fact that
                 a rank never exceeds the number of rows or the number of columns.</li>
           </ol>
@@ -1555,7 +1569,7 @@
               <li>$A_{31}=+\begin{vmatrix}2&0\\1&1\end{vmatrix}=2$，$A_{32}=-\begin{vmatrix}1&0\\0&1\end{vmatrix}=-1$，$A_{33}=+\begin{vmatrix}1&2\\0&1\end{vmatrix}=1$</li>
             </ul>
             <p><strong>第三步：按原位置排好再转置。</strong>代数余子式矩阵是 $\begin{pmatrix}1&1&-1\\-2&1&2\\2&-1&1\end{pmatrix}$，转置得</p>
-            <p>$$A^*=\begin{pmatrix}1&-2&2\\1&1&-1\\-1&2&1\end{pmatrix}$$</p>
+            <p class="en">$$A^*=\begin{pmatrix}1&-2&2\\1&1&-1\\-1&2&1\end{pmatrix}$$</p>
             <p><strong>第四步：验算 $AA^*=|A|E=3E$。</strong>用 $A$ 的第一行 $(1,2,0)$ 乘 $A^*$ 的三列：$1+2+0=3$，$-2+2+0=0$，$2-2+0=0$。再用第二行 $(0,1,1)$：$0+1-1=0$，$0+1+2=3$，$0-1+1=0$。第三行 $(1,0,1)$：$1+0-1=0$，$-2+0+2=0$，$2+0+1=3$。正好是 $3E$，答案正确。</p>
             <p><strong>第五步：用公式算 $|A^*|$（不要展开）。</strong>$n=3$，$|A^*|=|A|^{n-1}=3^{2}=9$。交叉验证（展开 $A^*$ 的第一行）：$1\times(1+2)+2\times(1-1)+2\times(2+1)=3+0+6=9$，一致。</p>
             <p><strong>第六步：算 $|(A^*)^*|$。</strong>由 $(A^*)^*=|A|^{n-2}A=3^{1}A=3A$，得 $|(A^*)^*|=|3A|=3^{3}\times|A|=27\times3=81$。另算验证：把 $A^*$ 看成新矩阵，$|(A^*)^*|=|A^*|^{n-1}=9^{2}=81$，一致。</p>
@@ -1693,7 +1707,7 @@
               <p>两个 $n$ 阶矩阵相乘得零矩阵，中间维数就是 $n$，由"$AB=O\Rightarrow R(A)+R(B)\le n$"直接得到</p>
               <p>$$R(A)+R(A-E)\le n$$</p>
               <p><strong>第二步：用三角不等式给出下界。</strong>考察两个矩阵的差：</p>
-              <p>$$A-(A-E)=E\ \Longrightarrow\ R\bigl(A-(A-E)\bigr)=R(E)=n$$</p>
+              <p class="en">$$A-(A-E)=E\ \Longrightarrow\ R\bigl(A-(A-E)\bigr)=R(E)=n$$</p>
               <p>又由秩不等式 $R(P-Q)\le R(P)+R(Q)$（它就是 $R(P+(-Q))\le R(P)+R(-Q)=R(P)+R(Q)$），取 $P=A$、$Q=A-E$，得</p>
               <p>$$n=R(E)=R\bigl(A-(A-E)\bigr)\le R(A)+R(A-E)$$</p>
               <p><strong>第三步：两头夹。</strong>上下界都是 $n$，所以</p>
@@ -1710,7 +1724,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$|A|=2$，则 $|A^*|=$（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$. Then $|A^*|=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$. Then $|A^*|=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$4$</span></li>
             <li><span class="opt-body">$2$</span></li>
@@ -1722,7 +1736,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$R(A)=2$，则 $R(A^*)=$（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=2$. Then $R(A^*)=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=2$. Then $R(A^*)=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$1$</span></li>
             <li><span class="opt-body">$2$</span></li>
@@ -1734,7 +1748,7 @@
 
         <div class="q" data-type="multi" data-level="基础">
           <p class="q-stem">设 $A,B$ 为 $n$ 阶矩阵，下列公式正确的是（　）。
-             <span class="en-line" lang="en">Let $A,B$ be $n\times n$ matrices. Which of the following formulas are correct?</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be $n\times n$ matrices. Which of the following formulas are correct?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$(AB)^*=B^*A^*$</span></li>
             <li data-correct="true"><span class="opt-body">$(kA)^*=k^{\,n-1}A^*$</span></li>
@@ -1746,7 +1760,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A,B$ 为 3 阶矩阵，$|A|=2$，$|B|=3$，则 $|B^*A^*|=$（　）。
-             <span class="en-line" lang="en">Let $A,B$ be $3\times3$ matrices with $|A|=2$ and $|B|=3$. Then $|B^*A^*|=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be $3\times3$ matrices with $|A|=2$ and $|B|=3$. Then $|B^*A^*|=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$36$</span></li>
             <li><span class="opt-body">$6$</span></li>
@@ -1758,7 +1772,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，下列说法正确的是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. Which of the following statements are correct?</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix. Which of the following statements are correct?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$A$ 可逆 $\Leftrightarrow$ $|A|\ne0$ $\Leftrightarrow$ $R(A)=n$</span></li>
             <li data-correct="true"><span class="opt-body">$R(A)=n-1$ $\Rightarrow$ $R(A^*)=1$</span></li>
@@ -1770,14 +1784,14 @@
 
         <div class="q" data-type="fill" data-level="中等">
           <p class="q-stem">设 $A$ 为 4 阶矩阵，$R(A)=3$，则 $|A^*|=$ ______。
-             <span class="en-line" lang="en">Let $A$ be a $4\times4$ matrix with $R(A)=3$. Then $|A^*|=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times4$ matrix with $R(A)=3$. Then $|A^*|=$ ______.</span></p>
           <div class="q-answer" data-answer="0|0."></div>
           <div class="q-explain">$R(A)=3=4-1$，说明 $|A|=0$（秩小于阶数即行列式为零）。代入公式得 $|A^*|=|A|^{n-1}=0^{3}=0$。（也可直接想：$R(A)=n-1$ 时 $R(A^*)=1$，秩 $1$ 小于阶数 $4$，故行列式为 $0$。）常见错解是填 $1$——那是 $R(A^*)$ 的值，不是 $|A^*|$；还有人忘了此时 $|A|$ 本身就是 $0$。</div>
         </div>
 
         <div class="q" data-type="judge" data-level="考研">
           <p class="q-stem">设 $A$ 为 4 阶矩阵，若 $R(A)=2$，则 $R(A^*)=1$。
-             <span class="en-line" lang="en">Let $A$ be a $4\times4$ matrix. If $R(A)=2$, then $R(A^*)=1$.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times4$ matrix. If $R(A)=2$, then $R(A^*)=1$.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">错误</span></li>
             <li><span class="opt-body">正确</span></li>
@@ -1787,7 +1801,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $3\times4$ 矩阵，$B$ 为 $4\times3$ 矩阵，且 $AB=O$，则（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times3$ matrix with $AB=O$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times4$ matrix and $B$ a $4\times3$ matrix with $AB=O$. Then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(A)+R(B)\le4$</span></li>
             <li><span class="opt-body">$R(A)+R(B)\le3$</span></li>
@@ -1799,7 +1813,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A$ 为 $3\times5$ 矩阵，$B$ 为 $5\times3$ 矩阵，且 $AB=O$，则（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times5$ matrix and $B$ a $5\times3$ matrix with $AB=O$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times5$ matrix and $B$ a $5\times3$ matrix with $AB=O$. Then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(A)+R(B)\le5$</span></li>
             <li><span class="opt-body">$R(A)+R(B)\le3$</span></li>
@@ -1811,7 +1825,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A,B$ 为 $n$ 阶矩阵，$AB=O$ 且 $A+B=E$，则 $R(A)+R(B)=$（　）。
-             <span class="en-line" lang="en">Let $A,B$ be $n\times n$ matrices with $AB=O$ and $A+B=E$. Then $R(A)+R(B)=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be $n\times n$ matrices with $AB=O$ and $A+B=E$. Then $R(A)+R(B)=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$n$</span></li>
             <li><span class="opt-body">$n-1$</span></li>
@@ -1823,7 +1837,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A$ 为 $5$ 阶矩阵，$R(A)=3$，则 $R(A^*)=$（　）。
-             <span class="en-line" lang="en">Let $A$ be a $5\times5$ matrix with $R(A)=3$. Then $R(A^*)=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $5\times5$ matrix with $R(A)=3$. Then $R(A^*)=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$0$</span></li>
             <li><span class="opt-body">$3$</span></li>
@@ -1842,7 +1856,11 @@
 
       </div>
 
-      <h2 id="s2-4" data-hours="2.4">2-4 分块矩阵</h2>
+      <h2 id="la-s2-4" data-hours="2.4"
+          data-video-map="la-s2-4"
+          data-video-title="《线性代数》全程教学视频（一高数）">2-4 分块矩阵</h2>
+
+      <div data-video-entry="la-s2-4" data-video-pos="top"></div>
 
       <p>前三节处理的矩阵大多只有二三阶，手算还应付得来。但真实问题里的矩阵动辄成百上千阶：有限元的整体刚度矩阵、图像数据矩阵、神经网络的权重矩阵都是如此。本节提供"<strong>化整为零</strong>"的手段——把大矩阵用横竖线切成小块，每块当成一个"元素"参与运算。这样分块对角阵的求逆就能拆成几个小矩阵各自求逆。分块矩阵在第 3 章会用来统一处理 $(A\mid E)$ 与 $(A\mid b)$，在第 5 章用于讨论可对角化，在第 6 章用于判断正定。</p>
 
@@ -1857,25 +1875,25 @@
         <div class="box-title"><span class="ico">📘</span>定义 2.8　分块矩阵</div>
         <p>用若干条横线和竖线把矩阵 $A$ 分成若干个小矩阵，每个小矩阵称为 $A$ 的一个<span class="term">子块</span>。以子块为元素的"形式矩阵"称为<span class="term">分块矩阵</span>。</p>
         <p>例如把 $4\times4$ 矩阵按 $2+2$ 分成四块：</p>
-        <p>$$A=\begin{pmatrix}1&0&2&1\\0&1&3&0\\1&2&1&0\\0&1&0&1\end{pmatrix}=\begin{pmatrix}A_{11}&A_{12}\\A_{21}&A_{22}\end{pmatrix}$$</p>
+        <p class="en">$$A=\begin{pmatrix}1&0&2&1\\0&1&3&0\\1&2&1&0\\0&1&0&1\end{pmatrix}=\begin{pmatrix}A_{11}&A_{12}\\A_{21}&A_{22}\end{pmatrix}$$</p>
         <p>其中 $A_{11}=\begin{pmatrix}1&0\\0&1\end{pmatrix}$，$A_{12}=\begin{pmatrix}2&1\\3&0\end{pmatrix}$，$A_{21}=\begin{pmatrix}1&2\\0&1\end{pmatrix}$，$A_{22}=\begin{pmatrix}1&0\\0&1\end{pmatrix}$。每个子块都还是普通矩阵。</p>
         <p><strong>分法不唯一</strong>：同一个矩阵可以横着切三行、竖着切一列，只要横线贯穿整个矩阵、竖线贯穿整个矩阵即可。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 2.8</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 2.8</span>
              <strong>Block Matrix.</strong>
              Draw several horizontal and vertical lines through a matrix $A$ to split it into small
              matrices; each small matrix is called a <span class="en-term">block</span>. The "formal
              matrix" whose entries are these blocks is called a
              <span class="en-term">block matrix</span>.</p>
-          <p>For example, split a $4\times4$ matrix as $2+2$ into four blocks:</p>
-          <p>$$A=\begin{pmatrix}1&0&2&1\\0&1&3&0\\1&2&1&0\\0&1&0&1\end{pmatrix}=\begin{pmatrix}A_{11}&A_{12}\\A_{21}&A_{22}\end{pmatrix}$$</p>
-          <p>where $A_{11}=\begin{pmatrix}1&0\\0&1\end{pmatrix}$,
+          <p class="en">For example, split a $4\times4$ matrix as $2+2$ into four blocks:</p>
+          <p class="en">$$A=\begin{pmatrix}1&0&2&1\\0&1&3&0\\1&2&1&0\\0&1&0&1\end{pmatrix}=\begin{pmatrix}A_{11}&A_{12}\\A_{21}&A_{22}\end{pmatrix}$$</p>
+          <p class="en">where $A_{11}=\begin{pmatrix}1&0\\0&1\end{pmatrix}$,
              $A_{12}=\begin{pmatrix}2&1\\3&0\end{pmatrix}$,
              $A_{21}=\begin{pmatrix}1&2\\0&1\end{pmatrix}$ and
              $A_{22}=\begin{pmatrix}1&0\\0&1\end{pmatrix}$. Each block is still an ordinary
              matrix.</p>
-          <p><strong>The splitting is not unique</strong>: the same matrix may be cut after three rows
+          <p class="en"><strong>The splitting is not unique</strong>: the same matrix may be cut after three rows
              in one place and after one column in another, as long as every horizontal line runs right
              across the matrix and every vertical line runs from top to bottom.</p>
         </div>
@@ -1889,8 +1907,8 @@
         <p>形式和普通矩阵乘法一模一样，只是"数"换成了"子块"。<strong>成立的两个前提</strong>（缺一不可）：<strong>维度匹配</strong>——$A$ 的列的切法必须与 $B$ 的行的切法一致；<strong>顺序固定</strong>——$A_{ik}$ 必须在左、$B_{kj}$ 必须在右，不能交换。</p>
         <p><strong>(3) 分块转置</strong>：$A=\begin{pmatrix}A_{11}&A_{12}\\A_{21}&A_{22}\end{pmatrix}$ 的转置是 $A^T=\begin{pmatrix}A_{11}^T&A_{21}^T\\A_{12}^T&A_{22}^T\end{pmatrix}$。<strong>两步走，缺一不可</strong>：子块<strong>位置</strong>按普通转置的规律整体对调，每个子块<strong>自身</strong>还要再转置一次。只做第一步、忘了第二步是最常见的错误。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.9</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.9</span>
              <strong>Addition, Scalar Multiplication, Multiplication and Transposition of Block
              Matrices.</strong></p>
           <p><strong>(1) Addition.</strong> If $A$ and $B$ have the same shape and are split in
@@ -1900,7 +1918,7 @@
              groups, giving $A_{ij}$, and split the <strong>rows</strong> of $B$ into the same $p$
              groups, giving $B_{ij}$; then</p>
           <p>$$(AB)_{ij}=\sum_{k=1}^{p}A_{ik}B_{kj}$$</p>
-          <p>The form is identical to ordinary matrix multiplication with "numbers" replaced by
+          <p class="en">The form is identical to ordinary matrix multiplication with "numbers" replaced by
              "blocks". <strong>Two prerequisites</strong> (both essential):
              <strong>matching dimensions</strong> — the way the columns of $A$ are cut must agree with
              the way the rows of $B$ are cut; and <strong>fixed order</strong> — $A_{ik}$ must stay on
@@ -1937,11 +1955,11 @@
         <p>$$\begin{pmatrix}A&B\\O&C\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&-A^{-1}BC^{-1}\\O&C^{-1}\end{pmatrix},\qquad \begin{pmatrix}A&O\\B&C\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\-C^{-1}BA^{-1}&C^{-1}\end{pmatrix}$$</p>
         <p>验证第一个：$\begin{pmatrix}A&B\\O&C\end{pmatrix}\begin{pmatrix}A^{-1}&-A^{-1}BC^{-1}\\O&C^{-1}\end{pmatrix}=\begin{pmatrix}E&-BC^{-1}+BC^{-1}\\O&E\end{pmatrix}=E$。注意右上角<strong>带负号</strong>，且顺序是"左逆—原块—右逆"。</p>
         <p><strong>(3) 副对角分块阵</strong>：设 $A$ 为 $p$ 阶、$B$ 为 $q$ 阶可逆矩阵，则</p>
-        <p>$$M=\begin{pmatrix}O&A\\B&O\end{pmatrix}\Longrightarrow M^{-1}=\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}$$</p>
+        <p class="en">$$M=\begin{pmatrix}O&A\\B&O\end{pmatrix}\Longrightarrow M^{-1}=\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}$$</p>
         <p>规律是"<strong>交叉摆放、不加负号</strong>"：原来在右上的 $A$ 求逆后到左下，原来在左下的 $B$ 求逆后到右上。验证：$\begin{pmatrix}O&A\\B&O\end{pmatrix}\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}=\begin{pmatrix}AA^{-1}&O\\O&BB^{-1}\end{pmatrix}=E$。若错写成 $\begin{pmatrix}O&A^{-1}\\B^{-1}&O\end{pmatrix}$，乘出来是 $\begin{pmatrix}AB^{-1}&O\\O&BA^{-1}\end{pmatrix}\ne E$（除非 $A,B$ 恰好可交换）。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.10</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.10</span>
              <strong>Inverses of Block Diagonal and Block Triangular Matrices.</strong></p>
           <p><strong>(1) Block diagonal matrix.</strong> A matrix of the form
              $D=\mathrm{diag}(A_1,A_2,\dots,A_s)$ (all off-diagonal positions are zero blocks and each
@@ -1949,24 +1967,24 @@
           <ul>
             <li>$|D|=|A_1|\cdot|A_2|\cdots|A_s|$ (the <strong>product</strong> of the block
                 determinants)</li>
-            <li>$D$ is invertible if and only if every $A_i$ is invertible; and
+            <li class="en">$D$ is invertible if and only if every $A_i$ is invertible; and
                 $D^{-1}=\mathrm{diag}(A_1^{-1},A_2^{-1},\dots,A_s^{-1})$</li>
             <li>$D^k=\mathrm{diag}(A_1^k,\dots,A_s^k)$; and
                 $R(D)=R(A_1)+R(A_2)+\cdots+R(A_s)$ (<strong>a sum, not a maximum</strong>)</li>
           </ul>
-          <p>Check the inverse formula: each diagonal block multiplies out to $E$, while every
+          <p class="en">Check the inverse formula: each diagonal block multiplies out to $E$, while every
              off-diagonal position is a zero block times a zero block, so the product is $E$.</p>
           <p><strong>(2) Block triangular matrix.</strong> Let $A$ be of order $p$ and $C$ of order
              $q$, both invertible. Then</p>
           <p>$$\begin{pmatrix}A&B\\O&C\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&-A^{-1}BC^{-1}\\O&C^{-1}\end{pmatrix},\qquad \begin{pmatrix}A&O\\B&C\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&O\\-C^{-1}BA^{-1}&C^{-1}\end{pmatrix}$$</p>
-          <p>Check the first one:
+          <p class="en">Check the first one:
              $\begin{pmatrix}A&B\\O&C\end{pmatrix}\begin{pmatrix}A^{-1}&-A^{-1}BC^{-1}\\O&C^{-1}\end{pmatrix}=\begin{pmatrix}E&-BC^{-1}+BC^{-1}\\O&E\end{pmatrix}=E$.
              Note the <strong>minus sign</strong> in the upper-right block and the order "inverse of the
              left block — original block — inverse of the right block".</p>
           <p><strong>(3) Anti-diagonal block matrix.</strong> Let $A$ be of order $p$ and $B$ of order
              $q$, both invertible. Then</p>
-          <p>$$M=\begin{pmatrix}O&A\\B&O\end{pmatrix}\Longrightarrow M^{-1}=\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}$$</p>
-          <p>The rule is "<strong>swap the positions and introduce no minus sign</strong>": the block
+          <p class="en">$$M=\begin{pmatrix}O&A\\B&O\end{pmatrix}\Longrightarrow M^{-1}=\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}$$</p>
+          <p class="en">The rule is "<strong>swap the positions and introduce no minus sign</strong>": the block
              $A$ that was in the upper-right moves to the lower-left after inversion, and $B$, which
              was in the lower-left, moves to the upper-right. Check:
              $\begin{pmatrix}O&A\\B&O\end{pmatrix}\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}=\begin{pmatrix}AA^{-1}&O\\O&BB^{-1}\end{pmatrix}=E$.
@@ -1984,8 +2002,8 @@
         <p>$$\begin{vmatrix}A&B\\C&D\end{vmatrix}=|A|\cdot|D-CA^{-1}B|$$</p>
         <p>推导就是"分块初等变换"：对 $\begin{pmatrix}A&B\\C&D\end{pmatrix}$ 做分块行变换，第二行减去第一行的 $CA^{-1}$ 倍（等价于左乘分块下三角阵 $\begin{pmatrix}E&O\\-CA^{-1}&E\end{pmatrix}$，其行列式为 $1$，故不改变行列式），得 $\begin{pmatrix}A&B\\O&D-CA^{-1}B\end{pmatrix}$，这是分块上三角，由 (1) 即得结论。量 $D-CA^{-1}B$ 叫 $A$ 的<span class="term">Schur 补</span>，在结构力学和优化里非常有名。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 2.11</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 2.11</span>
              <strong>Determinants of Block Matrices.</strong></p>
           <p><strong>(1) Block triangular.</strong>
              $\begin{vmatrix}A&B\\O&C\end{vmatrix}=|A|\cdot|C|$ and
@@ -2000,7 +2018,7 @@
           <p><strong>(3) General four-block case ($A$ invertible, the Schur complement
              formula).</strong></p>
           <p>$$\begin{vmatrix}A&B\\C&D\end{vmatrix}=|A|\cdot|D-CA^{-1}B|$$</p>
-          <p>The derivation is a "block elementary operation": apply to
+          <p class="en">The derivation is a "block elementary operation": apply to
              $\begin{pmatrix}A&B\\C&D\end{pmatrix}$ the block row operation that subtracts from the
              second row $CA^{-1}$ times the first row (equivalently, multiply on the left by the block
              lower triangular matrix $\begin{pmatrix}E&O\\-CA^{-1}&E\end{pmatrix}$, whose determinant
@@ -2023,27 +2041,27 @@
           <li><strong>算分块行列式</strong>：优先用 $\begin{vmatrix}A&B\\O&C\end{vmatrix}=|A||C|$；结构不合适就用分块行变换把它化成三角。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 2.6</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 2.6</span>
              <strong>Block Inversion and Block Elementary Operations.</strong></p>
           <ol>
-            <li><strong>Look at the structure first</strong>: is the matrix block diagonal (or
+            <li class="en"><strong>Look at the structure first</strong>: is the matrix block diagonal (or
                 anti-diagonal, or triangular)? If so, apply the formula directly instead of inverting
                 the whole matrix.</li>
-            <li><strong>Block diagonal</strong>: invert the blocks independently and keep their
+            <li class="en"><strong>Block diagonal</strong>: invert the blocks independently and keep their
                 positions: $\mathrm{diag}(A_1,A_2)^{-1}=\mathrm{diag}(A_1^{-1},A_2^{-1})$.</li>
-            <li><strong>Anti-diagonal</strong>:
+            <li class="en"><strong>Anti-diagonal</strong>:
                 $\begin{pmatrix}O&A\\B&O\end{pmatrix}^{-1}=\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}$
                 — swap the positions and add <strong>no minus sign</strong>.</li>
-            <li><strong>Block triangular</strong>:
+            <li class="en"><strong>Block triangular</strong>:
                 $\begin{pmatrix}A&B\\O&C\end{pmatrix}^{-1}=\begin{pmatrix}A^{-1}&-A^{-1}BC^{-1}\\O&C^{-1}\end{pmatrix}$
                 — the upper-right block <strong>does carry a minus sign</strong>.</li>
-            <li><strong>Block elementary operations</strong>: to carry out
+            <li class="en"><strong>Block elementary operations</strong>: to carry out
                 $(A\mid E)\to(E\mid A^{-1})$ you can first use blocks to turn $A$ into $E$, which is
                 faster than transforming the whole matrix. Another standard trick is to "eliminate one
                 corner": multiply on the left by a block lower triangular matrix to turn the
                 lower-left block $C$ into $O$.</li>
-            <li><strong>Computing a block determinant</strong>: prefer
+            <li class="en"><strong>Computing a block determinant</strong>: prefer
                 $\begin{vmatrix}A&B\\O&C\end{vmatrix}=|A||C|$; if the structure does not fit, use
                 block row operations to bring it into triangular form.</li>
           </ol>
@@ -2062,9 +2080,9 @@
             <p><strong>第一步：按 $2+2$ 分块。</strong>$A=\begin{pmatrix}A_1&O\\O&A_2\end{pmatrix}$，其中 $A_1=\begin{pmatrix}2&1\\1&1\end{pmatrix}$，$A_2=\begin{pmatrix}1&2\\0&1\end{pmatrix}$。</p>
             <p><strong>第二步：算行列式。</strong>用 $|A|=|A_1|\cdot|A_2|$：$|A_1|=2\times1-1\times1=1$，$|A_2|=1\times1-2\times0=1$，故 $|A|=1\ne0$。</p>
             <p><strong>第三步：各块分别求逆。</strong></p>
-            <p>$$A_1^{-1}=\frac{1}{1}\begin{pmatrix}1&-1\\-1&2\end{pmatrix}=\begin{pmatrix}1&-1\\-1&2\end{pmatrix},\qquad A_2^{-1}=\frac{1}{1}\begin{pmatrix}1&-2\\0&1\end{pmatrix}=\begin{pmatrix}1&-2\\0&1\end{pmatrix}$$</p>
+            <p class="en">$$A_1^{-1}=\frac{1}{1}\begin{pmatrix}1&-1\\-1&2\end{pmatrix}=\begin{pmatrix}1&-1\\-1&2\end{pmatrix},\qquad A_2^{-1}=\frac{1}{1}\begin{pmatrix}1&-2\\0&1\end{pmatrix}=\begin{pmatrix}1&-2\\0&1\end{pmatrix}$$</p>
             <p><strong>第四步：拼回去。</strong></p>
-            <p>$$A^{-1}=\begin{pmatrix}A_1^{-1}&O\\O&A_2^{-1}\end{pmatrix}=\begin{pmatrix}1&-1&0&0\\-1&2&0&0\\0&0&1&-2\\0&0&0&1\end{pmatrix}$$</p>
+            <p class="en">$$A^{-1}=\begin{pmatrix}A_1^{-1}&O\\O&A_2^{-1}\end{pmatrix}=\begin{pmatrix}1&-1&0&0\\-1&2&0&0\\0&0&1&-2\\0&0&0&1\end{pmatrix}$$</p>
             <p><strong>验算</strong>：左上角 $A_1A_1^{-1}=\begin{pmatrix}2&1\\1&1\end{pmatrix}\begin{pmatrix}1&-1\\-1&2\end{pmatrix}=\begin{pmatrix}1&0\\0&1\end{pmatrix}$，右下角同样得 $E_2$，非对角位置的块乘出来都是 $O$，故乘积确为 $E_4$。</p>
             <p><strong>要点</strong>：$4$ 阶求逆被拆成了两个互不干扰的 $2$ 阶求逆，矩阵越大优势越明显。</p>
           </div>
@@ -2084,7 +2102,7 @@
             <p><strong>第二步：套副对角公式。</strong>$M^{-1}=\begin{pmatrix}O&A_2^{-1}\\A_1^{-1}&O\end{pmatrix}$。规律是：原来在右上的 $A_1$ 求逆后到<strong>左下</strong>，原来在左下的 $A_2$ 求逆后到<strong>右上</strong>，交叉摆放、不加负号。</p>
             <p><strong>第三步：算两个小逆。</strong>$|A_1|=1$，$|A_2|=1$，故 $A_1^{-1}=\begin{pmatrix}1&-1\\-1&2\end{pmatrix}$，$A_2^{-1}=\begin{pmatrix}1&-2\\0&1\end{pmatrix}$。</p>
             <p><strong>第四步：拼装。</strong></p>
-            <p>$$M^{-1}=\begin{pmatrix}0&0&1&-2\\0&0&0&1\\1&-1&0&0\\-1&2&0&0\end{pmatrix}$$</p>
+            <p class="en">$$M^{-1}=\begin{pmatrix}0&0&1&-2\\0&0&0&1\\1&-1&0&0\\-1&2&0&0\end{pmatrix}$$</p>
             <p><strong>验算</strong>：取 $M$ 的第一行 $(0,0,2,1)$ 与 $M^{-1}$ 的第一列 $(0,0,1,-1)^T$ 相乘，得 $2\times1+1\times(-1)=1$；与第二列 $(0,0,-1,2)^T$ 相乘得 $2\times(-1)+1\times2=0$，正确。</p>
             <p><strong>对比提醒</strong>：如果错写成 $\begin{pmatrix}O&A_1^{-1}\\A_2^{-1}&O\end{pmatrix}$，第一行乘第一列会得到 $0\ne1$，一眼就能验出错误。另外要区分：副对角分块求逆<strong>不加负号</strong>，而分块三角阵求逆<strong>要加负号</strong>，两者的规则刚好相反。</p>
           </div>
@@ -2102,9 +2120,9 @@
             <p class="solution-label">解</p>
             <p><strong>第一步：按 $2+2$ 分块，看出结构。</strong>$A=\begin{pmatrix}E&2E\\2E&E\end{pmatrix}$，其中每个位置都是一个 $2\times2$ 的块，$E=\begin{pmatrix}1&0\\0&1\end{pmatrix}$。</p>
             <p><strong>第二步：用分块乘法。</strong>关键便利是块 $E$ 与块 $2E$ 可交换，所以可以按普通乘法展开：</p>
-            <p>$$A^2=\begin{pmatrix}E\cdot E+2E\cdot2E & E\cdot2E+2E\cdot E\\2E\cdot E+E\cdot2E & 2E\cdot2E+E\cdot E\end{pmatrix}$$</p>
+            <p class="en">$$A^2=\begin{pmatrix}E\cdot E+2E\cdot2E & E\cdot2E+2E\cdot E\\2E\cdot E+E\cdot2E & 2E\cdot2E+E\cdot E\end{pmatrix}$$</p>
             <p>逐项算：$E\cdot E=E$，$2E\cdot2E=4E^2=4E$，$E\cdot2E=2E$，$2E\cdot E=2E$。所以</p>
-            <p>$$A^2=\begin{pmatrix}5E&4E\\4E&5E\end{pmatrix}=\begin{pmatrix}5&0&4&0\\0&5&0&4\\4&0&5&0\\0&4&0&5\end{pmatrix}$$</p>
+            <p class="en">$$A^2=\begin{pmatrix}5E&4E\\4E&5E\end{pmatrix}=\begin{pmatrix}5&0&4&0\\0&5&0&4\\4&0&5&0\\0&4&0&5\end{pmatrix}$$</p>
             <p><strong>第三步：抽取元素验证。</strong>$A^2$ 的 $(1,3)$ 元素：$A$ 的第一行 $(1,0,2,0)$ 与第三列 $(2,0,1,0)^T$ 相乘得 $1\times2+0+2\times1+0=4$，与 $4E$ 的 $(1,1)$ 元素一致；$(1,1)$ 元素为 $1+0+4+0=5$，与 $5E$ 的 $(1,1)$ 元素一致。</p>
             <p><strong>结论</strong>：分块法把 $4\times4$ 的矩阵乘方化为 $2\times2$ 的"块运算"，矩阵越大优势越明显。</p>
           </div>
@@ -2128,7 +2146,7 @@
             <p><strong>补充提醒</strong>：若改成 $p=1,q=3$（$A$ 是 $1$ 阶、$B$ 是 $3$ 阶），则 $(-1)^{pq}=(-1)^3=-1$，<strong>会出现负号</strong>。所以"副对角就是正的"这个印象是错的，必须看 $pq$ 的奇偶。</p>
             <p><strong>(2) 第一步：按 $2+2$ 分块。</strong>取 $M_1=\begin{pmatrix}1&0\\0&1\end{pmatrix}=E$，$M_2=\begin{pmatrix}1&2\\0&1\end{pmatrix}$，$M_3=\begin{pmatrix}0&1\\1&0\end{pmatrix}$，$M_4=\begin{pmatrix}2&0\\1&3\end{pmatrix}$。幸运的是 $M_1=E$ 可逆，可以直接用 Schur 补公式 $|M|=|M_1|\cdot|M_4-M_3M_1^{-1}M_2|$。</p>
             <p><strong>第二步：算 Schur 补。</strong>因 $M_1^{-1}=E$，先算</p>
-            <p>$$M_3M_2=\begin{pmatrix}0&1\\1&0\end{pmatrix}\begin{pmatrix}1&2\\0&1\end{pmatrix}=\begin{pmatrix}0\times1+1\times0&0\times2+1\times1\\1\times1+0\times0&1\times2+0\times1\end{pmatrix}=\begin{pmatrix}0&1\\1&2\end{pmatrix}$$</p>
+            <p class="en">$$M_3M_2=\begin{pmatrix}0&1\\1&0\end{pmatrix}\begin{pmatrix}1&2\\0&1\end{pmatrix}=\begin{pmatrix}0\times1+1\times0&0\times2+1\times1\\1\times1+0\times0&1\times2+0\times1\end{pmatrix}=\begin{pmatrix}0&1\\1&2\end{pmatrix}$$</p>
             <p>（$M_3$ 是交换两行的矩阵，作用在 $M_2$ 上就是把 $M_2$ 的两行交换。）于是 $M_4-M_3M_2=\begin{pmatrix}2&0\\1&3\end{pmatrix}-\begin{pmatrix}0&1\\1&2\end{pmatrix}=\begin{pmatrix}2&-1\\0&1\end{pmatrix}$，其行列式为 $2\times1-(-1)\times0=2$。</p>
             <p><strong>第三步：代入公式。</strong>$|M_1|=|E|=1$，所以 $|M|=1\times2=2$。</p>
             <p><strong>第四步：用初等变换直接验算。</strong>对 $M$ 做行变换 $r_4-r_1$（不改变行列式），得 $\begin{pmatrix}1&0&1&2\\0&1&0&1\\0&1&2&0\\0&0&0&1\end{pmatrix}$。按第四行展开（只有 $(4,4)$ 一个非零元，符号为 $(-1)^{4+4}=+1$）：$|M|=1\times\begin{vmatrix}1&0&1\\0&1&0\\0&1&2\end{vmatrix}$。再按第一列展开得 $1\times\begin{vmatrix}1&0\\1&2\end{vmatrix}=2$，与分块法一致。</p>
@@ -2183,14 +2201,14 @@
             <div class="solution">
               <p class="solution-label">解</p>
               <p><strong>第一步：按 $2+2$ 分块，认出结构。</strong>取</p>
-              <p>$$A=\begin{pmatrix}1&0\\1&1\end{pmatrix},\qquad B=\begin{pmatrix}2&1\\1&1\end{pmatrix}$$</p>
+              <p class="en">$$A=\begin{pmatrix}1&0\\1&1\end{pmatrix},\qquad B=\begin{pmatrix}2&1\\1&1\end{pmatrix}$$</p>
               <p>则 $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$：左上与右下是零块，右上放 $A$，左下放 $B$。这个位置关系决定了求逆后谁到哪儿。</p>
               <p><strong>第二步：套副对角公式。</strong></p>
-              <p>$$M^{-1}=\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}$$</p>
+              <p class="en">$$M^{-1}=\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}$$</p>
               <p>规律是"交叉摆放、不加负号"：原来在<strong>右上</strong>的 $A$ 求逆后到<strong>左下</strong>，原来在<strong>左下</strong>的 $B$ 求逆后到<strong>右上</strong>。</p>
               <p><strong>第三步：算两个小逆。</strong>$|A|=1\times1-0\times1=1$，故 $A^{-1}=\begin{pmatrix}1&0\\-1&1\end{pmatrix}$；$|B|=2\times1-1\times1=1$，故 $B^{-1}=\begin{pmatrix}1&-1\\-1&2\end{pmatrix}$。</p>
               <p><strong>第四步：拼装并验算。</strong></p>
-              <p>$$M^{-1}=\begin{pmatrix}0&0&1&-1\\0&0&-1&2\\1&0&0&0\\-1&1&0&0\end{pmatrix}$$</p>
+              <p class="en">$$M^{-1}=\begin{pmatrix}0&0&1&-1\\0&0&-1&2\\1&0&0&0\\-1&1&0&0\end{pmatrix}$$</p>
               <p><strong>验算</strong>：$M$ 的第一个块行是 $(O\ \ A)$，$M^{-1}$ 的第一个块列是 $\begin{pmatrix}O\\A^{-1}\end{pmatrix}$，乘得 $O\cdot O+A\cdot A^{-1}=E_2$，即乘积的左上块为 $E_2$；右上块为 $O\cdot B^{-1}+A\cdot O=O$。后两块同理给出 $O$ 与 $E_2$，故 $MM^{-1}=E_4$。</p>
               <p><strong>答案：$M^{-1}=\begin{pmatrix}0&0&1&-1\\0&0&-1&2\\1&0&0&0\\-1&1&0&0\end{pmatrix}$。</strong></p>
             </div>
@@ -2212,7 +2230,7 @@
               <p><strong>第二步：算两个小块的行列式。</strong>$|A|=2$；$B$ 是上三角矩阵，$|B|=1\times2\times3=6$。</p>
               <p><strong>第三步：算符号因子。</strong>$$(-1)^{pq}=(-1)^{1\times3}=(-1)^{3}=-1$$</p>
               <p><strong>第四步：代入公式。</strong></p>
-              <p>$$D=(-1)^{3}\times|A|\times|B|=-1\times2\times6=-12$$</p>
+              <p class="en">$$D=(-1)^{3}\times|A|\times|B|=-1\times2\times6=-12$$</p>
               <p><strong>验算（按第一行展开）</strong>：第一行只有一个非零元素 $a_{14}=2$，故 $D=2\times(-1)^{1+4}\times M_{14}=-2M_{14}$，其中 $M_{14}$ 是划去第 1 行第 4 列后剩下的 $3$ 阶行列式，正好是 $B$，$M_{14}=6$。于是 $D=-2\times6=-12$，与分块公式一致。</p>
               <p><strong>答案：$D=-12$。</strong></p>
             </div>
@@ -2226,7 +2244,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A=\begin{pmatrix}A_1&O\\O&A_2\end{pmatrix}$（$A_1,A_2$ 均为方阵），则 $|A|=$（　）。
-             <span class="en-line" lang="en">Let $A=\begin{pmatrix}A_1&O\\O&A_2\end{pmatrix}$ (with $A_1,A_2$ both square). Then $|A|=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=\begin{pmatrix}A_1&O\\O&A_2\end{pmatrix}$ (with $A_1,A_2$ both square). Then $|A|=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$|A_1|\cdot|A_2|$</span></li>
             <li><span class="opt-body">$|A_1|+|A_2|$</span></li>
@@ -2238,7 +2256,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$，$A$ 为 $p$ 阶可逆矩阵，$B$ 为 $q$ 阶可逆矩阵，则 $M^{-1}=$（　）。
-             <span class="en-line" lang="en">Let $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$, where $A$ is an invertible matrix of order $p$ and $B$ an invertible matrix of order $q$. Then $M^{-1}=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$, where $A$ is an invertible matrix of order $p$ and $B$ an invertible matrix of order $q$. Then $M^{-1}=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}O&B^{-1}\\A^{-1}&O\end{pmatrix}$</span></li>
             <li><span class="opt-body">$\begin{pmatrix}O&A^{-1}\\B^{-1}&O\end{pmatrix}$</span></li>
@@ -2250,7 +2268,7 @@
 
         <div class="q" data-type="judge" data-level="基础">
           <p class="q-stem">分块矩阵相乘时，只要把每个子块当成数一样相乘即可，不需要任何额外条件。
-             <span class="en-line" lang="en">In block matrix multiplication one may simply treat every block as a number; no extra condition is required.</span></p>
+             <span class="q-stem-en" lang="en">In block matrix multiplication one may simply treat every block as a number; no extra condition is required.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">错误</span></li>
             <li><span class="opt-body">正确</span></li>
@@ -2260,7 +2278,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $M=\begin{pmatrix}A&B\\O&C\end{pmatrix}$，$A,C$ 可逆，则 $M^{-1}$ 的右上角子块为（　）。
-             <span class="en-line" lang="en">Let $M=\begin{pmatrix}A&B\\O&C\end{pmatrix}$ with $A,C$ invertible. Then the upper-right block of $M^{-1}$ is ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $M=\begin{pmatrix}A&B\\O&C\end{pmatrix}$ with $A,C$ invertible. Then the upper-right block of $M^{-1}$ is ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$-A^{-1}BC^{-1}$</span></li>
             <li><span class="opt-body">$-C^{-1}BA^{-1}$</span></li>
@@ -2272,7 +2290,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">关于分块对角阵 $D=\mathrm{diag}(A_1,A_2,A_3)$（各 $A_i$ 为方阵），下列说法正确的是（　）。
-             <span class="en-line" lang="en">For the block diagonal matrix $D=\mathrm{diag}(A_1,A_2,A_3)$ (each $A_i$ square), which of the following statements are correct?</span></p>
+             <span class="q-stem-en" lang="en">For the block diagonal matrix $D=\mathrm{diag}(A_1,A_2,A_3)$ (each $A_i$ square), which of the following statements are correct?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$|D|=|A_1|\cdot|A_2|\cdot|A_3|$</span></li>
             <li data-correct="true"><span class="opt-body">$D$ 可逆当且仅当每个 $A_i$ 都可逆</span></li>
@@ -2284,14 +2302,14 @@
 
         <div class="q" data-type="fill" data-level="中等">
           <p class="q-stem">设 $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$，其中 $A=\begin{pmatrix}1&2\\3&4\end{pmatrix}$，$B=E_2$，则 $|M|=$ ______。
-             <span class="en-line" lang="en">Let $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$ with $A=\begin{pmatrix}1&2\\3&4\end{pmatrix}$ and $B=E_2$. Then $|M|=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$ with $A=\begin{pmatrix}1&2\\3&4\end{pmatrix}$ and $B=E_2$. Then $|M|=$ ______.</span></p>
           <div class="q-answer" data-answer="-2|−2"></div>
           <div class="q-explain">$A,B$ 都是 2 阶，即 $p=q=2$，符号因子 $(-1)^{pq}=(-1)^4=+1$。$|A|=1\times4-2\times3=-2$，$|B|=1$，故 $|M|=1\times(-2)\times1=-2$。这里 $pq$ 是偶数所以不带负号；若 $p,q$ 都是奇数，符号因子就是 $-1$，答案要变号——这是副对角分块行列式最容易漏的地方。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $M=\begin{pmatrix}A&B\\C&D\end{pmatrix}$，其中 $A$ 可逆，则 $|M|=$（　）。
-             <span class="en-line" lang="en">Let $M=\begin{pmatrix}A&B\\C&D\end{pmatrix}$ with $A$ invertible. Then $|M|=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $M=\begin{pmatrix}A&B\\C&D\end{pmatrix}$ with $A$ invertible. Then $|M|=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$|A|\cdot|D-CA^{-1}B|$</span></li>
             <li><span class="opt-body">$|A|\cdot|D-BA^{-1}C|$</span></li>
@@ -2303,7 +2321,7 @@
 
         <div class="q" data-type="multi" data-level="考研">
           <p class="q-stem">关于分块矩阵的运算，下列说法正确的是（　）。
-             <span class="en-line" lang="en">Which of the following statements about block matrix operations are correct?</span></p>
+             <span class="q-stem-en" lang="en">Which of the following statements about block matrix operations are correct?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{vmatrix}A&B\\O&C\end{vmatrix}=|A|\cdot|C|$，与 $B$ 无关</span></li>
             <li data-correct="true"><span class="opt-body">分块矩阵转置时，既要交换子块位置，又要转置每个子块</span></li>
@@ -2315,7 +2333,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $M=\begin{pmatrix}0&0&1&2\\0&0&0&1\\2&1&0&0\\1&1&0&0\end{pmatrix}$，则 $M^{-1}=$（　）。
-             <span class="en-line" lang="en">Let $M=\begin{pmatrix}0&0&1&2\\0&0&0&1\\2&1&0&0\\1&1&0&0\end{pmatrix}$. Then $M^{-1}=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $M=\begin{pmatrix}0&0&1&2\\0&0&0&1\\2&1&0&0\\1&1&0&0\end{pmatrix}$. Then $M^{-1}=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}0&0&1&-1\\0&0&-1&2\\1&-2&0&0\\0&1&0&0\end{pmatrix}$</span></li>
             <li><span class="opt-body">$\begin{pmatrix}0&0&1&-2\\0&0&0&1\\1&-1&0&0\\-1&2&0&0\end{pmatrix}$</span></li>
@@ -2327,7 +2345,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $D=\begin{vmatrix}0&0&0&3\\2&1&0&0\\0&2&1&0\\0&0&2&0\end{vmatrix}$，则 $D=$（　）。
-             <span class="en-line" lang="en">Let $D=\begin{vmatrix}0&0&0&3\\2&1&0&0\\0&2&1&0\\0&0&2&0\end{vmatrix}$. Then $D=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $D=\begin{vmatrix}0&0&0&3\\2&1&0&0\\0&2&1&0\\0&0&2&0\end{vmatrix}$. Then $D=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$-24$</span></li>
             <li><span class="opt-body">$24$</span></li>
@@ -2355,7 +2373,7 @@
 
         <div class="q" data-type="multi" data-level="基础">
           <p class="q-stem">设 $A,B$ 为 $n$ 阶方阵，下列等式恒成立的是（　）。
-             <span class="en-line" lang="en">Let $A,B$ be $n\times n$ matrices. Which of the following identities always holds?</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be $n\times n$ matrices. Which of the following identities always holds?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$(AB)^T=B^TA^T$</span></li>
             <li data-correct="true"><span class="opt-body">$(A+B)^T=A^T+B^T$</span></li>
@@ -2367,7 +2385,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A,B$ 为 3 阶矩阵，$|A|=2$，$|B|=-3$，则 $|2AB^T|=$（　）。
-             <span class="en-line" lang="en">Let $A,B$ be $3\times3$ matrices with $|A|=2$ and $|B|=-3$. Then $|2AB^T|=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be $3\times3$ matrices with $|A|=2$ and $|B|=-3$. Then $|2AB^T|=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$-48$</span></li>
             <li><span class="opt-body">$-12$</span></li>
@@ -2379,7 +2397,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $\alpha=\begin{pmatrix}1\\2\end{pmatrix}$，$A=\alpha\alpha^T$，则 $A^5=$（　）。
-             <span class="en-line" lang="en">Let $\alpha=\begin{pmatrix}1\\2\end{pmatrix}$ and $A=\alpha\alpha^T$. Then $A^5=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha=\begin{pmatrix}1\\2\end{pmatrix}$ and $A=\alpha\alpha^T$. Then $A^5=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}625&1250\\1250&2500\end{pmatrix}$</span></li>
             <li><span class="opt-body">$\begin{pmatrix}3125&6250\\6250&12500\end{pmatrix}$</span></li>
@@ -2391,7 +2409,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$|A|=2$，$A^*$ 为 $A$ 的伴随矩阵，下列正确的是（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$, and let $A^*$ be the adjugate matrix of $A$. Which of the following are correct?</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$, and let $A^*$ be the adjugate matrix of $A$. Which of the following are correct?</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$|A^*|=4$</span></li>
             <li data-correct="true"><span class="opt-body">$(A^*)^*=2A$</span></li>
@@ -2403,14 +2421,14 @@
 
         <div class="q" data-type="fill" data-level="中等">
           <p class="q-stem">设 $A$ 为 3 阶矩阵，$|A|=2$，则 $|-A^*|=$ ______。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$. Then $|-A^*|=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$. Then $|-A^*|=$ ______.</span></p>
           <div class="q-answer" data-answer="-4|−4"></div>
           <div class="q-explain">两步走。第一步：$|A^*|=|A|^{n-1}=2^{2}=4$，指数是 $n-1=2$ 而不是 $n=3$。第二步：$|-A^*|=(-1)^3|A^*|=-4$，因为 $n=3$ 是奇数阶，负号会保留（若 $n=4$ 则 $|-A^*|=|A^*|$，负号消失）。常见错解是 $-8$（第一步用了 $2^3$）或 $4$（第二步漏了符号）。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A,B$ 为同阶可逆矩阵，则 $\bigl((AB)^{-1}\bigr)^T=$（　）。
-             <span class="en-line" lang="en">Let $A,B$ be invertible matrices of the same order. Then $\bigl((AB)^{-1}\bigr)^T=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A,B$ be invertible matrices of the same order. Then $\bigl((AB)^{-1}\bigr)^T=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$(A^T)^{-1}(B^T)^{-1}$</span></li>
             <li><span class="opt-body">$(B^T)^{-1}(A^T)^{-1}$</span></li>
@@ -2422,7 +2440,7 @@
 
         <div class="q" data-type="judge" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，若 $A^2-3A+2E=O$，则 $A$ 必可逆。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. If $A^2-3A+2E=O$, then $A$ is necessarily invertible.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix. If $A^2-3A+2E=O$, then $A$ is necessarily invertible.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
@@ -2432,7 +2450,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$B$ 为 $n\times s$ 矩阵，则必有（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix. Then necessarily ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix. Then necessarily ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(AB)\ge R(A)+R(B)-n$</span></li>
             <li><span class="opt-body">$R(AB)\ge R(A)+R(B)-s$</span></li>
@@ -2444,7 +2462,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A=\begin{pmatrix}1&1\\0&1\end{pmatrix}$，$n$ 为正整数，则 $A^{n}=$（　）。
-             <span class="en-line" lang="en">Let $A=\begin{pmatrix}1&1\\0&1\end{pmatrix}$ and let $n$ be a positive integer. Then $A^{n}=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=\begin{pmatrix}1&1\\0&1\end{pmatrix}$ and let $n$ be a positive integer. Then $A^{n}=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1&n\\0&1\end{pmatrix}$</span></li>
             <li><span class="opt-body">$\begin{pmatrix}1&1\\0&1\end{pmatrix}$</span></li>
@@ -2456,7 +2474,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$，其中 $A,B$ 均为 $2$ 阶可逆矩阵，$|A|=2$，$|B|=3$，则 $|M|=$（　）。
-             <span class="en-line" lang="en">Let $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$, where $A,B$ are invertible $2\times2$ matrices with $|A|=2$ and $|B|=3$. Then $|M|=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $M=\begin{pmatrix}O&A\\B&O\end{pmatrix}$, where $A,B$ are invertible $2\times2$ matrices with $|A|=2$ and $|B|=3$. Then $|M|=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$6$</span></li>
             <li><span class="opt-body">$-6$</span></li>
@@ -2468,7 +2486,7 @@
 
         <div class="q" data-type="judge" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，若 $A^2-3A+2E=O$，则 $R(A-E)+R(A-2E)=n$。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix. If $A^2-3A+2E=O$, then $R(A-E)+R(A-2E)=n$.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix. If $A^2-3A+2E=O$, then $R(A-E)+R(A-2E)=n$.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
@@ -2507,6 +2525,6 @@
 <script src="../assets/js/course-data.js"></script>
 <script src="../assets/js/site.js"></script>
 <script src="../assets/js/theme.js"></script>
-
 </body>
+
 </html>

@@ -145,6 +145,8 @@
         </div>
         <div class="toc-group">
           <div class="toc-title">工具</div>
+          <a class="toc-chapter" href="../cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter" href="../exam.html">综合自测卷</a>
         </div>
       </aside>
       <!-- /SHELL:SIDEBAR -->
@@ -160,14 +162,18 @@
 
       <!-- ======== 以下为小节内容 ======== -->
 
-      <h2 id="s4-1" data-hours="2.9">4-1 向量组及其线性组合</h2>
+      <h2 id="la-s4-1" data-hours="2.9"
+          data-video-map="la-s4-1"
+          data-video-title="《线性代数》全程教学视频（一高数）">4-1 向量组及其线性组合</h2>
+
+      <div data-video-entry="la-s4-1" data-video-pos="top"></div>
 
       <p>第 3 章我们已经能用初等行变换把任意线性方程组的解判清楚，但那些讨论都是"横着看"方程组的：一行就是一个方程，求的是所有方程的交集。本节换个方向"竖着看"——把系数矩阵的每一列当成一个整体，于是"方程组有没有解"就变成了"右端向量能不能由这些列向量拼出来"。为此本节引入三个新工具：$n$ 维向量及其线性运算、线性组合与线性表示、向量组等价。它们是 4-2 节"线性相关"的语言基础，也是第 5 章特征向量、第 6 章二次型里反复出现的基本对象。</p>
 
       <div class="box insight-box">
         <div class="box-title"><span class="ico">💡</span>为什么要把方程组的系数"竖着看"</div>
         <p>方程组 $Ax=b$ 有两种读法。第 3 章是<strong>横着读</strong>：一行就是一个方程，求所有方程的交集。现在换成<strong>竖着读</strong>：把 $A$ 的每一列看成一个整体（一个向量），那么</p>
-        <p>$$Ax=x_1\alpha_1+x_2\alpha_2+\cdots+x_n\alpha_n=\beta$$</p>
+        <p class="en">$$Ax=x_1\alpha_1+x_2\alpha_2+\cdots+x_n\alpha_n=\beta$$</p>
         <p>其中 $\alpha_j$ 是 $A$ 的第 $j$ 列，$\beta=b$。一句话：<strong>解方程组 ＝ 用系数矩阵的列向量去"拼"出右端向量</strong>。</p>
         <p>于是"方程组有没有解"这个问题，就变成了"$\beta$ 能不能被 $\alpha_1,\dots,\alpha_n$ 拼出来"。比如 $x_1\alpha_1+x_2\alpha_2=\beta$ 在二维里就是"两个向量能不能合成第三个向量"的平行四边形问题。这个"拼"字，就是本章第一个严格概念——<span class="term">线性表示</span>。</p>
       </div>
@@ -184,24 +190,24 @@
         </ul>
         <p>注意：<strong>行向量与列向量是两个不同的对象</strong>（$1\times n$ 与 $n\times 1$ 矩阵），写成 $(1,2,3)$ 和 $(1,2,3)^T$ 不能混用。在同一道题里必须统一，否则 $A\alpha_i$ 这类乘法在维数上就错了。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 4.1</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 4.1</span>
              <strong>Vectors in $\mathbb{R}^n$.</strong>
              An ordered array of $n$ numbers</p>
           <p>$$\alpha=(a_1,a_2,\dots,a_n)\quad\text{or}\quad \alpha=\begin{pmatrix}a_1\\a_2\\\vdots\\a_n\end{pmatrix}$$</p>
-          <p>is called an <span class="en-term">n-dimensional vector</span>, and $a_i$ is its
+          <p class="en">is called an <span class="en-term">n-dimensional vector</span>, and $a_i$ is its
              <span class="en-term">i-th component</span>. Written horizontally it is a
              <span class="en-term">row vector</span>; written vertically it is a
              <span class="en-term">column vector</span>. Throughout this chapter we use <strong>column
              vectors</strong> by default and add a transpose when a horizontal display is needed, e.g.
              $\alpha=(1,2,3)^T$.</p>
           <ul>
-            <li>The <strong>zero vector</strong> $\mathbf{0}=(0,0,\dots,0)^T$ has every component equal to $0$.</li>
+            <li class="en">The <strong>zero vector</strong> $\mathbf{0}=(0,0,\dots,0)^T$ has every component equal to $0$.</li>
             <li>The <strong>negative</strong> of $\alpha$ is $-\alpha=(-a_1,-a_2,\dots,-a_n)^T$.</li>
-            <li>Two vectors are <strong>equal</strong>, $\alpha=\beta$, when they have the same dimension and every
+            <li class="en">Two vectors are <strong>equal</strong>, $\alpha=\beta$, when they have the same dimension and every
                 pair of corresponding components is equal.</li>
           </ul>
-          <p>Note that a row vector and a column vector are <strong>different objects</strong> ($1\times n$ versus
+          <p class="en">Note that a row vector and a column vector are <strong>different objects</strong> ($1\times n$ versus
              $n\times1$ matrices): $(1,2,3)$ and $(1,2,3)^T$ cannot be used interchangeably. Within one problem you
              must be consistent, otherwise a product such as $A\alpha_i$ no longer matches in dimension.</p>
         </div>
@@ -213,19 +219,19 @@
         <p>$$\alpha+\beta=\begin{pmatrix}a_1+b_1\\ \vdots\\ a_n+b_n\end{pmatrix},\qquad k\alpha=\begin{pmatrix}ka_1\\ \vdots\\ ka_n\end{pmatrix}$$</p>
         <p>即<strong>对应分量相加</strong>、<strong>每个分量乘 $k$</strong>。满足八条运算律：</p>
         <p>$$\alpha+\beta=\beta+\alpha,\quad (\alpha+\beta)+\gamma=\alpha+(\beta+\gamma),\quad \alpha+\mathbf{0}=\alpha,\quad \alpha+(-\alpha)=\mathbf{0}$$</p>
-        <p>$$k(\alpha+\beta)=k\alpha+k\beta,\quad (k+l)\alpha=k\alpha+l\alpha,\quad (kl)\alpha=k(l\alpha),\quad 1\alpha=\alpha$$</p>
+        <p class="en">$$k(\alpha+\beta)=k\alpha+k\beta,\quad (k+l)\alpha=k\alpha+l\alpha,\quad (kl)\alpha=k(l\alpha),\quad 1\alpha=\alpha$$</p>
         <p>这八条与数的运算完全一致，所以向量可以像数一样移项、合并同类项；<strong>唯一的区别</strong>是向量没有乘法与除法。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 4.2</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 4.2</span>
              <strong>Vector Addition and Scalar Multiplication.</strong>
              Let $\alpha=(a_1,\dots,a_n)^T$, $\beta=(b_1,\dots,b_n)^T$ and let $k$ be a scalar. Define</p>
           <p>$$\alpha+\beta=\begin{pmatrix}a_1+b_1\\ \vdots\\ a_n+b_n\end{pmatrix},\qquad k\alpha=\begin{pmatrix}ka_1\\ \vdots\\ ka_n\end{pmatrix}$$</p>
-          <p>that is, <strong>add corresponding components</strong> and <strong>multiply every component by $k$</strong>.
+          <p class="en">that is, <strong>add corresponding components</strong> and <strong>multiply every component by $k$</strong>.
              These operations satisfy the eight rules</p>
           <p>$$\alpha+\beta=\beta+\alpha,\quad (\alpha+\beta)+\gamma=\alpha+(\beta+\gamma),\quad \alpha+\mathbf{0}=\alpha,\quad \alpha+(-\alpha)=\mathbf{0}$$</p>
-          <p>$$k(\alpha+\beta)=k\alpha+k\beta,\quad (k+l)\alpha=k\alpha+l\alpha,\quad (kl)\alpha=k(l\alpha),\quad 1\alpha=\alpha$$</p>
-          <p>These are exactly the rules of ordinary arithmetic, so vectors may be transposed across an equation and
+          <p class="en">$$k(\alpha+\beta)=k\alpha+k\beta,\quad (k+l)\alpha=k\alpha+l\alpha,\quad (kl)\alpha=k(l\alpha),\quad 1\alpha=\alpha$$</p>
+          <p class="en">These are exactly the rules of ordinary arithmetic, so vectors may be transposed across an equation and
              like terms may be combined just as numbers are. The <strong>only difference</strong> is that vectors have
              no multiplication and no division.</p>
         </div>
@@ -234,26 +240,26 @@
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 4.3　线性组合与线性表示</div>
         <p>设 $\alpha_1,\alpha_2,\dots,\alpha_m$ 是一组 $n$ 维向量，$k_1,k_2,\dots,k_m$ 是数，称</p>
-        <p>$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m$$</p>
+        <p class="en">$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m$$</p>
         <p>为向量组 $\alpha_1,\dots,\alpha_m$ 的一个 <span class="term">线性组合</span>。</p>
         <p>若存在数 $k_1,\dots,k_m$ 使得</p>
         <p>$$\beta=k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m$$</p>
         <p>则称 $\beta$ 可由向量组 $\alpha_1,\dots,\alpha_m$ <span class="term">线性表示</span>（或"$\beta$ 是这组向量的线性组合"），称 $k_1,\dots,k_m$ 为<strong>表示系数</strong>。</p>
         <p><strong>规定</strong>：零向量可由任何向量组线性表示（取 $k_1=\cdots=k_m=0$ 即可）。注意"$\beta$ 可由 $\alpha_1,\dots,\alpha_m$ 线性表示"只要求系数<strong>存在</strong>，既不要求系数非零，也不要求 $A=(\alpha_1,\dots,\alpha_m)$ 的秩等于 $m$（组内可以有多余的向量）。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 4.3</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 4.3</span>
              <strong>Linear Combination.</strong>
              Let $\alpha_1,\alpha_2,\dots,\alpha_m$ be vectors in $\mathbb{R}^n$ and let $k_1,k_2,\dots,k_m$ be scalars.
              Any expression</p>
-          <p>$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m$$</p>
-          <p>is called a <span class="en-term">linear combination</span> of $\alpha_1,\dots,\alpha_m$.</p>
-          <p>If there exist scalars $k_1,\dots,k_m$ such that</p>
+          <p class="en">$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m$$</p>
+          <p class="en">is called a <span class="en-term">linear combination</span> of $\alpha_1,\dots,\alpha_m$.</p>
+          <p class="en">If there exist scalars $k_1,\dots,k_m$ such that</p>
           <p>$$\beta=k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m$$</p>
-          <p>then $\beta$ can be <span class="en-term">expressed as a linear combination</span> of
+          <p class="en">then $\beta$ can be <span class="en-term">expressed as a linear combination</span> of
              $\alpha_1,\dots,\alpha_m$ (equivalently, $\beta$ lies in the <span class="en-term">span</span> of these
              vectors), and $k_1,\dots,k_m$ are called the coefficients of the combination.</p>
-          <p><strong>Convention.</strong> The zero vector can be expressed as a linear combination of any set of
+          <p class="en"><strong>Convention.</strong> The zero vector can be expressed as a linear combination of any set of
              vectors (take $k_1=\cdots=k_m=0$). Note that "$\beta$ can be expressed as a linear combination of
              $\alpha_1,\dots,\alpha_m$" only requires that such coefficients <strong>exist</strong>: it requires
              neither that the coefficients be nonzero, nor that $A=(\alpha_1,\dots,\alpha_m)$ have rank $m$.</p>
@@ -267,17 +273,17 @@
         <p>而且：<strong>$R(A)=m$（列向量组"无冗余"）时表示法唯一；$R(A) &lt; m$ 时表示法不唯一。</strong></p>
         <p>理由：$Ax=\beta$ 展开就是 $x_1\alpha_1+\cdots+x_m\alpha_m=\beta$，这正是"$\beta$ 可由 $\alpha$ 组线性表示"的定义式，方程组的解向量 $(x_1,\dots,x_m)^T$ 就是<strong>表示系数</strong>。有解的条件 $R(A)=R(A,\beta)$ 是第 3 章的结论；解的个数由 $R(A)$ 与未知量个数 $m$ 的关系决定：$R(A)=m$（无自由未知量）时解唯一，$R(A) &lt; m$ 时有无穷多解。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 4.1</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 4.1</span>
              <strong>Expressing $\beta$ as a Linear Combination Is the Same as Solving $Ax=\beta$.</strong>
              Let $\alpha_1,\dots,\alpha_m$ and $\beta$ be vectors in $\mathbb{R}^n$, and let
              $A=(\alpha_1,\dots,\alpha_m)$ be the $n\times m$ matrix whose columns are these vectors. Then the
              following statements are equivalent:</p>
           <p>$$\beta\ \text{can be expressed as a linear combination of}\ \alpha_1,\dots,\alpha_m
              \iff \text{the system}\ Ax=\beta\ \text{is solvable} \iff R(A)=R(A,\beta)$$</p>
-          <p>Moreover, the coefficients are <strong>unique when $R(A)=m$</strong> (the columns carry no redundancy),
+          <p class="en">Moreover, the coefficients are <strong>unique when $R(A)=m$</strong> (the columns carry no redundancy),
              and <strong>not unique when $R(A) &lt; m$</strong>.</p>
-          <p><strong>Why.</strong> Written out, $Ax=\beta$ reads $x_1\alpha_1+\cdots+x_m\alpha_m=\beta$, which is
+          <p class="en"><strong>Why.</strong> Written out, $Ax=\beta$ reads $x_1\alpha_1+\cdots+x_m\alpha_m=\beta$, which is
              precisely the definition of "$\beta$ is a linear combination of the $\alpha$'s"; the solution vector
              $(x_1,\dots,x_m)^T$ gives the coefficients. Solvability is characterized by $R(A)=R(A,\beta)$ from
              Chapter 3. The number of solutions is governed by how $R(A)$ compares with the number of unknowns $m$:
@@ -302,21 +308,21 @@
           <li>能表示时，把首元对应的变量留在左边，其余为自由未知量，直接读出<strong>表示系数的通解</strong>；若没有自由未知量，则读出的就是唯一的表示系数。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 4.1</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 4.1</span>
              <strong>Deciding Whether $\beta$ Is a Linear Combination of $\alpha_1,\dots,\alpha_m$, and Finding the
              Coefficients.</strong></p>
           <ol>
-            <li>Arrange $\alpha_1,\dots,\alpha_m$ as the <strong>columns</strong> of a matrix $A$ and append $\beta$
+            <li class="en">Arrange $\alpha_1,\dots,\alpha_m$ as the <strong>columns</strong> of a matrix $A$ and append $\beta$
                 as one extra last column, forming the augmented matrix $(A\mid\beta)$. <strong>Never arrange them as
                 rows</strong>, or the numbers you read off will not be the coefficients.</li>
-            <li>Apply <strong>elementary row operations only</strong> to $(A\mid\beta)$ until the left part is in
+            <li class="en">Apply <strong>elementary row operations only</strong> to $(A\mid\beta)$ until the left part is in
                 <strong>reduced row echelon form</strong> (each pivot equals $1$ and is the only nonzero entry in its
                 column).</li>
-            <li>Look at the last column. If a row of the shape $(0,\ 0,\ \dots,\ 0\mid d)$ with $d\ne 0$ appears, then
+            <li class="en">Look at the last column. If a row of the shape $(0,\ 0,\ \dots,\ 0\mid d)$ with $d\ne 0$ appears, then
                 $R(A)\ne R(A,\beta)$ and $\beta$ <strong>cannot</strong> be expressed as a linear combination;
                 otherwise it can.</li>
-            <li>When it can, keep the pivot variables on the left and treat the remaining variables as free, and read
+            <li class="en">When it can, keep the pivot variables on the left and treat the remaining variables as free, and read
                 off the <strong>general solution</strong> for the coefficients. If there are no free variables, what
                 you read off is the unique set of coefficients.</li>
           </ol>
@@ -379,15 +385,15 @@
         <p>若 $(I)$ 中每一个向量都能由 $(II)$ 线性表示，则称<strong>向量组 $(I)$ 可由向量组 $(II)$ 线性表示</strong>；若两个向量组可以<strong>互相</strong>线性表示，则称这两个向量组 <span class="term">等价</span>。</p>
         <p>用矩阵的语言说：$(I)$ 可由 $(II)$ 表示 $\iff$ 存在矩阵 $K$ 使 $A=BK$（$A,B$ 分别是把两组向量按列排成的矩阵），因为 $BK$ 的第 $j$ 列恰是 $B$ 的列的线性组合。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 4.4</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 4.4</span>
              <strong>Equivalent Sets of Vectors.</strong>
              Let $(I):\ \alpha_1,\dots,\alpha_m$ and $(II):\ \beta_1,\dots,\beta_s$ be two sets of vectors. If every
              vector of $(I)$ can be expressed as a linear combination of the vectors of $(II)$, we say that
              <strong>$(I)$ can be expressed as a linear combination of $(II)$</strong>. If each set can be expressed
              as a linear combination of the other, the two sets are called
              <span class="en-term">equivalent</span>.</p>
-          <p>In matrix language: $(I)$ can be expressed as a linear combination of $(II)$ if and only if there is a
+          <p class="en">In matrix language: $(I)$ can be expressed as a linear combination of $(II)$ if and only if there is a
              matrix $K$ with $A=BK$, where $A$ and $B$ are the matrices whose columns are the vectors of $(I)$ and
              $(II)$ respectively — because the $j$-th column of $BK$ is a linear combination of the columns of
              $B$.</p>
@@ -403,20 +409,20 @@
         <p>$$(I):\ (1,0,0)^T,\ (0,1,0)^T;\qquad (II):\ (1,0,0)^T,\ (0,0,1)^T$$</p>
         <p>两者秩都是 2，但 $(0,1,0)^T$ 不能由 $(II)$ 表示（$(II)$ 只能拼出 $xz$ 平面内的向量），所以不等价。等价还要求"表示的方向"成立，必须<strong>互相</strong>能表示。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 4.2</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 4.2</span>
              <strong>Equivalence and Rank.</strong></p>
-          <p><span class="thm-name">Property 4.1</span> If $(I)$ can be expressed as a linear combination of $(II)$,
+          <p class="en"><span class="thm-name">Property 4.1</span> If $(I)$ can be expressed as a linear combination of $(II)$,
              then $R(I)\le R(II)$. <em>(What is built out of other vectors cannot carry more information than its
              source.)</em></p>
-          <p><span class="thm-name">Property 4.2</span> If $(I)$ and $(II)$ are equivalent, then $R(I)=R(II)$.</p>
-          <p><span class="thm-name">Property 4.3</span> If $(I)$ can be expressed as a linear combination of $(II)$
+          <p class="en"><span class="thm-name">Property 4.2</span> If $(I)$ and $(II)$ are equivalent, then $R(I)=R(II)$.</p>
+          <p class="en"><span class="thm-name">Property 4.3</span> If $(I)$ can be expressed as a linear combination of $(II)$
              and $R(I)=R(II)$, then $(I)$ and $(II)$ are equivalent. <em>(Equal rank supplies the reverse
              direction.)</em></p>
-          <p><strong>Warning: $R(I)=R(II)$ alone does <em>not</em> imply equivalence!</strong> This is the most common
+          <p class="en"><strong>Warning: $R(I)=R(II)$ alone does <em>not</em> imply equivalence!</strong> This is the most common
              error. Counterexample:</p>
           <p>$$(I):\ (1,0,0)^T,\ (0,1,0)^T;\qquad (II):\ (1,0,0)^T,\ (0,0,1)^T$$</p>
-          <p>Both have rank $2$, yet $(0,1,0)^T$ cannot be expressed as a linear combination of $(II)$ (the vectors in
+          <p class="en">Both have rank $2$, yet $(0,1,0)^T$ cannot be expressed as a linear combination of $(II)$ (the vectors in
              $(II)$ only span the $xz$-plane), so the two sets are not equivalent. Equivalence also requires the
              expression to work in <strong>both</strong> directions.</p>
         </div>
@@ -503,7 +509,7 @@
               <p>验算：$(1,0,1)^T+(0,1,1)^T=(1,1,2)^T$ ✓；$(1,0,1)^T-(0,1,1)^T=(1,-1,0)^T$ ✓。所以 $(II)$ 可由 $(I)$ 线性表示。</p>
               <p><strong>第三步：下结论。</strong>$(II)$ 可由 $(I)$ 表示且 $R(I)=R(II)$，由性质 4.3 知两组<strong>等价</strong>。</p>
               <p><strong>另解（过渡矩阵，更快）</strong>：把上面两式写成矩阵形式 $B=AK$，其中</p>
-              <p>$$K=\begin{pmatrix}1&1\\1&-1\end{pmatrix},\qquad |K|=1\times(-1)-1\times1=-2\ne0$$</p>
+              <p class="en">$$K=\begin{pmatrix}1&1\\1&-1\end{pmatrix},\qquad |K|=1\times(-1)-1\times1=-2\ne0$$</p>
               <p>$K$ 可逆，两边右乘 $K^{-1}$ 得 $A=BK^{-1}$，即 $(I)$ 也可由 $(II)$ 表示，同样得到等价。</p>
               <p class="solution-label">易错提醒</p>
               <p>$R(I)=R(II)$ 本身<strong>推不出</strong>等价（见定理 4.2 的反例），必须补上"有一个方向能表示"。本题能用 $|K|\ne0$ 一步到位，是因为两组向量的<strong>个数相同</strong>；个数不同时不能写成可逆矩阵。</p>
@@ -528,7 +534,7 @@
               <p>$$(\beta_1,\beta_2,\beta_3)=(\alpha_1,\alpha_2,\alpha_3)K,\qquad K=\begin{pmatrix}1&1&1\\0&1&1\\0&0&1\end{pmatrix}$$</p>
               <p>这个等式本身就已经说明 <strong>$\beta$ 组可由 $\alpha$ 组线性表示</strong>。</p>
               <p><strong>第二步：$K$ 可逆。</strong>$K$ 是上三角矩阵，对角元全是 $1$，故 $|K|=1\ne0$，$K$ 可逆，且</p>
-              <p>$$K^{-1}=\begin{pmatrix}1&-1&0\\0&1&-1\\0&0&1\end{pmatrix}$$</p>
+              <p class="en">$$K^{-1}=\begin{pmatrix}1&-1&0\\0&1&-1\\0&0&1\end{pmatrix}$$</p>
               <p><strong>第三步：反解。</strong>在 $(\beta_1,\beta_2,\beta_3)=(\alpha_1,\alpha_2,\alpha_3)K$ 两边右乘 $K^{-1}$：</p>
               <p>$$(\alpha_1,\alpha_2,\alpha_3)=(\beta_1,\beta_2,\beta_3)K^{-1}$$</p>
               <p>即 $\alpha_1=\beta_1,\ \alpha_2=-\beta_1+\beta_2,\ \alpha_3=-\beta_2+\beta_3$。验算：$-\beta_1+\beta_2=-\alpha_1+(\alpha_1+\alpha_2)=\alpha_2$ ✓；$-\beta_2+\beta_3=-(\alpha_1+\alpha_2)+(\alpha_1+\alpha_2+\alpha_3)=\alpha_3$ ✓。所以 $\alpha$ 组也可由 $\beta$ 组线性表示。</p>
@@ -544,7 +550,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A=(\alpha_1,\dots,\alpha_m)$ 为 $n\times m$ 矩阵，$\beta$ 为 $n$ 维向量，则"$\beta$ 可由 $\alpha_1,\dots,\alpha_m$ 线性表示"等价于（　）。
-             <span class="en-line" lang="en">Let $A=(\alpha_1,\dots,\alpha_m)$ be an $n\times m$ matrix and let $\beta$ be a vector in $\mathbb{R}^n$. Then "$\beta$ can be expressed as a linear combination of $\alpha_1,\dots,\alpha_m$" is equivalent to ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=(\alpha_1,\dots,\alpha_m)$ be an $n\times m$ matrix and let $\beta$ be a vector in $\mathbb{R}^n$. Then "$\beta$ can be expressed as a linear combination of $\alpha_1,\dots,\alpha_m$" is equivalent to ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">方程组 $Ax=\beta$ 有解</span></li>
             <li><span class="opt-body">$R(A)=m$</span></li>
@@ -556,7 +562,7 @@
 
         <div class="q" data-type="judge" data-level="基础">
           <p class="q-stem">若向量组 $(I)$ 可由向量组 $(II)$ 线性表示，则 $(I)$ 与 $(II)$ 等价。
-             <span class="en-line" lang="en">If a set of vectors $(I)$ can be expressed as a linear combination of a set $(II)$, then $(I)$ and $(II)$ are equivalent.</span></p>
+             <span class="q-stem-en" lang="en">If a set of vectors $(I)$ can be expressed as a linear combination of a set $(II)$, then $(I)$ and $(II)$ are equivalent.</span></p>
           <ul class="options">
             <li><span class="opt-body">正确</span></li>
             <li data-correct="true"><span class="opt-body">错误</span></li>
@@ -566,7 +572,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $\alpha_1,\alpha_2,\alpha_3,\beta$ 都是 $3$ 维向量，$R(\alpha_1,\alpha_2,\alpha_3)=2$，且 $\beta$ 不能由 $\alpha_1,\alpha_2,\alpha_3$ 线性表示，则 $R(\alpha_1,\alpha_2,\alpha_3,\beta)=$（　）。
-             <span class="en-line" lang="en">Let $\alpha_1,\alpha_2,\alpha_3,\beta$ be vectors in $\mathbb{R}^3$ with $R(\alpha_1,\alpha_2,\alpha_3)=2$, and suppose $\beta$ cannot be expressed as a linear combination of $\alpha_1,\alpha_2,\alpha_3$. Then $R(\alpha_1,\alpha_2,\alpha_3,\beta)=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha_1,\alpha_2,\alpha_3,\beta$ be vectors in $\mathbb{R}^3$ with $R(\alpha_1,\alpha_2,\alpha_3)=2$, and suppose $\beta$ cannot be expressed as a linear combination of $\alpha_1,\alpha_2,\alpha_3$. Then $R(\alpha_1,\alpha_2,\alpha_3,\beta)=$ ( ).</span></p>
           <ul class="options">
             <li><span class="opt-body">$2$</span></li>
             <li data-correct="true"><span class="opt-body">$3$</span></li>
@@ -578,14 +584,14 @@
 
         <div class="q" data-type="fill" data-level="中等">
           <p class="q-stem">设 $\alpha_1=(1,1,1)^T,\ \alpha_2=(1,2,3)^T,\ \beta=(2,3,4)^T$。若 $\beta=k_1\alpha_1+k_2\alpha_2$，则 $k_1+k_2=$ ______。
-             <span class="en-line" lang="en">Let $\alpha_1=(1,1,1)^T$, $\alpha_2=(1,2,3)^T$ and $\beta=(2,3,4)^T$. If $\beta=k_1\alpha_1+k_2\alpha_2$, then $k_1+k_2=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha_1=(1,1,1)^T$, $\alpha_2=(1,2,3)^T$ and $\beta=(2,3,4)^T$. If $\beta=k_1\alpha_1+k_2\alpha_2$, then $k_1+k_2=$ ______.</span></p>
           <div class="q-answer" data-answer="2|２|二"></div>
           <div class="q-explain">解 $k_1(1,1,1)^T+k_2(1,2,3)^T=(2,3,4)^T$：由前两个分量得 $k_1+k_2=2,\ k_1+2k_2=3$，相减得 $k_2=1$，$k_1=1$；代入第三个分量 $1+3=4$ ✓ 相容。所以 $k_1+k_2=2$。本题中 $\alpha_1,\alpha_2$ 不成比例，$R(A)=2=m$，所以表示系数唯一（定理 4.1），不会出现多解。</div>
         </div>
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $\alpha_1=(1,0,1)^T,\ \alpha_2=(0,1,1)^T,\ \alpha_3=(1,1,2)^T,\ \beta=(1,1,t)^T$。若 $\beta$ 可由 $\alpha_1,\alpha_2,\alpha_3$ 线性表示，则（　）。
-             <span class="en-line" lang="en">Let $\alpha_1=(1,0,1)^T$, $\alpha_2=(0,1,1)^T$, $\alpha_3=(1,1,2)^T$ and $\beta=(1,1,t)^T$. If $\beta$ can be expressed as a linear combination of $\alpha_1,\alpha_2,\alpha_3$, then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha_1=(1,0,1)^T$, $\alpha_2=(0,1,1)^T$, $\alpha_3=(1,1,2)^T$ and $\beta=(1,1,t)^T$. If $\beta$ can be expressed as a linear combination of $\alpha_1,\alpha_2,\alpha_3$, then ( ).</span></p>
           <ul class="options">
             <li><span class="opt-body">$t$ 为任意实数</span></li>
             <li data-correct="true"><span class="opt-body">$t=2$</span></li>
@@ -597,7 +603,7 @@
 
         <div class="q" data-type="multi" data-level="考研">
           <p class="q-stem">设向量组 $(I)$ 可由向量组 $(II)$ 线性表示，则（　）。
-             <span class="en-line" lang="en">Suppose a set of vectors $(I)$ can be expressed as a linear combination of a set $(II)$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Suppose a set of vectors $(I)$ can be expressed as a linear combination of a set $(II)$. Then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(I)\le R(II)$</span></li>
             <li data-correct="true"><span class="opt-body">若 $R(I)=R(II)$，则 $(I)$ 与 $(II)$ 等价</span></li>
@@ -609,7 +615,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设向量组 $(I):(1,0,0)^T,(0,1,0)^T$，$(II):(1,0,0)^T,(0,0,1)^T$，则（　）。
-             <span class="en-line" lang="en">Let $(I):(1,0,0)^T,(0,1,0)^T$ and $(II):(1,0,0)^T,(0,0,1)^T$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $(I):(1,0,0)^T,(0,1,0)^T$ and $(II):(1,0,0)^T,(0,0,1)^T$. Then ( ).</span></p>
           <ul class="options">
             <li><span class="opt-body">$(I)$ 与 $(II)$ 等价</span></li>
             <li data-correct="true"><span class="opt-body">$R(I)=R(II)$，但 $(I)$ 与 $(II)$ 不等价</span></li>
@@ -621,7 +627,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $R(\alpha_1,\alpha_2,\alpha_3)=3$，$\beta$ 可由 $\alpha_1,\alpha_2,\alpha_3$ 线性表示，但不能由 $\alpha_1,\alpha_2$ 线性表示，则（　）。
-             <span class="en-line" lang="en">Let $R(\alpha_1,\alpha_2,\alpha_3)=3$, and suppose $\beta$ can be expressed as a linear combination of $\alpha_1,\alpha_2,\alpha_3$ but not as a linear combination of $\alpha_1,\alpha_2$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $R(\alpha_1,\alpha_2,\alpha_3)=3$, and suppose $\beta$ can be expressed as a linear combination of $\alpha_1,\alpha_2,\alpha_3$ but not as a linear combination of $\alpha_1,\alpha_2$. Then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(\alpha_1,\alpha_2,\beta)=3$</span></li>
             <li><span class="opt-body">$\beta$ 一定可由 $\alpha_2,\alpha_3$ 线性表示</span></li>
@@ -633,7 +639,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设向量组 $(I):\alpha_1=(1,0,1)^T,\ \alpha_2=(0,1,1)^T$；$(II):\beta_1=(1,1,2)^T,\ \beta_2=(1,-1,0)^T$，则（　）。
-             <span class="en-line" lang="en">Let $(I):\alpha_1=(1,0,1)^T,\ \alpha_2=(0,1,1)^T$ and $(II):\beta_1=(1,1,2)^T,\ \beta_2=(1,-1,0)^T$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $(I):\alpha_1=(1,0,1)^T,\ \alpha_2=(0,1,1)^T$ and $(II):\beta_1=(1,1,2)^T,\ \beta_2=(1,-1,0)^T$. Then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$(I)$ 与 $(II)$ 等价</span></li>
             <li><span class="opt-body">$R(I)=R(II)$，但 $(I)$ 与 $(II)$ 不等价</span></li>
@@ -645,7 +651,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $R(\alpha_1,\alpha_2,\alpha_3)=3$，$\beta_1=\alpha_1+\alpha_2,\ \beta_2=\alpha_2+a\alpha_3,\ \beta_3=\alpha_3+\alpha_1$，则向量组 $\beta_1,\beta_2,\beta_3$ 与 $\alpha_1,\alpha_2,\alpha_3$ 等价当且仅当（　）。
-             <span class="en-line" lang="en">Let $R(\alpha_1,\alpha_2,\alpha_3)=3$ and let $\beta_1=\alpha_1+\alpha_2$, $\beta_2=\alpha_2+a\alpha_3$, $\beta_3=\alpha_3+\alpha_1$. Then $\beta_1,\beta_2,\beta_3$ and $\alpha_1,\alpha_2,\alpha_3$ are equivalent if and only if ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $R(\alpha_1,\alpha_2,\alpha_3)=3$ and let $\beta_1=\alpha_1+\alpha_2$, $\beta_2=\alpha_2+a\alpha_3$, $\beta_3=\alpha_3+\alpha_1$. Then $\beta_1,\beta_2,\beta_3$ and $\alpha_1,\alpha_2,\alpha_3$ are equivalent if and only if ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$a\ne-1$</span></li>
             <li><span class="opt-body">$a\ne1$</span></li>
@@ -657,7 +663,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设向量组 $(I)$ 可由向量组 $(II)$ 线性表示，则"$R(I)=R(II)=R(I,II)$"是"$(I)$ 与 $(II)$ 等价"的（　）。
-             <span class="en-line" lang="en">Suppose a set of vectors $(I)$ can be expressed as a linear combination of a set $(II)$. Then "$R(I)=R(II)=R(I,II)$" is a ( ) condition for "$(I)$ and $(II)$ are equivalent".</span></p>
+             <span class="q-stem-en" lang="en">Suppose a set of vectors $(I)$ can be expressed as a linear combination of a set $(II)$. Then "$R(I)=R(II)=R(I,II)$" is a ( ) condition for "$(I)$ and $(II)$ are equivalent".</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">充分必要</span></li>
             <li><span class="opt-body">充分不必要</span></li>
@@ -675,7 +681,11 @@
 
       </div>
 
-      <h2 id="s4-2" data-hours="4.5">4-2 向量组的线性相关性</h2>
+      <h2 id="la-s4-2" data-hours="4.5"
+          data-video-map="la-s4-2"
+          data-video-title="《线性代数》全程教学视频（一高数）">4-2 向量组的线性相关性</h2>
+
+      <div data-video-entry="la-s4-2" data-video-pos="top"></div>
 
       <p>4-1 节我们学会问"$\beta$ 能不能由一组向量拼出来"。紧接着有两个新问题冒出来：第一，一组向量里到底有没有"多余的"？如果每个向量都不可替代，这组向量就是"干净的"；第二，$Ax=\mathbf{0}$ 的无穷多个解，能不能用有限几个解"生成"出来？这两个问题看着不搭界，其实是同一件事的两种说法，答案都落在同一个数上——秩。本节引入<strong>线性相关与线性无关</strong>，它是全课程最抽象的概念，也是考研数学一证明题最集中的地方。学完本节你会拿到三样东西：定义（能不能凑出零向量）、判定（比秩与个数）、工具（极大线性无关组与秩）。</p>
 
@@ -698,10 +708,10 @@
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 4.5　线性相关与线性无关</div>
         <p>设 $\alpha_1,\alpha_2,\dots,\alpha_m$ 是 $n$ 维向量组。若存在<strong>不全为零</strong>的数 $k_1,k_2,\dots,k_m$，使得</p>
-        <p>$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m=\mathbf{0}$$</p>
+        <p class="en">$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m=\mathbf{0}$$</p>
         <p>则称向量组 $\alpha_1,\dots,\alpha_m$ <span class="term">线性相关</span>；否则（即"上式成立"当且仅当 $k_1=k_2=\cdots=k_m=0$）称该向量组 <span class="term">线性无关</span>。</p>
         <p><strong>把定义翻译成方程组</strong>：记 $A=(\alpha_1,\dots,\alpha_m)$，则</p>
-        <p>$$k_1\alpha_1+\cdots+k_m\alpha_m=\mathbf{0}\iff A k=\mathbf{0}\quad(k=(k_1,\dots,k_m)^T)$$</p>
+        <p class="en">$$k_1\alpha_1+\cdots+k_m\alpha_m=\mathbf{0}\iff A k=\mathbf{0}\quad(k=(k_1,\dots,k_m)^T)$$</p>
         <p>于是定义有三种完全等价的说法，考试时用哪个方便就用哪个：</p>
         <ol>
           <li><strong>定义式</strong>：存在不全为零的 $k_i$ 使 $\sum k_i\alpha_i=\mathbf{0}$ $\iff$ 线性相关。</li>
@@ -710,27 +720,27 @@
         </ol>
         <p><strong>划重点</strong>：系数必须<strong>不全为零</strong>；$k_i$ 全为零的平凡组合永远成立，说明不了任何问题。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 4.5</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 4.5</span>
              <strong>Linear Dependence and Linear Independence.</strong>
              Let $\alpha_1,\alpha_2,\dots,\alpha_m$ be vectors in $\mathbb{R}^n$. If there exist scalars
              $k_1,k_2,\dots,k_m$, <strong>not all zero</strong>, such that</p>
-          <p>$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m=\mathbf{0}$$</p>
-          <p>then the set $\alpha_1,\dots,\alpha_m$ is <span class="en-term">linearly dependent</span>. Otherwise —
+          <p class="en">$$k_1\alpha_1+k_2\alpha_2+\cdots+k_m\alpha_m=\mathbf{0}$$</p>
+          <p class="en">then the set $\alpha_1,\dots,\alpha_m$ is <span class="en-term">linearly dependent</span>. Otherwise —
              that is, if the identity above forces $k_1=k_2=\cdots=k_m=0$ — the set is
              <span class="en-term">linearly independent</span>.</p>
-          <p><strong>In matrix form.</strong> Put $A=(\alpha_1,\dots,\alpha_m)$. Then
+          <p class="en"><strong>In matrix form.</strong> Put $A=(\alpha_1,\dots,\alpha_m)$. Then
              $k_1\alpha_1+\cdots+k_m\alpha_m=\mathbf{0}\iff Ak=\mathbf{0}$ with $k=(k_1,\dots,k_m)^T$. So the
              definition has three equivalent forms, and you may use whichever is convenient:</p>
           <ol>
-            <li><strong>Definition form:</strong> some nontrivial choice of the $k_i$ makes
+            <li class="en"><strong>Definition form:</strong> some nontrivial choice of the $k_i$ makes
                 $\sum k_i\alpha_i=\mathbf{0}$ $\iff$ dependent.</li>
-            <li><strong>System form:</strong> the homogeneous system $Ax=\mathbf{0}$ (with
+            <li class="en"><strong>System form:</strong> the homogeneous system $Ax=\mathbf{0}$ (with
                 $A=(\alpha_1,\dots,\alpha_m)$) has a nonzero solution $\iff$ dependent; it has only the zero solution
                 $\iff$ independent.</li>
-            <li><strong>Rank form:</strong> $R(A) &lt; m$ $\iff$ dependent; $R(A)=m$ $\iff$ independent.</li>
+            <li class="en"><strong>Rank form:</strong> $R(A) &lt; m$ $\iff$ dependent; $R(A)=m$ $\iff$ independent.</li>
           </ol>
-          <p><strong>Key point:</strong> the coefficients must be <strong>not all zero</strong>. The trivial
+          <p class="en"><strong>Key point:</strong> the coefficients must be <strong>not all zero</strong>. The trivial
              combination with all $k_i=0$ always works and therefore settles nothing.</p>
         </div>
       </div>
@@ -744,23 +754,23 @@
         <p><span class="thm-name">推论 4.3.2（个数超过维数必相关）</span>　若 $m&gt;n$（向量个数 $m$ 大于向量维数 $n$），则 $\alpha_1,\dots,\alpha_m$ <strong>必线性相关</strong>。因为 $R(A)\le\min\{n,m\}=n &lt; m$ 恒成立。</p>
         <p><span class="thm-name">推论 4.3.3（$A$ 与方程组的连接）</span>　设 $A$ 为 $n$ 阶矩阵，则 $A$ 可逆 $\iff |A|\ne0\iff R(A)=n\iff A$ 的列向量组线性无关 $\iff Ax=\mathbf{0}$ 只有零解。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 4.3</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 4.3</span>
              <strong>The Rank Test.</strong>
              Let $\alpha_1,\dots,\alpha_m$ be vectors in $\mathbb{R}^n$ and let
              $A=(\alpha_1,\dots,\alpha_m)$ be the corresponding $n\times m$ matrix. Then</p>
           <p>$$\alpha_1,\dots,\alpha_m\ \text{are dependent}\iff R(\alpha_1,\dots,\alpha_m) &lt; m;\qquad
              \alpha_1,\dots,\alpha_m\ \text{are independent}\iff R(\alpha_1,\dots,\alpha_m)=m$$</p>
-          <p><strong>Why.</strong> The system $Ax=\mathbf{0}$ has $m$ unknowns and its nullspace has dimension
+          <p class="en"><strong>Why.</strong> The system $Ax=\mathbf{0}$ has $m$ unknowns and its nullspace has dimension
              $m-R(A)$ (see &sect;4-3). A nonzero solution exists $\iff m-R(A)\ge1\iff R(A) &lt; m$.</p>
-          <p><span class="thm-name">Corollary 4.3.1 ($n$ vectors in $\mathbb{R}^n$)</span>
+          <p class="en"><span class="thm-name">Corollary 4.3.1 ($n$ vectors in $\mathbb{R}^n$)</span>
              $n$ vectors in $\mathbb{R}^n$ are linearly dependent $\iff$ the determinant of the matrix they form
              equals $0$; they are linearly independent $\iff$ that determinant is nonzero. In this case the rank is
              $n$, so the determinant can be computed directly instead of using row operations.</p>
-          <p><span class="thm-name">Corollary 4.3.2 (more vectors than components)</span>
+          <p class="en"><span class="thm-name">Corollary 4.3.2 (more vectors than components)</span>
              If $m&gt;n$ (more vectors than their dimension), then $\alpha_1,\dots,\alpha_m$ are
              <strong>necessarily linearly dependent</strong>, because $R(A)\le\min\{n,m\}=n &lt; m$ always holds.</p>
-          <p><span class="thm-name">Corollary 4.3.3 (linking $A$ to its linear system)</span>
+          <p class="en"><span class="thm-name">Corollary 4.3.3 (linking $A$ to its linear system)</span>
              For an $n\times n$ matrix $A$: $A$ is invertible $\iff |A|\ne0\iff R(A)=n\iff$ the columns of $A$ are
              linearly independent $\iff Ax=\mathbf{0}$ has only the zero solution.</p>
         </div>
@@ -826,63 +836,63 @@
         <p><em>为什么</em>：相关的等式 $\sum k_i\alpha_i=\mathbf{0}$ 是<strong>逐分量</strong>成立的，砍掉分量照样成立（故"短相关"）；无关性在截短后可能被破坏，只能靠"若接长后相关则截短后也相关"反推出接长后必无关。</p>
         <p><em>反方向为什么不成立</em>：$(1,1,1)^T,(1,1,2)^T,(1,2,3)^T$ 线性无关，各截掉最后一个分量后得 $(1,1)^T,(1,1)^T,(1,2)^T$，含两个相同向量，线性相关。故"无关组截短后仍无关"不成立。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">PROP 4.4–4.9</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">PROP 4.4–4.9</span>
              <strong>Properties to Know by Heart, Each with Its Intuition.</strong></p>
-          <p><span class="thm-name">Property 4.4 (a zero vector forces dependence)</span>
+          <p class="en"><span class="thm-name">Property 4.4 (a zero vector forces dependence)</span>
              A set of vectors that contains the zero vector is necessarily linearly dependent.</p>
-          <p><em>Intuition.</em> $1\cdot\mathbf{0}+0\cdot\alpha_2+\cdots+0\cdot\alpha_m=\mathbf{0}$ and the
+          <p class="en"><em>Intuition.</em> $1\cdot\mathbf{0}+0\cdot\alpha_2+\cdots+0\cdot\alpha_m=\mathbf{0}$ and the
              coefficients $(1,0,\dots,0)$ are not all zero, so a nontrivial combination vanishes.
              <strong>The converse fails:</strong> a set containing no zero vector can still be dependent, e.g.
              $(1,1)^T,(2,2)^T$.</p>
-          <p><span class="thm-name">Property 4.5 (a single vector)</span>
+          <p class="en"><span class="thm-name">Property 4.5 (a single vector)</span>
              A single vector $\alpha$ is linearly dependent $\iff\alpha=\mathbf{0}$.</p>
-          <p><em>Reason.</em> $k\alpha=\mathbf{0}$ has a nonzero solution $k$ $\iff\alpha=\mathbf{0}$.
+          <p class="en"><em>Reason.</em> $k\alpha=\mathbf{0}$ has a nonzero solution $k$ $\iff\alpha=\mathbf{0}$.
              <strong>Mind the difference between one vector and a set:</strong> when $\alpha\ne\mathbf{0}$, the set
              $\{\alpha\}$ is independent.</p>
-          <p><span class="thm-name">Property 4.6 (two vectors)</span>
+          <p class="en"><span class="thm-name">Property 4.6 (two vectors)</span>
              Two vectors $\alpha_1,\alpha_2$ are linearly dependent $\iff$ their corresponding components are
              proportional (they lie on the same line).</p>
-          <p><em>Reason.</em> From $k_1\alpha_1+k_2\alpha_2=\mathbf{0}$ with $(k_1,k_2)\ne(0,0)$, say $k_1\ne0$; then
+          <p class="en"><em>Reason.</em> From $k_1\alpha_1+k_2\alpha_2=\mathbf{0}$ with $(k_1,k_2)\ne(0,0)$, say $k_1\ne0$; then
              $\alpha_1=-\frac{k_2}{k_1}\alpha_2$, so one is a multiple of the other. In particular $\mathbf{0}$ is
              dependent with any vector, since $\mathbf{0}=0\cdot\alpha$.</p>
-          <p><span class="thm-name">Property 4.7 (how dependence passes between a part and the whole)</span>
+          <p class="en"><span class="thm-name">Property 4.7 (how dependence passes between a part and the whole)</span>
              <strong>A dependent part forces a dependent whole; an independent whole forces an independent
              part.</strong></p>
-          <p><em>Intuition.</em> If a small group already contains a redundant vector, adding more vectors cannot
+          <p class="en"><em>Intuition.</em> If a small group already contains a redundant vector, adding more vectors cannot
              remove the redundancy. Conversely, if nobody in the whole group is redundant, no subgroup can contain a
              redundant vector.</p>
-          <p><strong>Neither converse holds!</strong> "Dependent whole" does not imply "dependent part" (perhaps only
+          <p class="en"><strong>Neither converse holds!</strong> "Dependent whole" does not imply "dependent part" (perhaps only
              the newly added vector is redundant), and "independent part" certainly does not imply "independent
              whole". These are the most common traps in multiple-choice questions.</p>
-          <p><span class="thm-name">Property 4.8 (an independent set plus one vector)</span>
+          <p class="en"><span class="thm-name">Property 4.8 (an independent set plus one vector)</span>
              If $\alpha_1,\dots,\alpha_m$ are linearly independent, then $\alpha_1,\dots,\alpha_m,\beta$ are linearly
              dependent $\iff\beta$ can be expressed as a <strong>unique</strong> linear combination of
              $\alpha_1,\dots,\alpha_m$.</p>
-          <p><em>Proof.</em> ($\Leftarrow$) Immediate: $\beta=\sum k_i\alpha_i$ rearranges to a nontrivial combination
+          <p class="en"><em>Proof.</em> ($\Leftarrow$) Immediate: $\beta=\sum k_i\alpha_i$ rearranges to a nontrivial combination
              equal to $\mathbf{0}$. ($\Rightarrow$) Dependence gives scalars $k_1,\dots,k_m,k$, not all zero, with
              $\sum k_i\alpha_i+k\beta=\mathbf{0}$. If $k=0$ then $\sum k_i\alpha_i=\mathbf{0}$ with the $k_i$ not all
              zero, contradicting independence; hence $k\ne0$ and
              $\beta=-\frac{k_1}{k}\alpha_1-\cdots-\frac{k_m}{k}\alpha_m$. Uniqueness: if
              $\sum k_i\alpha_i=\sum l_i\alpha_i=\beta$, subtracting gives $\sum(k_i-l_i)\alpha_i=\mathbf{0}$, and
              independence forces $k_i=l_i$.</p>
-          <p><span class="thm-name">Property 4.9 (long stays independent, short stays dependent)</span>
+          <p class="en"><span class="thm-name">Property 4.9 (long stays independent, short stays dependent)</span>
              Add some components to each vector (lengthening them), obtaining $\beta_1,\dots,\beta_m$; or delete some
              components from each vector (shortening them), obtaining $\gamma_1,\dots,\gamma_m$. Then</p>
           <ul>
-            <li>if $\alpha_1,\dots,\alpha_m$ are linearly <strong>in</strong>dependent, so are the lengthened
+            <li class="en">if $\alpha_1,\dots,\alpha_m$ are linearly <strong>in</strong>dependent, so are the lengthened
                 $\beta_1,\dots,\beta_m$;</li>
-            <li>if $\alpha_1,\dots,\alpha_m$ are linearly <strong>de</strong>pendent, so are the shortened
+            <li class="en">if $\alpha_1,\dots,\alpha_m$ are linearly <strong>de</strong>pendent, so are the shortened
                 $\gamma_1,\dots,\gamma_m$.</li>
           </ul>
-          <p>Mnemonic: <strong>"long stays independent, short stays dependent."</strong> Do not reverse the
+          <p class="en">Mnemonic: <strong>"long stays independent, short stays dependent."</strong> Do not reverse the
              directions.</p>
-          <p><em>Why.</em> The dependence identity $\sum k_i\alpha_i=\mathbf{0}$ holds <strong>component by
+          <p class="en"><em>Why.</em> The dependence identity $\sum k_i\alpha_i=\mathbf{0}$ holds <strong>component by
              component</strong>, so deleting components preserves it ("short stays dependent"). Independence can be
              destroyed by deleting components, so the only safe statement in that direction is the contrapositive: if
              the lengthened set were dependent, the shortened set would be too, hence the lengthened set must be
              independent.</p>
-          <p><em>Why the reverse directions fail.</em> $(1,1,1)^T,(1,1,2)^T,(1,2,3)^T$ are linearly independent, but
+          <p class="en"><em>Why the reverse directions fail.</em> $(1,1,1)^T,(1,1,2)^T,(1,2,3)^T$ are linearly independent, but
              deleting the last component gives $(1,1)^T,(1,1)^T,(1,2)^T$, which contains a repeated vector and is
              dependent. So "an independent set stays independent after shortening" is false.</p>
         </div>
@@ -903,29 +913,29 @@
           <li>向量组本身线性无关 $\iff$ 它的极大无关组就是它自己 $\iff R=m$。</li>
         </ul>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 4.6</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 4.6</span>
              <strong>Maximal Linearly Independent Set and the Rank of a Set of Vectors.</strong>
              Let $\alpha_{j_1},\alpha_{j_2},\dots,\alpha_{j_r}$ be a subset of $\alpha_1,\dots,\alpha_m$. If</p>
           <ol>
-            <li>$\alpha_{j_1},\dots,\alpha_{j_r}$ are linearly independent, and</li>
-            <li>adding <strong>any</strong> one of the remaining vectors of the original set produces a linearly
+            <li class="en">$\alpha_{j_1},\dots,\alpha_{j_r}$ are linearly independent, and</li>
+            <li class="en">adding <strong>any</strong> one of the remaining vectors of the original set produces a linearly
                 dependent subset (that is, the subset is already "maximal"),</li>
           </ol>
-          <p>then it is called a <span class="en-term">maximal linearly independent set</span> of the original set,
+          <p class="en">then it is called a <span class="en-term">maximal linearly independent set</span> of the original set,
              and $r$ is called the <span class="en-term">rank</span> of the set, written
              $R(\alpha_1,\dots,\alpha_m)$. <em>(In Strang's language this is the analogue, for a list of vectors, of
              a basis: it is independent and no further vector of the list can be added to it.)</em></p>
-          <p><strong>Equivalent description (easier to use).</strong> A maximal linearly independent set is simply a
+          <p class="en"><strong>Equivalent description (easier to use).</strong> A maximal linearly independent set is simply a
              linearly independent subset containing as many vectors as possible; moreover every vector of the
              original set can be expressed as a linear combination of it (so the original set and this subset are
              equivalent).</p>
-          <p><strong>Facts you must know.</strong></p>
+          <p class="en"><strong>Facts you must know.</strong></p>
           <ul>
-            <li>A maximal linearly independent set is <strong>not unique</strong>, but the number of vectors it
+            <li class="en">A maximal linearly independent set is <strong>not unique</strong>, but the number of vectors it
                 contains is unique and equals the rank. A set consisting only of zero vectors has no maximal linearly
                 independent set, and its rank is defined to be $0$.</li>
-            <li>The set is itself linearly independent $\iff$ its maximal linearly independent set is the whole set
+            <li class="en">The set is itself linearly independent $\iff$ its maximal linearly independent set is the whole set
                 $\iff R=m$.</li>
           </ul>
         </div>
@@ -941,12 +951,12 @@
           <li>$R(A^T)=R(A)$；且 $R(\alpha_1,\dots,\alpha_m)=R(A)$——求向量组的秩，就是把它按列（或按行）排成矩阵求矩阵的秩，初等行、列变换都不改变秩。</li>
         </ul>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 4.4</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 4.4</span>
              <strong>The Rank of a Matrix Equals the Rank of Its Rows and of Its Columns.</strong>
              Reading $A$ by rows gives a set of row vectors; reading it by columns gives a set of column vectors.
              Then</p>
-          <p>$$R(A)=R(\text{row vectors})=R(\text{column vectors})$$</p>
+          <p class="en">$$R(A)=R(\text{row vectors})=R(\text{column vectors})$$</p>
           <p>(The left-hand side is the rank of a matrix as defined in Chapter 3, the right-hand side the rank of a
              set of vectors as defined in this section; the theorem says they are one and the same number.)</p>
           <p><strong>Useful consequences.</strong></p>
@@ -967,20 +977,20 @@
           <li>若还要写出"线性关系式"，把行最简形中自由未知量的值代回 $Ax=\mathbf{0}$ 即可。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 4.2</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 4.2</span>
              <strong>Testing Linear Dependence (including parameters).</strong></p>
           <ol>
-            <li><strong>Compare the count with the dimension first:</strong> if $m&gt;n$ (more vectors than
+            <li class="en"><strong>Compare the count with the dimension first:</strong> if $m&gt;n$ (more vectors than
                 components), declare "linearly dependent" at once.</li>
-            <li><strong>If $m=n$</strong> and the numbers are simple, compute the determinant
+            <li class="en"><strong>If $m=n$</strong> and the numbers are simple, compute the determinant
                 $|\alpha_1\ \alpha_2\ \cdots\ \alpha_n|$: nonzero means independent, zero means dependent.
                 <strong>With a parameter</strong>, set the determinant equal to $0$, solve for the critical values,
                 and discuss each case.</li>
-            <li><strong>Otherwise</strong> arrange the vectors as the columns of $A$, reduce to row echelon form by
+            <li class="en"><strong>Otherwise</strong> arrange the vectors as the columns of $A$, reduce to row echelon form by
                 elementary row operations, and count the nonzero rows $r=R(A)$: $r=m$ means independent, $r&lt;m$
                 means dependent.</li>
-            <li>If a linear relation is also required, substitute the free variables of the reduced row echelon form
+            <li class="en">If a linear relation is also required, substitute the free variables of the reduced row echelon form
                 back into $Ax=\mathbf{0}$.</li>
           </ol>
         </div>
@@ -996,23 +1006,23 @@
         </ol>
         <p><strong>为什么这么做对</strong>：初等行变换不改变列向量之间的线性关系（这就是第 3 章"行变换保持解集"的另一种说法）。行最简形的主元列是标准基向量，显然无关；非主元列能一眼读出表示系数，把这些关系搬回原矩阵的列即可。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 4.3</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 4.3</span>
              <strong>Finding a Maximal Linearly Independent Set, and Expressing the Remaining Vectors in Terms of
              It.</strong></p>
           <ol>
-            <li>Arrange the vectors as the <strong>columns</strong> of $A=(\alpha_1,\dots,\alpha_m)$.
+            <li class="en">Arrange the vectors as the <strong>columns</strong> of $A=(\alpha_1,\dots,\alpha_m)$.
                 <strong>Columns, not rows</strong> — this is what makes the pivot column numbers correspond to the
                 labels of the original vectors.</li>
-            <li>Using elementary row operations only, reduce $A$ to <strong>reduced row echelon form</strong> (better
+            <li class="en">Using elementary row operations only, reduce $A$ to <strong>reduced row echelon form</strong> (better
                 than mere echelon form, since the coefficients can then be read off directly).</li>
-            <li>The original vectors whose indices are the <strong>pivot columns</strong> form a maximal linearly
+            <li class="en">The original vectors whose indices are the <strong>pivot columns</strong> form a maximal linearly
                 independent set. A vector in a non-pivot column can be expressed as a linear combination of that set,
                 and the entries of that column in the reduced row echelon form are exactly the
                 <strong>coefficients</strong>.</li>
-            <li>Check by substituting the coefficients back into the original vectors.</li>
+            <li class="en">Check by substituting the coefficients back into the original vectors.</li>
           </ol>
-          <p><strong>Why this works.</strong> Elementary row operations do not change the linear relations among the
+          <p class="en"><strong>Why this works.</strong> Elementary row operations do not change the linear relations among the
              columns (this is another way of saying "row operations preserve the solution set", from Chapter 3). The
              pivot columns of the reduced row echelon form are standard basis vectors and are plainly independent,
              while the coefficients of a non-pivot column can be read off at sight; transferring these relations back
@@ -1104,7 +1114,7 @@
           <div class="solution">
             <p class="solution-label">解</p>
             <p>把向量<strong>按列</strong>排成矩阵 $A$，用初等行变换化行最简形（每一行对应一个分量）：</p>
-            <p>$$A=\begin{pmatrix}1&1&2&1&3\\1&2&3&3&5\\1&3&4&6&7\\1&4&5&10&9\end{pmatrix}\xrightarrow[r_3-r_1,\,r_4-r_1]{r_2-r_1}\begin{pmatrix}1&1&2&1&3\\0&1&1&2&2\\0&2&2&5&4\\0&3&3&9&6\end{pmatrix}$$</p>
+            <p class="en">$$A=\begin{pmatrix}1&1&2&1&3\\1&2&3&3&5\\1&3&4&6&7\\1&4&5&10&9\end{pmatrix}\xrightarrow[r_3-r_1,\,r_4-r_1]{r_2-r_1}\begin{pmatrix}1&1&2&1&3\\0&1&1&2&2\\0&2&2&5&4\\0&3&3&9&6\end{pmatrix}$$</p>
             <p>$$\xrightarrow[r_4-3r_2]{r_3-2r_2}\begin{pmatrix}1&1&2&1&3\\0&1&1&2&2\\0&0&0&1&0\\0&0&0&3&0\end{pmatrix}\xrightarrow{r_4-3r_3}\begin{pmatrix}1&1&2&1&3\\0&1&1&2&2\\0&0&0&1&0\\0&0&0&0&0\end{pmatrix}$$</p>
             <p>再化行最简形：先做 $r_2-2r_3$（打掉第 2 行第 4 列的数）和 $r_1-r_3$，得 $\begin{pmatrix}1&1&2&0&3\\0&1&1&0&2\\0&0&0&1&0\\0&0&0&0&0\end{pmatrix}$，再做 $r_1-r_2$：</p>
             <p>$$\to\begin{pmatrix}1&0&1&0&1\\0&1&1&0&2\\0&0&0&1&0\\0&0&0&0&0\end{pmatrix}$$</p>
@@ -1130,7 +1140,7 @@
           <div class="solution">
             <p class="solution-label">解</p>
             <p><strong>方法（抽象组的万能套路）</strong>：设 $x_1\beta_1+x_2\beta_2+x_3\beta_3=\mathbf{0}$，把 $\beta$ 用 $\alpha$ 代入并<strong>按 $\alpha$ 合并同类项</strong>：</p>
-            <p>$$x_1(\alpha_1+\alpha_2)+x_2(\alpha_2+\alpha_3)+x_3(\alpha_3+\alpha_1)=\mathbf{0}$$</p>
+            <p class="en">$$x_1(\alpha_1+\alpha_2)+x_2(\alpha_2+\alpha_3)+x_3(\alpha_3+\alpha_1)=\mathbf{0}$$</p>
             <p>$$(x_1+x_3)\alpha_1+(x_1+x_2)\alpha_2+(x_2+x_3)\alpha_3=\mathbf{0}$$</p>
             <p>因为 $\alpha_1,\alpha_2,\alpha_3$ 线性无关，所以各系数必须为零：</p>
             <p>$$\begin{cases}x_1+x_3=0\\ x_1+x_2=0\\ x_2+x_3=0\end{cases}$$</p>
@@ -1155,9 +1165,9 @@
           <div class="solution">
             <p class="solution-label">证明</p>
             <p><strong>存在性</strong>：因为 $\alpha_1,\alpha_2,\alpha_3,\beta$ 线性相关，由定义存在<strong>不全为零</strong>的数 $k_1,k_2,k_3,k$，使</p>
-            <p>$$k_1\alpha_1+k_2\alpha_2+k_3\alpha_3+k\beta=\mathbf{0}\qquad(\ast)$$</p>
+            <p class="en">$$k_1\alpha_1+k_2\alpha_2+k_3\alpha_3+k\beta=\mathbf{0}\qquad(\ast)$$</p>
             <p>下面说明必有 $k\ne0$。反设 $k=0$，则 $(\ast)$ 变为</p>
-            <p>$$k_1\alpha_1+k_2\alpha_2+k_3\alpha_3=\mathbf{0}$$</p>
+            <p class="en">$$k_1\alpha_1+k_2\alpha_2+k_3\alpha_3=\mathbf{0}$$</p>
             <p>而 $k_1,k_2,k_3,k$ 不全为零且 $k=0$，说明 $k_1,k_2,k_3$ 中至少有一个不为零，这与 $\alpha_1,\alpha_2,\alpha_3$ 线性无关<strong>矛盾</strong>。故 $k\ne0$。</p>
             <p>于是可在 $(\ast)$ 中两边除以 $k$ 并移项：</p>
             <p>$$\beta=-\frac{k_1}{k}\alpha_1-\frac{k_2}{k}\alpha_2-\frac{k_3}{k}\alpha_3$$</p>
@@ -1184,14 +1194,14 @@
           <div class="solution">
             <p class="solution-label">证明</p>
             <p>设</p>
-            <p>$$c_0\alpha+c_1A\alpha+c_2A^2\alpha+\cdots+c_kA^k\alpha=\mathbf{0}\qquad(\ast)$$</p>
+            <p class="en">$$c_0\alpha+c_1A\alpha+c_2A^2\alpha+\cdots+c_kA^k\alpha=\mathbf{0}\qquad(\ast)$$</p>
             <p>要证 $c_0=c_1=\cdots=c_k=0$。<strong>关键动作：两边同时左乘 $A^k$</strong>（因为 $A^{k+1}\alpha=\mathbf{0}$ 会把高次项全部打掉）。</p>
             <p>注意对 $i\ge1$，有</p>
-            <p>$$A^k(A^i\alpha)=A^{k+i}\alpha=A^{k+1}(A^{i-1}\alpha)=\mathbf{0}$$</p>
+            <p class="en">$$A^k(A^i\alpha)=A^{k+i}\alpha=A^{k+1}(A^{i-1}\alpha)=\mathbf{0}$$</p>
             <p>（因为 $A^{k+1}=\mathbf{0}$ 作用在任何向量上都是 $\mathbf{0}$）。所以 $(\ast)$ 两边左乘 $A^k$ 后，除第一项外全部消失，得</p>
             <p>$$c_0A^k\alpha=\mathbf{0}$$</p>
             <p>而已知 $A^k\alpha\ne\mathbf{0}$，故 $c_0=0$。于是 $(\ast)$ 简化为</p>
-            <p>$$c_1A\alpha+c_2A^2\alpha+\cdots+c_kA^k\alpha=\mathbf{0}$$</p>
+            <p class="en">$$c_1A\alpha+c_2A^2\alpha+\cdots+c_kA^k\alpha=\mathbf{0}$$</p>
             <p>再两边左乘 $A^{k-1}$，同理只剩第一项：$c_1A^{k}\alpha=\mathbf{0}$，故 $c_1=0$。</p>
             <p>依次左乘 $A^{k-2},A^{k-3},\dots,A^{0}=E$，逐步得到 $c_2=c_3=\cdots=c_k=0$。因此 $(\ast)$ 只有零解，向量组线性无关。$\blacksquare$</p>
             <p><strong>思路提炼</strong>：看到"$A$ 的某个幂作用在某向量上等于 $\mathbf{0}$"，就用 $A$ 的高次幂去乘等式，把低次项之外的东西全部清零。这与 4-3 节用 $A$ 作用在解上消项是同一套动作。</p>
@@ -1243,7 +1253,7 @@
               <p class="solution-label">解</p>
               <p><strong>第一步：设零组合。</strong>设 $x_1\beta_1+x_2\beta_2+x_3\beta_3=\mathbf{0}$。</p>
               <p><strong>第二步：代入并按 $\alpha$ 合并。</strong></p>
-              <p>$$x_1(\alpha_1+\alpha_2)+x_2(\alpha_2+\alpha_3)+x_3(\alpha_3-\alpha_1)=\mathbf{0}$$</p>
+              <p class="en">$$x_1(\alpha_1+\alpha_2)+x_2(\alpha_2+\alpha_3)+x_3(\alpha_3-\alpha_1)=\mathbf{0}$$</p>
               <p>$$(x_1-x_3)\alpha_1+(x_1+x_2)\alpha_2+(x_2+x_3)\alpha_3=\mathbf{0}$$</p>
               <p><strong>第三步：用无关性转成方程组。</strong>因为 $\alpha_1,\alpha_2,\alpha_3$ 线性无关，三个系数必须全为 $0$：</p>
               <p>$$\begin{cases}x_1-x_3=0\\ x_1+x_2=0\\ x_2+x_3=0\end{cases}$$</p>
@@ -1320,7 +1330,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $\alpha_1,\alpha_2,\dots,\alpha_m$ 是一组 $n$ 维向量，则"$\alpha_1,\dots,\alpha_m$ 线性相关"的准确定义是（　）。
-             <span class="en-line" lang="en">Let $\alpha_1,\alpha_2,\dots,\alpha_m$ be vectors in $\mathbb{R}^n$. The precise definition of "$\alpha_1,\dots,\alpha_m$ are linearly dependent" is ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha_1,\alpha_2,\dots,\alpha_m$ be vectors in $\mathbb{R}^n$. The precise definition of "$\alpha_1,\dots,\alpha_m$ are linearly dependent" is ( ).</span></p>
           <ul class="options">
             <li><span class="opt-body">对任意一组不全为零的数 $k_1,\dots,k_m$，都有 $k_1\alpha_1+\cdots+k_m\alpha_m=\mathbf{0}$</span></li>
             <li data-correct="true"><span class="opt-body">存在一组不全为零的数 $k_1,\dots,k_m$，使 $k_1\alpha_1+\cdots+k_m\alpha_m=\mathbf{0}$</span></li>
@@ -1332,7 +1342,7 @@
 
         <div class="q" data-type="multi" data-level="基础">
           <p class="q-stem">下列命题正确的是（　）。
-             <span class="en-line" lang="en">Which of the following statements are correct? ( )</span></p>
+             <span class="q-stem-en" lang="en">Which of the following statements are correct? ( )</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">含有零向量的向量组一定线性相关</span></li>
             <li data-correct="true"><span class="opt-body">单个向量 $\alpha$ 线性相关当且仅当 $\alpha=\mathbf{0}$</span></li>
@@ -1344,7 +1354,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">向量组 $\alpha_1=(1,2,3)^T,\ \alpha_2=(2,1,4)^T,\ \alpha_3=(3,3,7)^T$ 的线性相关性是（　）。
-             <span class="en-line" lang="en">The linear dependence of the vectors $\alpha_1=(1,2,3)^T$, $\alpha_2=(2,1,4)^T$, $\alpha_3=(3,3,7)^T$ is ( ).</span></p>
+             <span class="q-stem-en" lang="en">The linear dependence of the vectors $\alpha_1=(1,2,3)^T$, $\alpha_2=(2,1,4)^T$, $\alpha_3=(3,3,7)^T$ is ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">线性相关，且 $\alpha_1+\alpha_2-\alpha_3=\mathbf{0}$</span></li>
             <li><span class="opt-body">线性无关，因为三阶行列式不为零</span></li>
@@ -1356,14 +1366,14 @@
 
         <div class="q" data-type="fill" data-level="中等">
           <p class="q-stem">设 $\alpha_1=(1,1,1)^T,\ \alpha_2=(1,2,3)^T,\ \alpha_3=(1,3,t)^T$。若 $\alpha_1,\alpha_2,\alpha_3$ 线性相关，则 $t=$ ______。
-             <span class="en-line" lang="en">Let $\alpha_1=(1,1,1)^T$, $\alpha_2=(1,2,3)^T$ and $\alpha_3=(1,3,t)^T$. If $\alpha_1,\alpha_2,\alpha_3$ are linearly dependent, then $t=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha_1=(1,1,1)^T$, $\alpha_2=(1,2,3)^T$ and $\alpha_3=(1,3,t)^T$. If $\alpha_1,\alpha_2,\alpha_3$ are linearly dependent, then $t=$ ______.</span></p>
           <div class="q-answer" data-answer="5|５"></div>
           <div class="q-explain">三个 3 维向量，用行列式判断：$\begin{vmatrix}1&1&1\\1&2&3\\1&3&t\end{vmatrix}=1\times(2t-9)-1\times(t-3)+1\times(3-2)=2t-9-t+3+1=t-5$。相关 $\iff$ 行列式 $=0\iff t=5$。（若题目问的是"线性无关"，答案才是 $t\ne5$，注意看清问的是哪一个。）</div>
         </div>
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ 经初等行变换化为 $\begin{pmatrix}1&0&2&1\\0&1&3&2\\0&0&0&0\end{pmatrix}$，则（　）。
-             <span class="en-line" lang="en">Suppose $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ is reduced by elementary row operations to $\begin{pmatrix}1&0&2&1\\0&1&3&2\\0&0&0&0\end{pmatrix}$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Suppose $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ is reduced by elementary row operations to $\begin{pmatrix}1&0&2&1\\0&1&3&2\\0&0&0&0\end{pmatrix}$. Then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(\alpha_1,\alpha_2,\alpha_3,\alpha_4)=2$</span></li>
             <li data-correct="true"><span class="opt-body">$\alpha_1,\alpha_2$ 是向量组的一个极大线性无关组</span></li>
@@ -1375,7 +1385,7 @@
 
         <div class="q" data-type="judge" data-level="中等">
           <p class="q-stem">若向量组 $\alpha_1,\alpha_2,\alpha_3$ 线性无关，把每个向量都去掉最后一个分量后得到 $\gamma_1,\gamma_2,\gamma_3$，则 $\gamma_1,\gamma_2,\gamma_3$ 一定线性无关。
-             <span class="en-line" lang="en">If $\alpha_1,\alpha_2,\alpha_3$ are linearly independent and $\gamma_1,\gamma_2,\gamma_3$ are obtained by deleting the last component of each vector, then $\gamma_1,\gamma_2,\gamma_3$ must be linearly independent.</span></p>
+             <span class="q-stem-en" lang="en">If $\alpha_1,\alpha_2,\alpha_3$ are linearly independent and $\gamma_1,\gamma_2,\gamma_3$ are obtained by deleting the last component of each vector, then $\gamma_1,\gamma_2,\gamma_3$ must be linearly independent.</span></p>
           <ul class="options">
             <li><span class="opt-body">正确</span></li>
             <li data-correct="true"><span class="opt-body">错误</span></li>
@@ -1385,7 +1395,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $\alpha_1,\alpha_2,\alpha_3$ 线性无关，则下列向量组中线性<strong>无关</strong>的是（　）。
-             <span class="en-line" lang="en">Let $\alpha_1,\alpha_2,\alpha_3$ be linearly independent. Which of the following sets of vectors is linearly <strong>independent</strong>? ( )</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha_1,\alpha_2,\alpha_3$ be linearly independent. Which of the following sets of vectors is linearly <strong>independent</strong>? ( )</span></p>
           <ul class="options">
             <li><span class="opt-body">$\alpha_1+\alpha_2,\ \alpha_2+\alpha_3,\ \alpha_1+2\alpha_2+\alpha_3$</span></li>
             <li><span class="opt-body">$\alpha_1-\alpha_2,\ \alpha_2-\alpha_3,\ \alpha_3-\alpha_1$</span></li>
@@ -1397,7 +1407,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，$\alpha$ 为 $n$ 维非零向量，且满足 $A^2\alpha\ne\mathbf{0}$，$A^3\alpha=\mathbf{0}$，则向量组 $\alpha,\ A\alpha,\ A^2\alpha$（　）。
-             <span class="en-line" lang="en">Let $A$ be an $n\times n$ matrix and $\alpha$ a nonzero vector in $\mathbb{R}^n$ with $A^2\alpha\ne\mathbf{0}$ and $A^3\alpha=\mathbf{0}$. Then the set of vectors $\alpha,\ A\alpha,\ A^2\alpha$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix and $\alpha$ a nonzero vector in $\mathbb{R}^n$ with $A^2\alpha\ne\mathbf{0}$ and $A^3\alpha=\mathbf{0}$. Then the set of vectors $\alpha,\ A\alpha,\ A^2\alpha$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">线性无关</span></li>
             <li><span class="opt-body">线性相关</span></li>
@@ -1409,7 +1419,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$B$ 为 $n\times s$ 矩阵，且 $AB=O$，则（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix with $AB=O$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix with $AB=O$. Then ( ).</span></p>
           <ul class="options">
             <li><span class="opt-body">$R(A)+R(B)\le m$</span></li>
             <li data-correct="true"><span class="opt-body">$R(A)+R(B)\le n$</span></li>
@@ -1421,14 +1431,14 @@
 
         <div class="q" data-type="fill" data-level="考研">
           <p class="q-stem">设 $\alpha_1,\alpha_2,\alpha_3$ 线性无关，$\beta_1=\alpha_1+\alpha_2,\ \beta_2=\alpha_2+\alpha_3,\ \beta_3=\alpha_3+k\alpha_1$。若 $\beta_1,\beta_2,\beta_3$ 线性相关，则 $k=$ ______。
-             <span class="en-line" lang="en">Let $\alpha_1,\alpha_2,\alpha_3$ be linearly independent and let $\beta_1=\alpha_1+\alpha_2$, $\beta_2=\alpha_2+\alpha_3$, $\beta_3=\alpha_3+k\alpha_1$. If $\beta_1,\beta_2,\beta_3$ are linearly dependent, then $k=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha_1,\alpha_2,\alpha_3$ be linearly independent and let $\beta_1=\alpha_1+\alpha_2$, $\beta_2=\alpha_2+\alpha_3$, $\beta_3=\alpha_3+k\alpha_1$. If $\beta_1,\beta_2,\beta_3$ are linearly dependent, then $k=$ ______.</span></p>
           <div class="q-answer" data-answer="-1|－1|−1|负一"></div>
           <div class="q-explain">设 $x_1\beta_1+x_2\beta_2+x_3\beta_3=\mathbf{0}$，代入并按 $\alpha$ 合并同类项：$(x_1+kx_3)\alpha_1+(x_1+x_2)\alpha_2+(x_2+x_3)\alpha_3=\mathbf{0}$。由 $\alpha$ 组线性无关得齐次方程组，其系数行列式为 $\begin{vmatrix}1&0&k\\1&1&0\\0&1&1\end{vmatrix}=1\times(1-0)-0\times(1-0)+k\times(1-0)=1+k$。相关 $\iff$ 方程组有非零解 $\iff$ 行列式 $=0\iff k=-1$。代回验证：$\beta_1-\beta_2+\beta_3=(\alpha_1+\alpha_2)-(\alpha_2+\alpha_3)+(\alpha_3-\alpha_1)=\mathbf{0}$ ✓。（若问的是"线性无关"，答案则是 $k\ne-1$，注意看清问法。）</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $4\times3$ 矩阵，$R(A)=3$，$B$ 为 $3\times4$ 矩阵，且 $AB=O$，则 $R(B)=$（　）。
-             <span class="en-line" lang="en">Let $A$ be a $4\times3$ matrix with $R(A)=3$ and let $B$ be a $3\times4$ matrix with $AB=O$. Then $R(B)=$ ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times3$ matrix with $R(A)=3$ and let $B$ be a $3\times4$ matrix with $AB=O$. Then $R(B)=$ ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$0$</span></li>
             <li><span class="opt-body">$1$</span></li>
@@ -1440,7 +1450,7 @@
 
         <div class="q" data-type="judge" data-level="中等">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$B$ 为 $n\times s$ 矩阵，若 $AB=O$，则 $B$ 的每一个列向量都是齐次线性方程组 $Ax=\mathbf{0}$ 的解。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix. If $AB=O$, then every column of $B$ is a solution of the homogeneous system $Ax=\mathbf{0}$.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix and $B$ an $n\times s$ matrix. If $AB=O$, then every column of $B$ is a solution of the homogeneous system $Ax=\mathbf{0}$.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
@@ -1456,7 +1466,11 @@
 
       </div>
 
-      <h2 id="s4-3" data-hours="3">4-3 方程组解的结构</h2>
+      <h2 id="la-s4-3" data-hours="3"
+          data-video-map="la-s4-3"
+          data-video-title="《线性代数》全程教学视频（一高数）">4-3 方程组解的结构</h2>
+
+      <div data-video-entry="la-s4-3" data-video-pos="top"></div>
 
       <p>4-2 节把"一组向量有没有冗余"用秩讲清楚了，但第 3 章还留了一个尾巴：那些"有无穷多解"的方程组，解到底长什么样？无穷多个解不可能逐个列出，必须用有限的形式"打包"写出来。本节给出答案——齐次方程组的解集是一个向量空间（<strong>解空间</strong>），它的维数恰好是 $n-R(A)$；非齐次方程组的解集是它平移得到的，于是<strong>通解 ＝ 一个特解 ＋ 齐次通解</strong>。本节是第 3 章解方程技术的收官，也是第 5 章解 $(A-\lambda E)x=\mathbf{0}$ 求特征向量的直接工具。</p>
 
@@ -1471,7 +1485,7 @@
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 4.7　齐次线性方程组的解空间</div>
         <p>设 $A$ 为 $m\times n$ 矩阵，称 $n$ 元齐次线性方程组 $Ax=\mathbf{0}$ 的全体解向量构成的集合</p>
-        <p>$$S=\{x\in\mathbb{R}^n\mid Ax=\mathbf{0}\}$$</p>
+        <p class="en">$$S=\{x\in\mathbb{R}^n\mid Ax=\mathbf{0}\}$$</p>
         <p>为 $Ax=\mathbf{0}$ 的 <span class="term">解空间</span>（也叫零空间），它是 $\mathbb{R}^n$ 的子空间，即对加法与数乘封闭：</p>
         <ul>
           <li>若 $A\xi_1=\mathbf{0},\ A\xi_2=\mathbf{0}$，则 $A(\xi_1+\xi_2)=A\xi_1+A\xi_2=\mathbf{0}$，所以 $\xi_1+\xi_2\in S$；</li>
@@ -1479,20 +1493,20 @@
         </ul>
         <p>特别地，$\mathbf{0}$ 一定是解——这是"齐次"的好处：解集必非空。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 4.7</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 4.7</span>
              <strong>The Nullspace of a Homogeneous System.</strong>
              Let $A$ be an $m\times n$ matrix. The set of all solution vectors of the homogeneous system
              $Ax=\mathbf{0}$ in $n$ unknowns,</p>
-          <p>$$S=\{x\in\mathbb{R}^n\mid Ax=\mathbf{0}\}$$</p>
-          <p>is called the <span class="en-term">nullspace</span> of $Ax=\mathbf{0}$. It is a subspace of
+          <p class="en">$$S=\{x\in\mathbb{R}^n\mid Ax=\mathbf{0}\}$$</p>
+          <p class="en">is called the <span class="en-term">nullspace</span> of $Ax=\mathbf{0}$. It is a subspace of
              $\mathbb{R}^n$, that is, it is closed under addition and scalar multiplication:</p>
           <ul>
             <li>if $A\xi_1=\mathbf{0}$ and $A\xi_2=\mathbf{0}$, then $A(\xi_1+\xi_2)=A\xi_1+A\xi_2=\mathbf{0}$, so
                 $\xi_1+\xi_2\in S$;</li>
-            <li>if $A\xi=\mathbf{0}$ and $k$ is any scalar, then $A(k\xi)=kA\xi=\mathbf{0}$, so $k\xi\in S$.</li>
+            <li class="en">if $A\xi=\mathbf{0}$ and $k$ is any scalar, then $A(k\xi)=kA\xi=\mathbf{0}$, so $k\xi\in S$.</li>
           </ul>
-          <p>In particular $\mathbf{0}$ is always a solution — this is the advantage of a homogeneous system: its
+          <p class="en">In particular $\mathbf{0}$ is always a solution — this is the advantage of a homogeneous system: its
              solution set is never empty.</p>
         </div>
       </div>
@@ -1508,19 +1522,19 @@
         <p>$$x=k_1\xi_1+k_2\xi_2+\cdots+k_s\xi_s\qquad(k_1,\dots,k_s\ \text{为任意常数})$$</p>
         <p><strong>用 4-2 节的词说</strong>：基础解系就是解空间的一个<strong>极大线性无关组</strong>（一组基），$s$ 就是解空间的维数。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">DEF 4.8</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF 4.8</span>
              <strong>Basis of the Nullspace.</strong>
              Suppose a set of solutions $\xi_1,\xi_2,\dots,\xi_s$ of $Ax=\mathbf{0}$ satisfies</p>
           <ol>
-            <li>$\xi_1,\dots,\xi_s$ are <strong>linearly independent</strong>, and</li>
-            <li><strong>every</strong> solution of $Ax=\mathbf{0}$ can be expressed as a linear combination of
+            <li class="en">$\xi_1,\dots,\xi_s$ are <strong>linearly independent</strong>, and</li>
+            <li class="en"><strong>every</strong> solution of $Ax=\mathbf{0}$ can be expressed as a linear combination of
                 $\xi_1,\dots,\xi_s$.</li>
           </ol>
-          <p>Then $\xi_1,\dots,\xi_s$ is called a <span class="en-term">basis of the nullspace</span> of
+          <p class="en">Then $\xi_1,\dots,\xi_s$ is called a <span class="en-term">basis of the nullspace</span> of
              $Ax=\mathbf{0}$. In that case the <span class="en-term">general solution</span> of $Ax=\mathbf{0}$ is</p>
-          <p>$$x=k_1\xi_1+k_2\xi_2+\cdots+k_s\xi_s\qquad(k_1,\dots,k_s\ \text{arbitrary constants})$$</p>
-          <p><strong>In the language of &sect;4-2:</strong> a basis of the nullspace is a maximal linearly independent
+          <p class="en">$$x=k_1\xi_1+k_2\xi_2+\cdots+k_s\xi_s\qquad(k_1,\dots,k_s\ \text{arbitrary constants})$$</p>
+          <p class="en"><strong>In the language of &sect;4-2:</strong> a basis of the nullspace is a maximal linearly independent
              set in the nullspace, i.e. a basis in the usual sense, and $s$ is the dimension of the nullspace.</p>
         </div>
       </div>
@@ -1536,20 +1550,20 @@
         <p>$$\dim S=n-R(A),\qquad \text{基础解系所含向量个数}=n-R(A)$$</p>
         <p><strong>为什么是 $n-r$</strong>：行最简形里有 $r$ 个主元变量、$n-r$ 个自由未知量。每让一个自由未知量取 $1$、其余取 $0$，就得到 1 个解；这样构造的 $n-r$ 个解线性无关，且任一解都能由它们表示，故构成基础解系。这段推理本身就是<strong>求基础解系的操作方法</strong>。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 4.5</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 4.5</span>
              <strong>The Nullspace Has Dimension $n-R(A)$.</strong>
              Let $A$ be an $m\times n$ matrix with $R(A)=r$. Then</p>
           <ul>
-            <li>if $r=n$, the system $Ax=\mathbf{0}$ has <strong>only the zero solution</strong>, the nullspace is
+            <li class="en">if $r=n$, the system $Ax=\mathbf{0}$ has <strong>only the zero solution</strong>, the nullspace is
                 $\{\mathbf{0}\}$, its dimension is $0$, and there is no basis of the nullspace;</li>
-            <li>if $r &lt; n$, the system has <strong>infinitely many solutions</strong>, every basis of the nullspace
+            <li class="en">if $r &lt; n$, the system has <strong>infinitely many solutions</strong>, every basis of the nullspace
                 contains exactly $n-r$ vectors, and $\dim S=n-r$. The general solution then contains $n-r$ arbitrary
                 constants.</li>
           </ul>
           <p><strong>In one formula:</strong></p>
           <p>$$\dim S=n-R(A),\qquad \text{number of vectors in a basis of the nullspace}=n-R(A)$$</p>
-          <p><strong>Why $n-r$.</strong> The reduced row echelon form has $r$ pivot variables and $n-r$ free
+          <p class="en"><strong>Why $n-r$.</strong> The reduced row echelon form has $r$ pivot variables and $n-r$ free
              variables. Setting one free variable to $1$ and the others to $0$ produces one solution; the $n-r$
              solutions obtained in this way are linearly independent and every solution is a linear combination of
              them, so they form a basis of the nullspace. This argument is itself the <strong>procedure</strong> for
@@ -1567,21 +1581,21 @@
           <li>把每个 $\xi_j$ 代回原方程组验算，必须都等于 $\mathbf{0}$。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 4.4</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 4.4</span>
              <strong>Finding a Basis of the Nullspace of $Ax=\mathbf{0}$, and the General Solution.</strong></p>
           <ol>
-            <li>Reduce the coefficient matrix $A$ to <strong>reduced row echelon form</strong> by elementary row
+            <li class="en">Reduce the coefficient matrix $A$ to <strong>reduced row echelon form</strong> by elementary row
                 operations. (Reduced form is required; stopping at echelon form gives wrong coefficients.)</li>
-            <li>Count the nonzero rows, $r=R(A)$, and check that $n-r&gt;0$. The pivot columns correspond to
+            <li class="en">Count the nonzero rows, $r=R(A)$, and check that $n-r&gt;0$. The pivot columns correspond to
                 <strong>pivot variables</strong> and the other $n-r$ columns to <strong>free variables</strong>;
                 express the pivot variables in terms of the free ones.</li>
-            <li>Set the free variables, one at a time, to the standard unit vectors
+            <li class="en">Set the free variables, one at a time, to the standard unit vectors
                 $(1,0,\dots,0),(0,1,\dots,0),\dots$ — $n-r$ times in all — solving for the pivot variables each
                 time to obtain one solution vector $\xi_j$.</li>
-            <li>$\xi_1,\dots,\xi_{n-r}$ form a basis of the nullspace, and the general solution is
+            <li class="en">$\xi_1,\dots,\xi_{n-r}$ form a basis of the nullspace, and the general solution is
                 $x=k_1\xi_1+\cdots+k_{n-r}\xi_{n-r}$.</li>
-            <li>Substitute each $\xi_j$ back into the original system as a check; all of them must give
+            <li class="en">Substitute each $\xi_j$ back into the original system as a check; all of them must give
                 $\mathbf{0}$.</li>
           </ol>
         </div>
@@ -1599,7 +1613,7 @@
           <div class="solution">
             <p class="solution-label">解</p>
             <p>对系数矩阵 $A$ 做初等行变换，目标是行最简形：</p>
-            <p>$$A=\begin{pmatrix}1&1&-1&1\\1&-1&5&-3\\1&-2&8&-5\end{pmatrix}\xrightarrow[r_3-r_1]{r_2-r_1}\begin{pmatrix}1&1&-1&1\\0&-2&6&-4\\0&-3&9&-6\end{pmatrix}$$</p>
+            <p class="en">$$A=\begin{pmatrix}1&1&-1&1\\1&-1&5&-3\\1&-2&8&-5\end{pmatrix}\xrightarrow[r_3-r_1]{r_2-r_1}\begin{pmatrix}1&1&-1&1\\0&-2&6&-4\\0&-3&9&-6\end{pmatrix}$$</p>
             <p>把第 2 行除以 $-2$（非零数乘，属于初等行变换），再把第 3 行化零：</p>
             <p>$$\xrightarrow{r_2\div(-2)}\begin{pmatrix}1&1&-1&1\\0&1&-3&2\\0&-3&9&-6\end{pmatrix}\xrightarrow{r_3+3r_2}\begin{pmatrix}1&1&-1&1\\0&1&-3&2\\0&0&0&0\end{pmatrix}$$</p>
             <p>再做 $r_1-r_2$ 得行最简形：</p>
@@ -1631,35 +1645,35 @@
         <p><em>为什么这就是全部解</em>：一方面由性质 4.11，形如 $\eta^*+\sum k_i\xi_i$ 的都是解；另一方面任一解 $\eta$ 减去 $\eta^*$（性质 4.10）是齐次解，可写成 $\sum k_i\xi_i$。两个方向合起来就是等号。</p>
         <p><strong>几何图像</strong>：解集是一个不过原点的"平面"（仿射子空间），它就是齐次解空间这张过原点的平面沿着特解 $\eta^*$ 平移得到的。<strong>齐次解空间过原点，非齐次解集不过原点</strong>——这句话是理解本节的关键。</p>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">THM 4.6</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM 4.6</span>
              <strong>The Structure of the Solutions of $Ax=b$.</strong></p>
           <p><span class="thm-name">Solvability</span> $Ax=b$ is solvable $\iff R(A)=R(\bar A)=R(A,b)$.</p>
-          <p><span class="thm-name">Property 4.10 (the difference of two solutions solves the homogeneous
+          <p class="en"><span class="thm-name">Property 4.10 (the difference of two solutions solves the homogeneous
              system)</span> If $\eta_1,\eta_2$ are both solutions of $Ax=b$, then $\eta_1-\eta_2$ solves
              $Ax=\mathbf{0}$.</p>
           <p><em>Proof.</em> $A(\eta_1-\eta_2)=A\eta_1-A\eta_2=b-b=\mathbf{0}$.</p>
-          <p><span class="thm-name">Property 4.11 (a solution plus a homogeneous solution is still a solution)</span>
+          <p class="en"><span class="thm-name">Property 4.11 (a solution plus a homogeneous solution is still a solution)</span>
              If $\eta$ solves $Ax=b$ and $\xi$ solves $Ax=\mathbf{0}$, then $\eta+\xi$ solves $Ax=b$.</p>
           <p><em>Proof.</em> $A(\eta+\xi)=b+\mathbf{0}=b$.</p>
-          <p><span class="thm-name">Property 4.12 (when a combination of solutions is again a solution)</span>
+          <p class="en"><span class="thm-name">Property 4.12 (when a combination of solutions is again a solution)</span>
              Let $\eta_1,\dots,\eta_s$ all solve $Ax=b$ and let $k_1,\dots,k_s$ be constants. Then
              $k_1\eta_1+\cdots+k_s\eta_s$ solves $Ax=b$ $\iff k_1+\cdots+k_s=1$.</p>
-          <p><em>Proof.</em> $A(\sum k_i\eta_i)=\sum k_iA\eta_i=(\sum k_i)b$, which equals $b$ exactly when
+          <p class="en"><em>Proof.</em> $A(\sum k_i\eta_i)=\sum k_iA\eta_i=(\sum k_i)b$, which equals $b$ exactly when
              $\sum k_i=1$ (for $b\ne\mathbf{0}$). In particular $\frac{\eta_1+\eta_2}{2}$ and $2\eta_1-\eta_2$ are
              solutions.</p>
-          <p><span class="thm-name">Theorem 4.6 (structure of the general solution)</span>
+          <p class="en"><span class="thm-name">Theorem 4.6 (structure of the general solution)</span>
              Let $\eta^*$ be one <span class="en-term">particular solution</span> of $Ax=b$, and let
              $\xi_1,\dots,\xi_{n-r}$ be a basis of the nullspace of the corresponding homogeneous system
              $Ax=\mathbf{0}$ (with $r=R(A)$). Then the <span class="en-term">general solution</span> of $Ax=b$ is</p>
-          <p>$$x=\eta^*+k_1\xi_1+k_2\xi_2+\cdots+k_{n-r}\xi_{n-r}\qquad(k_i\ \text{arbitrary constants})$$</p>
-          <p>That is: <strong>general solution of $Ax=b$ = one particular solution + general solution of
+          <p class="en">$$x=\eta^*+k_1\xi_1+k_2\xi_2+\cdots+k_{n-r}\xi_{n-r}\qquad(k_i\ \text{arbitrary constants})$$</p>
+          <p class="en">That is: <strong>general solution of $Ax=b$ = one particular solution + general solution of
              $Ax=\mathbf{0}$.</strong></p>
-          <p><em>Why these are all the solutions.</em> On one hand, by Property 4.11 every vector of the form
+          <p class="en"><em>Why these are all the solutions.</em> On one hand, by Property 4.11 every vector of the form
              $\eta^*+\sum k_i\xi_i$ is a solution. On the other hand, any solution $\eta$ minus $\eta^*$ is a
              homogeneous solution by Property 4.10, hence equals $\sum k_i\xi_i$. The two directions together give
              equality.</p>
-          <p><strong>Geometric picture.</strong> The solution set is a plane not passing through the origin (an affine
+          <p class="en"><strong>Geometric picture.</strong> The solution set is a plane not passing through the origin (an affine
              subspace): it is the nullspace plane through the origin, translated by the particular solution
              $\eta^*$. <strong>The nullspace passes through the origin; the solution set of $Ax=b$ does not</strong> —
              this sentence is the key to the whole section.</p>
@@ -1685,19 +1699,19 @@
           <li>写出 $x=\eta^*+k_1\xi_1+\cdots+k_{n-r}\xi_{n-r}$，并代回原方程组验算。</li>
         </ol>
 
-        <div class="bi-en" lang="en">
-          <p><span class="bi-en-label">METHOD 4.5</span>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD 4.5</span>
              <strong>Finding the General Solution of $Ax=b$.</strong></p>
           <ol>
-            <li>Form the <strong>augmented matrix</strong> $\bar A=(A\mid b)$ and reduce it to reduced row echelon
+            <li class="en">Form the <strong>augmented matrix</strong> $\bar A=(A\mid b)$ and reduce it to reduced row echelon
                 form by elementary row operations.</li>
-            <li>If a row $(0,\dots,0\mid d)$ with $d\ne0$ appears, then $R(A)&lt;R(\bar A)$ and there is
+            <li class="en">If a row $(0,\dots,0\mid d)$ with $d\ne0$ appears, then $R(A)&lt;R(\bar A)$ and there is
                 <strong>no solution</strong>; stop.</li>
-            <li>If solutions exist, $r=R(A)=R(\bar A)$ and there are $n-r$ free variables. Set all free variables to
+            <li class="en">If solutions exist, $r=R(A)=R(\bar A)$ and there are $n-r$ free variables. Set all free variables to
                 $0$ and solve for the pivot variables to obtain a particular solution $\eta^*$.</li>
-            <li>Replace the constant column by $0$ and find a basis $\xi_1,\dots,\xi_{n-r}$ of the nullspace of
+            <li class="en">Replace the constant column by $0$ and find a basis $\xi_1,\dots,\xi_{n-r}$ of the nullspace of
                 $Ax=\mathbf{0}$ by the previous method.</li>
-            <li>Write $x=\eta^*+k_1\xi_1+\cdots+k_{n-r}\xi_{n-r}$ and check by substituting into the original
+            <li class="en">Write $x=\eta^*+k_1\xi_1+\cdots+k_{n-r}\xi_{n-r}$ and check by substituting into the original
                 system.</li>
           </ol>
         </div>
@@ -1746,7 +1760,7 @@
             <p><strong>第二步：验证它们线性无关。</strong>设 $k_1(\eta_2-\eta_1)+k_2(\eta_3-\eta_1)=\mathbf{0}$，看第 3、4 个分量即得 $k_1=0,\ k_2=0$，所以这两个差向量<strong>线性无关</strong>。</p>
             <p><strong>第三步：数出基础解系应有的个数。</strong>$n=4$（4 元方程组），$R(A)=2$，故 $\dim S=n-R(A)=2$。已有 2 个线性无关的齐次解，它们恰好构成 $Ax=\mathbf{0}$ 的一个<strong>基础解系</strong>。</p>
             <p><strong>第四步：写出通解。</strong>取 $\eta_1$ 为特解：</p>
-            <p>$$x=\eta_1+k_1(\eta_2-\eta_1)+k_2(\eta_3-\eta_1)=\begin{pmatrix}1\\2\\0\\0\end{pmatrix}+k_1\begin{pmatrix}-2\\3\\1\\0\end{pmatrix}+k_2\begin{pmatrix}1\\-2\\0\\1\end{pmatrix}$$</p>
+            <p class="en">$$x=\eta_1+k_1(\eta_2-\eta_1)+k_2(\eta_3-\eta_1)=\begin{pmatrix}1\\2\\0\\0\end{pmatrix}+k_1\begin{pmatrix}-2\\3\\1\\0\end{pmatrix}+k_2\begin{pmatrix}1\\-2\\0\\1\end{pmatrix}$$</p>
             <p>（$k_1,k_2$ 为任意常数。）</p>
             <p><strong>验算</strong>：把 $k_1=0,k_2=1$ 代入得 $(2,0,0,1)^T=\eta_3$ ✓；取 $k_1=1,k_2=1$ 得 $(0,3,1,1)^T$，它也应该满足同一个方程组（虽然我们没写出 $A$，但由构造方式保证）✓</p>
             <p><strong>考点</strong>：① 会用"两解之差是齐次解"造解；② 会数 $n-R(A)$ 确定基础解系应有的个数（本题为 2），不要多造也不要少造；③ 会验证造出的解线性无关。漏掉②③会被扣分。本题答案与例 4.12 一致，说明解的结构信息足以完全决定解集；反过来给通解也能反求 $R(A)$、$n$ 甚至 $A$。</p>
@@ -1766,10 +1780,10 @@
             <p class="solution-label">证明</p>
             <p>要证明两个集合相等，<strong>两个方向都要证</strong>：先证"形如右式的都是解"（右 $\subseteq$ 左），再证"每个解都能写成右式"（左 $\subseteq$ 右）。</p>
             <p><strong>方向一：右 $\subseteq$ 左。</strong>直接计算最干脆：</p>
-            <p>$$Ax=A\eta^*+\sum_{i=1}^{n-r}k_iA\xi_i=b+\sum_{i=1}^{n-r}k_i\cdot\mathbf{0}=b$$</p>
+            <p class="en">$$Ax=A\eta^*+\sum_{i=1}^{n-r}k_iA\xi_i=b+\sum_{i=1}^{n-r}k_i\cdot\mathbf{0}=b$$</p>
             <p>所以 $x$ 确实是 $Ax=b$ 的解。</p>
             <p><strong>方向二：左 $\subseteq$ 右。</strong>设 $\eta$ 是 $Ax=b$ 的<strong>任意</strong>一个解，则</p>
-            <p>$$A(\eta-\eta^*)=A\eta-A\eta^*=b-b=\mathbf{0}$$</p>
+            <p class="en">$$A(\eta-\eta^*)=A\eta-A\eta^*=b-b=\mathbf{0}$$</p>
             <p>所以 $\eta-\eta^*$ 是 $Ax=\mathbf{0}$ 的解。由基础解系的<strong>定义</strong>（齐次方程组的任一解都可由基础解系线性表示），存在常数 $k_1,\dots,k_{n-r}$ 使</p>
             <p>$$\eta-\eta^*=k_1\xi_1+\cdots+k_{n-r}\xi_{n-r}$$</p>
             <p>于是 $\eta=\eta^*+k_1\xi_1+\cdots+k_{n-r}\xi_{n-r}$，即 $\eta$ 可以写成题目中的形式。</p>
@@ -1835,7 +1849,7 @@
               <p><strong>第三步：解出 $r$。</strong>由第一式 $r_2=-r_1$，由第二式 $r_3=-r_1$，故</p>
               <p>$$r=r_1(1,-1,-1)$$</p>
               <p>取 $r_1=1$ 得 $r=(1,-1,-1)$，于是可取</p>
-              <p>$$A=\begin{pmatrix}1&-1&-1\\0&0&0\\0&0&0\end{pmatrix}$$</p>
+              <p class="en">$$A=\begin{pmatrix}1&-1&-1\\0&0&0\\0&0&0\end{pmatrix}$$</p>
               <p><strong>第四步：验算。</strong>$A\xi_1=1\times1+(-1)\times1+(-1)\times0=0$ ✓；$A\xi_2=1\times1+(-1)\times0+(-1)\times1=0$ ✓；$R(A)=1=3-2$ ✓。</p>
               <p>更一般地，$A$ 的每一行都必须是 $(1,-1,-1)$ 的倍数（至少一行非零），例如 $A=\begin{pmatrix}1&-1&-1\\2&-2&-2\\0&0&0\end{pmatrix}$ 也满足条件。</p>
               <p class="solution-label">易错提醒</p>
@@ -1855,9 +1869,9 @@
             <div class="solution">
               <p class="solution-label">解</p>
               <p><strong>第一步：把 $Ax$ 按列展开。</strong>设 $x=(x_1,x_2,x_3,x_4)^T$，则</p>
-              <p>$$Ax=x_1\alpha_1+x_2\alpha_2+x_3\alpha_3+x_4\alpha_4$$</p>
+              <p class="en">$$Ax=x_1\alpha_1+x_2\alpha_2+x_3\alpha_3+x_4\alpha_4$$</p>
               <p><strong>第二步：代入列关系并按 $\alpha_1,\alpha_2$ 合并。</strong>把 $\alpha_3=\alpha_1+2\alpha_2$、$\alpha_4=2\alpha_1+\alpha_2$ 代入：</p>
-              <p>$$Ax=x_1\alpha_1+x_2\alpha_2+x_3(\alpha_1+2\alpha_2)+x_4(2\alpha_1+\alpha_2)$$</p>
+              <p class="en">$$Ax=x_1\alpha_1+x_2\alpha_2+x_3(\alpha_1+2\alpha_2)+x_4(2\alpha_1+\alpha_2)$$</p>
               <p>$$=(x_1+x_3+2x_4)\alpha_1+(x_2+2x_3+x_4)\alpha_2$$</p>
               <p><strong>第三步：用无关性列方程。</strong>$\alpha_1,\alpha_2$ 线性无关，故 $Ax=\mathbf{0}$ 等价于</p>
               <p>$$\begin{cases}x_1+x_3+2x_4=0\\ x_2+2x_3+x_4=0\end{cases}\quad\Longrightarrow\quad x_1=-x_3-2x_4,\quad x_2=-2x_3-x_4$$</p>
@@ -1903,7 +1917,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $\xi_1,\dots,\xi_s$ 是齐次线性方程组 $Ax=\mathbf{0}$ 的一组解，则它们构成 $Ax=\mathbf{0}$ 的一个基础解系，当且仅当（　）。
-             <span class="en-line" lang="en">Let $\xi_1,\dots,\xi_s$ be solutions of the homogeneous system $Ax=\mathbf{0}$. They form a basis of the nullspace of $Ax=\mathbf{0}$ if and only if ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $\xi_1,\dots,\xi_s$ be solutions of the homogeneous system $Ax=\mathbf{0}$. They form a basis of the nullspace of $Ax=\mathbf{0}$ if and only if ( ).</span></p>
           <ul class="options">
             <li><span class="opt-body">$\xi_1,\dots,\xi_s$ 两两正交</span></li>
             <li data-correct="true"><span class="opt-body">$\xi_1,\dots,\xi_s$ 线性无关，且 $Ax=\mathbf{0}$ 的任一解都可由它们线性表示</span></li>
@@ -1915,7 +1929,7 @@
 
         <div class="q" data-type="judge" data-level="基础">
           <p class="q-stem">齐次线性方程组 $Ax=\mathbf{0}$ 的任意两个解之和仍是它的解，任意一个解的 $k$ 倍仍是它的解。
-             <span class="en-line" lang="en">The sum of any two solutions of the homogeneous system $Ax=\mathbf{0}$ is again a solution, and any scalar multiple of a solution is again a solution.</span></p>
+             <span class="q-stem-en" lang="en">The sum of any two solutions of the homogeneous system $Ax=\mathbf{0}$ is again a solution, and any scalar multiple of a solution is again a solution.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
@@ -1925,7 +1939,7 @@
 
         <div class="q" data-type="single" data-level="基础">
           <p class="q-stem">设 $A$ 为 $4\times5$ 矩阵，且 $R(A)=3$，则齐次线性方程组 $Ax=\mathbf{0}$ 的基础解系所含向量的个数为（　）。
-             <span class="en-line" lang="en">Let $A$ be a $4\times5$ matrix with $R(A)=3$. The number of vectors in a basis of the nullspace of $Ax=\mathbf{0}$ is ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times5$ matrix with $R(A)=3$. The number of vectors in a basis of the nullspace of $Ax=\mathbf{0}$ is ( ).</span></p>
           <ul class="options">
             <li><span class="opt-body">$1$</span></li>
             <li data-correct="true"><span class="opt-body">$2$</span></li>
@@ -1937,7 +1951,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$b\ne\mathbf{0}$，下列关于 $Ax=b$ 的解的说法正确的是（　）。
-             <span class="en-line" lang="en">Let $A$ be an $m\times n$ matrix with $b\ne\mathbf{0}$. Which of the following statements about the solutions of $Ax=b$ are correct? ( )</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix with $b\ne\mathbf{0}$. Which of the following statements about the solutions of $Ax=b$ are correct? ( )</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">若 $\eta_1,\eta_2$ 都是 $Ax=b$ 的解，则 $\eta_1-\eta_2$ 是 $Ax=\mathbf{0}$ 的解</span></li>
             <li data-correct="true"><span class="opt-body">若 $\eta$ 是 $Ax=b$ 的解，$\xi$ 是 $Ax=\mathbf{0}$ 的解，则 $\eta+\xi$ 是 $Ax=b$ 的解</span></li>
@@ -1949,14 +1963,14 @@
 
         <div class="q" data-type="fill" data-level="中等">
           <p class="q-stem">设 $4$ 元非齐次线性方程组 $Ax=b$ 有无穷多解，且 $R(A)=2$，则其通解中含 ______ 个任意常数（独立参数）。
-             <span class="en-line" lang="en">The nonhomogeneous system $Ax=b$ in $4$ unknowns has infinitely many solutions, with $R(A)=2$. Its general solution contains ______ arbitrary constants (independent parameters).</span></p>
+             <span class="q-stem-en" lang="en">The nonhomogeneous system $Ax=b$ in $4$ unknowns has infinitely many solutions, with $R(A)=2$. Its general solution contains ______ arbitrary constants (independent parameters).</span></p>
           <div class="q-answer" data-answer="2|２|二"></div>
           <div class="q-explain">通解中独立参数的个数 $=$ 自由未知量个数 $=n-R(A)=4-2=2$。注意不要看到 $R(A)=2$ 就写 2：把条件换成 $R(A)=1$，答案就是 $4-1=3$。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $\eta_1,\eta_2,\eta_3$ 是 $4$ 元非齐次方程组 $Ax=b$（$b\ne\mathbf{0}$）的三个解，且 $R(A)=2$，则 $Ax=b$ 的通解是（　）。
-             <span class="en-line" lang="en">Let $\eta_1,\eta_2,\eta_3$ be three solutions of the nonhomogeneous system $Ax=b$ in $4$ unknowns ($b\ne\mathbf{0}$), with $R(A)=2$. The general solution of $Ax=b$ is ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $\eta_1,\eta_2,\eta_3$ be three solutions of the nonhomogeneous system $Ax=b$ in $4$ unknowns ($b\ne\mathbf{0}$), with $R(A)=2$. The general solution of $Ax=b$ is ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\eta_1+k_1(\eta_2-\eta_1)+k_2(\eta_3-\eta_1)$，$k_1,k_2$ 为任意常数</span></li>
             <li><span class="opt-body">$\eta_1+k(\eta_2-\eta_1)$，$k$ 为任意常数</span></li>
@@ -1968,7 +1982,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ 为 $3\times4$ 矩阵，$R(A)=2$，$B$ 为 $4\times3$ 矩阵且 $AB=O$，则（　）。
-             <span class="en-line" lang="en">Let $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ be a $3\times4$ matrix with $R(A)=2$, and let $B$ be a $4\times3$ matrix with $AB=O$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ be a $3\times4$ matrix with $R(A)=2$, and let $B$ be a $4\times3$ matrix with $AB=O$. Then ( ).</span></p>
           <ul class="options">
             <li><span class="opt-body">$R(B)=0$</span></li>
             <li data-correct="true"><span class="opt-body">$R(B)\le2$</span></li>
@@ -1980,7 +1994,7 @@
 
         <div class="q" data-type="multi" data-level="考研">
           <p class="q-stem">设 $A$ 为 $3\times4$ 矩阵，$R(A)=2$，$B$ 为 $4\times3$ 矩阵，$AB=O$，则（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix with $R(A)=2$ and $B$ a $4\times3$ matrix with $AB=O$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times4$ matrix with $R(A)=2$ and $B$ a $4\times3$ matrix with $AB=O$. Then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(B)\le2$</span></li>
             <li data-correct="true"><span class="opt-body">$B$ 的每一列都是 $Ax=\mathbf{0}$ 的解</span></li>
@@ -1992,7 +2006,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $3$ 元齐次线性方程组 $Ax=\mathbf{0}$ 的基础解系为 $\xi_1=(1,1,1)^T,\ \xi_2=(1,2,3)^T$，则 $A$ 可以是（　）。
-             <span class="en-line" lang="en">The homogeneous system $Ax=\mathbf{0}$ in $3$ unknowns has the basis of its nullspace $\xi_1=(1,1,1)^T,\ \xi_2=(1,2,3)^T$. Then $A$ can be ( ).</span></p>
+             <span class="q-stem-en" lang="en">The homogeneous system $Ax=\mathbf{0}$ in $3$ unknowns has the basis of its nullspace $\xi_1=(1,1,1)^T,\ \xi_2=(1,2,3)^T$. Then $A$ can be ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\begin{pmatrix}1&-2&1\\0&0&0\\0&0&0\end{pmatrix}$</span></li>
             <li><span class="opt-body">$\begin{pmatrix}1&1&1\\0&0&0\\0&0&0\end{pmatrix}$</span></li>
@@ -2004,7 +2018,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ 为 $3\times4$ 矩阵，$R(A)=2$，$\alpha_1,\alpha_2$ 线性无关，且 $\alpha_3=2\alpha_1-\alpha_2$，$\alpha_4=\alpha_1+\alpha_2$，则 $Ax=\mathbf{0}$ 的一个基础解系为（　）。
-             <span class="en-line" lang="en">Let $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ be a $3\times4$ matrix with $R(A)=2$ such that $\alpha_1,\alpha_2$ are linearly independent, $\alpha_3=2\alpha_1-\alpha_2$ and $\alpha_4=\alpha_1+\alpha_2$. A basis of the nullspace of $Ax=\mathbf{0}$ is ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ be a $3\times4$ matrix with $R(A)=2$ such that $\alpha_1,\alpha_2$ are linearly independent, $\alpha_3=2\alpha_1-\alpha_2$ and $\alpha_4=\alpha_1+\alpha_2$. A basis of the nullspace of $Ax=\mathbf{0}$ is ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$(-2,1,1,0)^T,\ (-1,-1,0,1)^T$</span></li>
             <li><span class="opt-body">$(2,-1,1,0)^T,\ (1,1,0,1)^T$</span></li>
@@ -2016,7 +2030,7 @@
 
         <div class="q" data-type="judge" data-level="中等">
           <p class="q-stem">设 $A$ 为 $4\times5$ 矩阵，且 $R(A)=3$，则 $Ax=\mathbf{0}$ 的任意两个线性无关的解都构成它的一个基础解系。
-             <span class="en-line" lang="en">Let $A$ be a $4\times5$ matrix with $R(A)=3$. Then any two linearly independent solutions of $Ax=\mathbf{0}$ form a basis of its nullspace.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times5$ matrix with $R(A)=3$. Then any two linearly independent solutions of $Ax=\mathbf{0}$ form a basis of its nullspace.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
@@ -2040,7 +2054,7 @@
 
         <div class="q" data-type="judge" data-level="基础">
           <p class="q-stem">设 $A$ 为 $3\times4$ 矩阵，$\bar A=(A\mid b)$ 为增广矩阵，且 $R(A)=R(\bar A)=2$，则方程组 $Ax=b$ 有无穷多解。
-             <span class="en-line" lang="en">Let $A$ be a $3\times4$ matrix and $\bar A=(A\mid b)$ its augmented matrix, with $R(A)=R(\bar A)=2$. Then the system $Ax=b$ has infinitely many solutions.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times4$ matrix and $\bar A=(A\mid b)$ its augmented matrix, with $R(A)=R(\bar A)=2$. Then the system $Ax=b$ has infinitely many solutions.</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
@@ -2050,7 +2064,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $\alpha_1=(1,1,1)^T,\ \alpha_2=(1,2,3)^T,\ \alpha_3=(1,3,t)^T$。若向量组 $\alpha_1,\alpha_2,\alpha_3$ 的秩等于 $2$，则（　）。
-             <span class="en-line" lang="en">Let $\alpha_1=(1,1,1)^T$, $\alpha_2=(1,2,3)^T$ and $\alpha_3=(1,3,t)^T$. If the rank of the set $\alpha_1,\alpha_2,\alpha_3$ equals $2$, then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha_1=(1,1,1)^T$, $\alpha_2=(1,2,3)^T$ and $\alpha_3=(1,3,t)^T$. If the rank of the set $\alpha_1,\alpha_2,\alpha_3$ equals $2$, then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$t=5$，且 $\alpha_3=2\alpha_2-\alpha_1$</span></li>
             <li><span class="opt-body">$t=5$，且 $\alpha_3=\alpha_1+\alpha_2$</span></li>
@@ -2062,7 +2076,7 @@
 
         <div class="q" data-type="multi" data-level="中等">
           <p class="q-stem">下列命题正确的是（　）。
-             <span class="en-line" lang="en">Which of the following statements are correct? ( )</span></p>
+             <span class="q-stem-en" lang="en">Which of the following statements are correct? ( )</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">若向量组 $(I)$ 可由 $(II)$ 线性表示且 $R(I)=R(II)$，则 $(I)$ 与 $(II)$ 等价</span></li>
             <li data-correct="true"><span class="opt-body">矩阵的秩等于其行向量组的秩，也等于其列向量组的秩</span></li>
@@ -2074,7 +2088,7 @@
 
         <div class="q" data-type="single" data-level="中等">
           <p class="q-stem">设 $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ 为 $3\times4$ 矩阵，$\alpha_1,\alpha_2$ 线性无关，且 $\alpha_3=\alpha_1+\alpha_2$，$\alpha_4=\alpha_1-\alpha_2$，则 $Ax=\mathbf{0}$ 的一个基础解系为（　）。
-             <span class="en-line" lang="en">Let $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ be a $3\times4$ matrix such that $\alpha_1,\alpha_2$ are linearly independent, $\alpha_3=\alpha_1+\alpha_2$ and $\alpha_4=\alpha_1-\alpha_2$. A basis of the nullspace of $Ax=\mathbf{0}$ is ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ be a $3\times4$ matrix such that $\alpha_1,\alpha_2$ are linearly independent, $\alpha_3=\alpha_1+\alpha_2$ and $\alpha_4=\alpha_1-\alpha_2$. A basis of the nullspace of $Ax=\mathbf{0}$ is ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$(-1,-1,1,0)^T,\ (-1,1,0,1)^T$</span></li>
             <li><span class="opt-body">$(1,1,1,0)^T,\ (1,-1,0,1)^T$</span></li>
@@ -2086,7 +2100,7 @@
 
         <div class="q" data-type="multi" data-level="考研">
           <p class="q-stem">下列命题正确的是（　）。
-             <span class="en-line" lang="en">Which of the following statements are correct? ( )</span></p>
+             <span class="q-stem-en" lang="en">Which of the following statements are correct? ( )</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">设 $A$ 为 $m\times n$ 矩阵，$B$ 为 $n\times s$ 矩阵，若 $AB=O$，则 $R(A)+R(B)\le n$</span></li>
             <li data-correct="true"><span class="opt-body">若 $A$ 为 $n$ 阶矩阵且 $R(A)=n$，则 $Ax=\mathbf{0}$ 只有零解</span></li>
@@ -2098,7 +2112,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $\alpha_1,\alpha_2,\alpha_3$ 线性无关，则下列向量组中线性<strong>无关</strong>的是（　）。
-             <span class="en-line" lang="en">Let $\alpha_1,\alpha_2,\alpha_3$ be linearly independent. Which of the following sets of vectors is linearly <strong>independent</strong>? ( )</span></p>
+             <span class="q-stem-en" lang="en">Let $\alpha_1,\alpha_2,\alpha_3$ be linearly independent. Which of the following sets of vectors is linearly <strong>independent</strong>? ( )</span></p>
           <ul class="options">
             <li><span class="opt-body">$\alpha_1-\alpha_2,\ \alpha_2-\alpha_3,\ \alpha_3-\alpha_1$</span></li>
             <li><span class="opt-body">$\alpha_1+\alpha_2,\ \alpha_2+\alpha_3,\ \alpha_1+2\alpha_2+\alpha_3$</span></li>
@@ -2110,14 +2124,14 @@
 
         <div class="q" data-type="fill" data-level="考研">
           <p class="q-stem">设 $A$ 为 $4$ 阶矩阵，满足 $A^2=E$（$E$ 为 4 阶单位矩阵），则 $R(A+E)+R(A-E)=$ ______。
-             <span class="en-line" lang="en">Let $A$ be a $4\times4$ matrix with $A^2=E$ (where $E$ is the $4\times4$ identity matrix). Then $R(A+E)+R(A-E)=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times4$ matrix with $A^2=E$ (where $E$ is the $4\times4$ identity matrix). Then $R(A+E)+R(A-E)=$ ______.</span></p>
           <div class="q-answer" data-answer="4|４|四"></div>
           <div class="q-explain">一方面，$(A+E)(A-E)=A^2-E=O$，故 $A-E$ 的每一列都是 $(A+E)x=\mathbf{0}$ 的解，$R(A-E)\le4-R(A+E)$，即 $R(A+E)+R(A-E)\le4$。另一方面，$R(A+E)+R(A-E)\ge R\big((A+E)-(A-E)\big)=R(2E)=4$。两边夹逼得结果 $=4$。（一般地，$n$ 阶矩阵满足 $A^2=E$ 时有 $R(A+E)+R(A-E)=n$。）</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $\eta_1,\eta_2$ 是 $n$ 元非齐次方程组 $Ax=b$（$b\ne\mathbf{0}$）的两个不同的解，$\xi_1,\xi_2$ 是 $Ax=\mathbf{0}$ 的一个基础解系，则 $Ax=b$ 的通解是（　）。
-             <span class="en-line" lang="en">Let $\eta_1,\eta_2$ be two distinct solutions of the nonhomogeneous system $Ax=b$ in $n$ unknowns ($b\ne\mathbf{0}$), and let $\xi_1,\xi_2$ be a basis of the nullspace of $Ax=\mathbf{0}$. The general solution of $Ax=b$ is ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $\eta_1,\eta_2$ be two distinct solutions of the nonhomogeneous system $Ax=b$ in $n$ unknowns ($b\ne\mathbf{0}$), and let $\xi_1,\xi_2$ be a basis of the nullspace of $Ax=\mathbf{0}$. The general solution of $Ax=b$ is ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\eta_1+k_1\xi_1+k_2\xi_2$，$k_1,k_2$ 为任意常数</span></li>
             <li><span class="opt-body">$\eta_1+k_1\xi_1+k_2\xi_2+k_3\eta_2$，$k_1,k_2,k_3$ 为任意常数</span></li>
@@ -2129,7 +2143,7 @@
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设向量组 $(I):(1,0,1)^T,(0,1,1)^T$，$(II):(1,1,2)^T,(1,-1,0)^T$，则（　）。
-             <span class="en-line" lang="en">Let $(I):(1,0,1)^T,(0,1,1)^T$ and $(II):(1,1,2)^T,(1,-1,0)^T$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $(I):(1,0,1)^T,(0,1,1)^T$ and $(II):(1,1,2)^T,(1,-1,0)^T$. Then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(I)=R(II)$，且 $(I)$ 与 $(II)$ 等价</span></li>
             <li><span class="opt-body">$R(I)=R(II)$，但 $(I)$ 与 $(II)$ 不等价</span></li>
@@ -2141,14 +2155,14 @@
 
         <div class="q" data-type="fill" data-level="考研">
           <p class="q-stem">设 $A$ 为 $3$ 阶矩阵，$R(A)=2$，$B$ 为 $3$ 阶非零矩阵，且 $AB=O$，则 $R(B)=$ ______。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=2$ and let $B$ be a nonzero $3\times3$ matrix with $AB=O$. Then $R(B)=$ ______.</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=2$ and let $B$ be a nonzero $3\times3$ matrix with $AB=O$. Then $R(B)=$ ______.</span></p>
           <div class="q-answer" data-answer="1|１|一"></div>
           <div class="q-explain">$AB=O$ 说明 $B$ 的每一列都是 $3$ 元齐次方程组 $Ax=\mathbf{0}$ 的解，而该解空间维数为 $n-R(A)=3-2=1$，故 $R(B)\le1$；又 $B\ne O$，至少有一列非零，故 $R(B)\ge1$。两边夹得 $R(B)=1$。更一般地，$R(A)=n-1$ 且 $AB=O$、$B\ne O$ 时必有 $R(B)=1$，此时 $B$ 的任意非零列都是 $Ax=\mathbf{0}$ 的基础解系。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
           <p class="q-stem">设 $A$ 为 $3$ 阶矩阵，$R(A)=2$，$\xi=(1,1,1)^T$ 是 $Ax=\mathbf{0}$ 的一个非零解，则（　）。
-             <span class="en-line" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=2$, and let $\xi=(1,1,1)^T$ be a nonzero solution of $Ax=\mathbf{0}$. Then ( ).</span></p>
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $R(A)=2$, and let $\xi=(1,1,1)^T$ be a nonzero solution of $Ax=\mathbf{0}$. Then ( ).</span></p>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\xi$ 就是 $Ax=\mathbf{0}$ 的一个基础解系</span></li>
             <li><span class="opt-body">还需再找一个与 $\xi$ 线性无关的解，才能构成基础解系</span></li>
@@ -2188,6 +2202,6 @@
 <script src="../assets/js/course-data.js"></script>
 <script src="../assets/js/site.js"></script>
 <script src="../assets/js/theme.js"></script>
-
 </body>
+
 </html>
