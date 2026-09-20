@@ -10,6 +10,85 @@
 
 ---
 
+## v0.8.5 — 2026-09-20
+
+### 合并线代 S1+S2：多科目数据源（第 35 节）
+
+目标：在一个应用内同时装「高等数学」与「线性代数」，共用同一套外壳/引擎/样式。
+经比对，两个项目**架构完全不同**（不是同款改版），因此按**分阶段**推进，
+本轮只做 S1（抽取线代数据）与 S2（扩展数据源），**未触碰任何页面与组件**。
+
+#### 差异报告（实测）
+
+| 维度 | 高等数学 | 线性代数 |
+|---|---|---|
+| 数据源 | `course-data.json` → 生成 JS | **无**，硬编码在 `site.js` 的 `COURSE` 数组 |
+| 外壳 | `SHELL:HEADER` 标记 + `build-shell.py` | **无标记**，各页手写 |
+| 图表引擎 | `plot.js`（65 KB） | **`viz.js`（28 KB，不同 API）** |
+| 主题 | `theme.js` + `theme-tokens.css` | **无** |
+| 视频 | `videos.js` | **无** |
+| 公式 | MathJax 3.2.2 **已本地化** | MathJax **仍走 CDN** |
+| 公式配置 | `fontCache:'local'`（修过滚动条） | `fontCache:'global'`（**即高数修过的那个问题**） |
+| 双语 | 全面双语（ch1 有 452 个英文段） | **纯中文**（`en-inline`/`class="en"`/`bi` 均为 0） |
+| 规模 | 13 章 82 节 136 学时 | 6 章 21 节 57 学时，**300 道题** |
+
+**兼容的部分**：题目格式完全一致（`class="q" data-type data-level`）；CSS 变量同源。
+**不兼容的部分**：数据源、外壳、图表引擎、公式配置、双语能力。
+
+#### S1：线代数据抽取（不碰高数）
+
+新增 `tools/add-subjects.py` 与 `_migration-linalg/`：
+
+- 从线代 `site.js` 的 `COURSE` 数组解析出 6 章 21 节 57 学时，**内容未作改动**
+- 转为高数 schema：`num / file / status / hours / title{zh,en} / sections / sectionHours /
+  sectionTitles[] / card{desc,topics}`
+- 节标题中文取自各页 `<h2>` 实测提取；英文为标准译名
+- **关键字段 `lang: 'zh'`**：标注本科目无英文对照
+  （源项目实测双语标记 0 处），供语言开关据此禁用而非显示空白
+- `storageKeys`：线代进度/成绩用 `linalg.*` 键，与高数 `advmath.*` 互不污染
+
+#### S2：数据源扩展为多科目（向后兼容）
+
+`course-data.json` 新增 3 个字段，**顶层 `chapters` 原样保留**：
+
+```json
+{
+  "chapters": [ ... ],           ← 原样保留（即高数），现有读取方零感知
+  "subjects": [ {calculus}, {linearAlgebra} ],
+  "meta": { "defaultSubject": "calculus", "subjectsOrder": ["calculus","linearAlgebra"] }
+}
+```
+
+`gen-course-data.py` 是**纯透传**（整份 JSON → 全局常量），故**无需改脚本**。
+
+#### 验证
+
+| 项 | 结果 |
+|---|---|
+| 顶层 `chapters` 与改前逐项比对 | ✓ **完全一致** |
+| `meta` / `tools` / `external` 原有字段 | ✓ 一致（仅新增 3 个字段） |
+| 浏览器实测 ch1 | ✓ 13 章 / 侧栏 22 链接 / 已掌握 10 / 学时徽章 10 / 顶栏 3 链接，**与改前一致** |
+| 19 项校验 + 6 套 JS 单测（203 项） | ✓ 全绿 |
+| 图表视觉自检（46 图） | ✓ 通过 |
+
+#### 本轮未做（按分阶段计划）
+
+S3 起才触碰页面与组件：给高数加科目切换外壳（TopBar 下拉 + 侧栏按科目过滤）、
+线代章节页套统一外壳（重建 head/header/nav、换本地 MathJax）、`viz.js` 改接 `plot.js`。
+**本轮界面无任何变化**，科目切换尚不可见。
+
+#### 环境问题记录（与本次改动无关）
+
+图表自检每次失败于 `渲染失败：Node.js v24.x`。排查结论：
+1. 本会话 `node` 被解析为 DSH 自带包装器（`…/harness/.desktop-bin/node`，实为 Electron 以
+   `ELECTRON_RUN_AS_NODE=1` 运行），需用 `/usr/local/bin/node`；
+2. 该检查依赖的临时垫片 `/tmp/mj/tex-svg.js` 被系统清理。重建后检查通过。
+
+#### 备份
+
+`backups/merge-linalg-20260920-173521/`（高数 63 MB + 线代 1.7 MB）
+
+
 ## v0.8.4 — 2026-09-19
 
 ### 螺旋线图补三坐标轴（第 34 节）
