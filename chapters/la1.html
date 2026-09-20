@@ -117,6 +117,55 @@
   })();
 
 </script>
+<script>
+/* 第 1 章图：行列式的几何意义（1-4 节）。
+   用真实的线性变换 A = [[1.6,0.8],[0.4,1.8]] 把单位正方形映成平行四边形，
+   面积比 = |det A| = 2.56。引擎按 verify 校验面积比，防止画成示意图。 */
+(function () {
+  'use strict';
+  var tries = 0;
+  function ready(fn) {
+    if (window.Plot) { fn(); return; }
+    if (++tries > 80) return;
+    setTimeout(function () { ready(fn); }, 50);
+  }
+  ready(function () {
+    var host = document.getElementById('fig-det-area');
+    if (!host) return;
+    Plot.render(host, {
+      aria: '二阶行列式的几何意义：线性变换把单位正方形映成平行四边形，面积等于行列式的绝对值',
+      width: 560, height: 420, maxWidth: 700,
+      x: [-0.7, 2.9], y: [-0.7, 2.5],
+      axes: { x: { step: 1, label: 'x' }, y: { step: 1, label: 'y' } },
+      padding: { l: 46, r: 34, t: 26, b: 46 },
+      legend: [ { c: 'soft', t: '单位正方形（面积 1）', dash: true },
+                { c: 'brand', t: '像：平行四边形' },
+                { c: 'method', t: '像的两条边' } ],
+      legendOutside: 'bottom',   /* 图例外置于绘图区下方：否则会压住 y 轴刻度标签（实测间距仅 1.4px） */
+      elements: [
+        { type: 'polygon', at: [[0,0],[1,0],[1,1],[0,1]], color: 'soft', opacity: 0.10, stroke: true, dash: true },
+        { type: 'polygon', at: [[0,0],[1.6,0.4],[2.4,2.2],[0.8,1.8]], color: 'brand', opacity: 0.22, stroke: true },
+        { type: 'vector', from: [0,0], to: [1.6,0.4], color: 'method', width: 2.4 },
+        { type: 'vector', from: [0,0], to: [0.8,1.8], color: 'method', width: 2.4 },
+        { type: 'label', at: [1.72, 0.30], text: 'c₁ = (1.6, 0.4)', color: 'method' },
+        { type: 'label', at: [0.30, 1.90], text: 'c₂ = (0.8, 1.8)', color: 'method' },
+        { type: 'label', at: [1.45, 1.25], text: '|D| = 2.56', color: 'brand' }
+      ],
+      /* 面积校验：行列式值 = 面积比（1.6×1.8 − 0.8×0.4 = 2.56） */
+      verify: function () {
+        /* 用鞋带公式算像的面积，与行列式的绝对值比对——防止画成示意图形 */
+        var P = [[0,0],[1.6,0.4],[2.4,2.2],[0.8,1.8]], s2 = 0;
+        for (var i = 0; i < P.length; i++) {
+          var j = (i + 1) % P.length;
+          s2 += P[i][0] * P[j][1] - P[j][0] * P[i][1];
+        }
+        var area = Math.abs(s2) / 2, det = Math.abs(1.6 * 1.8 - 0.8 * 0.4);
+        if (Math.abs(area - det) > 1e-9) throw new Error('行列式与面积不符: ' + area + ' vs ' + det);
+      }
+    });
+  });
+})();
+</script>
 </head>
 <body data-page="la1" data-chapter="1" data-subject="linearAlgebra">
 
@@ -450,6 +499,11 @@
           <li><strong>横向</strong>：二阶行列式的绝对值是平行四边形面积——这条几何解释在第 6 章判断二次型正定性时会再次出现（二阶顺序主子式 $&gt;0$ 就是"面积不为零且定向为正"）。</li>
         </ul>
       </div>
+
+      <figure class="plot-figure">
+        <div id="fig-det-area"></div>
+        <figcaption>图 1　二阶行列式的几何意义。取 $D=\begin{vmatrix}1.6&0.8\\ 0.4&1.8\end{vmatrix}$，它的两列 $(1.6,0.4)$、$(0.8,1.8)$ 就是灰色平行四边形的两条边：单位正方形（虚线）被映成这个平行四边形，而 $|D|=2.56$ 正是它的面积。若两列共线，面积塌成 $0$，对应 $D=0$。</figcaption>
+      </figure>
 
       <div class="box app-box">
         <div class="box-title"><span class="ico">🔧</span>工程联系：桁架节点的力平衡就是一个二阶行列式</div>
