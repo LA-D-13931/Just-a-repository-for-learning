@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线性代数公式速查表 · 线性代数学习站</title>
+<meta name="description" content="线性代数全部核心公式、判定条件与解题套路速查：行列式、矩阵、秩、方程组、特征值、二次型。">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>
+  /* MathJax 配置：与高数各页一致（本地引擎 + 关闭自动全量排版，由脚本分片驱动） */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    startup: { typeset: false, ready: function () { MathJax.startup.defaultReady(); window.__mjxReady = true; } }
+  };
+</script>
+<script id="MathJax-script" async src="assets/js/vendor/tex-svg.js"></script>
+<script>
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head, .model-head, .model-signal, .model-route, .fb-body, .cs-note, .cs-item';
+    var pending = [], busy = false, started = false, sweepLeft = 3;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) { schedule(); return; }
+          /* 兜底补排（第 32 节）：例题标题 .example-head 里的公式此前从不进入队列，
+             导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
+             凡是仍含 `$` 且未被 MathJax 处理的 .example-head，补排一次。
+             只处理这一类元素，不影响其他已排好的内容。 */
+          if (sweepLeft > 0) {
+            sweepLeft--;
+            var left = Array.prototype.slice.call(document.querySelectorAll(SEL))
+              .filter(function (el) {
+                return !el.querySelector('mjx-container') &&
+                  Array.from(el.childNodes).some(function (n) {
+                    return n.nodeType === 3 && /\$[^$]{1,200}\$/.test(n.nodeValue || '');
+                  });
+              });
+            if (left.length) { pending = pending.concat(left); schedule(); }
+          } else {
+            /* 重扫用尽后仍可能剩零星块（工具页的表格 / 折叠块结构不规则）。
+               最后整块兜底排版一次，保证不留下未渲染的公式；只在这时付一次全量代价。 */
+            try {
+              var scope = document.querySelector('.content') || document.body;
+              if (scope) MJ.typesetPromise([scope]).catch(function () {});
+            } catch (e) {}
+          }
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL))
+        .filter(function (el) { var a = el.parentElement;
+          while (a && a !== document.body) { if (a.matches && a.matches(SEL)) return false; a = a.parentElement; }
+          return true; });
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+
+</script>
+</head>
+<body data-page="la-cheatsheet" data-subject="linearAlgebra">
+
+  <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">LA</span>
+      <span>线性代数<small>行列式 · 矩阵 · 方程组 · 特征值 · 二次型</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="index.html">首页</a>
+      <a href="linear-algebra-cheatsheet.html" class="is-active">公式速查表</a>
+      <a href="linear-algebra-exam.html">综合自测卷</a>
+    </nav>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+        <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="chapters/la1.html"><span class="num">1</span>行列式</a>
+          <a class="toc-chapter" href="chapters/la2.html"><span class="num">2</span>矩阵</a>
+          <a class="toc-chapter" href="chapters/la3.html"><span class="num">3</span>线性方程组与初等变换</a>
+          <a class="toc-chapter" href="chapters/la4.html"><span class="num">4</span>向量组与解的结构</a>
+          <a class="toc-chapter" href="chapters/la5.html"><span class="num">5</span>特征值与矩阵对角化</a>
+          <a class="toc-chapter" href="chapters/la6.html"><span class="num">6</span>二次型</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+          <a class="toc-chapter is-active" href="linear-algebra-cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter" href="linear-algebra-exam.html">综合自测卷</a>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div class="page-eyebrow">REFERENCE · 全站公式汇总</div>
+        <h1>线性代数公式速查表</h1>
+        <p class="lede">按章汇总核心公式、判定条件与解题套路。建议打印出来放在手边，
+           做题时先自己回忆，想不起来再查——<strong>直接查会记不住</strong>。</p>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>使用建议</div>
+        <p>这张表是<strong>复习用</strong>的，不是<strong>学习用</strong>的。
+           没学过对应章节就先背公式，只会在题目稍作变形时完全不会做。
+           每一条公式都应该能说出"它是怎么来的、什么时候用"。</p>
+      </div>
+
+      <!-- ================= 1. 行列式 ================= -->
+      <h2 id="cs1">一、行列式</h2>
+
+      <h3 id="cs1-1">1.1 基本计算</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>公式</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>$\begin{vmatrix}a&b\\c&d\end{vmatrix}=ad-bc$</td><td>二阶：主对角线 − 副对角线</td></tr>
+          <tr><td>三阶对角线法则</td><td><strong>只对二、三阶成立</strong>，四阶以上不可用</td></tr>
+          <tr><td>上（下）三角行列式 $=$ 对角元之积</td><td>含对角行列式</td></tr>
+          <tr><td>$\begin{vmatrix}A&O\\C&B\end{vmatrix}=|A||B|$</td><td>分块三角（$A$ 为 $m$ 阶、$B$ 为 $n$ 阶）</td></tr>
+          <tr><td>$\begin{vmatrix}O&A\\B&O\end{vmatrix}=(-1)^{mn}|A||B|$</td><td>副对角分块，<strong>符号易错</strong></td></tr>
+          <tr><td>$D_n=\prod_{1\le i &lt; j\le n}(x_j-x_i)$</td><td>范德蒙德行列式</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3 id="cs1-2">1.2 运算性质</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>性质</th><th>是否改变行列式的值</th></tr></thead>
+        <tbody>
+          <tr><td>$|A^T|=|A|$（转置不变）</td><td>不变</td></tr>
+          <tr><td>互换两行（列）</td><td><strong>变号</strong></td></tr>
+          <tr><td>某行（列）乘以 $k$</td><td><strong>变为 $k$ 倍</strong></td></tr>
+          <tr><td>某行（列）的 $k$ 倍加到另一行（列）</td><td><strong>不变</strong>（计算主力）</td></tr>
+          <tr><td>两行（列）相同或成比例</td><td>行列式 $=0$</td></tr>
+          <tr><td>某行（列）可拆成两组数之和</td><td>可拆成两个行列式之和</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>三个最常错的</div>
+        <ul>
+          <li>$|A+B|\ne|A|+|B|$ —— 行列式对<strong>加法不可拆</strong>（只有某一行可拆时才可拆）</li>
+          <li>$|kA|=k^n|A|$，<strong>不是</strong> $k|A|$（$n$ 是阶数）</li>
+          <li>$|A^*|=|A|^{n-1}$，<strong>不是</strong> $|A|^n$</li>
+        </ul>
+      </div>
+
+      <h3 id="cs1-3">1.3 展开与重要恒等式</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>公式</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td>$D=\sum_{j=1}^{n}a_{ij}A_{ij}$（按第 $i$ 行展开）</td><td>$A_{ij}=(-1)^{i+j}M_{ij}$</td></tr>
+          <tr><td>$\sum_{j=1}^{n}a_{ik}A_{jk}=0\quad(i\ne j)$</td><td><strong>异乘变零</strong>，构造证明题的利器</td></tr>
+          <tr><td>$|AB|=|A|\cdot|B|$</td><td>$A,B$ 同阶方阵</td></tr>
+          <tr><td>$\lvert A^{-1}\rvert=\dfrac{1}{\lvert A\rvert}$</td><td>$A$ 可逆</td></tr>
+          <tr><td>$|A^*|=|A|^{n-1}$</td><td></td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>行列式计算的四条路</div>
+        <ol>
+          <li><strong>化三角形</strong>：用"某行 $k$ 倍加到另一行"，把左下角全消成 0，答案就是对角元之积。</li>
+          <li><strong>降阶</strong>：先用性质把某行（列）造出尽量多的 0，只剩一个非零元，再按该行（列）展开。</li>
+          <li><strong>递推</strong>：$D_n$ 与 $D_{n-1}$、$D_{n-2}$ 有相同结构时，建立递推式（三对角行列式常用）。</li>
+          <li><strong>加边（升阶）</strong>：行列式各行（列）元素有规律地相近时，添一行一列反而更好算。</li>
+        </ol>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span> <strong>Four routes to evaluate a determinant.</strong></p>
+          <ol>
+          <li class="en"><strong>Row reduction to triangular form</strong> — add a multiple of one row to another to clear every entry below the diagonal; the determinant is then the product of the diagonal entries.</li>
+          <li class="en"><strong>Cofactor expansion</strong> — use the properties first to create as many zeros as possible in one row or column, leaving a single nonzero entry, then expand along that row or column.</li>
+          <li class="en"><strong>Recursion</strong> — when $D_n$ has the same structure as $D_{n-1}$ and $D_{n-2}$, set up a recurrence (the standard route for tridiagonal determinants).</li>
+          <li class="en"><strong>Bordering</strong> — when the rows or columns are close to each other in a regular pattern, adding one row and one column actually makes the determinant easier to evaluate.</li>
+          </ol>
+        </div>
+
+      <!-- ================= 2. 矩阵 ================= -->
+      <h2 id="cs2">二、矩阵运算</h2>
+
+      <h3 id="cs2-1">2.1 转置、逆、伴随的运算律</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>运算</th><th>公式</th><th>要不要反序</th></tr></thead>
+        <tbody>
+          <tr><td>转置</td><td>$(AB)^T=B^TA^T$</td><td class="center"><strong>反序</strong></td></tr>
+          <tr><td>逆</td><td>$(AB)^{-1}=B^{-1}A^{-1}$</td><td class="center"><strong>反序</strong></td></tr>
+          <tr><td>伴随</td><td>$(AB)^*=B^*A^*$</td><td class="center"><strong>反序</strong></td></tr>
+          <tr><td>转置</td><td>$(A+B)^T=A^T+B^T$</td><td class="center">不反序</td></tr>
+          <tr><td>转置</td><td>$(kA)^T=kA^T$</td><td class="center">不反序</td></tr>
+          <tr><td>逆</td><td>$(kA)^{-1}=\frac{1}{k}A^{-1}$</td><td class="center">不反序</td></tr>
+          <tr><td>混合</td><td>$(A^T)^{-1}=(A^{-1})^T$</td><td class="center">可交换</td></tr>
+          <tr><td>混合</td><td>$(A^T)^*=(A^*)^T$</td><td class="center">可交换</td></tr>
+          <tr><td>混合</td><td>$(A^{-1})^*=(A^*)^{-1}=\dfrac{A}{\lvert A\rvert}$</td><td class="center">可交换</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3 id="cs2-2">2.2 伴随矩阵</h3>
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>核心公式（其余全由它推出）</div>
+        <p>$$AA^*=A^*A=|A|E$$</p>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM</span> <strong>The central adjugate identity.</strong> Every other adjugate formula follows from it:</p>
+          $$AA^*=A^*A=|A|E$$
+        </div>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>公式</th><th>条件</th></tr></thead>
+        <tbody>
+          <tr><td>$A^*=|A|A^{-1}$</td><td>$A$ 可逆</td></tr>
+          <tr><td>$A^{-1}=\dfrac{1}{|A|}A^*$</td><td>$|A|\ne0$</td></tr>
+          <tr><td>$(kA)^*=k^{n-1}A^*$</td><td>$A$ 为 $n$ 阶</td></tr>
+          <tr><td>$(A^*)^*=|A|^{n-2}A$</td><td>$n\ge2$</td></tr>
+          <tr><td>$|A^*|=|A|^{n-1}$</td><td></td></tr>
+          <tr><td>$R(A^*)=\begin{cases}n,&R(A)=n\\1,&R(A)=n-1\\0,&R(A)\le n-2\end{cases}$</td><td>$A$ 为 $n$ 阶</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>伴随矩阵的定义易错</div>
+        <p>$A^*$ 是<strong>代数余子式矩阵的转置</strong>：$A^*=(A_{ji})_{n\times n}$，
+           即 $A^*$ 的第 $i$ 行第 $j$ 列元素是 $A_{ji}$。<strong>别忘 transpose</strong>。</p>
+      </div>
+
+      <h3 id="cs2-3">2.3 可逆的等价刻画（背下来）</h3>
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>$A$ 可逆 $\Leftrightarrow$ 下面每一条都等价</div>
+        <ul>
+          <li>$|A|\ne0$</li>
+          <li>$R(A)=n$</li>
+          <li>$A$ 的行最简形是 $E$</li>
+          <li>$A$ 可表示为若干初等矩阵的乘积</li>
+          <li>$Ax=0$ 只有零解</li>
+          <li>$Ax=b$ 对任意 $b$ 都有唯一解</li>
+          <li>$A$ 的特征值全不为 0</li>
+          <li>$A$ 的行（列）向量组线性无关</li>
+          <li>$A^TA$ 可逆</li>
+        </ul>
+      </div>
+
+      <!-- ================= 3. 秩 ================= -->
+      <h2 id="cs3">三、矩阵的秩</h2>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>公式</th><th>条件 / 说明</th></tr></thead>
+        <tbody>
+          <tr><td>$0\le R(A)\le\min\{m,n\}$</td><td>$A$ 为 $m\times n$</td></tr>
+          <tr><td>$R(A^T)=R(A)$</td><td>行秩 $=$ 列秩</td></tr>
+          <tr><td>$R(kA)=R(A)$</td><td>$k\ne0$</td></tr>
+          <tr><td>初等变换不改变秩</td><td>求秩的基本依据</td></tr>
+          <tr><td>$R(AB)\le\min\{R(A),R(B)\}$</td><td>乘只会掉秩，不会升秩</td></tr>
+          <tr><td>$R(A+B)\le R(A)+R(B)$</td><td></td></tr>
+          <tr><td>$R(A)+R(B)-n\le R(AB)$</td><td><strong>Sylvester 不等式</strong>，$A$ 为 $m\times n$、$B$ 为 $n\times s$</td></tr>
+          <tr><td>$P,Q$ 可逆 $\Rightarrow R(PAQ)=R(A)$</td><td>可逆矩阵不改变秩</td></tr>
+          <tr><td>$R(A^TA)=R(AA^T)=R(A)$</td><td>实矩阵</td></tr>
+          <tr><td>$A$ 为 $n$ 阶：$R(A)=n\Leftrightarrow|A|\ne0$</td><td></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>求秩的标准动作</div>
+        <ol>
+          <li>对矩阵作<strong>初等行变换</strong>，化为行阶梯形。</li>
+          <li>数<strong>非零行的行数</strong>，即为秩。</li>
+          <li>含参数时：先把参数尽量"逼"到某一行，再讨论它取何值时该行变成零行。</li>
+        </ol>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span> <strong>Standard procedure for finding the rank.</strong></p>
+          <ol>
+          <li class="en">Apply <span class="en-term">elementary row operations</span> to reduce the matrix to <span class="en-term">row echelon form</span>.</li>
+          <li class="en">Count the nonzero rows — that number is the <span class="en-term">rank</span>.</li>
+          <li class="en">If a parameter is present: push it into a pivot position first, then discuss for which values of it that row becomes a zero row.</li>
+          </ol>
+        </div>
+
+      <!-- ================= 4. 线性方程组 ================= -->
+      <h2 id="cs4">四、线性方程组</h2>
+
+      <h3 id="cs4-1">4.1 解的判定（最核心的一张表）</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>条件</th><th>结论</th><th>自由未知量个数</th></tr></thead>
+        <tbody>
+          <tr><td>$R(A) &lt; R(\bar A)$</td><td><strong>无解</strong></td><td>—</td></tr>
+          <tr><td>$R(A)=R(\bar A)=n$</td><td><strong>有唯一解</strong></td><td>0</td></tr>
+          <tr><td>$R(A)=R(\bar A)=r &lt; n$</td><td><strong>有无穷多解</strong></td><td>$n-r$</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p style="font-size:.88rem;color:var(--ink-soft)">
+        其中 $n$ 是<strong>未知量个数</strong>，$\bar A=(A\mid b)$ 是增广矩阵。
+        对<strong>齐次</strong>方程组 $Ax=0$：必有零解；$R(A)=n$ 时只有零解，$R(A) &lt; n$ 时有非零解。</p>
+
+      <h3 id="cs4-2">4.2 克拉默法则</h3>
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>定理</div>
+        <p>$n$ 个方程 $n$ 个未知量，系数行列式 $D=|A|\ne0$ 时，有唯一解</p>
+        <p class="en">$$x_1=\frac{D_1}{D},\quad x_2=\frac{D_2}{D},\quad\cdots,\quad x_n=\frac{D_n}{D}$$</p>
+        <p>$D_j$ 是把 $D$ 的第 $j$ 列换成常数项后得到的行列式。</p>
+        <p><strong>推论</strong>：齐次方程组有非零解 $\Leftrightarrow D=0$。</p>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM</span> <strong>Cramer&#39;s rule.</strong> For $n$ equations in $n$ unknowns whose coefficient determinant $D=|A|$ is nonzero, the system has a unique solution</p>
+          $$x_1=\frac{D_1}{D},\quad x_2=\frac{D_2}{D},\quad\cdots,\quad x_n=\frac{D_n}{D}$$
+          where $D_j$ is the determinant obtained by replacing the $j$-th column of $D$ with the constant terms.
+          <strong>Corollary.</strong> A homogeneous system has a nonzero solution $\Leftrightarrow D=0$.
+        </div>
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>克拉默法则的局限</div>
+        <p>只能用于<strong>方程个数 $=$ 未知量个数</strong>的情形，且要求 $D\ne0$。
+           实际求解一律用<strong>初等行变换</strong>。克拉默法则的价值在<strong>理论</strong>（给出解的存在唯一性判据与解析表达式），
+           不在计算。</p>
+      </div>
+
+      <h3 id="cs4-3">4.3 解的结构</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>类型</th><th>结构</th></tr></thead>
+        <tbody>
+          <tr><td>齐次 $Ax=0$</td><td>通解 $=k_1\xi_1+k_2\xi_2+\cdots+k_{n-r}\xi_{n-r}$，其中 $\xi_i$ 是基础解系，共 $n-r$ 个</td></tr>
+          <tr><td>非齐次 $Ax=b$</td><td>通解 $=\eta^*+k_1\xi_1+\cdots+k_{n-r}\xi_{n-r}$，即<strong>特解 + 齐次通解</strong></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>求通解的标准动作</div>
+        <ol>
+          <li>写出增广矩阵 $\bar A=(A\mid b)$。</li>
+          <li>初等<strong>行</strong>变换化为<strong>行最简形</strong>（不是行阶梯形就停，要化到底）。</li>
+          <li>比较 $R(A)$ 与 $R(\bar A)$，判定解的情况。</li>
+          <li>把非零行的首元对应的变量留在左边，其余（自由未知量）移到右边。</li>
+          <li>自由未知量依次取 $\begin{pmatrix}1\\0\\\vdots\\0\end{pmatrix},\begin{pmatrix}0\\1\\\vdots\\0\end{pmatrix},\dots$，读出基础解系。</li>
+          <li>非齐次再令自由未知量全取 0，读出一个特解。</li>
+        </ol>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span> <strong>Standard procedure for the general solution.</strong></p>
+          <ol>
+          <li class="en">Write down the augmented matrix $\bar A=(A\mid b)$.</li>
+          <li class="en">Use elementary <strong>row</strong> operations to reach <span class="en-term">reduced row echelon form</span> (RREF) — do not stop at row echelon form.</li>
+          <li class="en">Compare $R(A)$ with $R(\bar A)$ to decide whether the system is consistent.</li>
+          <li class="en">Keep the variables attached to pivots on the left; move the <span class="en-term">free variables</span> to the right.</li>
+          <li class="en">Give the free variables the values $\begin{pmatrix}1\\0\\\vdots\\0\end{pmatrix},\begin{pmatrix}0\\1\\\vdots\\0\end{pmatrix},\dots$ in turn and read off a <span class="en-term">basis of the nullspace</span>.</li>
+          <li class="en">For a nonhomogeneous system, set every free variable to 0 to read off one <span class="en-term">particular solution</span>.</li>
+          </ol>
+        </div>
+
+      <!-- ================= 5. 向量组 ================= -->
+      <h2 id="cs5">五、向量组的线性相关性</h2>
+
+      <h3 id="cs5-1">5.1 判定表</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>说法</th><th>等价条件</th></tr></thead>
+        <tbody>
+          <tr><td>$\alpha_1,\dots,\alpha_m$ 线性相关</td><td>$R(\alpha_1,\dots,\alpha_m) &lt; m$；齐次方程组有非零解</td></tr>
+          <tr><td>$\alpha_1,\dots,\alpha_m$ 线性无关</td><td>$R(\alpha_1,\dots,\alpha_m)=m$；齐次方程组只有零解</td></tr>
+          <tr><td>$n$ 个 $n$ 维向量线性相关</td><td>以它们为列构成的行列式 $=0$</td></tr>
+          <tr><td>向量个数 $m &gt;$ 维数 $n$</td><td><strong>必线性相关</strong>（"多必相关"）</td></tr>
+          <tr><td>$\beta$ 可由 $\alpha_1,\dots,\alpha_m$ 线性表示</td><td>$R(\alpha_1,\dots,\alpha_m)=R(\alpha_1,\dots,\alpha_m,\beta)$；方程组 $Ax=\beta$ 有解</td></tr>
+          <tr><td>两向量组等价</td><td>可互相线性表示；<strong>等价 $\Rightarrow$ 秩相等</strong>（反之不成立）</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3 id="cs5-2">5.2 必背性质</h3>
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>性质清单</div>
+        <ul>
+          <li>含<strong>零向量</strong>的向量组必线性相关。</li>
+          <li>单个向量 $\alpha$ 线性相关 $\Leftrightarrow \alpha=0$。</li>
+          <li>两个向量线性相关 $\Leftrightarrow$ 分量成比例（共线）。</li>
+          <li><strong>部分相关 $\Rightarrow$ 整体相关</strong>；<strong>整体无关 $\Rightarrow$ 部分无关</strong>。（逆命题均不成立）</li>
+          <li>无关组添一个向量后变相关 $\Leftrightarrow$ 该向量可由原组<strong>唯一</strong>线性表示。</li>
+          <li><strong>"短相关、长无关"</strong>：相关组每个向量截短（去掉分量）仍相关；无关组每个向量接长仍无关。</li>
+          <li>不同特征值对应的特征向量线性无关。</li>
+        </ul>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM</span> <strong>Properties you must know by heart.</strong></p>
+          <ul>
+          <li class="en">Any set containing the zero vector is <span class="en-term">linearly dependent</span>.</li>
+          <li class="en">A single vector $\alpha$ is linearly dependent $\Leftrightarrow \alpha=0$.</li>
+          <li class="en">Two vectors are linearly dependent $\Leftrightarrow$ their components are proportional (collinear).</li>
+          <li class="en">Any subset of a linearly independent set is linearly independent; any superset of a linearly dependent set is linearly dependent. (Neither converse holds.)</li>
+          <li class="en">Adding one vector to an independent set makes it dependent $\Leftrightarrow$ that vector is <strong>uniquely</strong> expressible as a linear combination of the original set.</li>
+          <li class="en"><strong>Delete components and dependence survives; append components and independence survives</strong> — deleting components from every vector of a dependent set leaves it dependent, and appending components to every vector of an independent set leaves it independent.</li>
+          <li class="en">Eigenvectors belonging to distinct eigenvalues are linearly independent.</li>
+          </ul>
+        </div>
+
+      <h3 id="cs5-3">5.3 求极大无关组</h3>
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>标准动作</div>
+        <ol>
+          <li>把向量<strong>按列</strong>排成矩阵 $A=(\alpha_1,\alpha_2,\dots,\alpha_m)$。</li>
+          <li>只作<strong>初等行变换</strong>，化为行阶梯形。</li>
+          <li>每个非零行的首元所在的<strong>列号</strong>，对应回原向量，就是极大无关组。</li>
+          <li>继续化为行最简形，即可读出其余向量用极大无关组表示的系数。</li>
+        </ol>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span> <strong>Standard procedure for a maximal linearly independent subset.</strong></p>
+          <ol>
+          <li class="en">Arrange the vectors <strong>as the columns</strong> of a matrix $A=(\alpha_1,\alpha_2,\dots,\alpha_m)$.</li>
+          <li class="en">Use elementary <strong>row</strong> operations only, reducing to row echelon form.</li>
+          <li class="en">The column index of the pivot in each nonzero row points back to the original vectors — those vectors form a <span class="en-term">maximal linearly independent set</span>.</li>
+          <li class="en">Continue to reduced row echelon form to read off the coefficients expressing every remaining vector in terms of that set.</li>
+          </ol>
+        </div>
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>必须按列排</div>
+        <p>求极大无关组时向量<strong>必须按列排成矩阵</strong>，用行变换。
+           如果按行排，得到的是行向量组的结论，对应关系会错。这是最常见的失分点。</p>
+      </div>
+
+      <!-- ================= 6. 特征值 ================= -->
+      <h2 id="cs6">六、特征值与相似对角化</h2>
+
+      <h3 id="cs6-1">6.1 定义与求法</h3>
+      <div class="box def-box">
+        <div class="box-title"><span class="ico">📘</span>定义</div>
+        <p>若存在数 $\lambda$ 和<strong>非零</strong>向量 $x$ 使 $Ax=\lambda x$，则 $\lambda$ 为<strong>特征值</strong>，
+           $x$ 为对应 $\lambda$ 的<strong>特征向量</strong>。</p>
+        <p>特征方程：$|A-\lambda E|=0$；特征多项式 $f(\lambda)=|A-\lambda E|$。</p>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">DEF</span> <strong>Eigenvalue and eigenvector.</strong> If there is a number $\lambda$ and a <strong>nonzero</strong> vector $x$ with $Ax=\lambda x$, then $\lambda$ is an <span class="en-term">eigenvalue</span> of $A$ and $x$ is an <span class="en-term">eigenvector</span> belonging to $\lambda$.</p>
+          Characteristic equation: $|A-\lambda E|=0$. Characteristic polynomial: $f(\lambda)=|A-\lambda E|$.
+        </div>
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>求特征值与特征向量</div>
+        <ol>
+          <li>解特征方程 $|A-\lambda E|=0$，得全部特征值 $\lambda_1,\dots,\lambda_n$。</li>
+          <li>对每个 $\lambda_i$，解齐次方程组 $(A-\lambda_i E)x=0$。</li>
+          <li>求基础解系 $\xi_1,\dots,\xi_{s}$，则对应特征向量为 $k_1\xi_1+\cdots+k_s\xi_s$，<strong>$k_i$ 不全为零</strong>。</li>
+        </ol>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span> <strong>Standard procedure for eigenvalues and eigenvectors.</strong></p>
+          <ol>
+          <li class="en">Solve the characteristic equation $|A-\lambda E|=0$ for all eigenvalues $\lambda_1,\dots,\lambda_n$.</li>
+          <li class="en">For each $\lambda_i$, solve the homogeneous system $(A-\lambda_i E)x=0$.</li>
+          <li class="en">Find a basis $\xi_1,\dots,\xi_{s}$ of its nullspace; the eigenvectors for $\lambda_i$ are $k_1\xi_1+\cdots+k_s\xi_s$ with the $k_i$ <strong>not all zero</strong>.</li>
+          </ol>
+        </div>
+
+      <h3 id="cs6-2">6.2 特征值的性质</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>公式</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>$\lambda_1+\lambda_2+\cdots+\lambda_n=\mathrm{tr}(A)$</td><td><strong>验算利器</strong>：特征值之和 $=$ 主对角元之和</td></tr>
+          <tr><td>$\lambda_1\lambda_2\cdots\lambda_n=|A|$</td><td><strong>验算利器</strong>：特征值之积 $=$ 行列式</td></tr>
+          <tr><td>$A$ 可逆 $\Leftrightarrow$ 特征值全非零</td><td></td></tr>
+          <tr><td>$k$ 重特征值最多有 $k$ 个线性无关的特征向量</td><td>判断能否对角化的依据</td></tr>
+          <tr><td>不同特征值的特征向量线性无关</td><td></td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3 id="cs6-3">6.3 特征值与矩阵运算（考研必考）</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>矩阵</th><th>特征值</th><th>特征向量</th></tr></thead>
+        <tbody>
+          <tr><td>$kA$</td><td>$k\lambda$</td><td>不变</td></tr>
+          <tr><td>$A^m$</td><td>$\lambda^m$</td><td>不变</td></tr>
+          <tr><td>$f(A)$（多项式）</td><td>$f(\lambda)$</td><td>不变</td></tr>
+          <tr><td>$A^{-1}$</td><td>$1/\lambda$</td><td>不变</td></tr>
+          <tr><td>$A^*$</td><td>$|A|/\lambda$</td><td>不变</td></tr>
+          <tr><td>$A^T$</td><td>$\lambda$（相同）</td><td><strong>一般不同</strong></td></tr>
+          <tr><td>$A+B$</td><td colspan="2"><strong>不是</strong> $\lambda_A+\lambda_B$，没有简单关系</td></tr>
+          <tr><td>$AB$ 与 $BA$</td><td colspan="2">特征多项式相同（$A,B$ 为同阶方阵时）</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3 id="cs6-4">6.4 可对角化的判定</h3>
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>三个等价说法</div>
+        <p>$n$ 阶方阵 $A$ 可对角化</p>
+        <ul>
+          <li>$\Leftrightarrow$ $A$ 有 $n$ 个线性无关的特征向量</li>
+          <li>$\Leftrightarrow$ 每个 $k$ 重特征值恰好有 $k$ 个线性无关的特征向量（即 $n-R(A-\lambda E)=k$）</li>
+          <li>$\Leftrightarrow$ $A$ 相似于对角矩阵</li>
+        </ul>
+        <p><strong>充分条件</strong>：$A$ 有 $n$ 个互不相同的特征值 $\Rightarrow$ 可对角化（反之不成立）。</p>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM</span> <strong>Three equivalent conditions for diagonalizability.</strong> An $n\times n$ matrix $A$ is <span class="en-term">diagonalizable</span></p>
+          <ul>
+          <li class="en">$\Leftrightarrow$ $A$ has $n$ linearly independent eigenvectors;</li>
+          <li class="en">$\Leftrightarrow$ every eigenvalue of multiplicity $k$ has exactly $k$ linearly independent eigenvectors, that is, $n-R(A-\lambda E)=k$;</li>
+          <li class="en">$\Leftrightarrow$ $A$ is <span class="en-term">similar</span> to a diagonal matrix.</li>
+          </ul>
+          <p class="en"><strong>Sufficient condition.</strong> If $A$ has $n$ distinct eigenvalues then $A$ is diagonalizable (the converse fails).</p>
+        </div>
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>对角化流程</div>
+        <ol>
+          <li>求全部特征值。</li>
+          <li>对每个特征值求基础解系，得到 $n$ 个线性无关特征向量 $\xi_1,\dots,\xi_n$。</li>
+          <li>令 $P=(\xi_1,\xi_2,\dots,\xi_n)$，则 $P^{-1}AP=\Lambda=\mathrm{diag}(\lambda_1,\dots,\lambda_n)$。</li>
+          <li><strong>$P$ 的列顺序必须与 $\Lambda$ 对角元的顺序一一对应</strong>——排错了整题就错。</li>
+        </ol>
+        <p>应用：$A^k=P\Lambda^kP^{-1}$，其中 $\Lambda^k=\mathrm{diag}(\lambda_1^k,\dots,\lambda_n^k)$。</p>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span> <strong>Procedure for diagonalization.</strong></p>
+          <ol>
+          <li class="en">Find all eigenvalues.</li>
+          <li class="en">For each eigenvalue find a basis of its nullspace, obtaining $n$ linearly independent eigenvectors $\xi_1,\dots,\xi_n$.</li>
+          <li>Set $P=(\xi_1,\xi_2,\dots,\xi_n)$; then $P^{-1}AP=\Lambda=\mathrm{diag}(\lambda_1,\dots,\lambda_n)$.</li>
+          <li class="en"><strong>The order of the columns of $P$ must match the order of the diagonal entries of $\Lambda$</strong> — get it wrong and the whole problem is wrong.</li>
+          </ol>
+          <p>Application: $A^k=P\Lambda^kP^{-1}$, where $\Lambda^k=\mathrm{diag}(\lambda_1^k,\dots,\lambda_n^k)$.</p>
+        </div>
+
+      <h3 id="cs6-5">6.5 实对称矩阵（三个必背定理）</h3>
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>三大定理</div>
+        <ol>
+          <li>实对称矩阵的特征值<strong>全是实数</strong>。</li>
+          <li>实对称矩阵<strong>不同特征值</strong>对应的特征向量<strong>相互正交</strong>。</li>
+          <li>实对称矩阵<strong>必可对角化</strong>，且存在<strong>正交矩阵</strong> $Q$ 使
+              $Q^{-1}AQ=Q^TAQ=\Lambda$。</li>
+        </ol>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM</span> <strong>Three theorems for real symmetric matrices.</strong></p>
+          <ol>
+          <li class="en">Every eigenvalue of a real symmetric matrix is <strong>real</strong>.</li>
+          <li class="en">Eigenvectors of a real symmetric matrix belonging to <strong>distinct</strong> eigenvalues are <strong>mutually orthogonal</strong>.</li>
+          <li class="en">Every real symmetric matrix is <strong>diagonalizable</strong>: there is an <span class="en-term">orthogonal matrix</span> $Q$ with $Q^{-1}AQ=Q^TAQ=\Lambda$.</li>
+          </ol>
+        </div>
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>用正交矩阵对角化（大题标准流程）</div>
+        <ol>
+          <li>求全部特征值。</li>
+          <li>对每个特征值求基础解系。</li>
+          <li><strong>同一特征值内部</strong>的多个特征向量先<strong>施密特正交化</strong>（不同特征值之间已自动正交，不用管）。</li>
+          <li>把所有特征向量<strong>单位化</strong>。</li>
+          <li>拼成 $Q$，答案 $Q^TAQ=\mathrm{diag}(\lambda_1,\dots,\lambda_n)$。</li>
+        </ol>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span> <strong>Orthogonal diagonalization (the standard long-answer procedure).</strong></p>
+          <ol>
+          <li class="en">Find all eigenvalues.</li>
+          <li class="en">For each eigenvalue find a basis of its nullspace.</li>
+          <li class="en">Within one eigenvalue, first apply the <span class="en-term">Gram-Schmidt process</span> to its eigenvectors (eigenvectors belonging to different eigenvalues are already orthogonal, so leave them alone).</li>
+          <li class="en"><strong>Normalize</strong> every eigenvector.</li>
+          <li class="en">Assemble $Q$; the answer is $Q^TAQ=\mathrm{diag}(\lambda_1,\dots,\lambda_n)$.</li>
+          </ol>
+        </div>
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>施密特正交化公式</div>
+        <p>$\beta_1=\alpha_1$</p>
+        <p>$\beta_2=\alpha_2-\dfrac{(\alpha_2,\beta_1)}{(\beta_1,\beta_1)}\beta_1$</p>
+        <p>$\beta_3=\alpha_3-\dfrac{(\alpha_3,\beta_1)}{(\beta_1,\beta_1)}\beta_1-\dfrac{(\alpha_3,\beta_2)}{(\beta_2,\beta_2)}\beta_2$</p>
+        <p>最后单位化：$\eta_i=\dfrac{\beta_i}{\|\beta_i\|}$。</p>
+      </div>
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>正交矩阵的判定</div>
+        <p>$Q$ 是正交矩阵 $\Leftrightarrow Q^TQ=E \Leftrightarrow Q^{-1}=Q^T \Leftrightarrow$
+           $Q$ 的<strong>列向量构成标准正交组</strong>（两两正交且长度为 1）。</p>
+        <p>性质：$|Q|=\pm1$；正交矩阵的乘积仍是正交矩阵。</p>
+      </div>
+
+      <!-- ================= 7. 二次型 ================= -->
+      <h2 id="cs7">七、二次型</h2>
+
+      <h3 id="cs7-1">7.1 基本概念</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>概念</th><th>要点</th></tr></thead>
+        <tbody>
+          <tr><td>二次型</td><td>$f(x_1,\dots,x_n)=x^TAx$，$A$ 为<strong>实对称矩阵</strong>，称为二次型的矩阵</td></tr>
+          <tr><td>二次型的秩</td><td>$R(A)$</td></tr>
+          <tr><td>合同（相合）</td><td>$B=C^TAC$（$C$ 可逆）</td></tr>
+          <tr><td>标准形</td><td>只含平方项：$d_1y_1^2+\cdots+d_ny_n^2$，矩阵为对角矩阵</td></tr>
+          <tr><td>规范形</td><td>系数只有 $1,-1,0$：$y_1^2+\cdots+y_p^2-y_{p+1}^2-\cdots-y_{p+q}^2$</td></tr>
+          <tr><td>惯性定理</td><td>正惯性指数 $p$、负惯性指数 $q$ 由二次型唯一确定，与所作可逆变换无关；$p+q=R(A)$</td></tr>
+          <tr><td>合同判定</td><td>$A\cong B \Leftrightarrow$ 正、负惯性指数分别相同</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>写二次型矩阵：交叉项系数要平分</div>
+        <p>平方项系数放<strong>主对角线</strong>，交叉项 $x_ix_j$ 的系数<strong>对半分</strong>给 $a_{ij}$ 与 $a_{ji}$。</p>
+        <p>例：$f=2x_1^2+3x_1x_2+x_2^2$ 的矩阵是
+           $\begin{pmatrix}2 & 3/2\\ 3/2 & 1\end{pmatrix}$，<strong>不是</strong>
+           $\begin{pmatrix}2&3\\0&1\end{pmatrix}$。</p>
+      </div>
+
+      <h3 id="cs7-2">7.2 化标准形的两种方法</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th></th><th>正交变换法</th><th>配方法</th></tr></thead>
+        <tbody>
+          <tr><td>所用变换</td><td>$x=Qy$，$Q$ 为正交矩阵</td><td>$x=Cy$，$C$ 可逆（一般不正交）</td></tr>
+          <tr><td>标准形系数</td><td>就是 $A$ 的<strong>特征值</strong></td><td>配方得到的系数</td></tr>
+          <tr><td>计算量</td><td>要解特征方程，常出现无理数</td><td>纯代数运算，系数多为有理数</td></tr>
+          <tr><td>几何意义</td><td>保持图形形状（旋转/反射）</td><td>图形被拉伸变形</td></tr>
+          <tr><td>典型用途</td><td>要求"求正交变换"时；判断几何类型</td><td>只要求标准形/规范形时；判定正定性</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="box method-box">
+        <div class="box-title"><span class="ico">⚙️</span>配方法要点</div>
+        <ol>
+          <li><strong>有平方项</strong>：把含某个 $x_i$ 的项全部集中，配成完全平方，再对剩余变量重复。</li>
+          <li><strong>无平方项</strong>（所有 $a_{ii}=0$ 但有交叉项）：先作变换
+              $x_i=y_i+y_j,\ x_j=y_i-y_j$（其余不变），制造出平方项，再回到上一步。</li>
+        </ol>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">METHOD</span> <strong>Key points of completing the square.</strong></p>
+          <ol>
+          <li class="en"><strong>Square terms present:</strong> collect every term containing one chosen $x_i$, complete the square, then repeat on the remaining variables.</li>
+          <li class="en"><strong>No square terms</strong> (all $a_{ii}=0$ but cross terms present): first substitute $x_i=y_i+y_j$, $x_j=y_i-y_j$ (all other variables unchanged) to manufacture square terms, then return to the previous step.</li>
+          </ol>
+        </div>
+
+      <h3 id="cs7-3">7.3 正定二次型</h3>
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">📐</span>正定的等价条件（$A$ 为 $n$ 阶实对称）</div>
+        <ul>
+          <li>对任意 $x\ne0$ 有 $x^TAx &gt; 0$（定义）</li>
+          <li>正惯性指数 $p=n$（规范形为 $y_1^2+\cdots+y_n^2$）</li>
+          <li>$A$ 的<strong>全部特征值大于 0</strong></li>
+          <li>$A$ 的<strong>各阶顺序主子式全都大于 0</strong>（最常用）</li>
+          <li>$A$ 与 $E$ 合同，即存在可逆矩阵 $C$ 使 $A=C^TC$</li>
+        </ul>
+      </div>
+        <div class="en" lang="en">
+          <p class="en"><span class="bi-en-label">THM</span> <strong>Equivalent conditions for positive definiteness</strong> ($A$ real symmetric of order $n$).</p>
+          <ul>
+          <li class="en">$x^TAx &gt; 0$ for every $x\ne0$ (the definition).</li>
+          <li class="en">The number of positive eigenvalues is $p=n$ (the canonical form is $y_1^2+\cdots+y_n^2$).</li>
+          <li class="en"><strong>All eigenvalues of $A$ are positive.</strong></li>
+          <li class="en"><strong>All leading principal minors of $A$ are positive</strong> (the most used test in practice).</li>
+          <li class="en">$A$ is <span class="en-term">congruent</span> to $E$, that is, $A=C^TC$ for some invertible $C$.</li>
+          </ul>
+        </div>
+      <div class="box warn-box">
+        <div class="box-title"><span class="ico">⚠️</span>必要条件 ≠ 充分条件</div>
+        <ul>
+          <li>$a_{ii} &gt; 0$ 只是<strong>必要</strong>条件，<strong>不充分</strong>。
+              反例：$\begin{pmatrix}1&2\\2&1\end{pmatrix}$ 对角元都为正，但特征值为 $3,-1$，不正定。</li>
+          <li>"<strong>顺序</strong>主子式"四个字不能丢：必须从左上角起按 $1,2,\dots,n$ 阶<strong>依次</strong>取。
+              只验证 $|A| &gt; 0$ 是不够的。</li>
+        </ul>
+      </div>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>类型</th><th>特征值</th><th>正负惯性指数</th><th>顺序主子式</th></tr></thead>
+        <tbody>
+          <tr><td>正定</td><td>全 $&gt;0$</td><td>$p=n,\ q=0$</td><td>全 $&gt;0$</td></tr>
+          <tr><td>半正定</td><td>全 $\ge0$</td><td>$p=R(A) &lt; n,\ q=0$</td><td>全 $\ge0$</td></tr>
+          <tr><td>负定</td><td>全 $&lt;0$</td><td>$p=0,\ q=n$</td><td>奇数阶 $&lt;0$，偶数阶 $&gt;0$</td></tr>
+          <tr><td>不定</td><td>有正有负</td><td>$p&gt;0,\ q&gt;0$</td><td>—</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <!-- ================= 8. 套路 ================= -->
+      <h2 id="cs8">八、考场套路速查</h2>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>看到题目这样说</th><th>第一反应</th></tr></thead>
+        <tbody>
+          <tr><td>"$A$ 满足 $f(A)=O$，求 $A^{-1}$"</td><td>从等式里<strong>凑出</strong> $A\cdot(\cdots)=E$，括号里就是 $A^{-1}$</td></tr>
+          <tr><td>"求 $A^n$"</td><td>试三条路：秩 1 矩阵用 $\alpha\beta^T$ 公式 / 拆成 $E+B$ 用二项式（$B$ 幂零）/ 相似对角化</td></tr>
+          <tr><td>"$AB=O$"</td><td>$B$ 的每一列都是 $Ax=0$ 的解，故 $R(A)+R(B)\le n$</td></tr>
+          <tr><td>"含参数，问方程组解的情况"</td><td>化行阶梯形，让<strong>参数出现在主元位置</strong>，再分情况讨论</td></tr>
+          <tr><td>"证明向量组线性无关"</td><td>设 $k_1\alpha_1+\cdots+k_m\alpha_m=0$，用已知条件推出 $k_i$ 全为 0</td></tr>
+          <tr><td>"求正交变换化二次型为标准形"</td><td>求特征值 → 特征向量 → （重根时施密特正交化）→ 单位化 → 拼 $Q$</td></tr>
+          <tr><td>"判断二次型正定"</td><td>算<strong>各阶顺序主子式</strong>，全 $&gt;0$ 即正定</td></tr>
+          <tr><td>"$A$ 与 $B$ 相似，求参数"</td><td>用 $\mathrm{tr}(A)=\mathrm{tr}(B)$ 和 $|A|=|B|$ 列方程</td></tr>
+          <tr><td>"求 $A$ 的特征值"</td><td>算完务必用 $\sum\lambda=\mathrm{tr}(A)$、$\prod\lambda=|A|$ <strong>验算</strong></td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>一句话串起整门课</div>
+        <p><strong>行列式</strong>给出方阵可逆的判据 →
+           <strong>矩阵</strong>用初等变换求逆与秩 →
+           <strong>秩</strong>决定<strong>方程组</strong>解的情况 →
+           <strong>解空间</strong>引出<strong>向量组</strong>的线性相关性 →
+           <strong>线性无关</strong>是<strong>特征向量</strong>的语言 →
+           <strong>特征值</strong>完成<strong>对角化</strong> →
+           对角化最终落地为<strong>二次型</strong>的标准形。</p>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <p><strong>线性代数学习站</strong> · 公式速查表 · 按「一高数」课程顺序编排</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="assets/js/plot.js"></script>
+<script src="assets/js/videos.js"></script>
+<script src="assets/js/quiz.js"></script>
+<script src="assets/js/course-data.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/theme.js"></script>
+</body>
+</html>

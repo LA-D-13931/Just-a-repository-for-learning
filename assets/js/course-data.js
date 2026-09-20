@@ -1432,8 +1432,8 @@ window.COURSE_DATA = {
       ],
       "tools": [
         {
-          "id": "cheatsheet",
-          "file": "cheatsheet.html",
+          "id": "la-cheatsheet",
+          "file": "linear-algebra-cheatsheet.html",
           "status": "built",
           "title": {
             "zh": "公式速查表",
@@ -1441,8 +1441,8 @@ window.COURSE_DATA = {
           }
         },
         {
-          "id": "exam",
-          "file": "exam.html",
+          "id": "la-exam",
+          "file": "linear-algebra-exam.html",
           "status": "built",
           "title": {
             "zh": "综合自测卷",

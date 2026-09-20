@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>综合自测卷（考研数一难度） · 线性代数学习站</title>
+<meta name="description" content="线性代数考研数学一难度的综合模拟卷，含 28 道客观题与 8 道计算证明题，逐题解析并点明每个干扰项错在哪。">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>
+  /* MathJax 配置：与高数各页一致（本地引擎 + 关闭自动全量排版，由脚本分片驱动） */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    startup: { typeset: false, ready: function () { MathJax.startup.defaultReady(); window.__mjxReady = true; } }
+  };
+</script>
+<script id="MathJax-script" async src="assets/js/vendor/tex-svg.js"></script>
+<script>
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head, .model-head, .model-signal, .model-route, .fb-body, .cs-note, .cs-item';
+    var pending = [], busy = false, started = false, sweepLeft = 3;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) { schedule(); return; }
+          /* 兜底补排（第 32 节）：例题标题 .example-head 里的公式此前从不进入队列，
+             导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
+             凡是仍含 `$` 且未被 MathJax 处理的 .example-head，补排一次。
+             只处理这一类元素，不影响其他已排好的内容。 */
+          if (sweepLeft > 0) {
+            sweepLeft--;
+            var left = Array.prototype.slice.call(document.querySelectorAll(SEL))
+              .filter(function (el) {
+                return !el.querySelector('mjx-container') &&
+                  Array.from(el.childNodes).some(function (n) {
+                    return n.nodeType === 3 && /\$[^$]{1,200}\$/.test(n.nodeValue || '');
+                  });
+              });
+            if (left.length) { pending = pending.concat(left); schedule(); }
+          } else {
+            /* 重扫用尽后仍可能剩零星块（工具页的表格 / 折叠块结构不规则）。
+               最后整块兜底排版一次，保证不留下未渲染的公式；只在这时付一次全量代价。 */
+            try {
+              var scope = document.querySelector('.content') || document.body;
+              if (scope) MJ.typesetPromise([scope]).catch(function () {});
+            } catch (e) {}
+          }
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL))
+        .filter(function (el) { var a = el.parentElement;
+          while (a && a !== document.body) { if (a.matches && a.matches(SEL)) return false; a = a.parentElement; }
+          return true; });
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+
+</script>
+</head>
+<body data-page="la-exam" data-subject="linearAlgebra">
+
+  <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">LA</span>
+      <span>线性代数<small>行列式 · 矩阵 · 方程组 · 特征值 · 二次型</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="index.html">首页</a>
+      <a href="linear-algebra-cheatsheet.html">公式速查表</a>
+      <a href="linear-algebra-exam.html" class="is-active">综合自测卷</a>
+    </nav>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+        <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="chapters/la1.html"><span class="num">1</span>行列式</a>
+          <a class="toc-chapter" href="chapters/la2.html"><span class="num">2</span>矩阵</a>
+          <a class="toc-chapter" href="chapters/la3.html"><span class="num">3</span>线性方程组与初等变换</a>
+          <a class="toc-chapter" href="chapters/la4.html"><span class="num">4</span>向量组与解的结构</a>
+          <a class="toc-chapter" href="chapters/la5.html"><span class="num">5</span>特征值与矩阵对角化</a>
+          <a class="toc-chapter" href="chapters/la6.html"><span class="num">6</span>二次型</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+          <a class="toc-chapter" href="linear-algebra-cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter is-active" href="linear-algebra-exam.html">综合自测卷</a>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div class="page-eyebrow">FINAL EXAM · 考研数学一难度 · 覆盖全部 6 章</div>
+        <h1>线性代数综合自测卷</h1>
+        <p class="lede">本站的<strong>难度峰值</strong>。客观题按
+           <span class="q-level" data-level="基础" style="vertical-align:1px">基础</span> →
+           <span class="q-level" data-level="中等" style="vertical-align:1px">中等</span> →
+           <span class="q-level" data-level="考研" style="vertical-align:1px">考研</span>
+           由浅入深排列，不要求你一开始就做得出后面的题。
+           命题风格对标<strong>考研数学一</strong>：抽象矩阵、秩的不等式、含参数讨论、特征值综合、二次型综合。
+           <strong>建议限时 120 分钟、闭卷、手写完成</strong>，中途不要查公式表。</p>
+      </div>
+
+      <div class="box exam-box">
+        <div class="box-title"><span class="ico">🎯</span>考试说明</div>
+        <ul>
+          <li><strong>第一部分 客观题</strong>（28 题，在线作答）：提交后立即出分，
+              每题解析都会<strong>点明每个干扰项错在哪</strong>，不是只给正确答案。</li>
+          <li><strong>第二部分 计算与证明题</strong>（8 题）：<strong>准备纸笔手写完成</strong>，
+              写完再展开答案对照。只看不算等于没做。</li>
+          <li>建议先手写第二部分，再做第一部分，更接近真实考试节奏。</li>
+          <li>本节是全站最难的一份，<strong>考研档做不出很正常</strong>，不必气馁。
+              关键是看懂每道错题的解析，定位到具体是哪一章的定义没吃透。</li>
+        </ul>
+      </div>
+
+      <!-- ==================== 第二部分：计算与证明 ==================== -->
+      <h2 id="part2">第二部分　计算与证明题</h2>
+      <p>共 8 题，请<strong>在纸上完整写出过程</strong>后再展开答案。评分不仅看结果，更看步骤是否规范。</p>
+
+      <div class="example">
+        <div class="example-head"><span class="badge">第 1 题</span>行列式计算<span class="lv">基础 · 8 分</span></div>
+        <div class="example-body">
+          <p>计算行列式</p>
+          <p class="en">$$D=\begin{vmatrix}1&2&3\\4&5&6\\7&8&10\end{vmatrix}$$</p>
+          <details class="reveal">
+            <summary>展开解答</summary>
+            <div class="reveal-body">
+              <p>按第一行展开（三阶也可以直接用对角线法则）：</p>
+              <p class="en">$$D=1\cdot\begin{vmatrix}5&6\\8&10\end{vmatrix}-2\cdot\begin{vmatrix}4&6\\7&10\end{vmatrix}+3\cdot\begin{vmatrix}4&5\\7&8\end{vmatrix}$$</p>
+              <p>$$=1\cdot(50-48)-2\cdot(40-42)+3\cdot(32-35)$$</p>
+              <p>$$=2-2\cdot(-2)+3\cdot(-3)=2+4-9=-3$$</p>
+              <p><strong>答案：$D=-3$。</strong></p>
+              <p class="solution-label">考点</p>
+              <p>三阶行列式的基本计算。注意代数余子式的符号是 $(-1)^{i+j}$，第二项前面是<strong>减号</strong>。</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head"><span class="badge">第 2 题</span>抽象行列式<span class="lv">考研 · 10 分</span></div>
+        <div class="example-body">
+          <p>设 $A$ 为 3 阶矩阵，$|A|=2$，$A^*$ 为 $A$ 的伴随矩阵，求 $|A^*|$ 与 $|(A^*)^{-1}|$。</p>
+          <details class="reveal">
+            <summary>展开解答</summary>
+            <div class="reveal-body">
+              <p><strong>第一步：求 $|A^*|$。</strong></p>
+              <p>由核心公式 $AA^*=|A|E$，两边取行列式：</p>
+              <p>$$|A|\cdot|A^*|=\bigl||A|E\bigr|=|A|^3\cdot|E|=|A|^3$$</p>
+              <p>因为 $|A|=2\ne0$，两边约去 $|A|$ 得 $|A^*|=|A|^{3-1}=|A|^2=4$。</p>
+              <p>（一般地：$n$ 阶矩阵有 $|A^*|=|A|^{n-1}$。）</p>
+              <p><strong>第二步：求 $|(A^*)^{-1}|$。</strong></p>
+              <p>$A$ 可逆 $\Rightarrow$ $|A|\ne0$ $\Rightarrow$ $|A^*|=|A|^{n-1}\ne0$，所以 $A^*$ 可逆，且</p>
+              <p>$$\bigl|(A^*)^{-1}\bigr|=\frac{1}{|A^*|}=\frac{1}{4}$$</p>
+              <p><strong>答案：$|A^*|=4$，$|(A^*)^{-1}|=\dfrac14$。</strong></p>
+              <p class="solution-label">考点</p>
+              <p>这是考研选择题的典型形式：<strong>不给具体矩阵，只给行列式，要求推出与伴随矩阵有关的量</strong>。
+                 关键是记住 $AA^*=|A|E$ 这条核心公式，以及由它派生的 $|A^*|=|A|^{n-1}$。</p>
+              <p><strong>常见错误</strong>：写成 $|A^*|=|A|^n$（多了 1 次方）。</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head"><span class="badge">第 3 题</span>抽象矩阵求逆<span class="lv">考研 · 10 分</span></div>
+        <div class="example-body">
+          <p>设 $n$ 阶矩阵 $A$ 满足 $A^2-3A+2E=O$。证明 $A$ 可逆，并求 $A^{-1}$ 与 $A^*$
+             （$A^*$ 用 $|A|$ 表示）。</p>
+          <details class="reveal">
+            <summary>展开解答</summary>
+            <div class="reveal-body">
+              <p><strong>第一步：凑出 $A\cdot(\text{某矩阵})=E$ 的形式。</strong></p>
+              <p>由 $A^2-3A+2E=O$ 得 $A^2-3A=-2E$，即</p>
+              <p>$$A(A-3E)=-2E$$</p>
+              <p>两边同除以 $-2$：</p>
+              <p class="en">$$A\cdot\left[-\frac12(A-3E)\right]=E$$</p>
+              <p><strong>第二步：读出 $A^{-1}$。</strong></p>
+              <p>由逆矩阵的定义（$AB=E$ 即 $B=A^{-1}$），得</p>
+              <p>$$A^{-1}=-\frac12(A-3E)=\frac12(3E-A)$$</p>
+              <p>既然 $A^{-1}$ 存在，$A$ 自然可逆。</p>
+              <p><strong>第三步：求 $A^*$。</strong>由 $A^*=|A|A^{-1}$，先求 $|A|$：</p>
+              <p>对 $A(A-3E)=-2E$ 两边取行列式，得 $|A|\cdot|A-3E|=(-2)^n$，这只给出 $|A|\ne0$ 的结论，具体值依赖于 $n$，不便直接求。</p>
+              <p>改用另一条路：在 $A^2-3A+2E=O$ 中，把 $A$ 换成它的任一特征值 $\lambda$，得 $\lambda^2-3\lambda+2=0$，
+                 即 $(\lambda-1)(\lambda-2)=0$，故 $A$ 的特征值只能取 $1$ 或 $2$。</p>
+              <p>于是 $|A|$ 等于 $n$ 个特征值之积，即 $|A|=1^{n_1}\cdot2^{n_2}$，其中 $n_1+n_2=n$
+                 （$n_1,n_2$ 分别是特征值 $1,2$ 的重数）。</p>
+              <p>$$A^*=|A|A^{-1}=\frac{|A|}{2}(3E-A)$$</p>
+              <p><strong>说明</strong>：本题只要求出 $A^{-1}$ 的表达式即可；$A^*$ 用 $|A|$ 表示是标准的处理方式，
+                 因为 $|A|$ 的具体值需要知道两个特征值各自的重数。</p>
+              <p class="solution-label">考点</p>
+              <p><strong>"由矩阵等式求逆"是考研的高频题型</strong>，套路固定：
+                 把等式整理成 $A\cdot(\text{关于 }A\text{ 的多项式})=kE$ 的形式，再把系数除过去。
+                 注意 $k$ 必须非零——本题中 $k=-2$ 恰好保证了可逆。</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head"><span class="badge">第 4 题</span>含参数方程组的讨论<span class="lv">考研 · 12 分</span></div>
+        <div class="example-body">
+          <p>当 $\lambda$ 取何值时，齐次线性方程组</p>
+          <p>$$\begin{cases}(1-\lambda)x_1-2x_2+4x_3=0\\ 2x_1+(3-\lambda)x_2+x_3=0\\ x_1+x_2+(1-\lambda)x_3=0\end{cases}$$</p>
+          <p>有非零解？</p>
+          <details class="reveal">
+            <summary>展开解答</summary>
+            <div class="reveal-body">
+              <p><strong>第一步：转化为行列式条件。</strong></p>
+              <p>这是 $n$ 个方程 $n$ 个未知量的<strong>齐次</strong>方程组，有非零解 $\Leftrightarrow$ 系数行列式 $|A|=0$。</p>
+              <p><strong>第二步：计算系数行列式（按第一行展开）。</strong></p>
+              <p>$$|A|=\begin{vmatrix}1-\lambda&-2&4\\2&3-\lambda&1\\1&1&1-\lambda\end{vmatrix}$$</p>
+              <p>三个代数余子式依次为：</p>
+              <p>$$\begin{vmatrix}3-\lambda&1\\1&1-\lambda\end{vmatrix}=(3-\lambda)(1-\lambda)-1=\lambda^2-4\lambda+2$$</p>
+              <p>$$\begin{vmatrix}2&1\\1&1-\lambda\end{vmatrix}=2(1-\lambda)-1=1-2\lambda$$</p>
+              <p>$$\begin{vmatrix}2&3-\lambda\\1&1\end{vmatrix}=2-(3-\lambda)=\lambda-1$$</p>
+              <p>代入（注意第二项符号是 $-$）：</p>
+              <p>$$|A|=(1-\lambda)(\lambda^2-4\lambda+2)-(-2)(1-2\lambda)+4(\lambda-1)$$</p>
+              <p>$$=(-\lambda^3+5\lambda^2-6\lambda+2)+(2-4\lambda)+(4\lambda-4)$$</p>
+              <p>$$=-\lambda^3+5\lambda^2-6\lambda=-\lambda(\lambda^2-5\lambda+6)$$</p>
+              <p>$$=-\lambda(\lambda-2)(\lambda-3)$$</p>
+              <p><strong>第三步：解出 $\lambda$。</strong>令 $|A|=0$，得</p>
+              <p>$$\lambda=0,\qquad \lambda=2,\qquad \lambda=3$$</p>
+              <p><strong>验算</strong>（直接代回原矩阵算行列式）：</p>
+              <p>$\lambda=0$ 时，$\begin{vmatrix}1&-2&4\\2&3&1\\1&1&1\end{vmatrix}=1(3-1)+2(2-1)+4(2-3)=2+2-4=0$ ✓</p>
+              <p>$\lambda=2$ 时，$\begin{vmatrix}-1&-2&4\\2&1&1\\1&1&-1\end{vmatrix}=-1(-1-1)+2(-2-1)+4(2-1)=2-6+4=0$ ✓</p>
+              <p>$\lambda=3$ 时，$\begin{vmatrix}-2&-2&4\\2&0&1\\1&1&-2\end{vmatrix}=-2(0-1)+2(-4-1)+4(2-0)=2-10+8=0$ ✓</p>
+              <p><strong>答案：$\lambda=0$ 或 $\lambda=2$ 或 $\lambda=3$。</strong></p>
+              <p class="solution-label">考点</p>
+              <p>含参数讨论是<strong>考研的必考题</strong>。核心是"齐次有非零解 $\Leftrightarrow |A|=0$"。
+                 算行列式时优先按<strong>含参数最少的那一行（列）</strong>展开，能大幅减少计算量与出错概率。
+                 算完务必<strong>代回验算</strong>——本题容易漏根或算错因式分解。</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head"><span class="badge">第 5 题</span>解的结构与反求<span class="lv">考研 · 12 分</span></div>
+        <div class="example-body">
+          <p>设 4 元非齐次线性方程组 $Ax=b$ 的系数矩阵 $A$ 的秩 $R(A)=2$，
+             已知 $\eta_1=(1,2,3,4)^T$，$\eta_2=(2,3,4,5)^T$ 是它的两个解，求该方程组的通解。</p>
+          <details class="reveal">
+            <summary>展开解答</summary>
+            <div class="reveal-body">
+              <p><strong>第一步：判断解的结构。</strong></p>
+              <p>$R(A)=2$，$n=4$，故对应齐次方程组 $Ax=0$ 的基础解系含 $n-R(A)=4-2=2$ 个向量。</p>
+              <p>通解 = 特解 + 齐次通解，因此需要<strong>1 个特解 + 2 个线性无关的齐次解</strong>。</p>
+              <p><strong>第二步：求特解。</strong></p>
+              <p>取 $\eta^*=\eta_1=(1,2,3,4)^T$。</p>
+              <p><strong>第三步：构造齐次解。</strong></p>
+              <p>两解之差是齐次方程组的解：</p>
+              <p>$$\xi_1=\eta_2-\eta_1=(1,1,1,1)^T$$</p>
+              <p>但基础解系需要<strong>2 个</strong>线性无关的向量，题目只给了两个解，只能造出 1 个。</p>
+              <p>所以本题条件下<strong>无法唯一确定通解</strong>——缺少一个与 $\xi_1$ 线性无关的齐次解。</p>
+              <p><strong>第四步：写出能确定的部分。</strong></p>
+              <p>可以确定通解形如</p>
+              <p class="en">$$x=\eta^*+k_1\xi_1+k_2\xi_2=\begin{pmatrix}1\\2\\3\\4\end{pmatrix}+k_1\begin{pmatrix}1\\1\\1\\1\end{pmatrix}+k_2\xi_2$$</p>
+              <p>其中 $k_1,k_2$ 为任意常数，$\xi_2$ 为与 $\xi_1$ 线性无关的任一 $Ax=0$ 的解。</p>
+              <p><strong>补充说明</strong>：若题目改为"求满足 $R(A)=2$ 且给定三个解"，则可由
+                 $\xi_1=\eta_2-\eta_1$、$\xi_2=\eta_3-\eta_1$ 得到两个齐次解（需验证线性无关），
+                 此时通解完全确定：</p>
+              <p class="en">$$x=\eta_1+k_1(\eta_2-\eta_1)+k_2(\eta_3-\eta_1)$$</p>
+              <p class="solution-label">考点</p>
+              <p>本题考查对<strong>解的结构</strong>的深层理解，而不是套公式计算：
+                 "两解之差是齐次的解"是关键性质；同时要意识到<strong>齐次解需要几个</strong>由 $n-R(A)$ 决定，
+                 给几个特解就能造出几个——这是考研大题的常见考法。</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head"><span class="badge">第 6 题</span>特征值与对角化<span class="lv">考研 · 12 分</span></div>
+        <div class="example-body">
+          <p>设 $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$。求 $A$ 的特征值与特征向量，判断 $A$ 能否对角化；
+             若能，求可逆矩阵 $P$ 使 $P^{-1}AP$ 为对角矩阵，并求 $A^{10}$。</p>
+          <details class="reveal">
+            <summary>展开解答</summary>
+            <div class="reveal-body">
+              <p><strong>第一步：求特征值。</strong></p>
+              <p>$$|A-\lambda E|=\begin{vmatrix}2-\lambda&1\\1&2-\lambda\end{vmatrix}=(2-\lambda)^2-1=\lambda^2-4\lambda+3=(\lambda-1)(\lambda-3)$$</p>
+              <p>令其为 0，得 $\lambda_1=3,\ \lambda_2=1$。</p>
+              <p><strong>验算</strong>：$\lambda_1+\lambda_2=4=\mathrm{tr}(A)=2+2$ ✓；
+                 $\lambda_1\lambda_2=3=|A|=4-1=3$ ✓。</p>
+              <p><strong>第二步：求特征向量。</strong></p>
+              <p>对 $\lambda_1=3$：解 $(A-3E)x=0$，即
+                 $\begin{pmatrix}-1&1\\1&-1\end{pmatrix}\begin{pmatrix}x_1\\x_2\end{pmatrix}=0$，
+                 得 $x_1=x_2$，基础解系 $\xi_1=\begin{pmatrix}1\\1\end{pmatrix}$，
+                 对应全部特征向量为 $k_1\xi_1\ (k_1\ne0)$。</p>
+              <p>对 $\lambda_2=1$：解 $(A-E)x=0$，即
+                 $\begin{pmatrix}1&1\\1&1\end{pmatrix}\begin{pmatrix}x_1\\x_2\end{pmatrix}=0$，
+                 得 $x_1=-x_2$，基础解系 $\xi_2=\begin{pmatrix}1\\-1\end{pmatrix}$，
+                 对应全部特征向量为 $k_2\xi_2\ (k_2\ne0)$。</p>
+              <p><strong>第三步：判断可对角化。</strong></p>
+              <p>$A$ 是 2 阶矩阵，两个特征值 $3\ne1$ 互不相同，$\xi_1,\xi_2$ 线性无关，
+                 故 $A$ 有 2 个线性无关的特征向量，<strong>可以对角化</strong>。</p>
+              <p><strong>第四步：写出 $P$ 与 $\Lambda$。</strong></p>
+              <p>取 $P=(\xi_1,\xi_2)=\begin{pmatrix}1&1\\1&-1\end{pmatrix}$，则</p>
+              <p class="en">$$P^{-1}AP=\Lambda=\begin{pmatrix}3&0\\0&1\end{pmatrix}$$</p>
+              <p><strong>注意</strong>：$\Lambda$ 对角元的顺序必须与 $P$ 中列向量的顺序<strong>一一对应</strong>。
+                 若取 $P=(\xi_2,\xi_1)$，则 $\Lambda=\mathrm{diag}(1,3)$。</p>
+              <p><strong>第五步：求 $A^{10}$。</strong></p>
+              <p>由 $A=P\Lambda P^{-1}$ 得 $A^{10}=P\Lambda^{10}P^{-1}$。</p>
+              <p>先求 $P^{-1}$：$|P|=-1-1=-2$，$P^*=\begin{pmatrix}-1&-1\\-1&1\end{pmatrix}$，
+                 故 $P^{-1}=\dfrac{1}{-2}\begin{pmatrix}-1&-1\\-1&1\end{pmatrix}=\dfrac12\begin{pmatrix}1&1\\1&-1\end{pmatrix}$。</p>
+              <p>（有趣的是 $P^{-1}=\dfrac12 P$，因为 $P^2=2E$。）</p>
+              <p>于是</p>
+              <p class="en">$$A^{10}=\frac12\begin{pmatrix}1&1\\1&-1\end{pmatrix}\begin{pmatrix}3^{10}&0\\0&1\end{pmatrix}\begin{pmatrix}1&1\\1&-1\end{pmatrix}$$</p>
+              <p>$$=\frac12\begin{pmatrix}3^{10}&1\\3^{10}&-1\end{pmatrix}\begin{pmatrix}1&1\\1&-1\end{pmatrix}
+                 =\frac12\begin{pmatrix}3^{10}+1&3^{10}-1\\3^{10}-1&3^{10}+1\end{pmatrix}$$</p>
+              <p>其中 $3^{10}=59049$，所以</p>
+              <p class="en">$$A^{10}=\begin{pmatrix}29525&29524\\29524&29525\end{pmatrix}$$</p>
+              <p><strong>验算</strong>：$A^{10}$ 是对称矩阵 ✓；对角元 $29525=\frac{59049+1}{2}$ ✓。</p>
+              <p class="solution-label">考点</p>
+              <p>这是第 5 章的标准大题，一条龙考完：求特征值 → 求特征向量 → 判断可对角化 →
+                 写出 $P$ → 用对角化求幂。<strong>每一步都可能单独出题</strong>，必须全部练熟。</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head"><span class="badge">第 7 题</span>正交变换化标准形<span class="lv">考研 · 12 分</span></div>
+        <div class="example-body">
+          <p>求一个正交变换 $x=Qy$，把二次型</p>
+          <p>$$f(x_1,x_2,x_3)=2x_1^2+2x_2^2+2x_3^2+2x_1x_2+2x_1x_3+2x_2x_3$$</p>
+          <p>化为标准形，并写出所用正交矩阵 $Q$。</p>
+          <details class="reveal">
+            <summary>展开解答</summary>
+            <div class="reveal-body">
+              <p><strong>第一步：写出二次型的矩阵。</strong></p>
+              <p>平方项系数都是 2 放在对角线上；三个交叉项系数都是 2，<strong>对半分</strong>得 $a_{ij}=1$：</p>
+              <p class="en">$$A=\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$$</p>
+              <p><strong>第二步：求特征值。</strong></p>
+              <p>$A$ 的每行元素之和都是 4，故 $\alpha_1=(1,1,1)^T$ 是特征向量，对应 $\lambda_1=4$。</p>
+              <p>再由 $\lambda_2+\lambda_3=6-4=2$（用迹）与 $\lambda_2\lambda_3\cdot4=|A|$ 求。先算 $|A|$：</p>
+              <p>$$|A|=\begin{vmatrix}2&1&1\\1&2&1\\1&1&2\end{vmatrix}
+                 \xrightarrow{r_1+r_2+r_3}\begin{vmatrix}4&4&4\\1&2&1\\1&1&2\end{vmatrix}
+                 =4\begin{vmatrix}1&1&1\\1&2&1\\1&1&2\end{vmatrix}$$</p>
+              <p>$$\xrightarrow{r_2-r_1,\ r_3-r_1}4\begin{vmatrix}1&1&1\\0&1&0\\0&0&1\end{vmatrix}=4$$</p>
+              <p>故 $\lambda_2\lambda_3=\dfrac{|A|}{\lambda_1}=\dfrac44=1$，结合 $\lambda_2+\lambda_3=2$，
+                 解得 $\lambda_2=\lambda_3=1$（二重根）。</p>
+              <p><strong>验算</strong>：$4+1+1=6=\mathrm{tr}(A)=2+2+2$ ✓；$4\times1\times1=4=|A|$ ✓。</p>
+              <p><strong>第三步：求各特征值的特征向量。</strong></p>
+              <p>对 $\lambda_1=4$：解 $(A-4E)x=0$，
+                 $A-4E=\begin{pmatrix}-2&1&1\\1&-2&1\\1&1&-2\end{pmatrix}$，
+                 化为 $\begin{pmatrix}1&1&-2\\0&1&-1\\0&0&0\end{pmatrix}$，得 $x_1=x_2=x_3$，
+                 基础解系 $\xi_1=(1,1,1)^T$。</p>
+              <p>对 $\lambda=1$：解 $(A-E)x=0$，
+                 $A-E=\begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$，
+                 得 $x_1+x_2+x_3=0$，基础解系可取 $\xi_2=(1,-1,0)^T$，$\xi_3=(1,0,-1)^T$。</p>
+              <p><strong>第四步：对重根的特征向量作施密特正交化。</strong></p>
+              <p>$\xi_1$ 与 $\xi_2,\xi_3$ 自动正交（不同特征值），但 $\xi_2,\xi_3$ 之间不正交，需要处理：</p>
+              <p>$(\xi_2,\xi_3)=1\times1+(-1)\times0+0\times(-1)=1\ne0$，确实不正交。</p>
+              <p>令 $\beta_2=\xi_2=(1,-1,0)^T$；</p>
+              <p>$$\beta_3=\xi_3-\frac{(\xi_3,\beta_2)}{(\beta_2,\beta_2)}\beta_2=(1,0,-1)^T-\frac{1}{2}(1,-1,0)^T=\left(\frac12,\frac12,-1\right)^T$$</p>
+              <p><strong>第五步：全部单位化。</strong></p>
+              <p>$\|\xi_1\|=\sqrt3$，$\|\beta_2\|=\sqrt2$，$\|\beta_3\|=\sqrt{\frac14+\frac14+1}=\sqrt{\frac32}$。</p>
+              <p class="en">$$q_1=\frac{1}{\sqrt3}\begin{pmatrix}1\\1\\1\end{pmatrix},\quad
+                 q_2=\frac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix},\quad
+                 q_3=\frac{1}{\sqrt{3/2}}\begin{pmatrix}1/2\\1/2\\-1\end{pmatrix}=\frac{1}{\sqrt6}\begin{pmatrix}1\\1\\-2\end{pmatrix}$$</p>
+              <p><strong>第六步：写出 $Q$ 与标准形。</strong></p>
+              <p class="en">$$Q=(q_1,q_2,q_3)=\begin{pmatrix}\frac{1}{\sqrt3}&\frac{1}{\sqrt2}&\frac{1}{\sqrt6}\\[4pt]
+                 \frac{1}{\sqrt3}&-\frac{1}{\sqrt2}&\frac{1}{\sqrt6}\\[4pt]
+                 \frac{1}{\sqrt3}&0&-\frac{2}{\sqrt6}\end{pmatrix}$$</p>
+              <p>作正交变换 $x=Qy$，则</p>
+              <p>$$f=4y_1^2+y_2^2+y_3^2$$</p>
+              <p><strong>验算</strong>：$Q$ 的列向量两两正交且长度为 1 ✓；
+                 标准形系数 $4,1,1$ 正是 $A$ 的三个特征值，且顺序与 $Q$ 的列一一对应 ✓。</p>
+              <p class="solution-label">考点</p>
+              <p>这是第 6 章的核心大题，也是考研数一的高频考点。三个易错处：</p>
+              <ul>
+                <li>写矩阵时<strong>交叉项系数忘了对半分</strong>（写成 $a_{12}=2$ 就全错了）。</li>
+                <li><strong>重根的特征向量忘记施密特正交化</strong>——只有不同特征值的特征向量才自动正交。</li>
+                <li>拼 $Q$ 时<strong>列的顺序与 $\Lambda$ 对角元顺序不一致</strong>。</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="example-head"><span class="badge">第 8 题</span>正定性的讨论<span class="lv">考研 · 12 分</span></div>
+        <div class="example-body">
+          <p>设二次型 $f(x_1,x_2,x_3)=x_1^2+x_2^2+x_3^2+2tx_1x_2+2x_1x_3$。求 $t$ 的取值范围，
+             使 $f$ 为正定二次型。</p>
+          <details class="reveal">
+            <summary>展开解答</summary>
+            <div class="reveal-body">
+              <p><strong>第一步：写出二次型的矩阵。</strong></p>
+              <p>交叉项 $2tx_1x_2$ 的系数平分给 $a_{12},a_{21}$，得 $a_{12}=a_{21}=t$；
+                 交叉项 $2x_1x_3$ 的系数平分，得 $a_{13}=a_{31}=1$；没有 $x_2x_3$ 项，$a_{23}=0$。</p>
+              <p class="en">$$A=\begin{pmatrix}1&t&1\\ t&1&0\\ 1&0&1\end{pmatrix}$$</p>
+              <p><strong>第二步：算各阶顺序主子式。</strong></p>
+              <p>一阶：$D_1=1 &gt; 0$，对任意 $t$ 都成立。</p>
+              <p>二阶：$D_2=\begin{vmatrix}1&t\\ t&1\end{vmatrix}=1-t^2 &gt; 0 \iff -1 &lt; t &lt; 1$。</p>
+              <p>三阶：按第一行展开</p>
+              <p class="en">$$D_3=\begin{vmatrix}1&t&1\\ t&1&0\\ 1&0&1\end{vmatrix}
+                 =1\cdot\begin{vmatrix}1&0\\0&1\end{vmatrix}-t\cdot\begin{vmatrix}t&0\\1&1\end{vmatrix}+1\cdot\begin{vmatrix}t&1\\1&0\end{vmatrix}$$</p>
+              <p>$$=1(1-0)-t(t-0)+1(0-1)=1-t^2-1=-t^2$$</p>
+              <p><strong>第三步：联立求解。</strong></p>
+              <p>要求 $D_3 &gt; 0$，即 $-t^2 &gt; 0$，这在实数范围内<strong>无解</strong>。</p>
+              <p><strong>结论：不存在使 $f$ 正定的 $t$。</strong></p>
+              <p><strong>进一步分析</strong>：事实上 $f$ 的矩阵 $A$ 满足 $|A|=-t^2\le0$，
+                 而正定矩阵必须 $|A| &gt; 0$，故 $f$ 永远不可能正定。</p>
+              <p>验证：取 $x=(1,0,-1)^T\ne0$，无论 $t$ 取何值都有</p>
+              <p>$$f=1+0+1+0-2=0$$</p>
+              <p>即存在非零向量使 $f=0$，故 $f$ <strong>不可能正定</strong>。
+                 （注意：由此<strong>不能</strong>推出 $f$ 半正定。事实上 $|A|=-t^2$：
+                  $t=0$ 时 $f=(x_1+x_3)^2+x_2^2\ge0$ 是半正定的；
+                  $t\ne0$ 时 $|A|&lt;0$，特征值必有一正一负，$f$ 是<strong>不定</strong>的。
+                  例如 $t=2$ 时取 $x=(1,-1,0)^T$ 得 $f=-2&lt;0$。）</p>
+              <p class="solution-label">考点</p>
+              <p>本题考查两点：</p>
+              <ul>
+                <li><strong>正定 $\Rightarrow |A| &gt; 0$ 是必要条件</strong>。看到一个矩阵的行列式恒 $\le0$，
+                    就可以直接下否定的结论，不必老实算完所有主子式。</li>
+                <li>用顺序主子式判定时，必须<strong>全部</strong>严格大于 0。
+                    本题中 $D_3=-t^2$ 恒 $\le0$，直接判死。</li>
+              </ul>
+              <p><strong>如果题目改为 $f=x_1^2+x_2^2+x_3^2+2tx_1x_2$</strong>（去掉 $x_1x_3$ 项），
+                 则 $A=\begin{pmatrix}1&t&0\\t&1&0\\0&0&1\end{pmatrix}$，
+                 $D_1=1$，$D_2=1-t^2$，$D_3=1-t^2$，
+                 条件为 $-1 &lt; t &lt; 1$。这才是本题的标准考法，值得对照体会。</p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- ==================== 第一部分：客观题 ==================== -->
+      <h2 id="part1">第一部分　客观题</h2>
+      <p>共 28 题，按 <strong>基础 → 中等 → 考研</strong> 由浅入深排列（系统会自动重排）。选好后点"提交答案"，系统会立即判分。
+         <strong>每题解析都会点明干扰项错在哪</strong>，请务必逐条读完。</p>
+
+      <div class="quiz" data-quiz-id="exam-objective" data-title="综合自测卷 · 客观题（考研数学一难度）" data-pass="0.6">
+
+        <div class="q" data-level="基础" data-type="single" data-point="行列式的计算" data-ref="chapters/ch1.html#s1-1">
+          <p class="q-stem">行列式 $\begin{vmatrix}1&2\\3&4\end{vmatrix}$ 的值是（　）。
+             <span class="q-stem-en" lang="en">The value of the <span class="en-term">determinant</span> $\begin{vmatrix}1&2\\3&4\end{vmatrix}$ is ( ).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$-2$</span></li>
+            <li><span class="opt-body">$-1$</span></li>
+            <li><span class="opt-body">$2$</span></li>
+            <li><span class="opt-body">$10$</span></li>
+          </ul>
+          <div class="q-explain">二阶行列式用对角线法则：主对角线之积减副对角线之积，$1\times4-2\times3=-2$。
+            选 $2$ 是<strong>把减法写反</strong>了（写成 $2\times3-1\times4$）；选 $10$ 是<strong>把行列式当成了矩阵的元素和</strong>。</div>
+        </div>
+
+        <div class="q" data-level="基础" data-type="single" data-point="可逆的等价刻画" data-ref="chapters/ch2.html#s2-2">
+          <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，则 $A$ 可逆的充要条件是（　）。
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix. Then a necessary and sufficient condition for $A$ to be <span class="en-term">invertible</span> is ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$A\ne O$</span></li>
+            <li data-correct="true"><span class="opt-body">$|A|\ne0$</span></li>
+            <li><span class="opt-body">$A$ 的主对角元全不为零</span></li>
+            <li><span class="opt-body">$R(A) &gt; 0$</span></li>
+          </ul>
+          <div class="q-explain">$A$ 可逆 $\Leftrightarrow|A|\ne0$ 是最基本的判据。
+            干扰项辨析：$A\ne O$ 不代表可逆（如 $\begin{pmatrix}1&0\\0&0\end{pmatrix}$）；
+            主对角元全不为零也不够（如 $\begin{pmatrix}1&1\\1&1\end{pmatrix}$ 的对角元都是 1，但 $|A|=0$）；
+            $R(A)&gt;0$ 只说明不是零矩阵。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="single" data-point="伴随矩阵" data-ref="chapters/ch2.html#s2-3">
+          <p class="q-stem">设 $A$ 为 3 阶矩阵，$|A|=2$，则 $|A^*|=$（　）。
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=2$, and let $A^*$ be the <span class="en-term">adjugate matrix</span> of $A$. Then $|A^*|=$ ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$2$</span></li>
+            <li data-correct="true"><span class="opt-body">$4$</span></li>
+            <li><span class="opt-body">$8$</span></li>
+            <li><span class="opt-body">$16$</span></li>
+          </ul>
+          <div class="q-explain">由 $AA^*=|A|E$ 两边取行列式得 $|A||A^*|=|A|^n$，故 $|A^*|=|A|^{n-1}$。
+            这里 $n=3$、$|A|=2$，所以 $|A^*|=2^2=4$。
+            <strong>选 $8$ 是错记成 $|A|^n$</strong>，<strong>选 $2$ 是错记成 $|A|$</strong>。这条公式是考研选择题的高频考点。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="single" data-point="行列式的性质" data-ref="chapters/ch1.html#s1-4">
+          <p class="q-stem">设 4 阶矩阵 $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$，且 $|A|=3$，
+             则 $|\alpha_4,\alpha_3,\alpha_2,\alpha_1|=$（　）。
+             <span class="q-stem-en" lang="en">Let $A=(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ be a $4\times4$ matrix with $|A|=3$.
+             Then $|\alpha_4,\alpha_3,\alpha_2,\alpha_1|=$ ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$-3$</span></li>
+            <li data-correct="true"><span class="opt-body">$3$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$12$</span></li>
+          </ul>
+          <div class="q-explain">把 $(\alpha_1,\alpha_2,\alpha_3,\alpha_4)$ 变成 $(\alpha_4,\alpha_3,\alpha_2,\alpha_1)$
+            需要作 $6$ 次列互换（$\frac{4\times3}{2}=6$），每次互换变号，故符号为 $(-1)^6=+1$，行列式的值仍为 $3$。
+            <strong>选 $-3$ 是只数了一次互换</strong>——互换次数是逆序数 $\tau(4321)=6$，不是 1。
+            一般结论：把 $n$ 列完全倒序，符号为 $(-1)^{n(n-1)/2}$。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="single" data-point="秩的不等式" data-ref="chapters/ch3.html#s3-3">
+          <p class="q-stem">设 $A$ 为 $n$ 阶矩阵，且 $A^2=A$，则 $R(A)+R(A-E)=$（　）。
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix with $A^2=A$. Then $R(A)+R(A-E)=$ ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$\le n$，但具体值不确定</span></li>
+            <li data-correct="true"><span class="opt-body">$n$</span></li>
+            <li><span class="opt-body">$2n$</span></li>
+          </ul>
+          <div class="q-explain">由 $A^2=A$ 得 $A(A-E)=O$。对 $AB=O$ 用秩的不等式 $R(A)+R(B)\le n$，
+            得 $R(A)+R(A-E)\le n$。<br>
+            另一方面 $A-(A-E)=E$，由 $R(X-Y)\le R(X)+R(Y)$ 得
+            $n=R(E)=R\bigl(A-(A-E)\bigr)\le R(A)+R(A-E)$。<br>
+            两个方向合起来得 $R(A)+R(A-E)=n$。<br>
+            <strong>这是考研经典题型</strong>：由矩阵等式推出秩的等式，需要"夹逼"两边的估计。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="single" data-point="秩的不等式" data-ref="chapters/ch3.html#s3-3">
+          <p class="q-stem">设 $A,B$ 均为 $n$ 阶矩阵，且 $AB=O$，则下列结论<strong>一定</strong>成立的是（　）。
+             <span class="q-stem-en" lang="en">Let $A$ and $B$ be $n\times n$ matrices with $AB=O$. Then the conclusion that <strong>must</strong> hold is ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$A=O$ 或 $B=O$</span></li>
+            <li><span class="opt-body">$BA=O$</span></li>
+            <li data-correct="true"><span class="opt-body">$R(A)+R(B)\le n$</span></li>
+            <li><span class="opt-body">$|A|=0$ 且 $|B|=0$</span></li>
+          </ul>
+          <div class="q-explain">$AB=O$ 说明 $B$ 的每一列都是 $Ax=0$ 的解，故 $R(B)\le n-R(A)$，即 $R(A)+R(B)\le n$。<br>
+            <strong>A 错</strong>：矩阵乘法无消去律，反例 $A=\begin{pmatrix}1&0\\0&0\end{pmatrix}$，$B=\begin{pmatrix}0&0\\0&1\end{pmatrix}$。<br>
+            <strong>B 错</strong>：$AB=O$ 推不出 $BA=O$，上例中 $BA=\begin{pmatrix}0&0\\1&0\end{pmatrix}\ne O$。<br>
+            <strong>D 错</strong>：若 $B=O$，则 $AB=O$ 对<strong>任何</strong> $A$ 成立，此时 $A$ 完全可以可逆（如 $A=E$），
+            故不能断言 $|A|=0$。</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="single" data-point="抽象矩阵求逆" data-ref="chapters/ch2.html#s2-2">
+          <p class="q-stem">设 $n$ 阶矩阵 $A$ 满足 $A^2-3A+2E=O$，则 $A^{-1}=$（　）。
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ matrix satisfying $A^2-3A+2E=O$. Then $A^{-1}=$ ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$A-3E$</span></li>
+            <li data-correct="true"><span class="opt-body">$\frac12(3E-A)$</span></li>
+            <li><span class="opt-body">$\frac12(A-3E)$</span></li>
+            <li><span class="opt-body">$3E-A$</span></li>
+          </ul>
+          <div class="q-explain">由 $A^2-3A+2E=O$ 得 $A^2-3A=-2E$，即 $A(A-3E)=-2E$，
+            两边除以 $-2$：$A\cdot\left[-\frac12(A-3E)\right]=E$，故 $A^{-1}=\frac12(3E-A)$。<br>
+            <strong>选 $\frac12(A-3E)$ 是漏了负号</strong>；<strong>选 $A-3E$ 是漏了系数</strong>。
+            验证：$A\cdot\frac12(3E-A)=\frac12(3A-A^2)=\frac12(3A-(3A-2E))=\frac12\cdot2E=E$ ✓</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="single" data-point="方程组解的判定" data-ref="chapters/ch3.html#s3-2">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$n$ 为未知量个数，则 $Ax=b$ 有无穷多解的充要条件是（　）。
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix, where $n$ is the number of unknowns. Then a necessary and sufficient condition for $Ax=b$ to have infinitely many solutions is ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$R(A)=R(\bar A)$</span></li>
+            <li><span class="opt-body">$R(A) &lt; n$</span></li>
+            <li data-correct="true"><span class="opt-body">$R(A)=R(\bar A) &lt; n$</span></li>
+            <li><span class="opt-body">$R(A)=R(\bar A)=n$</span></li>
+          </ul>
+          <div class="q-explain">解的判定必须<strong>同时</strong>看两件事：有没有解（$R(A)$ 与 $R(\bar A)$ 是否相等），
+            以及解是否唯一（秩是否等于未知量个数 $n$）。<br>
+            <strong>A 错</strong>：只保证有解，可能是唯一解。<strong>B 错</strong>：秩小于 $n$ 但不保证有解（可能 $R(A)&lt;R(\bar A)$）。<br>
+            <strong>D 是唯一解</strong>而非无穷多解。<br>
+            自由未知量个数 $=n-R(A)$，无穷多解意味着这个数 $&gt;0$。</div>
+        </div>
+
+        <div class="q" data-level="基础" data-type="single" data-point="基础解系" data-ref="chapters/ch4.html#s4-3">
+          <p class="q-stem">设 $A$ 为 $4\times3$ 矩阵，$R(A)=2$，则齐次方程组 $Ax=0$ 的基础解系含（　）个向量。
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times3$ matrix with $R(A)=2$. Then a <span class="en-term">basis of the nullspace</span> of the homogeneous system $Ax=0$ contains ( ) vectors.</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$2$</span></li>
+            <li data-correct="true"><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$3$</span></li>
+            <li><span class="opt-body">$4$</span></li>
+          </ul>
+          <div class="q-explain">基础解系所含向量个数 $=n-R(A)$，其中 $n$ 是<strong>未知量个数</strong>，即矩阵的<strong>列数</strong>。
+            这里 $n=3$（不是行数 4！），$R(A)=2$，故为 $3-2=1$。<br>
+            <strong>选 $2$ 是把 $n$ 当成了行数</strong>，或误用 $R(A)$ 本身。这是最常见的失分点。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="single" data-point="伴随矩阵的秩" data-ref="chapters/ch2.html#s2-3">
+          <p class="q-stem">设 $A$ 为 3 阶矩阵，$|A|=0$，且 $A$ 存在一个 2 阶非零子式，则 $R(A^*)=$（　）。
+             <span class="q-stem-en" lang="en">Let $A$ be a $3\times3$ matrix with $|A|=0$, and suppose $A$ has a nonzero <span class="en-term">minor</span> of order 2. Then $R(A^*)=$ ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$3$</span></li>
+            <li data-correct="true"><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$2$</span></li>
+          </ul>
+          <div class="q-explain">存在 2 阶非零子式且 $|A|=0$ 说明最高阶非零子式是 2 阶，故 $R(A)=2=n-1$。
+            $R(A)=n-1$ 时 $R(A^*)=1$。<br>
+            记忆口诀：$R(A)=n\Rightarrow R(A^*)=n$；$R(A)=n-1\Rightarrow R(A^*)=1$；$R(A)\le n-2\Rightarrow R(A^*)=0$。<br>
+            <strong>选 $2$ 是误以为 $R(A^*)=R(A)$</strong>；选 $0$ 是把条件 $R(A)=n-1$ 与 $R(A)\le n-2$ 搞混了。</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="single" data-point="线性相关性" data-ref="chapters/ch4.html#s4-2">
+          <p class="q-stem">设 $\alpha_1,\alpha_2,\alpha_3$ 线性无关，则下列向量组<strong>线性相关</strong>的是（　）。
+             <span class="q-stem-en" lang="en">Let $\alpha_1,\alpha_2,\alpha_3$ be <span class="en-term">linearly independent</span>. Then the set of vectors that is <strong>linearly dependent</strong> is ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$\alpha_1+\alpha_2,\ \alpha_2+\alpha_3,\ \alpha_3+\alpha_1$</span></li>
+            <li data-correct="true"><span class="opt-body">$\alpha_1-\alpha_2,\ \alpha_2-\alpha_3,\ \alpha_3-\alpha_1$</span></li>
+            <li><span class="opt-body">$\alpha_1,\ \alpha_1+\alpha_2,\ \alpha_1+\alpha_2+\alpha_3$</span></li>
+            <li><span class="opt-body">$\alpha_1,\ 2\alpha_2,\ 3\alpha_3$</span></li>
+          </ul>
+          <div class="q-explain"><strong>B 相关</strong>：三项相加得
+            $(\alpha_1-\alpha_2)+(\alpha_2-\alpha_3)+(\alpha_3-\alpha_1)=0$，
+            存在不全为零的系数 $(1,1,1)$ 使组合为零，故线性相关。<br>
+            <strong>A 无关</strong>：以 $\alpha_1,\alpha_2,\alpha_3$ 为基，系数矩阵为
+            $\begin{pmatrix}1&0&1\\1&1&0\\0&1&1\end{pmatrix}$，行列式为 $2\ne0$，故线性无关。<br>
+            <strong>C 无关</strong>：系数矩阵 $\begin{pmatrix}1&1&1\\0&1&1\\0&0&1\end{pmatrix}$ 是上三角，行列式为 1。<br>
+            <strong>D 无关</strong>：系数矩阵是对角矩阵 $\mathrm{diag}(1,2,3)$，行列式为 6。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="single" data-point="向量组的秩" data-ref="chapters/ch4.html#s4-2">
+          <p class="q-stem">设 $\alpha_1,\alpha_2,\alpha_3$ 线性无关，$\beta_1=\alpha_1+\alpha_2$，$\beta_2=\alpha_2+\alpha_3$，
+             $\beta_3=\alpha_3+\alpha_1$，则 $R(\beta_1,\beta_2,\beta_3)=$（　）。
+             <span class="q-stem-en" lang="en">Let $\alpha_1,\alpha_2,\alpha_3$ be linearly independent, and let $\beta_1=\alpha_1+\alpha_2$, $\beta_2=\alpha_2+\alpha_3$, $\beta_3=\alpha_3+\alpha_1$. Then $R(\beta_1,\beta_2,\beta_3)=$ ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$2$</span></li>
+            <li data-correct="true"><span class="opt-body">$3$</span></li>
+            <li><span class="opt-body">无法确定</span></li>
+          </ul>
+          <div class="q-explain">以 $\alpha_1,\alpha_2,\alpha_3$ 为基，$\beta$ 组的系数矩阵为
+            $C=\begin{pmatrix}1&0&1\\1&1&0\\0&1&1\end{pmatrix}$，
+            $|C|=1(1-0)-0+1(1-0)=2\ne0$，故 $C$ 可逆，$R(\beta)=R(C)=3$。<br>
+            一般结论：<strong>线性无关组经可逆线性变换后仍线性无关</strong>。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="single" data-point="特征值的运算性质" data-ref="chapters/ch5.html#s5-1">
+          <p class="q-stem">设 3 阶矩阵 $A$ 的特征值为 $1,2,3$，则 $|A^2-2A+3E|=$（　）。
+             <span class="q-stem-en" lang="en">The <span class="en-term">eigenvalues</span> of the $3\times3$ matrix $A$ are $1,2,3$. Then $|A^2-2A+3E|=$ ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$6$</span></li>
+            <li><span class="opt-body">$11$</span></li>
+            <li data-correct="true"><span class="opt-body">$36$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+          </ul>
+          <div class="q-explain">设 $f(x)=x^2-2x+3$。若 $\lambda$ 是 $A$ 的特征值，则 $f(\lambda)$ 是 $f(A)$ 的特征值。<br>
+            分别代入：$f(1)=1-2+3=2$，$f(2)=4-4+3=3$，$f(3)=9-6+3=6$。<br>
+            $f(A)$ 的三个特征值之积即为它的行列式：$|f(A)|=2\times3\times6=36$。<br>
+            <strong>选 $11$ 是把特征值相加</strong>（$2+3+6$），但行列式对应的是<strong>相乘</strong>；
+            <strong>选 $6$ 是只算了一个 $f$ 值</strong>。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="single" data-point="可对角化的条件" data-ref="chapters/ch5.html#s5-1">
+          <p class="q-stem">设 3 阶矩阵 $A$ 的特征值为 $1,1,2$，则 $A$ 可对角化的充要条件是（　）。
+             <span class="q-stem-en" lang="en">The eigenvalues of the $3\times3$ matrix $A$ are $1,1,2$. Then a necessary and sufficient condition for $A$ to be <span class="en-term">diagonalizable</span> is ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$R(A-E)=2$</span></li>
+            <li data-correct="true"><span class="opt-body">$R(A-E)=1$</span></li>
+            <li><span class="opt-body">$R(A-2E)=1$</span></li>
+            <li><span class="opt-body">$|A|=2$</span></li>
+          </ul>
+          <div class="q-explain">可对角化 $\Leftrightarrow$ 每个 $k$ 重特征值恰有 $k$ 个线性无关的特征向量
+            $\Leftrightarrow n-R(A-\lambda E)=k$。<br>
+            这里 $\lambda=1$ 是<strong>二重</strong>特征值（$k=2$），$n=3$，故需 $3-R(A-E)=2$，即 $R(A-E)=1$。<br>
+            <strong>选 $R(A-E)=2$ 对应的是只有 1 个线性无关特征向量</strong>（不可对角化）；
+            <strong>D 项 $|A|=2$ 恒成立</strong>（$=1\times1\times2$），与可对角化无关。</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="single" data-point="相似矩阵" data-ref="chapters/ch5.html#s5-1">
+          <p class="q-stem">设 $A$ 与 $B$ 相似，则下列结论<strong>不一定</strong>成立的是（　）。
+             <span class="q-stem-en" lang="en">Let $A$ and $B$ be <span class="en-term">similar</span>. Then the conclusion that is <strong>not necessarily</strong> true is ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$|A|=|B|$</span></li>
+            <li><span class="opt-body">$R(A)=R(B)$</span></li>
+            <li><span class="opt-body">$A$ 与 $B$ 有相同的特征值</span></li>
+            <li data-correct="true"><span class="opt-body">$A$ 与 $B$ 有相同的特征向量</span></li>
+          </ul>
+          <div class="q-explain">相似 $B=P^{-1}AP$ 保持：特征多项式、特征值、迹、行列式、秩、可逆性——
+            所以 A、B、C 都成立。<br>
+            但<strong>特征向量一般不保持</strong>：若 $Ax=\lambda x$，则 $B(P^{-1}x)=P^{-1}Ax=\lambda(P^{-1}x)$，
+            即 $B$ 对应的特征向量是 $P^{-1}x$ 而<strong>不是</strong> $x$ 本身。<br>
+            所以 D 不一定成立，是本题答案。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="single" data-point="合同与惯性定理" data-ref="chapters/ch6.html#s6-1">
+          <p class="q-stem">设 $A,B$ 为 $n$ 阶<strong>实对称</strong>矩阵，则 $A$ 与 $B$ 合同的充要条件是（　）。
+             <span class="q-stem-en" lang="en">Let $A$ and $B$ be $n\times n$ <strong>real symmetric</strong> matrices. Then a necessary and sufficient condition for $A$ and $B$ to be <span class="en-term">congruent</span> is ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$A$ 与 $B$ 有相同的特征值</span></li>
+            <li><span class="opt-body">$R(A)=R(B)$</span></li>
+            <li data-correct="true"><span class="opt-body">$A$ 与 $B$ 有相同的正、负惯性指数</span></li>
+            <li><span class="opt-body">$A$ 与 $B$ 相似</span></li>
+          </ul>
+          <div class="q-explain">由惯性定理，二次型的正、负惯性指数 $p,q$ 由二次型本身唯一确定；
+            两个实对称矩阵合同 $\Leftrightarrow$ 它们的规范形相同 $\Leftrightarrow$ $p,q$ 分别相同。<br><br>
+            <strong>A 错</strong>——"特征值相同"连必要条件都不是。
+            反例：$\mathrm{diag}(1,1)$ 的特征值是 $1,1$，$\mathrm{diag}(1,4)$ 的特征值是 $1,4$，两者特征值不同；
+            但它们都是正定矩阵（$p=2,\ q=0$），故<strong>合同</strong>。
+            可见合同与特征值是否相同无关。（特征值相同是<strong>相似</strong>的充要条件，那是另一回事。）<br><br>
+            <strong>B 错</strong>——秩相同只是必要条件，还要看正负如何分配。
+            反例：$\mathrm{diag}(1,1,-1)$ 与 $\mathrm{diag}(1,-1,-1)$ 的秩都是 3，
+            但正惯性指数分别是 $p=2$ 和 $p=1$，<strong>不合同</strong>。<br><br>
+            <strong>D 错</strong>——相似比合同严格。对实对称矩阵，相似 $\Rightarrow$ 特征值相同 $\Rightarrow$ 惯性指数相同 $\Rightarrow$ 合同，
+            但反过来不成立：上面 $\mathrm{diag}(1,1)$ 与 $\mathrm{diag}(1,4)$ 合同却不相似（特征值不同）。
+            即"相似"是"合同"的<strong>充分不必要</strong>条件。</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="single" data-point="惯性定理" data-ref="chapters/ch6.html#s6-1">
+          <p class="q-stem">二次型 $f(x_1,x_2,x_3)=x_1^2+x_2^2+x_3^2-2x_1x_2$ 的正惯性指数为（　）。
+             <span class="q-stem-en" lang="en">For the <span class="en-term">quadratic form</span> $f(x_1,x_2,x_3)=x_1^2+x_2^2+x_3^2-2x_1x_2$, the positive index of inertia (the number of positive eigenvalues) is ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$1$</span></li>
+            <li data-correct="true"><span class="opt-body">$2$</span></li>
+            <li><span class="opt-body">$3$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+          </ul>
+          <div class="q-explain"><strong>配方法</strong>：$f=(x_1^2-2x_1x_2+x_2^2)+x_3^2=(x_1-x_2)^2+x_3^2$。<br>
+            只有 2 个平方项，且系数都是正的，故正惯性指数 $p=2$，负惯性指数 $q=0$。<br>
+            也可用特征值：$A=\begin{pmatrix}1&-1&0\\-1&1&0\\0&0&1\end{pmatrix}$，
+            左上 $2\times2$ 块特征值为 $2,0$，加上 $1$，共 $2,0,1$，正特征值有 2 个 ✓<br>
+            <strong>选 $3$ 是没注意 $x_1,x_2$ 部分会退化</strong>。</div>
+        </div>
+
+        <div class="q" data-level="基础" data-type="single" data-point="标准形与规范形" data-ref="chapters/ch6.html#s6-1">
+          <p class="q-stem">设 3 阶实对称矩阵 $A$ 的特征值为 $1,1,-1$，则二次型 $x^TAx$ 的规范形是（　）。
+             <span class="q-stem-en" lang="en">The eigenvalues of the $3\times3$ real symmetric matrix $A$ are $1,1,-1$. Then the <span class="en-term">canonical form</span> of the quadratic form $x^TAx$ is ( ).</span></p>
+          <ul class="options">
+            <li><span class="opt-body">$y_1^2+y_2^2+y_3^2$</span></li>
+            <li data-correct="true"><span class="opt-body">$y_1^2+y_2^2-y_3^2$</span></li>
+            <li><span class="opt-body">$y_1^2-y_2^2-y_3^2$</span></li>
+            <li><span class="opt-body">$y_1^2+y_2^2$</span></li>
+          </ul>
+          <div class="q-explain">规范形的系数只看<strong>正负号</strong>，不看具体数值。
+            特征值 $1,1,-1$ 中有 2 个正、1 个负，故 $p=2$、$q=1$，规范形为 $y_1^2+y_2^2-y_3^2$。<br>
+            <strong>选 C 是把正负个数数反了</strong>。<br>
+            注意：正交变换下的<strong>标准形</strong>是 $y_1^2+y_2^2-y_3^2$（系数恰为特征值，此处数值恰好与规范形相同），
+            若特征值是 $2,3,-5$，标准形为 $2y_1^2+3y_2^2-5y_3^2$，规范形仍是 $y_1^2+y_2^2-y_3^2$。这是两者的区别。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="multi" data-point="正定二次型" data-ref="chapters/ch6.html#s6-3">
+          <p class="q-stem">设 $A$ 为 $n$ 阶实对称矩阵且正定，则下列矩阵中<strong>也正定</strong>的是（　）。
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ real symmetric <span class="en-term">positive definite</span> matrix. Then among the following matrices, the ones that are <strong>also positive definite</strong> are ( ).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$A^{-1}$</span></li>
+            <li data-correct="true"><span class="opt-body">$A^*$</span></li>
+            <li data-correct="true"><span class="opt-body">$A^k$（$k$ 为正整数）</span></li>
+            <li><span class="opt-body">$-A$</span></li>
+          </ul>
+          <div class="q-explain">设 $A$ 的特征值为 $\lambda_i&gt;0$。<br>
+            <strong>$A^{-1}$</strong>：特征值为 $1/\lambda_i&gt;0$，且 $A^{-1}$ 仍对称 ✓<br>
+            <strong>$A^*$</strong>：$A^*=|A|A^{-1}$，特征值为 $|A|/\lambda_i$。因 $|A|=\lambda_1\cdots\lambda_n&gt;0$，
+            故 $|A|/\lambda_i&gt;0$ ✓<br>
+            <strong>$A^k$</strong>：特征值为 $\lambda_i^k&gt;0$ ✓<br>
+            <strong>$-A$</strong>：特征值为 $-\lambda_i&lt;0$，是<strong>负定</strong>的 ✗</div>
+        </div>
+
+        <div class="q" data-level="基础" data-type="multi" data-point="相似矩阵" data-ref="chapters/ch5.html#s5-1">
+          <p class="q-stem">设 $A$ 与 $B$ 相似，则下列量中一定相等的是（　）。
+             <span class="q-stem-en" lang="en">Let $A$ and $B$ be similar. Then the quantities that must be equal are ( ).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">特征多项式</span></li>
+            <li data-correct="true"><span class="opt-body">秩</span></li>
+            <li data-correct="true"><span class="opt-body">迹（主对角元之和）</span></li>
+            <li><span class="opt-body">$A$ 与 $B$ 本身</span></li>
+          </ul>
+          <div class="q-explain">相似 $B=P^{-1}AP$（$P$ 可逆）保持：特征多项式、特征值、迹、行列式、秩、可逆性。<br>
+            但相似<strong>不意味着相等</strong>：$A\ne B$ 很常见（例如 $A$ 与它的对角化结果相似但不等）。<br>
+            另外务必区分：<strong>合同</strong>（$B=C^TAC$）保持的是秩与正负惯性指数，<strong>不保持特征值</strong>。</div>
+        </div>
+
+        <div class="q" data-level="基础" data-type="multi" data-point="实对称矩阵" data-ref="chapters/ch5.html#s5-2">
+          <p class="q-stem">设 $A$ 为 $n$ 阶实对称矩阵，则下列说法正确的是（　）。
+             <span class="q-stem-en" lang="en">Let $A$ be an $n\times n$ real symmetric matrix. Then the statements that are true are ( ).</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$A$ 的特征值全是实数</span></li>
+            <li data-correct="true"><span class="opt-body">$A$ 不同特征值对应的特征向量相互正交</span></li>
+            <li><span class="opt-body">$A$ 的特征向量之间两两正交</span></li>
+            <li data-correct="true"><span class="opt-body">存在正交矩阵 $Q$ 使 $Q^TAQ$ 为对角矩阵</span></li>
+          </ul>
+          <div class="q-explain">C 项是错的：只有<strong>不同特征值</strong>对应的特征向量才自动正交。
+            <strong>同一个特征值</strong>对应的多个特征向量之间不一定正交——这正是需要对它们额外做
+            <strong>施密特正交化</strong>的原因。<br>
+            这个区别是正交对角化大题的关键得分点，也是选择题的高频陷阱。</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="judge" data-point="秩的不等式" data-ref="chapters/ch3.html#s3-3">
+          <p class="q-stem">若 $n$ 阶矩阵 $A,B$ 满足 $AB=O$，则必有 $A=O$ 或 $B=O$。
+             <span class="q-stem-en" lang="en">If the $n\times n$ matrices $A$ and $B$ satisfy $AB=O$, then necessarily $A=O$ or $B=O$.</span></p>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">矩阵乘法<strong>没有消去律</strong>，也没有"乘积为零则因子为零"的性质（那是数的性质，不是矩阵的）。
+            反例：$A=\begin{pmatrix}1&0\\0&0\end{pmatrix}$，$B=\begin{pmatrix}0&0\\0&1\end{pmatrix}$，
+            则 $AB=O$，但 $A\ne O$ 且 $B\ne O$。<br>
+            正确结论是 $R(A)+R(B)\le n$。</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="judge" data-point="特征值的性质" data-ref="chapters/ch5.html#s5-1">
+          <p class="q-stem">若 $A^2=A$，则 $A$ 的特征值只能是 $0$ 或 $1$。
+             <span class="q-stem-en" lang="en">If $A^2=A$, then the eigenvalues of $A$ can only be $0$ or $1$.</span></p>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">设 $Ax=\lambda x$（$x\ne0$）。两边左乘 $A$：$A^2x=\lambda Ax=\lambda^2x$；
+            又因 $A^2=A$，得 $A^2x=Ax=\lambda x$。于是 $\lambda^2x=\lambda x$，即 $(\lambda^2-\lambda)x=0$。
+            因 $x\ne0$，得 $\lambda(\lambda-1)=0$，故 $\lambda=0$ 或 $1$。<br>
+            <strong>一般结论</strong>：若 $f(A)=O$，则 $A$ 的任一特征值必是 $f(\lambda)=0$ 的根。
+            这条性质在考研中反复出现。</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="judge" data-point="可对角化的条件" data-ref="chapters/ch5.html#s5-1">
+          <p class="q-stem">若两个 $n$ 阶矩阵有相同的特征值，则它们相似。
+             <span class="q-stem-en" lang="en">If two $n\times n$ matrices have the same eigenvalues, then they are similar.</span></p>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">特征值相同只是相似的<strong>必要条件</strong>，不是充分条件。
+            反例：$A=\begin{pmatrix}1&0\\0&1\end{pmatrix}$ 与 $B=\begin{pmatrix}1&1\\0&1\end{pmatrix}$，
+            两者的特征值都是 $1$（二重），但 $A$ 可对角化而 $B$ 不可，故不相似。<br>
+            相似要求<strong>特征多项式相同（或等价地，Jordan 标准形相同）</strong>，而不只是特征值相同。
+            对<strong>实对称</strong>矩阵而言，特征值相同确实等价于相似（因为都能正交对角化）。</div>
+        </div>
+
+        <div class="q" data-level="考研" data-type="fill" data-point="伴随矩阵的秩" data-ref="chapters/ch2.html#s2-3">
+          <p class="q-stem">设 4 阶矩阵 $A$ 的秩 $R(A)=3$，则 $R(A^*)=$ ______。
+             <span class="q-stem-en" lang="en">Let $A$ be a $4\times4$ matrix with <span class="en-term">rank</span> $R(A)=3$. Then $R(A^*)=$ ______.</span></p>
+          <div class="q-answer" data-answer="1"></div>
+          <div class="q-explain">$R(A)=n-1$（这里 $n=4$，$R(A)=3$）时 $R(A^*)=1$。<br>
+            理由：$R(A)=3$ 说明存在 3 阶非零子式，故 $A^*\ne O$；又 $|A|=0$，故 $AA^*=|A|E=O$，
+            由 $R(A)+R(A^*)\le n=4$ 得 $R(A^*)\le1$。两者结合得 $R(A^*)=1$。</div>
+        </div>
+
+        <div class="q" data-level="基础" data-type="fill" data-point="特征值的性质" data-ref="chapters/ch5.html#s5-1">
+          <p class="q-stem">设 3 阶矩阵 $A$ 的特征值为 $1,-1,2$，则 $|A|=$ ______。
+             <span class="q-stem-en" lang="en">The eigenvalues of the $3\times3$ matrix $A$ are $1,-1,2$. Then $|A|=$ ______.</span></p>
+          <div class="q-answer" data-answer="-2|−2"></div>
+          <div class="q-explain">特征值之积等于行列式：$|A|=1\times(-1)\times2=-2$。
+            这一条必须与"特征值之和等于迹"一起记住——它们是算完特征值后的<strong>验算利器</strong>。</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="fill" data-point="二次型的矩阵表示" data-ref="chapters/ch6.html#s6-1">
+          <p class="q-stem">二次型 $f(x_1,x_2)=2x_1x_2$ 的矩阵为 $\begin{pmatrix}0&a\\a&0\end{pmatrix}$，则 $a=$ ______。
+             <span class="q-stem-en" lang="en">The matrix of the quadratic form $f(x_1,x_2)=2x_1x_2$ is $\begin{pmatrix}0&a\\a&0\end{pmatrix}$. Then $a=$ ______.</span></p>
+          <div class="q-answer" data-answer="1"></div>
+          <div class="q-explain">二次型的矩阵必须是实对称矩阵，且<strong>交叉项系数要对半分</strong>。
+            交叉项 $2x_1x_2$ 的系数是 $2$，平分为 $a_{12}=a_{21}=1$，故 $a=1$。<br>
+            验证：$x^TAx=\begin{pmatrix}x_1&x_2\end{pmatrix}\begin{pmatrix}0&1\\1&0\end{pmatrix}\begin{pmatrix}x_1\\x_2\end{pmatrix}=2x_1x_2$ ✓</div>
+        </div>
+
+        <div class="q" data-level="中等" data-type="fill" data-point="基础解系" data-ref="chapters/ch4.html#s4-3">
+          <p class="q-stem">设 $A$ 为 $m\times n$ 矩阵，$R(A)=r &lt; n$，则齐次方程组 $Ax=0$ 的基础解系含 ______ 个向量
+             （用 $n,r$ 表示，如"n-r"）。
+             <span class="q-stem-en" lang="en">Let $A$ be an $m\times n$ matrix with $R(A)=r &lt; n$. Then a basis of the nullspace of the homogeneous system $Ax=0$ contains ______ vectors (express it in terms of $n$ and $r$, for example "n-r").</span></p>
+          <div class="q-answer" data-answer="n-r|n−r|n - r"></div>
+          <div class="q-explain">基础解系所含向量个数等于解空间的维数，即 $\dim N(A)=n-R(A)=n-r$。<br>
+            直观理解：$n$ 个未知量中有 $r$ 个是"被约束住"的主元变量，剩下 $n-r$ 个是自由变量，
+            每个自由变量对应一个基础解。</div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这份卷子是<strong>全站的难度峰值</strong>，28 道客观题横跨六章，命题方式
+             完全对齐考研数一。它的目的不是"检验你学没学会"，而是<strong>暴露跨章节的漏洞</strong>——
+             所以做错一半完全不必慌，那恰恰说明它起到了作用。</p>
+
+          <p>从题型看，本卷有三条主线。一是<strong>抽象矩阵</strong>：不给具体数值、只给矩阵等式，
+             考的是"由 $f(A)=O$ 能推出什么"。二是<strong>秩的语言</strong>：从 $R(AB)\le\min\{R(A),R(B)\}$
+             到 $R(A^*)$ 的分段结论，这是把六章串起来的那根线。三是<strong>相似 / 合同 / 等价三者的辨析</strong>，
+             这是考研选择题最容易设陷阱的地方。</p>
+
+          <p>最常见的错法有三个：把 $R(A)=R(\bar A)$ 直接当成"有唯一解"、
+             把"$n$ 个特征值"当成可对角化的条件、以及认为"相似必合同"。
+             这三处的解析都写清了干扰项错在哪，请重点读。</p>
+
+          <p>如果你在<strong>基础档</strong>就丢分，说明定义还没记准，回对应章节重读；
+             如果只是<strong>考研档</strong>做不出，那很正常——概念已经清楚了，
+             差的是综合运用的熟练度，可以进入强化阶段。第二部分那 8 道计算证明题，
+             请务必<strong>动手写完</strong>再看答案：线代的失分有相当一部分不是不会，而是算错。</p>
+        </div>
+
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>做完之后怎么办</div>
+        <ul>
+          <li><strong>正确率 ≥ 80%</strong>：考研数一线代部分已经具备扎实基础，
+              可以开始刷历年真题的线代大题，或者进入后续课程（数值分析、自动控制原理、有限元）。</li>
+          <li><strong>60% – 80%</strong>：定位错题所在章节，重读该节的<strong>定义</strong>与<strong>例题</strong>，
+              把该节的自测题再做一遍。重点是搞清"为什么错"，而不是记住答案。</li>
+          <li><strong>&lt; 60%</strong>：不要急着刷题。回到<a href="index.html">课程地图</a>，
+              从第 1 章开始按顺序重学一遍。考研数一的线代题<strong>全部建立在定义的精确理解上</strong>，
+              定义含糊的话刷再多题也提不上去。</li>
+        </ul>
+      </div>
+
+            <!-- SHELL:BOTTOMNAV -->
+      <nav class="chapter-nav">
+        <a class="prev" href="linear-algebra-cheatsheet.html"><span class="dir">← 上一页</span><span class="ttl">公式速查表</span></a>
+        <span class="next is-disabled"></span>
+      </nav>
+      <!-- /SHELL:BOTTOMNAV -->
+
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <p><strong>线性代数学习站</strong> · 综合自测卷（考研数学一难度）· 28 道客观题 + 8 道计算证明题</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="assets/js/plot.js"></script>
+<script src="assets/js/videos.js"></script>
+<script src="assets/js/quiz.js"></script>
+<script src="assets/js/course-data.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/theme.js"></script>
+</body>
+</html>
