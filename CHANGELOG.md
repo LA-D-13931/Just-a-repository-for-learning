@@ -10,6 +10,61 @@
 
 ---
 
+## v0.9.2 — 2026-09-20
+
+### 线性代数主页（第 38 节）
+
+#### 问题
+
+切到「线性代数」后内容区仍显示高等数学主页——线代**没有自己的首页**。
+
+#### 根本原因（三处叠加）
+
+1. **路由硬编码**：`index.html` 的 hero 是写死的「高等数学，从极限到考场」，
+   `setupSubjectSwitcher` 切换后只跳 `lastChapterOf()`（第一章），**从不跳科目首页**。
+2. **数据源缺主页字段**：`subjects[]` 只有 `title`/`tagline`，没有 hero 文案与首页文件。
+3. **状态未按科目隔离存储键**：`site.js` 的 `PROG_KEY`、`quiz.js` 的 `STORE_KEY`
+   **硬编码**为 `advmath.*`，线代页会与高数**共用同一存储键**（数据源里已配好
+   `subjects[].storageKeys`，但代码没读）。
+
+#### 修法
+
+| 文件 | 改动 |
+|---|---|
+| `assets/course-data.json` | 两个科目各加 `home`：首页文件、`h1_zh`、`intro_zh[]`、`cta_zh`/`cta_href`、`meta_zh[]` |
+| `assets/js/site.js` | 新增 `setupHomeHero()`：按 `data-page` 命中科目首页后，用数据源填充 h1/简介/CTA/hero-meta；新增 `gotoHomeOrChapter()`：有未读章节回章节，否则回科目首页；`PROG_KEY`/`QUIZ_KEY` 改读 `subjects[].storageKeys` |
+| `assets/js/quiz.js` | `STORE_KEY` 改读 `subjects[].storageKeys` |
+| `linear-algebra.html` | **新增**线代首页：克隆 `index.html` 的结构与组件，6 张章节卡片按线代数据生成 |
+| `tests/check-html.py` | 页面清单纳入 `linear-algebra.html`（否则新页不被质检覆盖） |
+
+#### 线代主页数据（按线代实际数据填充）
+
+- 标题：线性代数，从行列式到二次型 / 一条主线走通
+- 按钮：从第 1 章开始 → （指向 `chapters/la1.html`）
+- 统计：6 章 21 节骨架 · 5 幅几何直观配图 · 300 道自测与例题 · 57 学时建议
+
+#### 顺带修掉的两个缺陷
+
+1. **卡片进度条结构缺失**：线代首页初版卡片只有空的 `.card-progress`，
+   而 `refreshProgressUI` 需要 `.bar > i`，报 `Cannot read properties of null (reading 'classList')`。已补 `.lbl > .done` 与 `.bar > i`。
+2. **`setupHomeHero` 依赖 `location.pathname`**：自检脚本的桩里没有该属性，导致
+   `site.test.js` 抛错（27 项全挂）。改用 `data-page` 判定。
+
+#### 验证
+
+| 项 | 结果 |
+|---|---|
+| 切换科目 | ✓ 高数首页 → 点线性代数 → **linear-algebra.html**，图标 LA，data-subject=linearAlgebra |
+| 线代主页文案 | ✓ h1/CTA/hero-meta/6 张卡片标题**全部对应线代** |
+| 切回高数 | ✓ index.html 仍 `0 / 82`，13 张卡片正常 |
+| **科目进度隔离** | ✓ 线代勾选只写 `linalg.progress.v1`，`advmath.progress.v1` 未生成；线代首页 `1 / 21`，高数首页仍 `0 / 82` |
+| 各页零错误 | ✓ index / linear-algebra / la1 / ch1 均无 JS 报错 |
+| 站点校验 11 项 | ✓ 全绿 |
+| `check-html` | ✓ **23/23 页**（含新页）、660 链接 0 失效 |
+| JS 单测 6 套（203 项） | ✓ 全绿 |
+| 图表视觉自检 | ✓ 通过 |
+
+
 ## v0.9.1 — 2026-09-20
 
 ### 线代视频接入 + 中英切换 + 校验器支持多科目

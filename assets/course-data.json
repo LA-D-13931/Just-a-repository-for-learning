@@ -1103,7 +1103,35 @@
         "progress": "advmath.progress.v1",
         "quiz": "advmath.quiz.v1"
       },
-      "ready": true
+      "ready": true,
+      "home": {
+        "file": "index.html",
+        "h1_zh": "高等数学，从极限到考场<br>一条主线走通",
+        "intro_zh": [
+          "本站以<strong>同济《高等数学》第八版</strong>的 12 章 80 节为骨架，逐节补入<strong>托马斯 14 版</strong>独有的内容，每一节都先讲<strong>定义</strong>，再讲<strong>为什么</strong>，然后给<strong>计算步骤</strong>与<strong>例题</strong>，标注<strong>考察要点</strong>与<strong>工程联系</strong>，最后附<strong>自测题</strong>。",
+          "<strong>难度由浅入深，上限到考研数学一；每节标注建议学时。</strong>概念讲解与题目均<strong>中英对照</strong>——校内考试是英文命题，术语必须能写得出。"
+        ],
+        "cta_zh": "从第 1 章开始 →",
+        "cta_href": "chapters/ch1.html",
+        "meta_zh": [
+          [
+            "12",
+            "章 · 80 节骨架"
+          ],
+          [
+            "+34",
+            "节托马斯独有内容"
+          ],
+          [
+            "2",
+            "种教材体系双向映射"
+          ],
+          [
+            "中英",
+            "等权双语"
+          ]
+        ]
+      }
     },
     {
       "_comment": "线性代数科目数据。由 _migration-linalg/build-subject.py 从线代项目 site.js 的 COURSE 数组迁移而来，内容未作改动。",
@@ -1424,7 +1452,35 @@
         "progress": "linalg.progress.v1",
         "quiz": "linalg.quiz.v1"
       },
-      "ready": true
+      "ready": true,
+      "home": {
+        "file": "linear-algebra.html",
+        "h1_zh": "线性代数，从行列式到二次型<br>一条主线走通",
+        "intro_zh": [
+          "本站以<strong>同济《线性代数》</strong>的 6 章 21 节为骨架，从行列式出发，经矩阵与线性方程组，到向量组的线性相关性、特征值与二次型，每一节都先讲<strong>定义</strong>，再讲<strong>为什么</strong>，然后给<strong>计算步骤</strong>与<strong>例题</strong>，标注<strong>考察要点</strong>与<strong>工程联系</strong>，最后附<strong>自测题</strong>。",
+          "<strong>难度由浅入深，上限到考研数学一；每节标注建议学时。</strong>重点把<strong>几何直观</strong>讲透——行列式是面积与体积、特征向量是不变的方向、二次型对应曲面，配图都用真实数学关系渲染。"
+        ],
+        "cta_zh": "从第 1 章开始 →",
+        "cta_href": "chapters/la1.html",
+        "meta_zh": [
+          [
+            "6",
+            "章 · 21 节骨架"
+          ],
+          [
+            "5",
+            "幅几何直观配图"
+          ],
+          [
+            "300",
+            "道自测与例题"
+          ],
+          [
+            "57",
+            "学时建议"
+          ]
+        ]
+      }
     }
   ]
 }

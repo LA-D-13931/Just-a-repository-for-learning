@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线性代数学习站 · 从行列式到二次型</title>
+<meta name="description" content="以同济《高等数学》第八版 12 章 80 节为骨架，补入托马斯 14 版独有内容，面向考研数学一与英文命题考试：每节先讲定义与直观动机，再给计算步骤与例题，标注考察要点与工程联系，概念与题目均中英对照。Bilingual calculus built on Tongji 8th edition, mapped to Thomas Calculus 14th edition, targeting the Chinese postgraduate entrance exam (Math I) and English-language course exams.">
+<script>
+  /* 尽早应用主题与亮暗模式，避免刷新时"先亮后暗"闪一下。
+     theme.js 里还有一份同样的逻辑，这里是关键路径上的同步版本。 */
+  (function () {
+    try {
+      var t = localStorage.getItem('advmath.theme.v1') || 'default';
+      var m = localStorage.getItem('advmath.mode.v1') || 'auto';
+      var e = document.documentElement;
+      e.setAttribute('data-theme', t);
+      if (m !== 'auto') e.setAttribute('data-mode', m);
+      /* 语言：纯中文模式下要把英文段与行内英文整段隐藏，
+         所以必须在首屏渲染前就把 data-lang 写上去，否则会闪一下英文。 */
+      if ((localStorage.getItem('advmath.lang.v1') || 'both') === 'zh') {
+        e.setAttribute('data-lang', 'zh');
+      }
+    } catch (err) { /* 隐私模式下 localStorage 不可用，退回默认主题 */ }
+  })();
+</script>
+<link rel="stylesheet" href="assets/css/theme-tokens.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>
+  /* MathJax 配置。
+     性能与正确性的折中（2026-09-18）：
+     本站公式密集（ch1 有 7518 个），一次性排版全页会生成约 19 万 DOM 元素，
+     任何重排都要 200 ms —— 侧栏拖动会卡。
+     但如果"只为视口内排版"，未被滚到的公式会一直显示成 $\sqrt{x}$ 这样的源码，
+     这对读者是明显的文字损坏，不可接受。
+     因此改为：首屏立即排版（保证打开就是正确文字），
+     其余公式在浏览器空闲时段分片补排（不阻塞交互）。
+     两全：文字正确，且拖动期间几乎没有排版开销。 */
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\(', '\)']], displayMath: [['$$', '$$'], ['\[', '\]']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+    svg: { fontCache: 'local', overflow: 'scale' },
+    /* 关键（第 26 节 · 页面切换性能）：
+       默认 startup 会在 MathJax 就绪时自动同步扫描全页并排版，
+       实测这一步在主线程上连续占用 1.7 s（ch3：0 → 5484 个公式一次成型），
+       期间点击无响应——这就是"切换卡顿/点击无反应"的根因。
+       改为 typeset:false：既不自动排版，也不自动扫描；
+       排版全部由下面这段脚本按"首屏优先 + 分片"驱动。 */
+    startup: {
+      typeset: false,
+      ready: function () {
+        MathJax.startup.defaultReady();
+        window.__mjxReady = true;   /* 供下面的分片调度感知 */
+      }
+    }
+  };
+
+  (function () {
+    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
+    if (/[?&]eager=1/.test(location.search)) return;
+
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head';
+    var pending = [], busy = false, started = false, sweepDone = false;
+
+    function idle(fn) {
+      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
+      else setTimeout(fn, 16);
+    }
+    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
+       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
+    function schedule() {
+      if (busy || !pending.length) return;
+      busy = true;
+      var batch = pending.splice(0, 25);
+      idle(function () {
+        MJ.typesetPromise(batch).catch(function () {}).then(function () {
+          busy = false;
+          if (pending.length) { schedule(); return; }
+          /* 兜底补排（第 32 节）：例题标题 .example-head 里的公式此前从不进入队列，
+             导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
+             凡是仍含 `$` 且未被 MathJax 处理的 .example-head，补排一次。
+             只处理这一类元素，不影响其他已排好的内容。 */
+          if (!sweepDone) {
+            sweepDone = true;
+            var left = Array.prototype.slice.call(document.querySelectorAll('.example-head'))
+              .filter(function (el) {
+                return !el.querySelector('mjx-container') && /\$[^$]{1,200}\$/.test(el.textContent || '');
+              });
+            if (left.length) { pending = pending.concat(left); schedule(); }
+          }
+        });
+      });
+    }
+
+    function start() {
+      if (started) return;
+      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
+        setTimeout(start, 60); return;
+      }
+      started = true;
+      MJ = window.MathJax;
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL));
+      var first = all.filter(function (el) {
+        var r = el.getBoundingClientRect();
+        return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      });
+      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
+
+      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
+         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
+      MJ.typesetPromise(first.slice(0, 60)).then(function () {
+        pending = pending.concat(first.slice(60));
+        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
+        if (typeof IntersectionObserver !== 'function') {
+          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
+          schedule(); return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) {
+              pending.push(entries[i].target);
+              io.unobserve(entries[i].target);
+            }
+          }
+          schedule();
+        }, { rootMargin: '400px 0px' });
+        rest.forEach(function (el) { io.observe(el); });
+        schedule();
+      }).catch(function () {});
+    }
+
+    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
+    function boot() {
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
+      } else setTimeout(start, 0);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+</script>
+<script id="MathJax-script" async src="assets/js/vendor/tex-svg.js"></script>
+</head>
+<body data-page="linear-algebra" data-subject="linearAlgebra">
+
+                                                                      <!-- SHELL:HEADER -->
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">LA</span>
+      <span>线性代数<small>行列式 · 矩阵 · 方程组 · 特征值 · 二次型</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="切换菜单">☰</button>
+    <nav class="header-nav">
+      <a href="index.html" class="is-active">首页</a>
+      <a href="cheatsheet.html">公式速查表</a>
+      <a href="exam.html">综合自测卷</a>
+    </nav>
+    <a class="header-ext" href="https://www.desmos.com/calculator" target="_blank" rel="noopener noreferrer" aria-label="在新标签页打开 Desmos 计算器"><svg class="header-ext-ico" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M2 18C6 18 7 6 11 6s5 12 9 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="header-ext-label">Desmos</span></a>
+    <div class="header-actions" data-theme-controls></div>
+    <div class="global-progress"></div>
+  </header>
+  <!-- /SHELL:HEADER -->
+
+<div class="layout">
+                                                                                                                                                                                                                  <!-- SHELL:SIDEBAR -->
+      <aside class="sidebar">
+        <div class="toc-group">
+        <div class="toc-title">课程导航</div>
+          <a class="toc-chapter" href="chapters/ch1.html"><span class="num">1</span>函数与极限</a>
+          <a class="toc-chapter" href="chapters/ch2.html"><span class="num">2</span>导数与微分</a>
+          <a class="toc-chapter" href="chapters/ch3.html"><span class="num">3</span>微分中值定理与导数的应用</a>
+          <a class="toc-chapter" href="chapters/ch4.html"><span class="num">4</span>不定积分</a>
+          <a class="toc-chapter" href="chapters/ch5.html"><span class="num">5</span>定积分</a>
+          <a class="toc-chapter" href="chapters/ch6.html"><span class="num">6</span>定积分的应用</a>
+          <a class="toc-chapter" href="chapters/ch7.html"><span class="num">7</span>微分方程</a>
+          <a class="toc-chapter" href="chapters/ch8.html"><span class="num">8</span>向量代数与空间解析几何</a>
+          <a class="toc-chapter" href="chapters/ch9.html"><span class="num">9</span>多元函数微分法及其应用</a>
+          <a class="toc-chapter" href="chapters/ch10.html"><span class="num">10</span>重积分</a>
+          <a class="toc-chapter" href="chapters/ch11.html"><span class="num">11</span>曲线积分与曲面积分</a>
+          <a class="toc-chapter" href="chapters/ch12.html"><span class="num">12</span>无穷级数</a>
+          <a class="toc-chapter" href="chapters/supp1.html"><span class="num">TX</span>托马斯补充</a>
+      </div>
+        <div class="toc-group">
+          <div class="toc-title">工具</div>
+          <a class="toc-chapter" href="cheatsheet.html">公式速查表</a>
+          <a class="toc-chapter" href="exam.html">综合自测卷</a>
+        </div>
+      </aside>
+      <!-- /SHELL:SIDEBAR -->
+
+  <main class="main">
+    <div class="content">
+
+      <section class="hero">
+        <h1>线性代数，从行列式到二次型<br>一条主线走通</h1>
+                <p class="zh" lang="zh">本站以<strong>同济《高等数学》第八版</strong>的 12 章 80 节为骨架，逐节补入<strong>托马斯 14 版</strong>独有的内容，
+        每一节都先讲<strong>定义</strong>，再讲<strong>为什么</strong>，然后给<strong>计算步骤</strong>与<strong>例题</strong>，
+        标注<strong>考察要点</strong>与<strong>工程联系</strong>，最后附<strong>自测题</strong>。</p>
+        <p class="zh" lang="zh"><strong>难度由浅入深，上限到考研数学一；每节标注建议学时。</strong>
+        概念讲解与题目均<strong>中英对照</strong>——校内考试是英文命题，术语必须能写得出。</p>
+      
+        <a class="btn btn-hero" href="chapters/ch1.html">从第 1 章开始 →</a>
+
+        <div class="hero-meta">
+          <div><strong>12</strong>章 · 80 节骨架</div>
+          <div><strong>+34</strong>节托马斯独有内容</div>
+          <div><strong>2</strong>种教材体系双向映射</div>
+          <div><strong>中英</strong>等权双语</div>
+        </div>
+      </section>
+
+      <h2 id="progress">我的学习进度</h2>
+      <div class="progress-panel">
+        <div class="stat" data-stat="sections">
+          <div class="stat-label">已完成小节</div>
+          <div class="stat-value">0 / 17</div>
+          <div class="stat-sub">在小节标题右侧点「已掌握」</div>
+        </div>
+        <div class="stat" data-stat="quiz">
+          <div class="stat-label">测验平均正确率</div>
+          <div class="stat-value">—</div>
+          <div class="stat-sub">做完测验后自动统计</div>
+        </div>
+        <div class="stat" data-stat="chapters">
+          <div class="stat-label">整章完成</div>
+          <div class="stat-value">0 / 3</div>
+          <div class="stat-sub">一章全部小节打勾</div>
+        </div>
+        <div class="stat" data-stat="hours">
+          <div class="stat-label">已投入学时</div>
+          <div class="stat-value">0 / 28 h</div>
+          <div class="stat-sub">按已完成小节的建议学时累加</div>
+        </div>
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">💡</span>这一站和教材的关系</div>
+  <p class="zh">你手上有两套体系：<strong>同济八版</strong>是校内教学的骨架，<strong>托马斯 14 版</strong>是英文教材。
+             两者的章节顺序并不一致——例如<strong>数列的极限</strong>在同济是第 1 章第 2 节，在托马斯却被放到第 10 章（级数章的最前面）。
+             本站以同济的进度为主线，凡是与托马斯错位的小节，都会挂一个
+             <span style="color:var(--thm);font-weight:600">🧭 教材映射</span> 提示，告诉你"这块内容在英文书上哪一节"。</p>
+  <p class="zh">带 <span class="tag-pro">专业必需</span> 标记的小节，是同济教材用 <code>*</code> 号标为"超出工科基本要求"、
+             但对<strong>航空发动机 · 结构 / 控制 / 有限元仿真</strong>方向不可跳过的内容——这是本站相对教材的主要增量。</p>
+      </div>
+
+      <div class="box thm-box">
+        <div class="box-title"><span class="ico">👨‍🏫</span>做完测验会得到什么</div>
+        <p class="zh">每份自测提交后，下方会生成一份<strong>讲评报告</strong>，包含：</p>
+        <ul>
+        <li class="zh"><strong>病根诊断</strong> —— 判断失分是集中在基础档（定义没记准）还是只在考研档（概念清楚、差熟练度），两者下一步完全不同。</li>
+        <li class="zh"><strong>简要回顾</strong> —— 本次考查的知识点清单，未掌握的直接给「回看 →」链接。</li>
+        <li class="zh"><strong>逐题订正</strong> —— 每道错题的「你选了 / 正确答案 / 解析」，公式排版原样保留。</li>
+        <li class="zh"><strong>订正环节</strong> —— 只解锁错题重做，答对的题保持已答状态；订正后重新出分。</li>
+        </ul>
+        <p class="zh">每份测验还配一段<strong>讲评</strong>：不重复单题解析，而讲整份卷子的考查主线、最常见错法、以及这些知识与前后章节的联系。</p>
+      
+      </div>
+
+      <p style="font-size:.85rem;color:var(--ink-faint)">
+        进度保存在本机浏览器（localStorage，键前缀 <code>advmath.*</code>），换设备或清缓存会丢失；与线代站的存档互不干扰。
+      </p>
+
+            <h2 id="chapters">课程地图</h2>
+              <p class="zh">第 1 期已建成<strong>第 1–7 章（44 节）与托马斯补充一（2 节）</strong>，共 <strong>46 节 / 81 学时</strong>、<strong>177 道例题</strong>、<strong>408 道自测题</strong>，全部中英对照。其余 5 章（第 8–12 章）与补充内容在后续各期按同一模板补入，建成前保持「未开放」占位。</p>
+              <p class="zh">已开放的两章可直接从下方卡片进入；<a href="cheatsheet.html">公式速查表</a>与
+        <a href="exam.html">综合自测卷</a>（第 1 期范围）也已建好，适合复习时使用。</p>
+      
+
+      <div class="chapter-grid">
+<!-- SHELL:CARDS -->
+        <a class="chapter-card" data-chapter="1" href="chapters/la1.html">
+          <div class="card-top">
+            <span class="card-num">CH 1</span>
+            <h3>行列式</h3>
+            <span class="card-videos">6 节 · 11.5 h</span>
+          </div>
+          <p class="card-desc">从二阶行列式一路推到 n 阶定义，掌握性质与展开，把行列式算准算快。</p>
+          <div class="card-topics"><span>二三阶行列式</span><span>全排列和对换</span><span>行列式的定义</span><span>行列式的性质</span><span>行列式按行(列)展开</span><span>行列式的计算</span></div>
+          <div class="card-progress">
+            <div class="lbl"><span>完成度</span><span class="done">0/6</span></div>
+            <div class="bar"><i></i></div>
+          </div>
+        </a>
+        <a class="chapter-card" data-chapter="2" href="chapters/la2.html">
+          <div class="card-top">
+            <span class="card-num">CH 2</span>
+            <h3>矩阵</h3>
+            <span class="card-videos">4 节 · 10.6 h</span>
+          </div>
+          <p class="card-desc">矩阵运算、逆矩阵、伴随矩阵公式与分块矩阵——线代的计算基本功。</p>
+          <div class="card-topics"><span>矩阵及其运算</span><span>逆矩阵</span><span>矩阵的公式（伴随矩阵与秩的不等式）</span><span>分块矩阵</span></div>
+          <div class="card-progress">
+            <div class="lbl"><span>完成度</span><span class="done">0/4</span></div>
+            <div class="bar"><i></i></div>
+          </div>
+        </a>
+        <a class="chapter-card" data-chapter="3" href="chapters/la3.html">
+          <div class="card-top">
+            <span class="card-num">CH 3</span>
+            <h3>线性方程组与初等变换</h3>
+            <span class="card-videos">3 节 · 9.3 h</span>
+          </div>
+          <p class="card-desc">克拉默法则、初等行变换、矩阵的秩，一举解决方程组解的判定与求解。</p>
+          <div class="card-topics"><span>克拉默法则</span><span>线性方程组</span><span>初等变换与秩</span></div>
+          <div class="card-progress">
+            <div class="lbl"><span>完成度</span><span class="done">0/3</span></div>
+            <div class="bar"><i></i></div>
+          </div>
+        </a>
+        <a class="chapter-card" data-chapter="4" href="chapters/la4.html">
+          <div class="card-top">
+            <span class="card-num">CH 4</span>
+            <h3>向量组与解的结构</h3>
+            <span class="card-videos">3 节 · 10.4 h</span>
+          </div>
+          <p class="card-desc">线性组合、线性相关性、极大无关组、基础解系——线代理论的主干。</p>
+          <div class="card-topics"><span>向量组及其线性组合</span><span>向量组的线性相关性</span><span>方程组解的结构</span></div>
+          <div class="card-progress">
+            <div class="lbl"><span>完成度</span><span class="done">0/3</span></div>
+            <div class="bar"><i></i></div>
+          </div>
+        </a>
+        <a class="chapter-card" data-chapter="5" href="chapters/la5.html">
+          <div class="card-top">
+            <span class="card-num">CH 5</span>
+            <h3>特征值与矩阵对角化</h3>
+            <span class="card-videos">2 节 · 9.0 h</span>
+          </div>
+          <p class="card-desc">特征值特征向量的求法与性质，相似对角化条件，实对称矩阵的正交对角化。</p>
+          <div class="card-topics"><span>特征值与特征向量</span><span>对称矩阵的对角化</span></div>
+          <div class="card-progress">
+            <div class="lbl"><span>完成度</span><span class="done">0/2</span></div>
+            <div class="bar"><i></i></div>
+          </div>
+        </a>
+        <a class="chapter-card" data-chapter="6" href="chapters/la6.html">
+          <div class="card-top">
+            <span class="card-num">CH 6</span>
+            <h3>二次型</h3>
+            <span class="card-videos">3 节 · 6.2 h</span>
+          </div>
+          <p class="card-desc">二次型的矩阵表示、正交变换与配方法化标准形、正定性判定。</p>
+          <div class="card-topics"><span>二次型及其标准形</span><span>正交变换及配方法化标准形</span><span>正定二次型</span></div>
+          <div class="card-progress">
+            <div class="lbl"><span>完成度</span><span class="done">0/3</span></div>
+            <div class="bar"><i></i></div>
+          </div>
+        </a>
+        <!-- /SHELL:CARDS -->
+      </div>
+
+      <div class="box insight-box">
+        <div class="box-title"><span class="ico">◆</span>内容来源与版权</div>
+                <p class="zh">本站的<strong>章节划分</strong>依据同济《高等数学》第八版（上册 / 下册）的目录，并逐条核对；
+        托马斯 14 版的节次与英文标题取自该版 PDF 的文字层。
+        讲解文字、例题、自测题<strong>全部独立撰写</strong>，不复制任何教材正文、例题或习题原文；
+        托马斯 PDF 仅用于核实结构与术语。宋浩老师的视频<strong>只做外链</strong>，不嵌入、不转存。</p>
+      
+      </div>
+
+    </div>
+                                                                                                                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+      <nav class="chapter-nav">
+        <span class="prev is-disabled"></span>
+        <a class="next" href="chapters/ch1.html"><span class="dir">下一页 →</span><span class="ttl">第 1 章 函数与极限</span></a>
+      </nav>
+      <!-- /SHELL:BOTTOMNAV -->
+
+    </main>
+
+</div>
+<footer class="site-footer">
+  <p><strong>高等数学学习站</strong> · 同济八版骨架 + 托马斯 14 版映射 · 中英对照</p>
+  <p>进度与成绩保存在本机浏览器，不上传任何数据。</p>
+</footer>
+
+<script src="assets/js/quiz.js"></script>
+<script src="assets/js/course-data.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/theme.js"></script>
+</body>
+</html>

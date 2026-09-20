@@ -34,7 +34,16 @@
 (function () {
   'use strict';
 
-  var STORE_KEY = 'advmath.quiz.v1';
+  /* 测验成绩键按科目取（第 38 节）：与 site.js 同源，读 COURSE_DATA.subjects[].storageKeys。
+     未标 data-subject 的页面（高等数学）回退 advmath.quiz.v1，行为不变。 */
+  var STORE_KEY = (function () {
+    var CD = (typeof window !== 'undefined' && window.COURSE_DATA) || {};
+    var sel = (typeof document !== 'undefined' && document.body)
+      ? document.body.getAttribute('data-subject') : null;
+    var subs = CD.subjects || [];
+    function keys(id) { for (var i = 0; i < subs.length; i++) if (subs[i].id === id) return subs[i].storageKeys || {}; return {}; }
+    return (sel && keys(sel).quiz) || keys('calculus').quiz || 'advmath.quiz.v1';
+  })();
   var LETTERS = 'ABCDEFGH';
 
   /* ---------------- 存储 ---------------- */

@@ -66,9 +66,23 @@
     return a + c.hours.reduce(function (x, y) { return x + y; }, 0);
   }, REVIEW_HOURS);
 
-  var PROG_KEY = 'advmath.progress.v1';
+  /* 进度/成绩键按**科目**取（第 38 节）：数据源 subjects[].storageKeys 已分别配好，
+     高等数学 advmath.* / 线性代数 linalg.*，两科目互不污染。
+     页面未标 data-subject 时回退高等数学的键，故高数原有行为完全不变。 */
+  function storageKeysFor(sel) {
+    var subs = (CD.subjects || []);
+    for (var i = 0; i < subs.length; i++) {
+      if (subs[i].id === sel && subs[i].storageKeys) return subs[i].storageKeys;
+    }
+    for (var j = 0; j < subs.length; j++) {
+      if (subs[j].id === 'calculus' && subs[j].storageKeys) return subs[j].storageKeys;
+    }
+    return { progress: 'advmath.progress.v1', quiz: 'advmath.quiz.v1' };
+  }
+  var SK = storageKeysFor(PAGE_SUBJECT);
+  var PROG_KEY = SK.progress;
   var SUBJ_KEY = 'advmath.subject.v1';   // 当前科目（第 36 节）
-  var QUIZ_KEY = 'advmath.quiz.v1';
+  var QUIZ_KEY = SK.quiz;
 
   /* ---------------- 存储 ---------------- */
 
@@ -556,11 +570,64 @@
     var key = ch.file.replace('chapters/', '').replace('.html', '');
     if (here !== key) location.href = prefix(ch.file);
   }
+  /* 跳该科目的首页（第 38 节）：有未读完的章节就回章节，否则回科目首页。
+     路径：站点根下的首页文件，从 chapters/ 需要补 '../'。 */
+  function gotoHomeOrChapter(sub) {
+    if (!sub) return;
+    var home = (sub.home && sub.home.file) || '';
+    if (!home) { gotoChapter(lastChapterOf(sub)); return; }
+    var last = lastChapterOf(sub);
+    var pages = getProgress();
+    var visited = last && Object.keys(pages).some(function (k) {
+      return k.split('#')[0] === last.file.replace('chapters/', '').replace('.html', '');
+    });
+    var target = visited ? last.file : home;
+    var inChapters = (document.body.getAttribute('data-page') || '') !== 'index' &&
+                     !!document.querySelector('link[href^="../"]');
+    location.href = inChapters ? ('../' + target) : target;
+  }
   /* 相对本站根的前缀：章节页在 chapters/ 下，需要上一级 */
   function prefix(file) {
     var inChapters = (document.body.getAttribute('data-page') || '') !== 'index' &&
                      !!document.querySelector('link[href^="../"]');
     return inChapters ? ('../' + file) : file;
+  }
+
+  /* 首页 hero 按当前科目填充（第 38 节）：把写死的 hero 文案改为读数据源。
+     只在本页是该科目首页时执行，其他页面不受影响。 */
+  function setupHomeHero() {
+    if (!SUBJECTS.length) return;
+    var page = (document.body.getAttribute('data-page') || '') + '.html';
+    if (page === '.html') page = 'index.html';
+    /* 用 data-page 判定，不依赖 location.pathname（自检脚本的桩里没有它） */
+    var sub = null;
+    for (var i = 0; i < SUBJECTS.length; i++) {
+      var hf = (SUBJECTS[i].home && SUBJECTS[i].home.file) || '';
+      if (hf && hf.split('/').pop() === page) { sub = SUBJECTS[i]; break; }
+    }
+    /* 顶层 index.html 是高等数学的首页：把它当作 calculus 的 home 处理 */
+    if (!sub && page === 'index.html') {
+      for (var j = 0; j < SUBJECTS.length; j++) if (SUBJECTS[j].id === 'calculus') sub = SUBJECTS[j];
+    }
+    if (!sub || !sub.home) return;
+    var hm = sub.home;
+    var h1 = document.querySelector('.hero h1');
+    if (h1 && hm.h1_zh) h1.innerHTML = hm.h1_zh;
+    var ps = document.querySelectorAll('.hero > p.zh');
+    if (ps.length && hm.intro_zh) {
+      for (var k = 0; k < ps.length && k < hm.intro_zh.length; k++) ps[k].innerHTML = hm.intro_zh[k];
+    }
+    var cta = document.querySelector('.hero .btn-hero');
+    if (cta) {
+      if (hm.cta_zh) cta.textContent = hm.cta_zh;
+      if (hm.cta_href) cta.setAttribute('href', hm.cta_href);
+    }
+    var meta = document.querySelector('.hero-meta');
+    if (meta && hm.meta_zh && hm.meta_zh.length) {
+      meta.innerHTML = hm.meta_zh.map(function (m) {
+        return '<div><strong>' + m[0] + '</strong>' + m[1] + '</div>';
+      }).join('');
+    }
   }
 
   function setupSubjectSwitcher() {
@@ -610,7 +677,7 @@
       }
       writeJSON(SUBJ_KEY, sub.id);
       close();
-      gotoChapter(lastChapterOf(sub));
+      gotoHomeOrChapter(sub);
     }
     function highlight() {
       items.forEach(function (el, i) { el.classList.toggle('is-active', i === idx); });
@@ -679,6 +746,7 @@
     setupHoursBadges();     // 再注入学时徽章，保证它排在勾选框左侧
     setupMobileNav();
     setupTopButton();
+    setupHomeHero();          // 首页 hero 按科目填充（第 38 节）
     setupSubjectSwitcher();   // 品牌区可点击切换科目（第 36 节）
     refreshProgressUI();
     setupMathFallback();
