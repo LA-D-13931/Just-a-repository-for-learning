@@ -21,8 +21,8 @@
     /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
     if (/[?&]eager=1/.test(location.search)) return;
 
-    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head';
-    var pending = [], busy = false, started = false, sweepDone = false;
+    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head, .model-head, .model-signal, .model-route, .fb-body';
+    var pending = [], busy = false, started = false, sweepLeft = 3;
 
     function idle(fn) {
       if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
@@ -42,8 +42,8 @@
              导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
              凡是仍含 `$` 且未被 MathJax 处理的 .example-head，补排一次。
              只处理这一类元素，不影响其他已排好的内容。 */
-          if (!sweepDone) {
-            sweepDone = true;
+          if (sweepLeft > 0) {
+            sweepLeft--;
             var left = Array.prototype.slice.call(document.querySelectorAll(SEL))
               .filter(function (el) {
                 return !el.querySelector('mjx-container') &&
@@ -64,7 +64,19 @@
       }
       started = true;
       MJ = window.MathJax;
-      var all = Array.prototype.slice.call(document.querySelectorAll(SEL));
+      var all = Array.prototype.slice.call(document.querySelectorAll(SEL))
+        /* 去重：只保留没有「匹配祖先」的元素。
+           线代页存在 <div class="en"> 内含 <p class="en"> 的嵌套，
+           父子同时入选会让 MathJax 对同一文本节点排两次，
+           抛 IndexSizeError: splitText offset 超过文本长度（实测第 6 章漏 658 块）。 */
+        .filter(function (el) {
+          var a = el.parentElement;
+          while (a && a !== document.body) {
+            if (a.matches && a.matches(SEL)) return false;
+            a = a.parentElement;
+          }
+          return true;
+        });
       var first = all.filter(function (el) {
         var r = el.getBoundingClientRect();
         return r.bottom > -300 && r.top < (window.innerHeight + 300);
