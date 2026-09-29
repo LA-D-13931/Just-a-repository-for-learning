@@ -74,6 +74,8 @@
       idle(function () {
         MJ.typesetPromise(batch).catch(function () {}).then(function () {
           busy = false;
+          /* 一批排完：如果地址栏有锚点，把目标重新对齐（MathJax 会撑高页面） */
+          if (typeof window.__anchorSettle === 'function') window.__anchorSettle();
           if (pending.length) { schedule(); return; }
           /* 兜底补排（第 32 节）：例题标题 .example-head 里的公式此前从不进入队列，
              导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
@@ -649,5 +651,6 @@
 <script src="assets/js/course-data.js"></script>
 <script src="assets/js/site.js"></script>
 <script src="assets/js/theme.js"></script>
+<script src="assets/js/anchor-fix.js"></script>
 </body>
 </html>
