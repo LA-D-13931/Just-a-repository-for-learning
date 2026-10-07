@@ -500,7 +500,7 @@
             <p><strong>验算。</strong>① 原函数核对：对 $f(x)=\dfrac{1}{2}\arctan\dfrac{x+1}{2}+\dfrac{\pi}{4}$ 求导，用链式法则（§2.2），内层导数为 $\dfrac{1}{2}$：</p>
             <p>$$f'(x)=\frac{1}{2}\cdot\frac{\frac{1}{2}}{1+\left(\frac{x+1}{2}\right)^{2}}=\frac{1}{4}\cdot\frac{4}{4+(x+1)^{2}}=\frac{1}{(x+1)^{2}+4}=\frac{1}{x^{2}+2x+5}$$</p>
             <p>✓，与题目条件一致。再核初值：$f(-1)=\dfrac{1}{2}\arctan 0+\dfrac{\pi}{4}=\dfrac{\pi}{4}$ ✓。</p>
-            <p>② 定积分数值核对：$\dfrac{\pi}{8}\approx 0.3927$，$\arctan 0.5 \approx 0.46365$，故结果约为 $0.3927-0.2318=0.1609$。另一方面，用梯形法数值积分 $\displaystyle\int_{0}^{1}\frac{\mathrm{d}x}{(x+1)^{2}+4}$：被积函数在 $x=0,0.5,1$ 处分别为 $\dfrac{1}{5}=0.2$、$\dfrac{1}{6.25}=0.16$、$\dfrac{1}{8}=0.125$，梯形近似为 $\dfrac{0.2+0.125}{2}\cdot\dfrac{1}{2}+\dfrac{0.16+0.125}{2}\cdot\dfrac{1}{2}=0.08125+0.07125=0.1525$，与 $0.1609$ 相差约 $5\%$，方向与梯形法的误差量级相符 ✓。</p>
+            <p>② 定积分数值核对：$\dfrac{\pi}{8}\approx 0.3927$，$\arctan 0.5 \approx 0.46365$，故结果约为 $0.3927-0.2318=0.1609$。另一方面，用梯形法数值积分 $\displaystyle\int_{0}^{1}\frac{\mathrm{d}x}{(x+1)^{2}+4}$：被积函数在 $x=0,0.5,1$ 处分别为 $\dfrac{1}{5}=0.2$、$\dfrac{1}{6.25}=0.16$、$\dfrac{1}{8}=0.125$，梯形近似为 $\dfrac{0.2+0.16}{2}\cdot\dfrac{1}{2}+\dfrac{0.16+0.125}{2}\cdot\dfrac{1}{2}=0.09+0.07125=0.16125$，与 $0.1609$ 相差约 $0.2\%$；被积函数在 $[0,1]$ 上凸，梯形法必然高估，方向相符 ✓。</p>
             <p><strong>本题的套路。</strong>分母为二次式（判别式小于零）的积分固定两步：<strong>先配方，再套 $\dfrac{1}{a}\arctan\dfrac{u}{a}$</strong>。若判别式大于零，则改为部分分式分解，那是 §4.5 的内容。第二问的接口要提前记住：求出一条曲线的原函数族之后，"求两点间的增量"就是定积分，`C` 会被自动消掉，这是 §5.2 微积分基本定理的核心。</p>
           </div>
         </div>
@@ -1761,7 +1761,7 @@
           <div class="q-explain">
             <p>取 $u=x$、$\mathrm{d}v=\cos x\,\mathrm{d}x$，则 $\mathrm{d}u=\mathrm{d}x$、$v=\sin x$，所以</p>
             <p>$$\int x\cos x\,\mathrm{d}x=x\sin x-\int \sin x\,\mathrm{d}x=x\sin x+\cos x+C.$$</p>
-            <p>B 错在最后一步：$\int\sin x\,\mathrm{d}x=-\cos x$，公式前还有一个负号，$-\left(-\cos x\right)=+\cos x$，符号弄反。C 错在把 $\sin x$ 当成了 $\mathrm{d}v$ 的一部分而直接对 $x$ 积分（把 $\cos x$ 当作常数），它对应的是 $\int x\,\mathrm{d}x$ 乘 $\sin x$，与本题无关，而且求导得 $\dfrac{x^2}{2}\cos x+x\sin x\ne x\cos x$，回代即知不对。D 错在选错了 $u$：取 $u=\cos x$、$\mathrm{d}v=x\,\mathrm{d}x$ 得 $-x\cos x+\sin x+C$，形式也对，但这是把三角函数当 $u$，后续积分没有变简单，属于"能做但选法不合口诀"的做法；把它求导回代可以验证结果本身正确，这恰好说明 $u$ 的选取影响的是难易而不是正确与否。</p>
+            <p>B 错在最后一步：$\int\sin x\,\mathrm{d}x=-\cos x$，公式前还有一个负号，$-\left(-\cos x\right)=+\cos x$，符号弄反。C 错在把 $\sin x$ 当成了 $\mathrm{d}v$ 的一部分而直接对 $x$ 积分（把 $\cos x$ 当作常数），它对应的是 $\int x\,\mathrm{d}x$ 乘 $\sin x$，与本题无关，而且求导得 $\dfrac{x^2}{2}\cos x+x\sin x\ne x\cos x$，回代即知不对。D 错：$-x\cos x+\sin x$ 的导数是 $x\sin x$，它是 $\int x\sin x\,\mathrm{d}x$ 的结果，并不是 $x\cos x$ 的原函数；而取 $u=\cos x$、$\mathrm{d}v=x\,\mathrm{d}x$ 实际得到 $\dfrac{x^{2}}{2}\cos x+\dfrac{1}{2}\int x^{2}\sin x\,\mathrm{d}x$，与原式相差更远。所以 D 必须判错。</p>
             <p class="en" lang="en">Take $u=x$ and $\mathrm{d}v=\cos x\,\mathrm{d}x$, so $\mathrm{d}u=\mathrm{d}x$ and $v=\sin x$; hence $x\sin x+\cos x+C$. Option B loses the two minus signs. Option C differentiates to $\frac{x^2}{2}\cos x+x\sin x$, not $x\cos x$. Option D is correct as an antiderivative but comes from the unprofitable choice $u=\cos x$.</p>
           </div>
         </div>
@@ -2192,7 +2192,7 @@
             <p>$$x=\frac{2-t^3}{t^3+1}.$$</p>
             <p>对 $t$ 求导，用商法则：</p>
             <p>$$\frac{\mathrm{d}x}{\mathrm{d}t}=\frac{(-3t^2)(t^3+1)-(2-t^3)(3t^2)}{(t^3+1)^2}=\frac{-3t^5-3t^2-6t^2+3t^5}{(t^3+1)^2}=\frac{-9t^2}{(t^3+1)^2}.$$</p>
-            <p>这个结果有一个更快的来源：对 $t^3=\dfrac{2-x}{x+1}$ 两边对 $x$ 求导，得 $3t^2\dfrac{\mathrm{d}t}{\mathrm{d}x}=-\dfrac{3}{(x+1)^2}$，故 $\dfrac{\mathrm{d}x}{\mathrm{d}t}=-\dfrac{(x+1)^2}{t^2}$。而 $x+1=\dfrac{3}{t^3+1}$，于是 $\dfrac{\mathrm{d}x}{\mathrm{d}t}=-\dfrac{9}{t^2(t^3+1)^2}$，与商法则的结果一致。两种算法互相印证。</p>
+            <p>这个结果有一个更快的来源：对 $t^3=\dfrac{2-x}{x+1}$ 两边对 $x$ 求导，得 $3t^2\dfrac{\mathrm{d}t}{\mathrm{d}x}=-\dfrac{3}{(x+1)^2}$，故 $\dfrac{\mathrm{d}x}{\mathrm{d}t}=-t^{2}(x+1)^2$。而 $x+1=\dfrac{3}{t^3+1}$，于是 $\dfrac{\mathrm{d}x}{\mathrm{d}t}=-\dfrac{9t^{2}}{(t^3+1)^2}$，与商法则的结果一致。两种算法互相印证。</p>
             <p><strong>第三步，把被积函数整体换成 $t$。</strong>先算各因子：</p>
             <p>$t=\left(\dfrac{2-x}{x+1}\right)^{1/3}$ 就是 $\sqrt[3]{\dfrac{2-x}{x+1}}$；而 $x+1=\dfrac{3}{t^3+1}$。于是</p>
             <p>$$\sqrt[3]{\frac{2-x}{x+1}}\cdot\frac{1}{x+1}=t\cdot\frac{t^3+1}{3}.$$</p>
@@ -2375,7 +2375,7 @@
             <p>$\displaystyle\int_{0}^{6}\frac{\mathrm{d}x}{(x+2)^{2/3}}=$ ______。</p>
             <p class="q-stem-en" lang="en">$\int_0^6\frac{dx}{(x+2)^{2/3}}=$ ______.</p>
           </div>
-          <div class="q-answer" data-answer="3·2^(2/3)/2|1.5*2^(2/3)|3/2*2^(2/3)|1.5·2^(2/3)|2.3811|2.38"></div>
+          <div class="q-answer" data-answer="6-3*2^(1/3)|6-3·2^(1/3)|2.2202|2.22"></div>
           <div class="q-explain">
             <p>用第二类换元法，令 $u=x+2$，则 $\mathrm{d}u=\mathrm{d}x$，上下限变为 $u=2$ 与 $u=8$：</p>
             <p>$$\int_2^8 u^{-2/3}\,\mathrm{d}u=\left[3u^{1/3}\right]_2^8=3\left(8^{1/3}-2^{1/3}\right)=3\left(2-2^{1/3}\right).$$</p>
@@ -2393,7 +2393,7 @@
           <ul class="options">
             <li><span class="opt-body">$\dfrac{2}{\sqrt{3}}\arctan\dfrac{1}{\sqrt{3}}$</span></li>
             <li><span class="opt-body">$\dfrac{2}{\sqrt{3}}\left(\arctan\sqrt{3}-\arctan\dfrac{1}{\sqrt{3}}\right)$</span></li>
-            <li data-correct="true"><span class="opt-body">$\dfrac{1}{\sqrt{3}}\left(\arctan\sqrt{3}-\arctan\dfrac{1}{\sqrt{3}}\right)$</span></li>
+            <li data-correct="true"><span class="opt-body">$\dfrac{2}{\sqrt{3}}\left(\arctan\dfrac{2\sqrt{2}-1}{\sqrt{3}}-\arctan\dfrac{1}{\sqrt{3}}\right)$</span></li>
             <li><span class="opt-body">$\dfrac{1}{2\sqrt{3}}\left(\arctan\sqrt{3}-\arctan\dfrac{1}{\sqrt{3}}\right)$</span></li>
           </ul>
           <div class="q-explain">
@@ -2412,7 +2412,7 @@
             <p>$\displaystyle\int\frac{3x^2+2x+1}{(x+1)(x^2+2)}\,\mathrm{d}x=$ ______（结果中不含反正切项以外的积分号，$C$ 为任意常数）。</p>
             <p class="q-stem-en" lang="en">$\int\frac{3x^2+2x+1}{(x+1)(x^2+2)}\,dx=$ ______ (with constant $C$).</p>
           </div>
-          <div class="q-answer" data-answer="(1/2)ln|x+1|+(5/2)ln(x^2+2)-(1/sqrt2)arctan(x/sqrt2)+C|1/2ln|x+1|+5/2ln(x^2+2)-1/√2 arctan(x/√2)+C|0.5ln|x+1|+2.5ln(x^2+2)-arctan(x/√2)/√2+C"></div>
+          <div class="q-answer" data-answer="(2/3)ln|x+1|+(7/6)ln(x^2+2)-(1/(3sqrt2))arctan(x/sqrt2)+C|2/3ln|x+1|+7/6ln(x^2+2)-1/(3√2)arctan(x/√2)+C"></div>
           <div class="q-explain">
             <p>分母 $\deg Q=3$，分子 $\deg P=2$，是真分式。分母已分解为一次因式 $x+1$ 与不可分解的二次因式 $x^2+2$（$0-8&lt;0$），按定理 4.5 设</p>
             <p>$$\frac{3x^2+2x+1}{(x+1)(x^2+2)}=\frac{A}{x+1}+\frac{Bx+C}{x^2+2}.$$</p>

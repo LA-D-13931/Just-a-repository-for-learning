@@ -797,7 +797,7 @@
             <p>第二个等号同样用了偶函数在对称区间上的性质。求原函数：</p>
             <p>$$V_{x}=2\pi\left[4x-\frac{4x^{3}}{3}+\frac{x^{5}}{5}\right]_{0}^{\sqrt{2}}=2\pi\left(4\sqrt{2}-\frac{4}{3}\cdot 2\sqrt{2}+\frac{1}{5}\cdot 4\sqrt{2}\right).$$</p>
             <p>这里用了 $\left(\sqrt{2}\right)^{3}=2\sqrt{2}$ 与 $\left(\sqrt{2}\right)^{5}=4\sqrt{2}$。把括号内的系数合并：$4-\dfrac{8}{3}+\dfrac{4}{5}=\dfrac{60-40+12}{15}=\dfrac{32}{15}$，于是</p>
-            <p>$$V_{x}=2\pi\cdot\frac{32\sqrt{2}}{15}=\frac{64\sqrt{2}\,\pi}{15}\approx 4.466\pi\approx 14.03.$$</p>
+            <p>$$V_{x}=2\pi\cdot\frac{32\sqrt{2}}{15}=\frac{64\sqrt{2}\,\pi}{15}\approx 6.034\pi\approx 18.96.$$</p>
             <p><strong>（2）验算。</strong>这个立体含在半径 $2$ 的球内吗？立体的最远点到原点的距离是 $\sqrt{2}$（径向）与 $2$（纵向），因此它含在半径 $2$ 的球内：$V_{x}\approx 14.03 \lt \dfrac{4}{3}\pi\cdot 2^{3}\approx 33.51$ ✓。再看外接圆柱：底为半径 $2$ 的圆、高为 $2\sqrt{2}$，体积 $\pi\cdot 4\cdot 2\sqrt{2}\approx 35.5$，$V_{x}$ 小于它 ✓。作为更细的一步，把立体看作绕 $x$ 轴的半球壳：以 $\left|x\right|$ 为半径的截面高度 $2-x^{2}$ 随 $\left|x\right|$ 由 2 降到 0，体积应在"高 2 的圆柱"与"半径 2 的半球"之间，$14.03$ 位于 $2\pi\sqrt{2}\cdot$ 相关区间内，量级正确。</p>
             <p><strong>（3）第一步，选微元。</strong>绕 $y$ 轴旋转用柱壳法更快：到轴距离为 $x$ 的薄壳半径为 $x$、高为 $2-x^{2}$、厚为 $\mathrm{d}x$，微元体积 $\mathrm{d}V=2\pi x\left(2-x^{2}\right)\mathrm{d}x$（定理 6.3 第二条），积分范围 $x$ 从 $0$ 到 $\sqrt{2}$（图形在 $y$ 轴右侧的这一半与左侧那一半给出同样的壳，取 $x \ge 0$ 的一段正好覆盖整个立体）。</p>
             <p><strong>（3）第二步，积分。</strong></p>

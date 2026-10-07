@@ -564,17 +564,17 @@
           </div>
           <ul class="options">
             <li><span class="opt-body">$0$</span></li>
-            <li><span class="opt-body">$1$</span></li>
-            <li data-correct="true"><span class="opt-body">$2$</span></li>
+            <li data-correct="true"><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$2$</span></li>
             <li><span class="opt-body">任意实数</span></li>
           </ul>
           <div class="q-explain">
-            <p>C 对。设 $\vec c=u\vec a+v\vec b$，则 $(2,1,k)=(u+v,\ u,\ v)$。由前两个分量得 $u=1$、$v=1$，代入第三个分量得 $k=u+v=2$。</p>
+            <p>B 对。设 $\vec c=u\vec a+v\vec b$，则 $(2,1,k)=(u+v,\ u,\ v)$。由第二个分量得 $u=1$，由第一个分量得 $u+v=2$ 即 $v=1$；第三个分量是 $v$ 而不是 $u+v$，所以 $k=v=1$。</p>
             <p>用行列式复核：</p>
-            <p>$$\begin{vmatrix}1&1&0\\1&0&1\\2&1&k\end{vmatrix}=1\cdot(0\cdot k-1\cdot1)-1\cdot(1\cdot k-1\cdot2)+0=k-2,$$</p>
-            <p>令其为零同样得 $k=2$ ✓，与线性组合的结果一致。</p>
-            <p>A 错：$k=0$ 时行列式为 $-2\ne0$，三向量不共面。B 错：$k=1$ 时行列式为 $-1\ne0$。D 错：$k$ 取其他值时行列式非零，并不任意。</p>
-            <p class="en" lang="en">C: writing $\vec c=u\vec a+v\vec b$ gives $u=v=1$ and hence $k=2$; the determinant is $k-2$ and vanishes exactly then. A and B give non-zero determinants, and D is false because the condition pins $k$ down.</p>
+            <p>$$\begin{vmatrix}1&1&0\\1&0&1\\2&1&k\end{vmatrix}=1\cdot(0\cdot k-1\cdot1)-1\cdot(1\cdot k-1\cdot2)+0=1-k,$$</p>
+            <p>令其为零同样得 $k=1$ ✓，与线性组合的结果一致。</p>
+            <p>A 错：$k=0$ 时行列式为 $1\ne0$，三向量不共面。C 错：$k=2$ 时行列式为 $-1\ne0$。D 错：$k$ 只有取 $1$ 才共面，并不任意。</p>
+            <p class="en" lang="en">B: writing $\vec c=u\vec a+v\vec b$ gives $(u+v,u,v)=(2,1,k)$, so $u=1$, $v=k$ and $u+v=2$, hence $k=1$; the determinant is $1-k$ and vanishes exactly then. A and C give non-zero determinants, and D is false because the condition pins $k$ down.</p>
           </div>
         </div>
 

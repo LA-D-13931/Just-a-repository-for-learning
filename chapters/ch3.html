@@ -414,7 +414,7 @@
       
       <figure class="plot-figure">
         <div id="fig-mvt"></div>
-        <figcaption>图　拉格朗日中值定理：曲线 y=f(x) 在 [a,b] 上连续、在 (a,b) 内可导，则存在一点 ξ，使该点切线平行于两端点连线 AB。取 f(x)=x³−3x²+3x+1 于 [0,2]：割线 AB 斜率为 f(2)−f(0) 除以 2，而 ξ=1 处切线与之平行。</figcaption>
+        <figcaption>图　拉格朗日中值定理：曲线 y=f(x) 在 [a,b] 上连续、在 (a,b) 内可导，则存在一点 ξ，使该点切线平行于两端点连线 AB。取 f(x)=x³−3x²+3x+1 于 [0,2]：割线 AB 斜率为 f(2)−f(0) 除以 2，而在 ξ=1±√3/3≈0.423 与 1.577 处切线与之平行（ξ=1 处 f′(1)=0，并不平行）。</figcaption>
       </figure>
 
       <div class="box warn-box">
@@ -1727,7 +1727,7 @@
             <li><span class="opt-body">若 $f$ 在 $(a,b)$ 内可导且单调增加，则对一切 $x \in (a,b)$ 有 $f'(x)&gt;0$</span></li>
           </ul>
           <div class="q-explain">
-            <p>A 对：这是方法 3.1 的清单，三类来源缺一不可。B 错：$y=x^3$ 在 $x=0$ 处 $f'(0)=0$，但函数在 $\mathbb{R}$ 上单调增加，$x=0$ 不是分界点；驻点只是候选。C 对：$x_0$ 两侧符号相反而 $f'(x_0)$ 存在，由导数的连续性（可导必连续，§2.1 定理 2.1）该值只能为 0，否则符号在该点附近不会改变。D 错：单调增加且可导只能推出 $f'(x)\ge 0$，$y=x^3$ 在 $x=0$ 处就是等号成立的情形。</p>
+            <p>A 对：这是方法 3.1 的清单，三类来源缺一不可。B 错：$y=x^3$ 在 $x=0$ 处 $f'(0)=0$，但函数在 $\mathbb{R}$ 上单调增加，$x=0$ 不是分界点；驻点只是候选。C 对：$x_0$ 两侧符号相反而 $f'(x_0)$ 存在，该值只能为 0：若 $f'(x_0)&gt;0$，则 $f$ 在 $x_0$ 两侧同向变化，$x_0$ 不可能是增减分界点。（依据是导数的介值性／达布定理，<strong>不能</strong>写成“由导数的连续性”——可导推不出导函数连续，§2.1 例 2.5 的 $x^2\sin\frac1x$ 就是反例。）D 错：单调增加且可导只能推出 $f'(x)\ge 0$，$y=x^3$ 在 $x=0$ 处就是等号成立的情形。</p>
             <p class="en" lang="en">A is the list of Method 3.1 and C follows because a derivative that exists at a sign change must vanish there. B fails for $y=x^3$ at 0, which is stationary but not a dividing point; D fails because an increasing differentiable function only gives $f'(x)\ge 0$.</p>
           </div>
         </div>
@@ -1773,7 +1773,7 @@
             <li><span class="opt-body">若在区间 $I$ 上恒有 $f''(x)&gt;0$，则曲线在 $I$ 上开口向下</span></li>
           </ul>
           <div class="q-explain">
-            <p>A 对：这是定理 3.3 的必要条件，注意结论是"等于零或不存在"两种可能并存，$y=\sqrt[3]{x^2}$ 在 $x=0$ 处就是 $f''$ 不存在的情形。B 错：$y=x^4$ 在 $x=0$ 处 $f''(0)=0$，但两侧符号不变，$(0,0)$ 不是拐点；必要条件不能当充分条件用。C 对：由差商 $f'(x)=\lim\limits_{h\to 0^+}\dfrac{f(x+h)-f(x)}{h}$，单调增加使分子非负、分母为正，取极限后得 $f'(x)\ge 0$；这里推不出严格大于零。D 错：把方向读反了，$f''&gt;0$ 对应开口向上。</p>
+            <p>A 对：这是定理 3.3 的必要条件，注意结论是"等于零或不存在"两种可能并存，$y=\sqrt[3]{x}$ 在 $x=0$ 处就是 $f''$ 不存在的情形（两侧 $f''$ 异号，$(0,0)$ 确为拐点；注意不能误用 $y=\sqrt[3]{x^2}$——它两侧 $f''$ 同号，并不是拐点）。B 错：$y=x^4$ 在 $x=0$ 处 $f''(0)=0$，但两侧符号不变，$(0,0)$ 不是拐点；必要条件不能当充分条件用。C 对：由差商 $f'(x)=\lim\limits_{h\to 0^+}\dfrac{f(x+h)-f(x)}{h}$，单调增加使分子非负、分母为正，取极限后得 $f'(x)\ge 0$；这里推不出严格大于零。D 错：把方向读反了，$f''&gt;0$ 对应开口向上。</p>
             <p class="en" lang="en">A is the necessary condition of Theorem 3.3 and C follows from the right-hand difference quotient, which is non-negative for an increasing function. B fails for $y=x^4$ at 0, where $f''(0)=0$ without a sign change; D reverses the direction of the second derivative.</p>
           </div>
         </div>
@@ -2865,7 +2865,7 @@
             <p>与第三步的 $\rho$ 一致，说明曲率中心确实在以 $\rho$ 为半径的圆周上。</p>
             <p>② 法线检验：$M$ 处法线斜率为 $-\dfrac{1}{y'}=-\dfrac{1}{2}$，法线方程是 $y=1-\dfrac{1}{2}(x-1)$。代入 $x=-4$ 得 $y=1-\dfrac{1}{2}(-5)=\dfrac{7}{2}$，与算出的 $y_C$ 相同，说明 $C$ 落在法线上 ✓。</p>
             <p>③ 公切线检验：曲率圆圆心 $\left(-4,\dfrac{7}{2}\right)$ 与切点 $(1,1)$ 连线的斜率为 $\dfrac{1-7/2}{1+4}=-\dfrac{1}{2}$，正是法线方向，所以圆在 $(1,1)$ 处的切线斜率是 $-\dfrac{1}{-1/2}=2$，与曲线在 $(1,1)$ 处的切线斜率 $y'=2$ 相同 ✓。</p>
-            <p>④ 数值检验：取 $x=0.99$ 与 $x=1.01$ 两点，割线的倾斜角用 $\arctan$ 换算。左段斜率 $0.99+1=1.99$，$\alpha_-\approx 1.10419$；右段斜率 $1.01+1=2.01$，$\alpha_+\approx 1.10934$。转角约 $0.00515$，弧长约 $\sqrt{0.01^2+(0.0201)^2}+\sqrt{0.01^2+(0.0199)^2}\approx 0.02882$，比值约 $0.1787$，与 $K\approx 0.1789$ 相符 ✓。</p>
+            <p>④ 数值检验：取 $x=0.99$ 与 $x=1.01$ 两点，割线的倾斜角用 $\arctan$ 换算。在 $x=0.99$ 处切线斜率 $2\times0.99=1.98$，$\alpha_-\approx 1.10312$；在 $x=1.01$ 处切线斜率 $2\times1.01=2.02$，$\alpha_+\approx 1.11112$。转角约 $0.00800$，弧长用两端点间的弦长近似 $\sqrt{0.02^2+0.04^2}\approx 0.04472$，比值约 $0.1789$，与 $K=\dfrac{2}{5\sqrt5}\approx 0.17889$ 相符 ✓。</p>
             <p><strong>提示。</strong>分母中的 $1+y'^2$ 不能省略。若误用 $\rho=\dfrac{1}{|y''|}=\dfrac{1}{2}$，得到的圆半径只有正确值的约 $9\%$，与曲线在 $(1,1)$ 附近相差很远。只有当 $y'=0$ 时两者才相等，而 $x=1$ 处 $y'=2\ne 0$。</p>
           </div>
         </div>
@@ -2898,7 +2898,7 @@
             <p>③ 公切线检验：把圆写成参数式 $x=3+2\sqrt{2}\cos\theta$、$y=-2+2\sqrt{2}\sin\theta$，切点对应 $\theta_0=\dfrac{3\pi}{4}$。在 $\theta_0$ 处</p>
             <p>$$\frac{\mathrm{d}y}{\mathrm{d}x}=\frac{2\sqrt{2}\cos\theta}{-2\sqrt{2}\sin\theta}=-\cot\theta\Big|_{\theta_0}=-\cot\frac{3\pi}{4}=1,$$</p>
             <p>与 $y'(1)=1$ 相同，所以曲率圆与曲线在切点处有同一条切线 ✓。</p>
-            <p>④ 曲率检验：对 $x$ 再求一次导，$\dfrac{\mathrm{d}^2y}{\mathrm{d}x^2}=\dfrac{1}{2\sqrt{2}\sin^3\theta}$；在 $\theta_0$ 处 $\sin\theta_0=\dfrac{1}{\sqrt{2}}$，故 $\dfrac{\mathrm{d}^2y}{\mathrm{d}x^2}=\dfrac{1}{2\sqrt{2}}\cdot 2\sqrt{2}=1$，而 $\left(\dfrac{\mathrm{d}y}{\mathrm{d}x}\right)^2=1$。由定理 3.6，曲率圆的曲率为</p>
+            <p>④ 曲率检验：对 $x$ 再求一次导，$\dfrac{\mathrm{d}^2y}{\mathrm{d}x^2}=-\dfrac{1}{2\sqrt{2}\sin^3\theta}$；在 $\theta_0$ 处 $\sin\theta_0=\dfrac{1}{\sqrt{2}}$，故 $\dfrac{\mathrm{d}^2y}{\mathrm{d}x^2}=-\dfrac{1}{2\sqrt{2}}\cdot 2\sqrt{2}=-1$，而 $\left(\dfrac{\mathrm{d}y}{\mathrm{d}x}\right)^2=1$。由定理 3.6，曲率圆的曲率为</p>
             <p>$$K_{\text{圆}}=\frac{1}{(1+1)^{3/2}}=\frac{1}{2\sqrt{2}},$$</p>
             <p>与第二步对 $y=\ln x$ 算出的 $K$ 完全相同 ✓。这正是定义 3.17 中"曲率圆与曲线在该点有相同曲率"的定量含义。以上三条正好逐条对应定义 3.17 的三项要求：圆心落在法线上且 $|MC|=\rho$、与曲线有公切线、与曲线有相同曲率。曲率圆的验算按这三条走，不必再去比较二阶导数——两者相差因子 $\left(1+y'^2\right)^{3/2}$。</p>
             <p><strong>教材出处与核对。</strong>本题为同济八版上册 §3.7 的典型题（求 $y=\ln x$ 在 $(1,0)$ 处的曲率半径与曲率圆），题干照原样引用。自己解一遍的结果：$\rho=2\sqrt{2}$、曲率中心 $(3,-2)$、曲率圆 $(x-3)^2+(y+2)^2=8$，三项与教材一致，未发现印刷错误。</p>
@@ -3103,20 +3103,20 @@
 
         <div class="q" data-type="single" data-level="考研">
           <div class="q-stem">
-            <p>曲线 $y=f(x)$ 在点 $(1,1)$ 处的曲率圆为 $(x-1)^2+(y-2)^2=\dfrac{1}{4}$，则 $f''(1)=$（　）。</p>
-            <p class="q-stem-en" lang="en">At the point $(1,1)$ the circle of curvature of $y=f(x)$ is $(x-1)^2+(y-2)^2=\frac14$. Then $f''(1)=$</p>
+            <p>曲线 $y=f(x)$ 在点 $(1,1)$ 处的曲率圆为 $(x-1)^2+\left(y-\dfrac{3}{2}\right)^2=\dfrac{1}{4}$，则 $f''(1)=$（　）。</p>
+            <p class="q-stem-en" lang="en">At the point $(1,1)$ the circle of curvature of $y=f(x)$ is $(x-1)^2+(y-\frac32)^2=\frac14$. Then $f''(1)=$</p>
           </div>
           <ul class="options">
-            <li data-correct="true"><span class="opt-body">$-2$</span></li>
-            <li><span class="opt-body">$2$</span></li>
+            <li><span class="opt-body">$-2$</span></li>
+            <li data-correct="true"><span class="opt-body">$2$</span></li>
             <li><span class="opt-body">$-\dfrac{1}{2}$</span></li>
             <li><span class="opt-body">$\dfrac{1}{4}$</span></li>
           </ul>
           <div class="q-explain">
             <p>第一步读出曲率半径。曲率圆的半径就是曲率半径，由方程读出 $\rho=\dfrac{1}{2}$，故 $K=\dfrac{1}{\rho}=2$。</p>
-            <p>第二步定切线方向。圆心是 $(1,2)$，恰在切点 $(1,1)$ 的正上方，连线竖直，所以法线竖直、切线水平，$f'(1)=0$。这一步是本题的关键：不能一上来就套 $K=\dfrac{|f''(1)|}{\left(1+f'(1)^2\right)^{3/2}}$，必须先确定 $f'(1)$，否则分母里多一个未知量。</p>
-            <p>第三步代入并定符号。$f'(1)=0$ 时分母 $\left(1+0\right)^{3/2}=1$，由定理 3.6 得 $|f''(1)|=K=2$，即 $f''(1)=\pm 2$。圆心在切点上方，说明曲线在 $(1,1)$ 附近向下凹，故 $f''(1)&lt;0$，得 $f''(1)=-2$。</p>
-            <p>选 B 的 2 只算到 $|f''(1)|=2$，漏了凹向判断，把绝对值当成了结果。选 C 的 $-\dfrac{1}{2}$ 是把 $\rho$ 直接当成了 $K$，方向对但漏取倒数。选 D 的 $\dfrac{1}{4}$ 是把 $\rho^2$ 当成了曲率。三个干扰项都来自同一个动作没走完：半径 → 曲率 → 一阶导数 → 二阶导数，四步少任何一步都会落在某个干扰项上。</p>
+            <p>第二步定切线方向。圆心是 $\left(1,\dfrac{3}{2}\right)$，恰在切点 $(1,1)$ 的正上方（距离 $\dfrac12$ 正是半径），连线竖直，所以法线竖直、切线水平，$f'(1)=0$。这一步是本题的关键：不能一上来就套 $K=\dfrac{|f''(1)|}{\left(1+f'(1)^2\right)^{3/2}}$，必须先确定 $f'(1)$，否则分母里多一个未知量。</p>
+            <p>第三步代入并定符号。$f'(1)=0$ 时分母 $\left(1+0\right)^{3/2}=1$，由定理 3.6 得 $|f''(1)|=K=2$，即 $f''(1)=\pm 2$。圆心在切点上方，说明曲线在 $(1,1)$ 附近<strong>向上</strong>凹（曲率中心恒在曲线的凹侧），故 $f''(1)&gt;0$，得 $f''(1)=2$。</p>
+            <p>选 A 的 $-2$ 是只算到 $|f''(1)|=2$ 后把凹向判反，多添了一个负号。选 C 的 $-\dfrac{1}{2}$ 是把 $\rho$ 直接当成了 $K$，方向对但漏取倒数。选 D 的 $\dfrac{1}{4}$ 是把 $\rho^2$ 当成了曲率。三个干扰项都来自同一个动作没走完：半径 → 曲率 → 一阶导数 → 二阶导数，四步少任何一步都会落在某个干扰项上。</p>
             <p class="en" lang="en">The radius of the circle of curvature is the radius of curvature, so $K=1/\rho=2$. Its centre $(1,2)$ lies directly above $(1,1)$, so the normal is vertical, the tangent is horizontal and $f'(1)=0$; hence $|f''(1)|=2$. Downward concavity gives $f''(1)=-2$. The other options mistake $\rho$ for $K$, forget to invert, or use $\rho^2$.</p>
           </div>
         </div>

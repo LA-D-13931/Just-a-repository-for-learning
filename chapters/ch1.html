@@ -713,7 +713,7 @@
             <p>即取"比它大的最小整数"。则当 $n>N$ 时必有 $n>\dfrac{1}{3}\left(\dfrac{1}{3\varepsilon}-2\right)$，从而 。</p>
             <p>$$\left|\dfrac{2n+1}{3n+2}-\dfrac{2}{3}\right| &lt; \varepsilon$$</p>
             <p><strong>小结</strong>：由 $\varepsilon$ 的任意性，$\lim_{n\to\infty}\dfrac{2n+1}{3n+2}=\dfrac{2}{3}$。∎</p>
-            <p><strong>验算</strong>：取 $\varepsilon=\dfrac{1}{100}$，则 $\dfrac{1}{3}\left(300-2\right)=\dfrac{298}{3}=99.33\ldots$，取 $N=100$。查 $n=101$： ✓。再查边界 $n=100$（本不必满足）：$\dfrac{1}{3\times302}=\dfrac{1}{906}\approx 0.00110$，同样 $&lt;0.01$，说明 $N=100$ 偏保守，但定义只要求"存在一个 $N$"，偏大完全合法。</p>
+            <p><strong>验算</strong>：取 $\varepsilon=\dfrac{1}{100}$，则 $\dfrac{1}{3}\left(\dfrac{100}{3}-2\right)=\dfrac{94}{9}=10.44\ldots$，取 $N=11$。查 $n=12$：$\left|\dfrac{2\times12+1}{3\times12+2}-\dfrac{2}{3}\right|=\dfrac{1}{114}\approx 0.00877&lt;0.01$ ✓。再查临界点 $n=11$（严格说不必满足，因为要求的是 $n&gt;N$）：$\dfrac{1}{3(3\times11+2)}=\dfrac{1}{105}\approx 0.00952$，同样 $&lt;0.01$，说明 $N=11$ 略偏保守，但定义只要求"存在一个 $N$"，偏大完全合法。</p>
             <p>$$\left|a_{101}-\dfrac{2}{3}\right|=\dfrac{1}{3\times305}=\dfrac{1}{915}\approx 0.00109 &lt; 0.01$$</p>
           </div>
         </div>
@@ -1325,7 +1325,7 @@
           <div class="q-explain">
             <p>A 就是定义 1.1，只是把定义里的 $\varepsilon$ 与 $X$ 的角色原样保留，选 A。</p>
             <p>B 错：极限只要求 $f(x)$ <strong>任意接近</strong> $A$，并不要求<strong>取到</strong> $A$。反例：$\lim_{x\to\infty}\dfrac{1}{x}=0$，而 $\dfrac{1}{x}=0$ 没有实数解。</p>
-            <p>C 错：极限存在只保证"存在 $X$，在 $|x|&gt;X$ 上有界"，这是一条"尾部"性质，与 $f$ 在有限区间上的行为无关。反例：$f(x)=\dfrac{\sin x}{x}$ 在 $x\to\infty$ 时极限为 $0$，但它在有限区间上当然有界——这不是反例；真正说明问题的是 $f(x)=\dfrac{\sin x}{x}$ 的变形并不需要，因为"尾部有界"与"整体有界"不是一回事，例如 $f(x)=\dfrac{1}{x}$ 在 $(0,1)$ 上无界但在 $\mathbb{R}\setminus\{0\}$ 上有界，$x\to\infty$ 的极限照样是 $0$。</p>
+            <p>C 错：极限存在只保证"存在 $X$，在 $|x|&gt;X$ 上有界"，这是一条"尾部"性质，与 $f$ 在有限区间上的行为无关。反例：$f(x)=\dfrac{\sin x}{x}$ 在 $x\to\infty$ 时极限为 $0$，但它在有限区间上当然有界——这不是反例；真正说明问题的是 $f(x)=\dfrac{\sin x}{x}$ 的变形并不需要，因为"尾部有界"与"整体有界"不是一回事，例如 $f(x)=\dfrac{1}{x}$ 在 $(0,1)$ 上无界但在 $[1,+\infty)$ 上有界，$x\to\infty$ 的极限照样是 $0$。</p>
             <p>D 错：两处都反了。定义是"对任意 $\varepsilon&gt;0$ 找 $X$"，不是"对任意 $\delta&gt;0$ 找 $\varepsilon$"；而且 $X$ 的作用范围是 $|x|&gt;X$，不能凭空出现。</p>
             <p class="en" lang="en">A is Definition 1.1. B fails because the limit demands closeness, not attainment ($1/x$ never equals $0$). C confuses a tail property with global boundedness. D reverses the quantifiers: the definition fixes $\varepsilon$ and then produces $X$.</p>
           </div>
@@ -2390,7 +2390,7 @@
             <p>$$\lim_{x\to0}\frac{1-\cos x}{x^2}=\frac{1}{2}\times1^2=\frac{1}{2}$$</p>
             <p><strong>第四步，合成结果。</strong>三块的极限都存在，由 §1.5的乘积法则：</p>
             <p>$$\lim_{x\to0}\frac{\tan x-\sin x}{x^3}=1\times\frac{1}{2}\times1=\frac{1}{2}.$$</p>
-            <p><strong>验算</strong>：取 $x=0.1$ 弧度，$\tan 0.1\approx0.10033467$，$\sin 0.1\approx0.09983342$，差为 $0.00050125$，除以 $x^3=0.001$ 得 $0.50125$；取 $x=0.01$，差为 $5.00\times10^{-7}$，除以 $10^{-6}$ 得 $0.5000$。可见误差随 $x$ 线性变小，结果确实收敛到 $0.5$ ✓。</p>
+            <p><strong>验算</strong>：取 $x=0.1$ 弧度，$\tan 0.1\approx0.10033467$，$\sin 0.1\approx0.09983342$，差为 $0.00050125$，除以 $x^3=0.001$ 得 $0.50125$；取 $x=0.01$，差为 $5.00\times10^{-7}$，除以 $10^{-6}$ 得 $0.5000$。可见误差随 $x$ 的<strong>平方</strong>变小（比值误差是 $O(x^2)$：$x$ 缩小 $10$ 倍，比值误差缩小 $100$ 倍），结果确实收敛到 $0.5$ ✓。</p>
             <p><strong>（2）第一步，判型。</strong>当 $x\to\infty$ 时底数 $\frac{x+2}{x-1}\to1$、指数 $x\to\infty$，是 $1^\infty$ 型，目标锁定第二重要极限。这里必须提醒自己：<strong>绝不能把底数与指数分开取极限</strong>。</p>
             <p><strong>第二步，把底数改写成 $1+u$ 的样子。</strong>用配凑法把分子写成"分母 $+$ 常数"：$x+2=(x-1)+3$，于是</p>
             <p>$$\frac{x+2}{x-1}=1+\frac{3}{x-1}.$$</p>
@@ -2787,7 +2787,7 @@
         <p>这一步在数学上不是"近似"，而是<strong>标准的等价无穷小替换</strong>：由 §1-6 节 $\lim_{\theta\to0}\dfrac{\sin\theta}{\theta}=1$ 得 $\sin\theta \sim \theta$；正因为它是一次替换而不是"把 $\sin\theta$ 当成 $\theta$"，代换才是合法的。"小角度"三个字对应的是替换的前提 $\theta\to0$，与本节方法 1.1 的第一步（定型、定过程）完全一致。工程手册说"$\theta$ 在 $5^\circ$ 以内误差小于 $0.1\%$"，说的就是这个前提是否被满足。</p>
         <p>误差有多大？由本节的语言可以直接给出量级：</p>
         <p>$$\sin\theta=\theta-\frac{\theta^3}{6}+o(\theta^3)\quad\Longrightarrow\quad \theta-\sin\theta \sim \frac{\theta^3}{6},$$</p>
-        <p>即 $\theta-\sin\theta$ 是 $3$ 阶无穷小，与 $\theta^3$ 同阶。这就是为什么误差随角度的<strong>立方</strong>衰减：$\theta=0.1$ rad（约 $5.73^\circ$）时，$\dfrac{\theta^3}{6}=1.67\times10^{-4}$，相对误差约 $0.017\%$；$\theta=0.01$ rad 时降到约 $1.7\times10^{-5}\%$。相对误差 $=\dfrac{\theta^2}{6}$ 这个公式，工程上就是"线性化误差"的定量估计。</p>
+        <p>即 $\theta-\sin\theta$ 是 $3$ 阶无穷小，与 $\theta^3$ 同阶。这就是为什么误差随角度的<strong>立方</strong>衰减：$\theta=0.1$ rad（约 $5.73^\circ$）时，$\dfrac{\theta^3}{6}=1.67\times10^{-4}$，相对误差约 $0.167\%$；$\theta=0.01$ rad 时降到约 $0.00167\%$。相对误差 $=\dfrac{\theta^2}{6}$ 这个公式，工程上就是"线性化误差"的定量估计。</p>
         <p>同一套语言在别处反复出现。气动弹性里的小扰动线化、有限元里小应变假设下把 $\varepsilono(\alpha)$ 那笔账。工程上能放心用近似，靠的不是"差不多就行"，而是<strong>知道余项是什么阶、因此知道误差怎么随参数减小而缩小</strong>。</p>
             <p>$$ 的高次项扔掉、叶轮机械里小攻角假设把气流角的三角函数线性化，本质上都是"保留主部、丢掉高阶余项"；而"丢掉之后误差还有多大"这个问题，正是本节定义 1.2 与定理 1.1 里 $$</p>
       </details>
@@ -3193,7 +3193,7 @@
             <p><strong>（Ⅱ）第一步，找可疑点。</strong>$g(x)=\dfrac{1}{1-e^{x/(x-1)}}$ 是初等函数，定义域由两条排除：指数部分要求 $x\ne1$；分母要求 $1-e^{x/(x-1)}\ne0$，即 $e^{x/(x-1)}\ne1$，即 $\dfrac{x}{x-1}\ne0$，即 $x\ne0$。所以可疑点只有 $x=0$ 与 $x=1$。</p>
             <p><strong>第二步，$x=0$ 处。</strong>$\dfrac{x}{x-1}\to0$，故 $e^{x/(x-1)}\to e^0=1$，分子恒为 $1$，分母 $\to0$。要分清两侧：</p>
             <p>当 $x&lt;0$ 时 $x-1&lt;0$，$\dfrac{x}{x-1}=\dfrac{\text{负}}{\text{负}}&gt;0$，于是 $e^{x/(x-1)}&gt;1$，分母 $1-e^{x/(x-1)}&lt;0$，故 $g(x)&lt;0$；当 $x\to0^-$ 时指数 $\to0^+$，用 $\dfrac{1}{1-e^{t}}\sim-\dfrac{1}{t}$（$t\to0$），得</p>
-            <p>$$g(0^-) = \lim_{x\to0^-}\frac{1}{1-e^{x/(x-1)}} = -1.$$</p>
+            <p>$$g(0^-) = \lim_{x\to0^-}\frac{1}{1-e^{x/(x-1)}} = -\infty.$$</p>
             <p>当 $x\to0^+$ 时 $x&gt;0$、$x-1&lt;0$，$\dfrac{x}{x-1}&lt;0$，于是 $e^{x/(x-1)}&lt;1$，分母 $1-e^{x/(x-1)}&gt;0$，且当 $x\to0^+$ 时指数 $\to0^-$，故分母 $\to0^+$，于是</p>
             <p>$$g(0^+) = +\infty.$$</p>
             <p>右极限不存在（为 $+\infty$），所以 $x=0$ 是<strong>第二类间断点</strong>（无穷间断点）。</p>
@@ -3203,7 +3203,7 @@
             <p>$$g(1^+) = 0.$$</p>
             <p>两侧极限都存在（分别是 $1$ 与 $0$）但<strong>不相等</strong>，且 $g$ 在 $x=1$ 处无定义，所以 $x=1$ 是<strong>第一类间断点中的跳跃间断点</strong>。</p>
             <p><strong>第四步，结论。</strong>$g$ 的全部间断点是 $x=0$（第二类，无穷）与 $x=1$（第一类，跳跃），此外 $g$ 在其定义域内连续。</p>
-            <p><strong>验算</strong>：（Ⅰ）取 $x=0.001$，，确实是"分母比分子小一个量级"，右极限发散 ✓；取 $x=-0.001$、$a=3$， ✓。（Ⅱ）取 $x=-0.1$，$\dfrac{x}{x-1}=\dfrac{-0.1}{-1.1}=0.0909$，$g=\dfrac{1}{1-e^{0.0909}}=\dfrac{1}{1-1.0952}=-10.5$，为负且数值大，与"$g(0^-)=-1$"的趋势相容 ✓；取 $x=0.9$，$\dfrac{0.9}{-0.1}=-9$，$e^{-9}=0.000123$，$g=\dfrac{1}{1-0.000123}=1.00012\to1$ ✓；取 $x=1.1$，$\dfrac{1.1}{0.1}=11$，$e^{11}=59874$，$g=\dfrac{1}{1-59874}=-0.0000167\to0^-$ ✓。</p>
+            <p><strong>验算</strong>：（Ⅰ）取 $x=0.001$，，确实是"分母比分子小一个量级"，右极限发散 ✓；取 $x=-0.001$、$a=3$， ✓。（Ⅱ）取 $x=-0.1$，$\dfrac{x}{x-1}=\dfrac{-0.1}{-1.1}=0.0909$，$g=\dfrac{1}{1-e^{0.0909}}=\dfrac{1}{1-1.0952}=-10.5$，为负且数值大，与"$g(0^-)=-\infty$"的趋势相容 ✓；取 $x=0.9$，$\dfrac{0.9}{-0.1}=-9$，$e^{-9}=0.000123$，$g=\dfrac{1}{1-0.000123}=1.00012\to1$ ✓；取 $x=1.1$，$\dfrac{1.1}{0.1}=11$，$e^{11}=59874$，$g=\dfrac{1}{1-59874}=-0.0000167\to0^-$ ✓。</p>
             <p>$$\dfrac{\sqrt{1.002}-\sqrt{1.001}}{10^{-6}}=\dfrac{0.0009995\ldots}{10^{-6}}\approx 999.5$$</p>
             <p>$$\dfrac{e^{-0.003}-1}{-0.001}=\dfrac{-0.0029955\ldots}{-0.001}\approx 2.9955\to3$$</p>
             <p><strong>本题的两个考点。</strong>① 反求参数之前必须先判断极限是否存在：本例右极限一算出来就是无穷大，"求 $a$"这个问题本身就无解——很多同学会条件反射地令 $a=f(0^+)$ 然后写 $a=+\infty$，这是典型失分。② 含 $e^{x/(x-1)}$ 的题必须按 $x&lt;0$、$0&lt;x&lt;1$、$x&gt;1$ 三段分别看指数的正负，指数的正负决定 $e^{\cdot}$ 是 $0$、$1$ 还是 $+\infty$，这正是"左右极限可以不同"的物理原因。</p>
@@ -3297,16 +3297,16 @@
             <p class="q-stem-en" lang="en">The function $f(x)=\dfrac{\sin x}{\cos x-1}$ has exactly $2$ points of discontinuity in its domain, and they are not all of the same kind.</p>
           </div>
           <ul class="options">
-            <li data-correct="true"><span class="opt-body">正确</span></li>
-            <li><span class="opt-body">错误</span></li>
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
           </ul>
           <div class="q-explain">
-            <p>正确。间断点的候选是分母为零的点：$\cos x=1$，即 $x=2k\pi$（$k\in\mathbb{Z}$），这些都是 $f$ 无定义的点。挨个算极限：由 $\cos x-1=-2\sin^2\dfrac{x}{2}$，得 。</p>
+            <p>错误。间断点的候选是分母为零的点：$\cos x=1$，即 $x=2k\pi$（$k\in\mathbb{Z}$），这些都是 $f$ 无定义的点。挨个算极限：由 $\cos x-1=-2\sin^2\dfrac{x}{2}$，得 。</p>
             <p>$$f(x)=\dfrac{\sin x}{-2\sin^2\frac{x}{2}}=-\dfrac{1}{2}\cdot\dfrac{\sin x}{\sin^2\frac{x}{2}}=-\dfrac{1}{2}\cdot\dfrac{2\sin\frac{x}{2}\cos\frac{x}{2}}{\sin^2\frac{x}{2}}=-\dfrac{\cos\frac{x}{2}}{\sin\frac{x}{2}}=-\cot\dfrac{x}{2}$$</p>
             <p>当 $x=0$ 时，$x\to0$ 即 $\dfrac{x}{2}\to0$，$-\cot\dfrac{x}{2}\to\infty$，两侧极限都不存在，$x=0$ 是<strong>第二类间断点（无穷）</strong>。</p>
             <p>当 $x=2k\pi$（$k\ne0$）时，$\dfrac{x}{2}=k\pi$ 是 $\cot$ 的零点，故 $\lim\limits_{x\to2k\pi}\left(-\cot\dfrac{x}{2}\right)=0$；而 $f$ 在该点无定义，补定义 $f(2k\pi)=0$ 即连续，故它们都是<strong>第一类间断点（可去）</strong>。</p>
-            <p>通常的说法"无穷多个间断点"是因为 $k$ 可取全体整数；若按"$x=0$ 与 $x=2k\pi\ (k\ne0)$"归类，则恰好是两类：一类无穷、其余可去，确实不全是同一类。若只答"两个间断点"是指 $x=0$ 与 $x=2\pi$ 这一对代表元时，结论"不全是同一类"依然成立。</p>
-            <p class="en" lang="en">Correct. Since $\cos x-1=-2\sin^2\frac{x}{2}$, the function equals $-\cot\frac{x}{2}$. At $x=0$ this is infinite (second kind); at $x=2k\pi$ with $k\ne0$ the limit is $0$ but the function is undefined, so those points are removable (first kind).</p>
+            <p>但间断点是 $x=2k\pi$（$k\in\mathbb{Z}$），共有<strong>无穷多个</strong>，所以题干前半句"共有 $2$ 个间断点"是<strong>错的</strong>，整句应判"错误"。后半句"不全是同一类"本身成立：$x=0$ 是第二类无穷间断点，$x=2k\pi\ (k\ne0)$ 是第一类可去间断点——但一句中只要有一部分为假，整句即为假。</p>
+            <p class="en" lang="en">False. Since $\cos x-1=-2\sin^2\frac{x}{2}$, the function equals $-\cot\frac{x}{2}$. At $x=0$ this is infinite (second kind); at $x=2k\pi$ with $k\ne0$ the limit is $0$ but the function is undefined, so those points are removable (first kind).</p>
           </div>
         </div>
 
@@ -3942,7 +3942,7 @@
           <p class="zh" lang="zh"><strong>把最值定理用在开区间或不连续函数上。</strong>定理要求"闭区间 + 连续"同时成立。$f(x)=x$ 在 $(0,1)$ 上连续却取不到最大值；$f(x)=\dfrac{1}{x}$ 在 $[-1,1]$ 上不连续，既无界又无最值。答题时先核对条件，再写结论。</p>
           <p class="zh" lang="zh"><strong>把零点定理当成"根的个数定理"。</strong>它只说 $(a,b)$ 内<strong>至少</strong>有一个根。$f(x)=x^3-x$ 在 $[-2,2]$ 上连续，且 $f(-2)f(2) &lt; 0$，但它在 $(-2,2)$ 内其实有三个根：$-1$、$0$、$1$。要讨论个数，必须另加条件。</p>
           <p class="zh" lang="zh"><strong>证明题里跳过"连续"这一步。</strong>写下"由零点定理可知"之前，必须先说明 $f$ 在 $[a,b]$ 上连续，通常写成"$f$ 是初等函数，在其定义区间上连续"。漏掉这一句，整条证明链就是断的，阅卷必扣分。</p>
-          <p class="zh" lang="zh"><strong>把 $f(a)f(b) &gt; 0$ 读成"区间内没有零点"。</strong>这是错的：$f(x)=x^2$ 在 $[-1,1]$ 上连续，$f(-1)f(1)=1 &gt; 0$，而 $x=0$ 就是一个零点。两端同号只能说明零点个数为偶数（含 $0$ 个），不能说明一个都没有。</p>
+          <p class="zh" lang="zh"><strong>把 $f(a)f(b) &gt; 0$ 读成"区间内没有零点"。</strong>这是错的：$f(x)=x^2$ 在 $[-1,1]$ 上连续，$f(-1)f(1)=1 &gt; 0$，而 $x=0$ 就是一个零点。两端同号时零点的个数既可以是 $0$ 个，也可以是奇数个（$f(x)=|x|$ 在 $[-1,1]$ 上两端同号却恰有一个零点），总之不能据此断定一个零点都没有。</p>
       </div>
 
       <div class="box exam-box">
@@ -4152,8 +4152,8 @@
 
         <div class="q" data-type="single" data-level="中等">
           <div class="q-stem">
-            <p>$\lim\limits_{x\to\infty}\left(\sqrt{x^2+3x}-x\right)=$（　）。</p>
-            <p class="q-stem-en" lang="en">$\lim\limits_{x\to\infty}\left(\sqrt{x^2+3x}-x\right)=$</p>
+            <p>$\lim\limits_{x\to+\infty}\left(\sqrt{x^2+3x}-x\right)=$（　）。</p>
+            <p class="q-stem-en" lang="en">$\lim\limits_{x\to+\infty}\left(\sqrt{x^2+3x}-x\right)=$</p>
           </div>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$\dfrac{3}{2}$</span></li>
