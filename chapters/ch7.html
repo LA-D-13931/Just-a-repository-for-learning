@@ -606,8 +606,8 @@
 
         <div class="q" data-type="single" data-level="考研">
           <div class="q-stem">
-            <p>下列函数中，是方程 $y''-2y^{3}-y=0$ 的解的是（　）。</p>
-            <p class="q-stem-en" lang="en">Which of the following functions is a solution of $y''-2y^{3}-y=0$?</p>
+            <p>下列函数中，是方程 $y''-2y^{3}+y=0$ 的解的是（　）。</p>
+            <p class="q-stem-en" lang="en">Which of the following functions is a solution of $y''-2y^{3}+y=0$?</p>
           </div>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$y=\sec x$</span></li>
@@ -616,7 +616,7 @@
             <li><span class="opt-body">$y=x^{2}$</span></li>
           </ul>
           <div class="q-explain">
-            <p>逐一按方法 7.1 代入左端。A：$y=\sec x=\frac{1}{\cos x}$，由 $(\sec x)'=\sec x\tan x$、$(\tan x)'=\sec^{2}x$ 得 $y''=\sec x\tan^{2}x+\sec^{3}x$，于是 $y''-2y^{3}-y=\sec x\tan^{2}x+\sec^{3}x-2\sec^{3}x-\sec x=\sec x\left(\tan^{2}x-\sec^{2}x-1\right)$。用恒等式 $\tan^{2}x+1=\sec^{2}x$ 得括号内为 0，故左端恒为 0，A 对。B：$y''=e^{x}$，左端 $=e^{x}-2e^{3x}-e^{x}=-2e^{3x} \ne 0$，错。C：$y''=e^{-x}$，左端 $=e^{-x}-2e^{-3x}-e^{-x}=-2e^{-3x} \ne 0$，错。D：$y''=2$，左端 $=2-2x^{6}-x^{2} \ne 0$，错。注意本题方程是非线性的（含 $y^{3}$），验证只能逐项代入，不能套用线性方程的性质。</p>
+            <p>逐一按方法 7.1 代入左端。A：$y=\sec x=\frac{1}{\cos x}$，由 $(\sec x)'=\sec x\tan x$、$(\tan x)'=\sec^{2}x$ 得 $y''=\sec x\tan^{2}x+\sec^{3}x$，于是 $y''-2y^{3}+y=\sec x\tan^{2}x+\sec^{3}x-2\sec^{3}x+\sec x=\sec x\left(\tan^{2}x-\sec^{2}x+1\right)$。用恒等式 $\tan^{2}x+1=\sec^{2}x$ 得括号内为 0，故左端恒为 0，A 对。B：$y''=e^{x}$，左端 $=e^{x}-2e^{3x}-e^{x}=-2e^{3x} \ne 0$，错。C：$y''=e^{-x}$，左端 $=e^{-x}-2e^{-3x}-e^{-x}=-2e^{-3x} \ne 0$，错。D：$y''=2$，左端 $=2-2x^{6}-x^{2} \ne 0$，错。注意本题方程是非线性的（含 $y^{3}$），验证只能逐项代入，不能套用线性方程的性质。</p>
             <p class="en" lang="en">Substituting into the left-hand side one by one: for $y=\sec x$ we get $y''=\sec x\tan^{2}x+\sec^{3}x$, and $\tan^{2}x+1=\sec^{2}x$ reduces the left side to $0$, so A is correct. For $y=e^{x}$ the left side equals $-2e^{3x}$, for $y=e^{-x}$ it equals $-2e^{-3x}$, and for $y=x^{2}$ it equals $2-2x^{6}-x^{2}$; none vanishes identically.</p>
           </div>
         </div>
@@ -802,11 +802,11 @@
             <p>把 $-\ln|\cos x|+C$ 整体变号后仍写成 $C$。这一步只在等号一侧出现任意常数，符合定理 7.1。</p>
             <p><strong>第四步，代入初值定 $C$。</strong>把 $x=0$、$y=1$ 代入：$\ln|\cos 0|=\ln 1=0$，故 $1=0+C$，得 $C=1$。于是</p>
             <p>$$\frac{1}{y}=\ln|\cos x|+1 \;\Longrightarrow\; y=\frac{1}{1+\ln|\cos x|}.$$</p>
-            <p>分母不为零要求 $\ln|\cos x| \ne -1$。在 $x=0$ 处分母等于 1；当 $x \to \pm\frac{\pi}{2}$ 时 $\ln|\cos x| \to -\infty$，分母穿过零点，故解的最大存在区间是 $\left(-\frac{\pi}{2},\frac{\pi}{2}\right)$。</p>
+            <p>分母不为零要求 $\ln|\cos x| \ne -1$。在 $x=0$ 处分母等于 1；分母 $1+\ln|\cos x|$ 的零点由 $|\cos x|=\mathrm{e}^{-1}$ 给出，即 $x=\pm\arccos\mathrm{e}^{-1}\approx\pm1.194$；$x\to\pm\frac{\pi}{2}$ 时分母趋于 $-\infty$ 并<strong>不</strong>为零。故解的最大存在区间是 $\left(-\arccos\mathrm{e}^{-1},\arccos\mathrm{e}^{-1}\right)\approx(-1.194,1.194)$，比 $\left(-\frac{\pi}{2},\frac{\pi}{2}\right)$ 更小。</p>
             <p><strong>验算一（代回原方程）。</strong>把 $y=\left(1+\ln|\cos x|\right)^{-1}$ 求导，用复合函数求导法（§2.3）：</p>
             <p>$$y'=-\left(1+\ln|\cos x|\right)^{-2}\cdot\frac{-\sin x}{\cos x}=\frac{\tan x}{\left(1+\ln|\cos x|\right)^{2}}=y^{2}\tan x,$$</p>
             <p>与原方程右端一致 ✓，其中用到 $\frac{1}{\left(1+\ln|\cos x|\right)^{2}}=y^{2}$。</p>
-            <p><strong>验算二（初值与区间）。</strong>$x=0$ 时 $y=\frac{1}{1+0}=1$ ✓，初值满足。区间核对：$\cos 0=1$，$|x| \lt \frac{\pi}{2}$ 时 $\ln|\cos x| \gt -\infty$ 且分母有限，$x=\pm\frac{\pi}{2}$ 处分母趋于 $0$，解发散，故区间不能写大 ✓。</p>
+            <p><strong>验算二（初值与区间）。</strong>$x=0$ 时 $y=\frac{1}{1+0}=1$ ✓，初值满足。区间核对：$x=0$ 时分母为 $1$；当 $|x|$ 增大到 $\arccos\mathrm{e}^{-1}\approx1.194$ 时分母降为 $0$，解发散。故最大存在区间约为 $(-1.194,1.194)$，写成 $(-\frac{\pi}{2},\frac{\pi}{2})$ 会偏大 ✓。</p>
             <p><strong>验算三（常数解核对）。</strong>把 $y \equiv 0$ 代入通解 $\frac{1}{y}=C+\ln|\cos x|$ 需要 $\frac{1}{0}$，对任何 $C$ 都不成立，确认 $y \equiv 0$ 不在通解中，只能单独列出 ✓。</p>
           </div>
         </div>
@@ -2672,7 +2672,7 @@
           <p class="zh" lang="zh">$$xy'=\frac{\mathrm{d}y}{\mathrm{d}t}.$$</p>
           <p class="zh" lang="zh">右端只剩对 $t$ 的导数，$x$ 消失了。二阶项做同样的事：先用乘积法则写出 $y''=\frac{1}{x^{2}}\left(\frac{\mathrm{d}^{2}y}{\mathrm{d}t^{2}}-\frac{\mathrm{d}y}{\mathrm{d}t}\right)$，两边乘 $x^{2}$ 得</p>
           <p class="zh" lang="zh">$$x^{2}y''=\frac{\mathrm{d}^{2}y}{\mathrm{d}t^{2}}-\frac{\mathrm{d}y}{\mathrm{d}t}.$$</p>
-          <p class="zh" lang="zh">规律是：$x^{k}y^{(k)}$ 换成对 $t$ 的一个 $k$ 阶导数组合，$x$ 全部被吸收。欧拉方程正是让 $x$ 的幂次与求导阶数逐项对上，所以整个方程换完之后一项 $x$ 都不剩。反过来，$x^{2}y''+y=0$ 不是欧拉方程：第一项要求配 $x^{2}$、第二项要求配 $x^{0}$，两件要求不能同时满足，代换后仍会留下含 $\mathrm{e}^{2t}$ 的系数。</p>
+          <p class="zh" lang="zh">规律是：$x^{k}y^{(k)}$ 换成对 $t$ 的一个 $k$ 阶导数组合，$x$ 全部被吸收。欧拉方程正是让 $x$ 的幂次与求导阶数逐项对上，所以整个方程换完之后一项 $x$ 都不剩。注意欧拉方程 $x^{2}y''+pxy'+qy=f(x)$ 允许 $p=0$：$x^{2}y''+y=0$ 正是 $p=0$、$q=1$ 的特例，代换 $x=\mathrm{e}^{t}$ 后化为 $\ddot y-\dot y+y=0$，是常系数方程。</p>
           <p class="en" lang="en">First, why the class deserves a section of its own. Substitute the derivative relation of $t=\ln x$ into a first derivative: $\frac{\mathrm{d}y}{\mathrm{d}x}=\frac{\mathrm{d}y}{\mathrm{d}t}\cdot\frac{\mathrm{d}t}{\mathrm{d}x}=\frac{1}{x}\frac{\mathrm{d}y}{\mathrm{d}t}$. Multiplying by $x$ gives the clean identity</p>
           <p class="en" lang="en">$$xy'=\frac{\mathrm{d}y}{\mathrm{d}t}.$$</p>
           <p class="en" lang="en">Only derivatives with respect to $t$ remain, and $x$ is gone. The second derivative behaves in the same way: the product rule gives $y''=\frac{1}{x^{2}}\left(\frac{\mathrm{d}^{2}y}{\mathrm{d}t^{2}}-\frac{\mathrm{d}y}{\mathrm{d}t}\right)$, and multiplying by $x^{2}$ gives</p>
@@ -2843,11 +2843,11 @@
 
       <div class="box warn-box">
         <div class="box-title"><span class="ico">⚠️</span>易错点</div>
-        <p class="zh" lang="zh"><strong>漏写 $x \gt 0$ 或 $x \lt 0$。</strong>$t=\ln x$ 只对正的 $x$ 有意义，直接写下 $t=\ln x$ 而不说明区间，等于把定义域丢了一半。负半轴的解法是换 $t=\ln|x|$，不是换 $t=\ln(-x)$：用 $\ln(-x)$ 时 $\frac{\mathrm{d}t}{\mathrm{d}x}=\frac{1}{x}$ 同样成立，但回代时 $\mathrm{e}^{t}=-x$，通解会写成含 $|x|$ 的形式，与定理 7.1 给出的三组通解不一致。</p>
+        <p class="zh" lang="zh"><strong>漏写 $x \gt 0$ 或 $x \lt 0$。</strong>$t=\ln x$ 只对正的 $x$ 有意义，直接写下 $t=\ln x$ 而不说明区间，等于把定义域丢了一半。负半轴上取 $t=\ln|x|$ 即可——此时 $|x|=-x$，所以 $t=\ln(-x)$ 与它是<strong>同一个函数</strong>，两者不会给出不同的通解。</p>
         <p class="zh" lang="zh"><strong>二阶项漏掉 $-\frac{\mathrm{d}y}{\mathrm{d}t}$。</strong>把 $x^{2}y''$ 记成 $\frac{\mathrm{d}^{2}y}{\mathrm{d}t^{2}}$ 是本节最集中的错误。检查办法：换成 $t$ 之后 $y'_{t}$ 的系数应当是 $p-1$，例 7.1 里 $p=-2$ 得 $-3$，例 7.3 里 $p=3$ 得 $2$；若算出的系数恰好是 $p$，就是漏了这一项。</p>
         <p class="zh" lang="zh"><strong>解完不换回 $x$。</strong>题目问的是 $y$ 与 $x$ 的关系，答案写成 $(C_{1}+C_{2}t)\mathrm{e}^{t}$ 不得分。回代要用足两条：$\mathrm{e}^{rt}=x^{r}$，以及 $t$ 换 $\ln x$，例如 $(C_{1}+C_{2}t)\mathrm{e}^{2t}$ 换成 $x^{2}(C_{1}+C_{2}\ln x)$。</p>
         <p class="zh" lang="zh"><strong>非齐次右端不换元。</strong>$\frac{\mathrm{d}^{2}y}{\mathrm{d}t^{2}}-2\frac{\mathrm{d}y}{\mathrm{d}t}+y=\frac{1}{x}$ 是错的，右端必须写成 $\mathrm{e}^{-t}$ 之后才能用待定系数法。同理，右端是 $x^{2}$ 时要换成 $\mathrm{e}^{2t}$，并检查指数 $2$ 是否为特征根；是重根时特解要多乘一个 $t$。</p>
-        <p class="zh" lang="zh"><strong>把 $x^{2}y''+y=0$ 当成欧拉方程。</strong>这一项配 $x^{2}$、那一项配 $x^{0}$，要求互相冲突，代换后得到 $\frac{\mathrm{d}^{2}y}{\mathrm{d}t^{2}}-\frac{\mathrm{d}y}{\mathrm{d}t}+\mathrm{e}^{2t}y=0$，仍有变系数，本节方法不适用。识别时逐项检查幂次与阶数是否相等，不要只看有没有 $x^{2}y''$。</p>
+        <p class="zh" lang="zh"><strong>把 $x^{2}y''+y=0$ 当成欧拉方程。</strong>它正是一个欧拉方程（$x^{2}y''+0\cdot xy'+1\cdot y=0$，$p=0$ 是允许的），$x=\mathrm{e}^{t}$ 后代换为 $\frac{\mathrm{d}^{2}y}{\mathrm{d}t^{2}}-\frac{\mathrm{d}y}{\mathrm{d}t}+y=0$，是常系数方程。识别时看的是"每项 $x$ 的幂次是否等于该项求导的阶数"，$y$ 项配 $x^{0}$ 恰好符合。</p>
       </div>
 
       <div class="box exam-box">
@@ -2869,11 +2869,11 @@
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$x^{2}y''+3xy'+2y=0$</span></li>
             <li data-correct="true"><span class="opt-body">$x^{2}y''+3xy'+2y=x^{3}$</span></li>
-            <li><span class="opt-body">$x^{2}y''+y=0$</span></li>
+            <li data-correct="true"><span class="opt-body">$x^{2}y''+y=0$</span></li>
             <li data-correct="true"><span class="opt-body">$2x^{2}y''+3xy'-y=x$</span></li>
           </ul>
           <div class="q-explain">
-            <p>A、B、D 都对。A 的三项分别配 $x^{2}$、$x$、常数 $x^{0}$；B 只在右端多了一个非齐次项，不影响识别；D 的 $y''$ 项系数是 $2x^{2}$，除以 $2$ 后仍化成标准形状，含 $y''$ 项的系数只要是常数倍的 $x^{2}$ 就算。C 是常见的误判对象：$y$ 项要配 $x^{0}$，而 $y''$ 项要配 $x^{2}$，两件要求冲突，代换后得到 $\frac{\mathrm{d}^{2}y}{\mathrm{d}t^{2}}-\frac{\mathrm{d}y}{\mathrm{d}t}+\mathrm{e}^{2t}y=0$，仍含变系数。识别判据只有一条：$x$ 的幂次是否逐项等于求导的阶数。</p>
+            <p>A、B、C、D 都对。A 的三项分别配 $x^{2}$、$x$、常数 $x^{0}$；B 只在右端多了一个非齐次项，不影响识别；D 的 $y''$ 项系数是 $2x^{2}$，除以 $2$ 后仍化成标准形状，含 $y''$ 项的系数只要是常数倍的 $x^{2}$ 就算。C 也是欧拉方程：$y$ 项配 $x^{0}$、$y''$ 项配 $x^{2}$，幂次与阶数逐项对上，代换后为 $\frac{\mathrm{d}^{2}y}{\mathrm{d}t^{2}}-\frac{\mathrm{d}y}{\mathrm{d}t}+y=0$，是常系数方程。识别判据只有一条：$x$ 的幂次是否逐项等于求导的阶数。</p>
             <p class="en" lang="en">A, B and D are Euler equations: the powers of $x$ match the orders of the derivatives term by term, a constant multiple of $x^{2}$ is allowed in front of $y''$, and a nonhomogeneous right-hand side is irrelevant to the identification. Option C is not one, since the $y$ term would require the power $x^{0}$ while the $y''$ term requires $x^{2}$.</p>
           </div>
         </div>

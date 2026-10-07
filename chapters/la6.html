@@ -562,7 +562,7 @@
             <li data-correct="true"><span class="opt-body">若 $A$ 与 $B$ 合同，则 $R(A)=R(B)$</span></li>
             <li><span class="opt-body">若 $A$ 与 $B$ 合同，则 $A$ 与 $B$ 相似</span></li>
           </ul>
-          <div class="q-explain">对<strong>实对称矩阵</strong>：相似意味着特征值完全相同，而特征值相同意味着正、负特征值的<em>个数</em>完全相同，即正负惯性指数相同，由合同判定定理得合同——所以前两个都对。合同由 $B=C^TAC$ 定义，$C$ 可逆故秩不变，第 3 个对。第 4 个错在方向：合同只保证正负号个数一致，不保证特征值本身相同，反例就是上一题的 $\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 与 $\mathrm{diag}(1,-3)$。特别注意：若题目去掉"实对称"这个前提，第一个命题就<strong>不再成立</strong>（例如 $\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$ 与 $\begin{pmatrix}1&amp;0\\0&amp;1\end{pmatrix}$ 不相似），所以前提条件必须看清。</div>
+          <div class="q-explain">对<strong>实对称矩阵</strong>：相似意味着特征值完全相同，而特征值相同意味着正、负特征值的<em>个数</em>完全相同，即正负惯性指数相同，由合同判定定理得合同——所以前两个都对。合同由 $B=C^TAC$ 定义，$C$ 可逆故秩不变，第 3 个对。第 4 个错在方向：合同只保证正负号个数一致，不保证特征值本身相同，反例可取 $A=\mathrm{diag}(2,1)$ 与 $B=\begin{pmatrix}1&amp;1\\0&amp;2\end{pmatrix}$：特征值同为 $1,2$（互异）故相似，而 $A$ 对称、$B$ 不对称，对称矩阵的合同变换仍对称，故不合同（原例 $\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 与 $\mathrm{diag}(1,-3)$。特别注意：若题目去掉"实对称"这个前提，第一个命题就<strong>不再成立</strong>（例如 $\begin{pmatrix}1&amp;1\\0&amp;1\end{pmatrix}$ 与 $\begin{pmatrix}1&amp;0\\0&amp;1\end{pmatrix}$ 不相似），所以前提条件必须看清。</div>
         </div>
 
         <div class="q" data-type="fill" data-level="考研">
@@ -819,7 +819,7 @@
           <li><strong>承上（第 5 章）</strong>：定理 6.2 与第 5 章的"实对称矩阵必可正交对角化"是<strong>同一条定理</strong>，只是把矩阵语言翻译成了二次型语言。第 5 章学得扎实的话，本节的新知识几乎为零。</li>
           <li><strong>承上（第 3、4 章）</strong>：求特征向量就是解齐次方程组 $(\lambda E-A)x=0$ 并写出<strong>基础解系</strong>；判断重根能否凑够正交特征向量，要看解空间维数 $n-R(\lambda E-A)$。<strong>施密特正交化</strong>是第 4 章学的，本节第一次真正派上大用场。</li>
           <li><strong>承上（第 2 章）</strong>：$x=Cy$ 代入 $x^TAx$ 得到 $C^TAC$，是矩阵乘法的直接应用；合同要求 $C$ 可逆，用到逆矩阵。</li>
-          <li><strong>横向与启下</strong>：正交矩阵满足 $Q^T=Q^{-1}$，故正交变换下<strong>合同与相似同时成立</strong>——这句话把第 5、6 两章焊在一起。本节算出的 $p,q$ 又是 6-3 节判定正定（$p=n$）与半正定（$p=R(A)&lt;n$）的直接依据。</li>
+          <li><strong>横向与启下</strong>：正交矩阵满足 $Q^T=Q^{-1}$，故正交变换下<strong>合同与相似同时成立</strong>——这句话把第 5、6 两章焊在一起。本节算出的 $p,q$ 又是 6-3 节判定正定（$p=n$）与半正定（$p=R(A)$（特征值全 $\ge0$））的直接依据。</li>
         </ul>
       </div>
 
@@ -1237,7 +1237,7 @@
         <p><span class="thm-name">必要条件</span>　若 $A$ 正定，则 $|A|&gt;0$、$a_{ii}&gt;0$、$\mathrm{tr}(A)&gt;0$、$A$ 可逆，且 $A^{-1},A^*,A^k$ 都正定。<strong>但 $|A|&gt;0$ 与 $a_{ii}&gt;0$ 只是必要条件，不充分</strong>（反例见易错块）。</p>
         <p><strong>理由</strong>（抽象矩阵证明题的标准套路：<strong>先验对称性，再验特征值符号</strong>）：设 $A$ 的特征值为 $\lambda_i&gt;0$，则 $A^{-1}$ 的是 $1/\lambda_i&gt;0$；$A^*=|A|A^{-1}$ 的是 $|A|/\lambda_i&gt;0$（因 $|A|=\prod\lambda_i&gt;0$）；$A^k$ 的是 $\lambda_i^k&gt;0$。三者都实对称，故都正定。</p>
         <p><span class="thm-name">负定</span>　$A$ 负定 $\iff$ $-A$ 正定 $\iff$ 顺序主子式<strong>正负交替</strong>：奇数阶小于 0、偶数阶大于 0，即 $(-1)^kD_k&gt;0$（等价地：特征值全小于 0）。</p>
-        <p><span class="thm-name">半正定</span>　$f\ge0$ 对一切 $x$ 成立 $\iff$ 特征值全 $\ge0$ $\iff$ $p=R(A)&lt;n$ $\iff$ $A=C^TC$（$C$ 可不可逆）。</p>
+        <p><span class="thm-name">半正定</span>　$f\ge0$ 对一切 $x$ 成立 $\iff$ 特征值全 $\ge0$ $\iff$ $p=R(A)$（特征值全 $\ge0$） $\iff$ $A=C^TC$（$C$ 可不可逆）。</p>
         <div class="en" lang="en">
           <p class="en"><span class="bi-en-label">THM 6.4</span>
              <strong>Necessary Conditions; Negative Definite and Positive Semidefinite.</strong></p>
@@ -1254,7 +1254,7 @@
              $\iff$ the leading principal minors <strong>alternate in sign</strong>: negative for odd order and positive
              for even order, that is, $(-1)^kD_k&gt;0$ (equivalently: all eigenvalues are less than $0$).</p>
           <p class="en"><span class="thm-name">Positive semidefinite</span>　$f\ge0$ for all $x$ $\iff$ all eigenvalues are
-             $\ge0$ $\iff$ $p=R(A)&lt;n$ $\iff$ $A=C^TC$ ($C$ need not be invertible).</p>
+             $\ge0$ $\iff$ $p=R(A)$（特征值全 $\ge0$） $\iff$ $A=C^TC$ ($C$ need not be invertible).</p>
         </div>
       </div>
 

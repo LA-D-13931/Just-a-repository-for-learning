@@ -533,7 +533,7 @@
           </ul>
           <div class="q-explain">
             <p>B 对：中点 $M=\left(\dfrac{1+3}{2},\dfrac{0+4}{2},\dfrac{1+5}{2}\right)=(2,2,3)$，故 $|\overrightarrow{OM}|=\sqrt{4+4+9}=\sqrt{17}$。</p>
-            <p>A 是把 $|\overrightarrow{AB}|$ 的一半当成了答案（$\frac12\sqrt{56}=\sqrt{14}$），但题目问的是 $O$ 到 $M$ 的距离，不是 $A$ 到 $B$ 的一半。这两个量一般<strong>不相等</strong>：只有 $O$ 恰好是 $AB$ 中点时才有 $|\overrightarrow{OM}|=\frac12|\overrightarrow{AB}|$。</p>
+            <p>A 是把 $|\overrightarrow{AB}|$ 的一半当成了答案（$\frac12|\overrightarrow{AB}|=3$），但题目问的是 $O$ 到 $M$ 的距离，不是 $A$ 到 $B$ 的一半。这两个量一般<strong>不相等</strong>：只有 $O$ 恰好是 $AB$ 中点时才有 $|\overrightarrow{OM}|=\frac12|\overrightarrow{AB}|$。</p>
             <p class="en" lang="en">B: the midpoint is $(2,2,3)$, so $|\overrightarrow{OM}|=\sqrt{4+4+9}=\sqrt{17}$. A halves $|\overrightarrow{AB}|$, which is a different quantity unless $O$ happens to be the midpoint of $AB$.</p>
           </div>
         </div>
@@ -1885,7 +1885,7 @@
       <div class="box warn-box">
         <div class="box-title"><span class="ico">⚠️</span>易错点</div>
         <p class="zh" lang="zh"><strong>把"缺变量"的判据记反。</strong>方程里缺哪个变量，母线就平行于<strong>那条轴</strong>。例如 $x^2+y^2=4$ 缺 $z$，母线平行于 $z$ 轴（竖直的圆柱），不是"平行于 $x$ 轴"。记法：方程只约束 $x$ 与 $y$，$z$ 可以任意取，所以沿 $z$ 方向可以无限延伸——延伸方向就是母线方向。</p>
-        <p class="zh" lang="zh"><strong>旋转曲面公式套错轴。</strong>"绕 $z$ 轴转就把 $y$ 换成 $\sqrt{x^2+y^2}$"这条只对<strong>母线在 $yOz$ 平面内</strong>的情形成立。若母线在 $xOy$ 平面内、绕 $z$ 轴转，则要保留 $z$、把 $x$ 换成 $\pm\sqrt{x^2+y^2}$——这时原方程里根本没有 $z$，换完得到的仍是"缺 $z$"的柱面，说明<strong>绕垂直于母线的轴转才得到非柱面的曲面</strong>。做题前先确认母线与轴的关系。</p>
+        <p class="zh" lang="zh"><strong>旋转曲面公式套错轴。</strong>"绕 $z$ 轴转就把 $y$ 换成 $\sqrt{x^2+y^2}$"这条只对<strong>母线在 $yOz$ 平面内</strong>的情形成立。母线在 $xOz$ 平面内（$f(x,z)=0$）绕 $z$ 轴转，才把 $x$ 换成 $\pm\sqrt{x^2+y^2}$。而母线若在 $xOy$ 平面内，它与 $z$ 轴<strong>垂直</strong>，绕 $z$ 轴旋转只会得到 $z=0$ 内的退化图形，根本不成曲面——要得到真正的旋转曲面，旋转轴必须<strong>位于母线所在平面内</strong>。做题前先确认母线与轴的关系。</p>
         <p class="zh" lang="zh"><strong>把"两正一负"一律当成单叶双曲面。</strong>必须同时看<strong>常数项</strong>与<strong>哪个变量是一次</strong>。两正一负而常数项为负的是<strong>双叶</strong>；若其中一个变量只出现一次（如 $z=x^2-y^2$），那是<strong>双曲抛物面</strong>而非双曲面。三者方程形式相近，只有靠"有没有一次项"和"常数项符号"区分。</p>
         <p class="zh" lang="zh"><strong>配方时把常数算错。</strong>球面方程配方时，右端应加上三个配方常数之和，如例 8.16 的 $1+4+9=14$ 加上原来的 $2$ 得 $16$。漏掉原有的常数项是高频错误，且会让半径算错。配方后务必把球心代回原方程验算。</p>
         <p class="zh" lang="zh"><strong>消去变量求投影后不判取值范围。</strong>如例 8.20，消去 $z$ 得到的方程可能包含原曲面上不存在的点。凡是"求投影""求交线"，消元之后都要回到原方程检查 $z$（或其他被消去的变量）是否有实数解、是否落在定义域内，必要时把范围写进答案。</p>
