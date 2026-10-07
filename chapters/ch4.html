@@ -2307,11 +2307,11 @@
             <p class="q-stem-en" lang="en">The fraction $\frac{x^3+x}{x^2-1}$ is improper, and division with remainder gives $\frac{x^3+x}{x^2-1}=x+\frac{2x}{x^2-1}$.</p>
           </div>
           <ul class="options">
-            <li><span class="opt-body">正确</span></li>
-            <li data-correct="true"><span class="opt-body">错误</span></li>
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
           </ul>
           <div class="q-explain">
-            <p>错误，商的整式部分不是 $x$ 而是 $x+1$。实际相除：$x^3+x$ 除以 $x^2-1$，$x^3 \div x^2=x$，乘回得 $x^3-x$，相减余 $2x$；这一步没错。但余式 $2x$ 的次数 1 已小于分母次数 2，除法到此为止，商为 $x$。问题出在给出的等式本身：右边 $x+\dfrac{2x}{x^2-1}$ 通分后分子是 $x(x^2-1)+2x=x^3+x$，与原式相等，所以这个等式<strong>竟然成立</strong>。</p>
+            <p>正确。实际相除：$x^3+x$ 除以 $x^2-1$，$x^3\div x^2=x$，乘回得 $x^3-x$，相减余 $2x$；余式 $2x$ 的次数 $1$ 小于分母次数 $2$，除法到此为止，故商为 $x$、余式为 $2x$，即 $\dfrac{x^3+x}{x^2-1}=x+\dfrac{2x}{x^2-1}$。直接通分验证：$x(x^2-1)+2x=x^3-x+2x=x^3+x$ ✓。所以题干说法<strong>正确</strong>。（余式 $2x$ 还可继续作部分分式分解，但这不影响带余除法的结论。）</p>
             <p>再看分母：$x^2-1=(x-1)(x+1)$，而 $\dfrac{2x}{x^2-1}$ 还可以继续分解，即 $\dfrac{2x}{(x-1)(x+1)}=\dfrac{1}{x-1}+\dfrac{1}{x+1}$。所以真正的问题是题干把一个尚未分解完的真分式当成了最终结果，且 $x^2-1$ 在 $x=\pm 1$ 处使原分式无定义，等号只在定义域内成立。正确结论：除法给出 $x+\dfrac{2x}{x^2-1}$ 没有算错，但题干声称"做带余除法得"这个式子，作为化简的终点不合格。</p>
             <p class="en" lang="en">The division itself is right but incomplete: the remainder $\frac{2x}{x^2-1}$ still factors, since $x^2-1=(x-1)(x+1)$ and $\frac{2x}{(x-1)(x+1)}=\frac{1}{x-1}+\frac{1}{x+1}$. Stopping at $\frac{2x}{x^2-1}$ leaves the fraction undecomposed.</p>
           </div>
@@ -2354,8 +2354,8 @@
 
         <div class="q" data-type="single" data-level="中等">
           <div class="q-stem">
-            <p>设 $\dfrac{3}{(x+1)^2}=\dfrac{A}{x}+\dfrac{B}{x+1}+\dfrac{C}{(x+1)^2}$，则 $A=$（　）。</p>
-            <p class="q-stem-en" lang="en">If $\frac{3}{(x+1)^2}=\frac{A}{x}+\frac{B}{x+1}+\frac{C}{(x+1)^2}$, then $A=$</p>
+            <p>设 $\dfrac{3}{x(x+1)^2}=\dfrac{A}{x}+\dfrac{B}{x+1}+\dfrac{C}{(x+1)^2}$，则 $A=$（　）。</p>
+            <p class="q-stem-en" lang="en">If $\frac{3}{x(x+1)^2}=\frac{A}{x}+\frac{B}{x+1}+\frac{C}{(x+1)^2}$, then $A=$</p>
           </div>
           <ul class="options">
             <li><span class="opt-body">$1$</span></li>
@@ -2364,8 +2364,8 @@
             <li><span class="opt-body">$-3$</span></li>
           </ul>
           <div class="q-explain">
-            <p>待定形式不对——$\dfrac{3}{(x+1)^2}$ 的分母已经是重因式的最高次幂，若按题中形式分解，右边通分后的分子是 $A(x+1)^2+Bx(x+1)+Cx$，它含 $x^2$ 项 $A+B$，而左边分子是常数 3，不含 $x^2$ 项，故必须有 $A=0$，不可能等于 3。题目的设问本身是把 $x$ 放错了位置：正确的分解对象应是 $\dfrac{3}{x(x+1)^2}$ 这一类。</p>
-            <p>但四个选项都在考"遮盖法"的读数：对 $\dfrac{3}{x(x+1)^2}$，取 $x=0$ 得 $A=\dfrac{3}{(0+1)^2}=3$，故按出题意图选 3。选 $-1$ 或 $-3$ 是符号错，选 $1$ 是把分子 3 与 $x=0$ 处的分母值 1 相除时漏掉分子。答本题时应当指出：原式本身不需要引入 $\dfrac{A}{x}$ 这一项。</p>
+            <p>用“遮盖法”读数：两边乘 $x$ 后令 $x\to 0$，得 $A=\left.\dfrac{3}{(x+1)^2}\right|_{x=0}=\dfrac{3}{1}=3$。</p>
+            <p>选 $-1$ 或 $-3$ 是符号错；选 $1$ 是把分子 $3$ 与 $x=0$ 处分母的值 $1$ 相除时漏掉了分子。关键前提是分母含因子 $x$——只有分母写成 $x(x+1)^2$，才可能出现 $\dfrac{A}{x}$ 这一项。</p>
             <p class="en" lang="en">As written the decomposition is over-determined, since $\frac{3}{(x+1)^2}$ has no $x^2$ term in its numerator and therefore forces $A=0$. For the intended fraction $\frac{3}{x(x+1)^2}$ the cover-up rule at $x=0$ gives $A=\frac{3}{(0+1)^2}=3$.</p>
           </div>
         </div>

@@ -1136,14 +1136,14 @@
             <li><span class="opt-body">$F(x)-G(x)$ 在 $[1,+\infty)$ 上单调增加</span></li>
             <li data-correct="true"><span class="opt-body">$F$ 与 $G$ 在 $[1,+\infty)$ 上都单调增加</span></li>
             <li data-correct="true"><span class="opt-body">$\lim\limits_{x \to 0^{+}}\dfrac{F(x)}{x}=1$</span></li>
-            <li data-correct="true"><span class="opt-body">$F(1) \lt G(1)$</span></li>
+              <li><span class="opt-body">$F(1) \lt G(1)$</span></li>
           </ul>
           <div class="q-explain">
             <p>三个结论正确，全部由"变限积分的导数等于被积函数"得到。</p>
             <p>A 错：令 $H(x)=F(x)-G(x)$，则 $H'(x)=\mathrm{e}^{-x^{2}}-\dfrac{1}{1+x^{2}}$。对 $t \gt 0$ 有 $\mathrm{e}^{t^{2}} \gt 1+t^{2}$（这就是 $\mathrm{e}^{u} \gt 1+u$ 在 $u=t^{2} \gt 0$ 时的写法），取倒数得 $\mathrm{e}^{-t^{2}} \lt \dfrac{1}{1+t^{2}}$，所以 $H'(x) \lt 0$，$H$ 在 $[1,+\infty)$ 上单调减少而不是增加。两个被积函数都小于 1，不能由此直接比较它们的大小。</p>
             <p>B 对：$F'(x)=\mathrm{e}^{-x^{2}} \gt 0$、$G'(x)=\dfrac{1}{1+x^{2}} \gt 0$，由 §3.1 用导数符号判定单调性，两个函数在 $[1,+\infty)$ 上都单调增加。</p>
             <p>C 对：$x \to 0^{+}$ 时分子 $F(x)=\int_0^{x}\mathrm{e}^{-t^{2}}\mathrm{d}t \to 0$，分母 $x \to 0$，是 $\dfrac{0}{0}$ 型。用洛必达法则（§3.2），对分子求导用定理 5.2：$\lim\limits_{x \to 0^{+}}\dfrac{F(x)}{x}=\lim\limits_{x \to 0^{+}}\dfrac{\mathrm{e}^{-x^{2}}}{1}=1$。</p>
-            <p>D 对：对 $t \in (0,1)$ 仍有 $\mathrm{e}^{t^{2}} \gt 1+t^{2}$，取倒数得 $\mathrm{e}^{-t^{2}} \lt \dfrac{1}{1+t^{2}}$，这个不等式在积分区间 $(0,1)$ 上处处成立，由 §5.1 的积分比较性质，$F(1)=\int_0^{1}\mathrm{e}^{-t^{2}}\mathrm{d}t \lt \int_0^{1}\dfrac{\mathrm{d}t}{1+t^{2}}=\arctan 1=\dfrac{\pi}{4}$；而 $G(1)=\int_1^{1}\dfrac{\mathrm{d}t}{1+t^{2}}=0$，所以 $F(1) \gt G(1)$，D 的说法把不等号方向弄反了。</p>
+            <p>D 错：对 $t\in(0,1)$ 有 $\mathrm{e}^{t^{2}}&gt;1+t^{2}$，取倒数得 $\mathrm{e}^{-t^{2}}&lt;\dfrac{1}{1+t^{2}}$，于是 $F(1)=\int_0^1\mathrm{e}^{-t^{2}}\mathrm{d}t&lt;\int_0^1\dfrac{\mathrm{d}t}{1+t^{2}}=\dfrac{\pi}{4}$；而 $G(1)=\int_1^1\dfrac{\mathrm{d}t}{1+t^{2}}=0$。所以 $F(1)&gt;G(1)$，D 把不等号方向写反了。</p>
             <p>本题把两件事合在一起考：变限积分的导数给出单调性与洛必达法则所需的导数，被积函数的大小给出积分值的大小。判断被积函数的符号与相对大小是第一步，代入具体点定出函数值的大小是第二步。</p>
             <p class="en" lang="en">B is correct since both integrands are positive, so both integrals increase; C is L'Hopital's rule using $F'(x)=e^{-x^{2}}$; D holds because $F(1)&gt;G(1)=0$, as $e^{-t^{2}}&gt;0$ on $(0,1)$. A is false: $H=F-G$ has $H'(x)=e^{-x^{2}}-\frac{1}{1+x^{2}}&lt;0$, since $e^{t^{2}}&gt;1+t^{2}$ for $t&gt;0$, so $H$ decreases on $[1,+\infty)$.</p>
           </div>
@@ -1596,8 +1596,8 @@
             <li><span class="opt-body">若 $f$ 以 $2$ 为周期且 $\displaystyle\int_{0}^{1} f(x)\,\mathrm{d}x=3$，则 $\displaystyle\int_{1}^{2} f(x)\,\mathrm{d}x=3$</span></li>
           </ul>
           <div class="q-explain">
-            <p>选 A、B、D。A、B 是定理 5.2 的两条对称性结论，条件"区间关于原点对称"与"整体具有相应奇偶性"都已满足。</p>
-            <p>C 错：周期性质给的是"长度为一个周期的区间上的积分与起点无关"，即 $\int_1^3 f=\int_0^2 f$，不等于 0。只有当 $f$ 在一个周期上的正负面积恰好相消时它才为零，例如 $f(x)=\sin\pi x$；对 $f(x)=1+\sin\pi x$（周期也是 2）就有 $\int_1^3 f=2 \ne 0$，可见"周期"本身推不出"积分为零"。D 对：由周期性质 $\int_1^2 f=\int_0^1 f$（区间 $[1,2]$ 与 $[0,1]$ 只差一个周期长度），已知 $\int_0^1 f=3$，故 $\int_1^2 f=3$。这里也可以先写 $\int_0^2 f=2\int_0^1 f=6$，再由 $\int_0^2 f=\int_0^1 f+\int_1^2 f$ 解得 $\int_1^2 f=3$。</p>
+            <p>选 A、B。A、B 是定理 5.2 的两条对称性结论，条件“区间关于原点对称”与“整体具有相应奇偶性”都已满足。</p>
+            <p>C 错：周期性质给的是“长度为一个周期的区间上的积分与起点无关”，即 $\int_1^3 f=\int_0^2 f$，它一般不等于 $0$——只有 $f$ 在一个周期上的正负面积恰好相消时才为零，例如 $f(x)=\sin\pi x$；对 $f(x)=1+\sin\pi x$（周期也是 $2$）就有 $\int_1^3 f=2\ne0$。<strong>D 也错</strong>：$[1,2]$ 与 $[0,1]$ 相差的是半个周期而不是一个周期，周期性质推不出二者相等。反例：令 $f$ 在 $[0,1)$ 上取 $3$、在 $[1,2)$ 上取 $-3$ 并作 $2$-周期延拓，则 $\int_0^1 f=3$ 而 $\int_1^2 f=-3\ne3$。所以本题只有 A、B 正确。</p>
             <p class="en" lang="en">A, B and D are correct. A and B are the odd and even rules of Theorem 5.2. C is wrong because periodicity says only that the integral over an interval of length one period is independent of the starting point, not that it vanishes. D follows from $\int_1^2 f=\int_0^1 f=3$.</p>
           </div>
         </div>
@@ -1619,8 +1619,8 @@
 
         <div class="q" data-type="single" data-level="考研">
           <div class="q-stem">
-            <p>设 $f$ 在 $(-\infty,+\infty)$ 上连续且以 $2$ 为周期，已知 $\displaystyle\int_{0}^{1} f(x)\,\mathrm{d}x=3$，则 $\displaystyle\int_{2}^{4} f(x)\,\mathrm{d}x=$（　）。</p>
-            <p class="q-stem-en" lang="en">Let $f$ be continuous on $(-\infty,+\infty)$ with period $2$, and suppose $\int_{0}^{1} f(x)\,\mathrm{d}x=3$. Then $\int_{2}^{4} f(x)\,\mathrm{d}x=$</p>
+            <p>设 $f$ 在 $(-\infty,+\infty)$ 上连续且以 $2$ 为周期，已知 $\displaystyle\int_{0}^{2} f(x)\,\mathrm{d}x=6$，则 $\displaystyle\int_{2}^{4} f(x)\,\mathrm{d}x=$（　）。</p>
+            <p class="q-stem-en" lang="en">Let $f$ be continuous on $(-\infty,+\infty)$ with period $2$, and suppose $\int_{0}^{2} f(x)\,\mathrm{d}x=6$. Then $\int_{2}^{4} f(x)\,\mathrm{d}x=$</p>
           </div>
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$6$</span></li>
@@ -1631,7 +1631,7 @@
           <div class="q-explain">
             <p>第一步，把区间平移到一个周期长度以内。作代换 $u=x-2$，则 $\mathrm{d}u=\mathrm{d}x$，且 $x=2$、$4$ 分别对应 $u=0$、$2$；由 $f(u+2)=f(u)$，</p>
             <p>$$\int_{2}^{4} f(x)\,\mathrm{d}x=\int_{0}^{2} f(u)\,\mathrm{d}u.$$</p>
-            <p>第二步，用周期性质拆成两半。区间 $[0,2]$ 的长度恰为一个周期，由定理 5.2 的第三条，$\int_0^2 f=2\int_0^1 f=2\times 3=6$。</p>
+            <p>第二步，用周期性质读出答案。区间 $[2,4]$ 的长度恰为一个周期，由定理 5.2 的第三条，$f$ 在任一长度为 $2$ 的区间上的积分都相等，故 $\int_2^4 f=\int_0^2 f=6$。</p>
             <p>选 $3$ 是漏了"一个周期长度"这一步，只算了半个周期；选 $0$ 是把周期性质误记成"一个周期上的积分为零"；选 $12$ 是把 $\int_0^1 f$ 又乘了一次区间长度 $2$，重复计数。核对办法：取 $f(x)=3$（周期函数，任意正数都是它的周期），则 $\int_0^1 f=3$ ✓，$\int_2^4 f=3\times 2=6$ ✓，与所选答案一致。</p>
             <p class="en" lang="en">Substituting $u=x-2$ and using periodicity gives $\int_2^4 f=\int_0^2 f$; the interval $[0,2]$ has length one period, so the value is $2\int_0^1 f=6$. The distractors forget one period, mistake the period rule for a vanishing integral, or count the interval twice.</p>
           </div>
