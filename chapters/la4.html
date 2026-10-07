@@ -1061,7 +1061,7 @@
             <p>$$\alpha_1+\alpha_2-\alpha_3=\mathbf{0}$$</p>
             <p>系数 $(1,1,-1)$ 不全为零，这正是"线性相关"的定义式。</p>
             <p><strong>用秩验证</strong>：对 $A=(\alpha_1,\alpha_2,\alpha_3)$ 做行变换</p>
-            <p>$$\begin{pmatrix}1&2&3\\2&1&3\\3&4&7\end{pmatrix}\xrightarrow[r_3-3r_1]{r_2-2r_1}\begin{pmatrix}1&2&3\\0&-3&-3\\0&-2&-2\end{pmatrix}\to\begin{pmatrix}1&0&\frac13\\0&1&1\\0&0&0\end{pmatrix}$$</p>
+            <p>$$\begin{pmatrix}1&2&3\\2&1&3\\3&4&7\end{pmatrix}\xrightarrow[r_3-3r_1]{r_2-2r_1}\begin{pmatrix}1&2&3\\0&-3&-3\\0&-2&-2\end{pmatrix}\to\begin{pmatrix}1&0&1\\0&1&1\\0&0&0\end{pmatrix}$$</p>
             <p>$R(A)=2&lt;3=m$，线性相关 ✓，与行列式结论一致。顺带看出 $\alpha_1,\alpha_2$ 是一个极大无关组（首元在第 1、2 列）。</p>
           </div>
         </div>
@@ -2001,7 +2001,7 @@
           <ul class="options">
             <li><span class="opt-body">$R(B)=0$</span></li>
             <li data-correct="true"><span class="opt-body">$R(B)\le2$</span></li>
-            <li><span class="opt-body">$R(B)\le3$</span></li>
+            <li><span class="opt-body">$R(B)\le1$</span></li>
             <li><span class="opt-body">$R(B)=3$</span></li>
           </ul>
           <div class="q-explain">$AB=O$ 说明 $B$ 的每一列都是 4 元齐次方程组 $Ax=\mathbf{0}$ 的解。解空间维数为 $n-R(A)=4-2=2$，故 $B$ 的列向量组可由 2 个向量线性表示，$R(B)\le2$。A 太强（$B=O$ 只是可能之一，取 $B$ 的列为任一基础解系时 $R(B)=2$）；C 用了行数 $m=3$，维度错；D 完全不成立。</div>

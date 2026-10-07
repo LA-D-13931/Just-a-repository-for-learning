@@ -531,7 +531,7 @@
             <li><span class="opt-body">正确</span></li>
             <li data-correct="true"><span class="opt-body">错误</span></li>
           </ul>
-          <div class="q-explain">错误。$|A|=0$ 只说明 $R(A)&lt;n$，并没有说明 $R(\bar A)$ 是多少。若 $b$ 恰好落在 $A$ 的列向量组张成的空间里，就有 $R(\bar A)=R(A)&lt;n$，方程组不但有解，还有无穷多解（$b=0$ 时就是齐次情形，一定有解）。反例：$A=\begin{pmatrix}1&0\\0&0\end{pmatrix}$，$|A|=0$，取 $b=(1,0)^T$，则 $x=(1,c)^T$（$c$ 任意）都是解。<br>这个命题是「$D\ne0$ 必有唯一解」的错误逆否：$D\ne0$ 是唯一解的<strong>充分</strong>条件而非必要条件，不能靠否定它来推出「无解」。</div>
+          <div class="q-explain">错误。$|A|=0$ 只说明 $R(A)&lt;n$，并没有说明 $R(\bar A)$ 是多少。若 $b$ 恰好落在 $A$ 的列向量组张成的空间里，就有 $R(\bar A)=R(A)&lt;n$，方程组不但有解，还有无穷多解（$b=0$ 时就是齐次情形，一定有解）。反例：$A=\begin{pmatrix}1&0\\0&0\end{pmatrix}$，$|A|=0$，取 $b=(1,0)^T$，则 $x=(1,c)^T$（$c$ 任意）都是解。<br>这个命题是「$D\ne0$ 必有唯一解」的错误逆否：$D\ne0$ 是唯一解的<strong>充要</strong>条件（克拉默法则），不能靠否定它来推出「无解」。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
@@ -591,7 +591,7 @@
             <li><span class="opt-body">$a \ne 2,\ b = 3$</span></li>
             <li><span class="opt-body">$a = 2,\ b$ 为任意常数</span></li>
           </ul>
-          <div class="q-explain">先把已知解代进去。$\eta=(1,1,0)^T$ 满足第 1 式（$1+1+0=2$ ✓）与第 3 式（$2+3+0=5$ ✓），代入第 2 式得 $1+2+0=3=b$，所以 $b=3$。「有无穷多解」再给出 $a$：系数行列式 $D=\begin{vmatrix}1&1&1\\1&2&a\\2&3&3\end{vmatrix}=2-a$（第 3 行恰是前两行之和当且仅当 $a=2$），故必须 $a=2$。代入检验：$a=2,b=3$ 时 $\bar A\to\begin{pmatrix}1&1&1&2\\0&1&1&1\\0&0&0&0\end{pmatrix}$，$R(A)=R(\bar A)=2&lt;3$，确为无穷多解，通解 $x=(1,1,0)^T+c(0,-1,1)^T$ 也确实含 $\eta$。<br>第二个选项 $b=1$ 是把 $b$ 代错了方程或算错了常数：$a=2,b=1$ 时 $r_3-r_2$ 给出 $(0,0,0\mid4)$，$R(A)=2&lt;R(\bar A)=3$，方程组<strong>无解</strong>。第三个选项只要求 $D\ne0$ 的反面不成立——$a\ne2$ 时 $R(A)=3=n$，方程组至多只有一个解，与「无穷多解」矛盾。第四个选项忽略了已知解的作用：$\eta$ 是解直接定出 $b=3$；若 $a=2$ 而 $b\ne3$，第三行化为 $(0,0,0\mid b-3)$，仍是无解。</div>
+          <div class="q-explain">先把已知解代进去。$\eta=(1,1,0)^T$ 满足第 1 式（$1+1+0=2$ ✓）与第 3 式（$2+3+0=5$ ✓），代入第 2 式得 $1+2+0=3=b$，所以 $b=3$。「有无穷多解」再给出 $a$：系数行列式 $D=\begin{vmatrix}1&1&1\\1&2&a\\2&3&3\end{vmatrix}=2-a$（第 3 行恰是前两行之和当且仅当 $a=2$），故必须 $a=2$。代入检验：$a=2,b=3$ 时 $\bar A\to\begin{pmatrix}1&1&1&2\\0&1&1&1\\0&0&0&0\end{pmatrix}$，$R(A)=R(\bar A)=2&lt;3$，确为无穷多解，通解 $x=(1,1,0)^T+c(0,-1,1)^T$ 也确实含 $\eta$。<br>第二个选项 $b=1$ 是把 $b$ 代错了方程或算错了常数：$a=2,b=1$ 时 $r_3-r_1-r_2$ 给出 $(0,0,0\mid2)$，$R(A)=2&lt;R(\bar A)=3$，方程组<strong>无解</strong>。第三个选项只要求 $D\ne0$ 的反面不成立——$a\ne2$ 时 $R(A)=3=n$，方程组至多只有一个解，与「无穷多解」矛盾。第四个选项忽略了已知解的作用：$\eta$ 是解直接定出 $b=3$；若 $a=2$ 而 $b\ne3$，第三行化为 $(0,0,0\mid b-3)$，仍是无解。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">

@@ -1011,7 +1011,7 @@
               <p>$$x_1=z_1+z_2-z_3,\qquad x_2=z_1-z_2+z_3,\qquad x_3=z_3$$</p>
               <p class="en">$$x=\begin{pmatrix}1&amp;1&amp;-1\\1&amp;-1&amp;1\\0&amp;0&amp;1\end{pmatrix}z,\qquad |C|=1\cdot\begin{vmatrix}1&amp;1\\1&amp;-1\end{vmatrix}=1\times(-2)=-2\ne0$$</p>
               <p>$C$ 可逆，变换合法。</p>
-              <p><strong>第五步：结论与验证。</strong>$f=2z_1^2-2z_2^2+2z_3^2$，故 $p=2,\ q=1$，$p+q=3=R(A)$，规范形为 $u_1^2+u_2^2-u_3^2$（再令 $u_1=\sqrt2z_1,\ u_2=\sqrt2z_2,\ u_3=\sqrt2z_3$）。</p>
+              <p><strong>第五步：结论与验证。</strong>$f=2z_1^2-2z_2^2+2z_3^2$，故 $p=2,\ q=1$，$p+q=3=R(A)$，规范形为 $u_1^2+u_2^2-u_3^2$（再令 $u_1=\sqrt2z_1,\ u_2=\sqrt2z_3,\ u_3=\sqrt2z_2$）。</p>
               <p>取 $z=(0,0,1)^T$，则 $x=(-1,1,1)^T$，代入原式：$f=2(-1)(1)-2(-1)(1)+2(1)(1)=-2+2+2=2$；标准形给出 $2z_3^2=2$，一致 $\checkmark$。</p>
             </div>
             <p><strong>易错提醒</strong>　① 造平方项的变换必须<strong>可逆</strong>：若写成 $x_i=y_i+y_j,\ x_j=y_i+y_j$，行列式为 $0$，答案直接作废，写完变换顺手算一下行列式；② 变换要写成 $x=Cy$ 的形式并<strong>反解出 $x$ 的表达式</strong>，只写 $y$ 不写 $x$ 会丢分；③ 本题 $y_1$ 恰好没参与交叉项，所以只配方一次就结束——但每一步都要检查"还剩不剩交叉项"，不能凭感觉跳过。</p>
@@ -1184,7 +1184,7 @@
           <li>若 $f$ 既能取正值又能取负值，称 $f$ 为<span class="term">不定</span>。</li>
         </ul>
         <p>用惯性指数统一刻画（最本质的描述）：</p>
-        <p>$$f\ \text{正定}\iff p=n;\qquad f\ \text{负定}\iff q=n;\qquad f\ \text{半正定}\iff p=R(A)&lt;n;\qquad f\ \text{不定}\iff p&gt;0\ \text{且}\ q&gt;0$$</p>
+        <p>$$f\ \text{正定}\iff p=n;\qquad f\ \text{负定}\iff q=n;\qquad f\ \text{半正定}\iff p=R(A);\qquad f\ \text{不定}\iff p&gt;0\ \text{且}\ q&gt;0$$</p>
         <div class="en" lang="en">
           <p class="en"><span class="bi-en-label">DEF 6.4</span>
              <strong>Positive Definite, Negative Definite, Semidefinite and Indefinite.</strong>
@@ -1572,7 +1572,7 @@
 
         <div class="q-review">
           <p>本卷讲评：正定是本章的落点，也是全书的落点。这一卷围绕<strong>"四种等价说法"与"必要条件"的分界线</strong>展开：$p=n$（惯性指数）、特征值全正、<strong>各阶"顺序"主子式全正</strong>、与 $E$ 合同，四条互为充要；而 $a_{ii}&gt;0$、$|A|&gt;0$、$R(A)=n$ 只是必要条件，卷子里反复拿它们做干扰项。</p>
-          <p>最经典的失分点有两处。其一，第 1 题的正确选项特意把"<strong>顺序</strong>"二字加粗，第 3 题与第 6 题第 4 个选项则用 $\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 设套：主对角元全正、$|A|=1&gt;0$，看着无懈可击，特征值却是 $3,-1$——<strong>主对角元只管单个变量的平方项，管不住交叉项的耦合</strong>；同理 $|A|&gt;0$ 只说明负特征值的个数是偶数，是 0 个还是 2 个它分不出来。其二，含参数题必须"逐阶列不等式再<strong>取交集</strong>"：第 5 题的 $|t|&lt;2$ 只是二阶条件，会被三阶条件 $|t|&lt;\sqrt3$ 收紧，只解一半就掉进陷阱；解 $t^2$ 型不等式时漏掉绝对值、只取正半轴，也是同一类方向性错误。</p>
+          <p>最经典的失分点有两处。其一，第 1 题的正确选项特意把"<strong>顺序</strong>"二字加粗，第 3 题与第 6 题第 4 个选项则用 $\begin{pmatrix}1&amp;2\\2&amp;1\end{pmatrix}$ 设套：主对角元全正，看着无懈可击，特征值却是 $3,-1$——<strong>主对角元只管单个变量的平方项，管不住交叉项的耦合</strong>；同理 $|A|&gt;0$ 只说明负特征值的个数是偶数，是 0 个还是 2 个它分不出来。其二，含参数题必须"逐阶列不等式再<strong>取交集</strong>"：第 5 题的 $|t|&lt;2$ 只是二阶条件，会被三阶条件 $|t|&lt;\sqrt3$ 收紧，只解一半就掉进陷阱；解 $t^2$ 型不等式时漏掉绝对值、只取正半轴，也是同一类方向性错误。</p>
           <p>向前看，顺序主子式是一串第 1 章的行列式，特征值符号来自第 5 章，与 $E$ 合同、$p=n$ 则分别是 6-1、6-2 的语言；抽象矩阵的证明（如第 8 题的 $A^{-1},A^*,A^k$）只能走"先验对称、再验特征值符号"这一条路。</p>
           <p>下一步：把本节易错块里的五句结论背下来，再做一遍例 6.8，然后限时 20 分钟完成章末综合测验。</p>
         </div>

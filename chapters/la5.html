@@ -1303,7 +1303,7 @@
         <p>$$A^TA=E,$$</p>
         <p>则称 $A$ 为<span class="term">正交矩阵</span>（orthogonal matrix）。</p>
         <p><span class="thm-name">等价说法（做题最常用）</span>　$A$ 是正交矩阵 $\iff$ $A$ 可逆且 $A^{-1}=A^T$ $\iff$ $A$ 的<strong>列向量组</strong>是标准正交向量组 $\iff$ $A$ 的<strong>行向量组</strong>也是标准正交向量组。</p>
-        <p>最后一条的理由：$A^TA=E$ 的第 $(i,j)$ 元就是"第 $i$ 列与第 $j$ 列的内积"，它等于 $\delta_{ij}$ 正是"两两正交且长度都是 $1$"。把 $A^TA=E$ 两边取转置得 $A^TA=(A^TA)^T=AA^T$，所以 $AA^T=E$ 也成立，即行向量同样标准正交。</p>
+        <p>最后一条的理由：$A^TA=E$ 的第 $(i,j)$ 元就是"第 $i$ 列与第 $j$ 列的内积"，它等于 $\delta_{ij}$ 正是"两两正交且长度都是 $1$"。由 $A^TA=E$ 得 $|A|^{2}=|A^TA|=1$，故 $A$ 可逆且 $A^{-1}=A^{T}$，于是 $AA^{T}=A\,A^{-1}=E$，即行向量同样标准正交。</p>
 
         <div class="en" lang="en">
           <p class="en"><span class="bi-en-label">DEF 5.10</span>
@@ -1865,11 +1865,11 @@
         </ul>
         <div class="q-explain">$A$ 是实对称矩阵，先正交对角化。$|A-\lambda E|=(2-\lambda)^2-1=\lambda^2-4\lambda+3=(\lambda-3)(\lambda-1)$，特征值为 $3,1$（验算 $\mathrm{tr}(A)=4=3+1$ ✓，$|A|=4-1=3=3\times1$ ✓）。对应的单位特征向量是 $\frac{1}{\sqrt2}(1,1)^T$ 与 $\frac{1}{\sqrt2}(1,-1)^T$，拼成正交矩阵 $Q=\frac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}$，则 $Q^TAQ=\mathrm{diag}(3,1)$。由 $A=Q\Lambda Q^T$ 得
         $$A^k=Q\begin{pmatrix}3^k&0\\0&1\end{pmatrix}Q^T=\frac12\begin{pmatrix}3^k+1&3^k-1\\3^k-1&3^k+1\end{pmatrix}.$$
-        验算：$k=1$ 得 $\frac12\begin{pmatrix}4&2\\2&4\end{pmatrix}=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A$ ✓；$k=2$ 得 $\begin{pmatrix}5&4\\4&5\end{pmatrix}$，而 $A^2=\begin{pmatrix}5&4\\4&5\end{pmatrix}$ ✓。<strong>B 错</strong>：$k=1$ 时它给出 $\begin{pmatrix}1&2\\2&1\end{pmatrix}$，是对角元写反了（$3^k$ 与 $1$ 的位置互换）。<strong>C 错</strong>：这是对角化之后的 $\Lambda^k$，不是 $A^k$——$k=1$ 时它是 $\mathrm{diag}(3,1)$，而 $A$ 的非对角元是 $1$，明显不符。选择它说明忘掉了"还原"这一步 $A^k=Q\Lambda^kQ^T$。<strong>D 错</strong>：$k=1$ 时得 $\begin{pmatrix}2&-1\\-1&2\end{pmatrix}$，副对角元符号反了，它对应的特征值是 $-1$ 和 $3$（来自把某个投影系数的符号算错）。</div>
+        验算：$k=1$ 得 $\frac12\begin{pmatrix}4&2\\2&4\end{pmatrix}=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A$ ✓；$k=2$ 得 $\begin{pmatrix}5&4\\4&5\end{pmatrix}$，而 $A^2=\begin{pmatrix}5&4\\4&5\end{pmatrix}$ ✓。<strong>B 错</strong>：$k=1$ 时它给出 $\begin{pmatrix}1&2\\2&1\end{pmatrix}$，是对角元写反了（$3^k$ 与 $1$ 的位置互换）。<strong>C 错</strong>：这是对角化之后的 $\Lambda^k$，不是 $A^k$——$k=1$ 时它是 $\mathrm{diag}(3,1)$，而 $A$ 的非对角元是 $1$，明显不符。选择它说明忘掉了"还原"这一步 $A^k=Q\Lambda^kQ^T$。<strong>D 错</strong>：$k=1$ 时得 $\begin{pmatrix}2&-1\\-1&2\end{pmatrix}$，副对角元符号反了，它对应的特征值是 $1$ 和 $3$（来自把某个投影系数的符号算错）。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">
-        <p class="q-stem">设 $A=\begin{pmatrix}4&2&2\\2&4&2\\2&2&4\end{pmatrix}$，$Q$ 为正交矩阵使 $Q^TAQ=\mathrm{diag}(8,2,2)$。若 $Q$ 的第 1 列取 $\dfrac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix}$，则 $Q$ 的第 2 列可以是（　）。
+        <p class="q-stem">设 $A=\begin{pmatrix}4&2&2\\2&4&2\\2&2&4\end{pmatrix}$，$Q$ 为正交矩阵使 $Q^TAQ=\mathrm{diag}(2,2,8)$。若 $Q$ 的第 1 列取 $\dfrac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix}$，则 $Q$ 的第 2 列可以是（　）。
            <span class="q-stem-en" lang="en">Let $A=\begin{pmatrix}4&2&2\\2&4&2\\2&2&4\end{pmatrix}$ and let $Q$ be an orthogonal matrix with $Q^TAQ=\mathrm{diag}(8,2,2)$. If the first column of $Q$ is taken as $\dfrac{1}{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix}$, then the second column of $Q$ can be ( ).</span></p>
         <ul class="options">
         <li data-correct="true"><span class="opt-body">$\dfrac{1}{\sqrt6}\begin{pmatrix}1\\1\\-2\end{pmatrix}$</span></li>
@@ -1960,7 +1960,7 @@
         <li><span class="opt-body">$7$</span></li>
         <li><span class="opt-body">$25$</span></li>
         </ul>
-        <div class="q-explain">"每行元素之和均为 $2$" 等价于 $A(1,1,1)^T=2(1,1,1)^T$，即 $\lambda_1=2$ 是特征值。设另两个特征值为 $\lambda_2,\lambda_3$：由 $\mathrm{tr}(A)=5$ 得 $\lambda_2+\lambda_3=5-2=3$；由 $|A|=2$ 得 $2\lambda_2\lambda_3=2$，即 $\lambda_2\lambda_3=1$。于是 $\mathrm{tr}(A^2)=\lambda_1^2+\lambda_2^2+\lambda_3^2=4+[(\lambda_2+\lambda_3)^2-2\lambda_2\lambda_3]=4+(9-2)=11$。<strong>B 错</strong>：$13=4+9$，直接把 $(\lambda_2+\lambda_3)^2=9$ 当成了 $\lambda_2^2+\lambda_3^2$，漏掉交叉项 $-2\lambda_2\lambda_3$。<strong>C 错</strong>：$7=(\lambda_2+\lambda_3)^2-2\lambda_2\lambda_3=9-2$，算出了 $\lambda_2^2+\lambda_3^2$ 却忘了再加上 $\lambda_1^2=4$。<strong>D 错</strong>：$25=(\mathrm{tr}A)^2$，把 $\mathrm{tr}(A^2)$ 与 $(\mathrm{tr}A)^2$ 混为一谈，二者一般不相等（只有当矩阵可正交对角化且特征值同号时才可能相等，这里是 $11\ne25$）。</div>
+        <div class="q-explain">"每行元素之和均为 $2$" 等价于 $A(1,1,1)^T=2(1,1,1)^T$，即 $\lambda_1=2$ 是特征值。设另两个特征值为 $\lambda_2,\lambda_3$：由 $\mathrm{tr}(A)=5$ 得 $\lambda_2+\lambda_3=5-2=3$；由 $|A|=2$ 得 $2\lambda_2\lambda_3=2$，即 $\lambda_2\lambda_3=1$。于是 $\mathrm{tr}(A^2)=\lambda_1^2+\lambda_2^2+\lambda_3^2=4+[(\lambda_2+\lambda_3)^2-2\lambda_2\lambda_3]=4+(9-2)=11$。<strong>B 错</strong>：$13=4+9$，直接把 $(\lambda_2+\lambda_3)^2=9$ 当成了 $\lambda_2^2+\lambda_3^2$，漏掉交叉项 $-2\lambda_2\lambda_3$。<strong>C 错</strong>：$7=(\lambda_2+\lambda_3)^2-2\lambda_2\lambda_3=9-2$，算出了 $\lambda_2^2+\lambda_3^2$ 却忘了再加上 $\lambda_1^2=4$。<strong>D 错</strong>：$25=(\mathrm{tr}A)^2$，把 $\mathrm{tr}(A^2)$ 与 $(\mathrm{tr}A)^2$ 混为一谈，二者一般不相等（二者相差 $2\sum_{i&lt;j}\lambda_i\lambda_j$，一般不为零；这里是 $11\ne25$）。</div>
         </div>
 
         <div class="q" data-type="single" data-level="考研">

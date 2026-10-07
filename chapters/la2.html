@@ -682,7 +682,7 @@
             <li data-correct="true"><span class="opt-body">$|A^TB^{-1}|=-2$</span></li>
             <li><span class="opt-body">$|A+B|=|A|+|B|=1$</span></li>
           </ul>
-          <div class="q-explain">A 对：$|AB|=|A|\cdot|B|=2\times(-1)=-2$。B 对：$|2A^T|=2^3\cdot|A^T|=8\times2=16$，指数是<strong>阶数 $3$</strong> 而不是 $1$，漏掉立方就会错得 $4$。C 对：$|A^TB^{-1}|=|A^T|\cdot|B^{-1}|=2\times\frac{1}{-1}=-2$，注意 $|B^{-1}|=1/|B|$ 要取倒数。D 错：行列式对加法<strong>没有</strong>可拆性，$|A+B|\ne|A|+|B|$——取 $A=E,B=-E$ 就有 $|A+B|=0$ 而 $|A|+|B|=2$。</div>
+          <div class="q-explain">A 对：$|AB|=|A|\cdot|B|=2\times(-1)=-2$。B 对：$|2A^T|=2^3\cdot|A^T|=8\times2=16$，指数是<strong>阶数 $3$</strong> 而不是 $1$，漏掉立方就会错得 $4$。C 对：$|A^TB^{-1}|=|A^T|\cdot|B^{-1}|=2\times\frac{1}{-1}=-2$，注意 $|B^{-1}|=1/|B|$ 要取倒数。D 错：行列式对加法<strong>没有</strong>可拆性，$|A+B|\ne|A|+|B|$——取 $A=B=E_3$ 就有 $|A+B|=|2E_3|=8$，而 $|A|+|B|=1+1=2$，两者不等。</div>
         </div>
 
         <div class="q" data-type="single" data-level="中等">
@@ -742,7 +742,7 @@
             <li><span class="opt-body">$\begin{pmatrix}a&b\\c&d\end{pmatrix}$（$a,b,c,d$ 任意）</span></li>
             <li><span class="opt-body">$\begin{pmatrix}a&b\\-b&a\end{pmatrix}$（$a,b$ 任意）</span></li>
           </ul>
-          <div class="q-explain">设 $B=\begin{pmatrix}a&b\\c&d\end{pmatrix}$，分别算出 $AB=\begin{pmatrix}a+c&b+d\\c&d\end{pmatrix}$ 与 $BA=\begin{pmatrix}a&a+b\\c&c+d\end{pmatrix}$，逐位置比较：$(1,1)$ 给 $a+c=a$，故 $c=0$；$(2,2)$ 给 $d=c+d$，同样得 $c=0$；$(2,1)$ 给 $c=c$，没有新信息；$(1,2)$ 给 $b+d=a+b$，故 $d=a$。于是 $B=\begin{pmatrix}a&b\\0&a\end{pmatrix}$，$a,b$ 任意。选项 B 只取了 $b=0$ 的那一部分，漏掉了 $b\ne0$ 的矩阵；选项 C 说任意矩阵都可交换，取 $B=\begin{pmatrix}0&1\\0&0\end{pmatrix}$ 就不成立；选项 D 是与旋转矩阵可交换的形状：代入可得 $AB$ 的 $(1,1)$ 元素为 $a-b$ 而 $BA$ 的为 $a$，一般不等。</div>
+          <div class="q-explain">设 $B=\begin{pmatrix}a&b\\c&d\end{pmatrix}$，分别算出 $AB=\begin{pmatrix}a+c&b+d\\c&d\end{pmatrix}$ 与 $BA=\begin{pmatrix}a&a+b\\c&c+d\end{pmatrix}$，逐位置比较：$(1,1)$ 给 $a+c=a$，故 $c=0$；$(2,2)$ 给 $d=c+d$，同样得 $c=0$；$(2,1)$ 给 $c=c$，没有新信息；$(1,2)$ 给 $b+d=a+b$，故 $d=a$。于是 $B=\begin{pmatrix}a&b\\0&a\end{pmatrix}$，$a,b$ 任意。选项 B 只取了 $b=0$ 的那一部分，漏掉了 $b\ne0$ 的矩阵；选项 C 说任意矩阵都可交换，取 $B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$ 就不成立；选项 D 是与旋转矩阵可交换的形状：代入可得 $AB$ 的 $(1,1)$ 元素为 $a-b$ 而 $BA$ 的为 $a$，一般不等。</div>
         </div>
 
         <div class="q-review">
@@ -1233,7 +1233,7 @@
             <li data-correct="true"><span class="opt-body">正确</span></li>
             <li><span class="opt-body">错误</span></li>
           </ul>
-          <div class="q-explain">两边取行列式：$|A|\cdot|B|=|AB|\ne0$。两个数相乘非零，说明两个因子都非零，所以 $|A|\ne0$ 且 $|B|\ne0$，由定理 2.3 知 $A,B$ 都可逆。反过来也对：$A,B$ 可逆时 $AB$ 可逆且 $(AB)^{-1}=B^{-1}A^{-1}$。要留神的是这条<strong>依赖"方阵"前提</strong>：若 $A$ 是 $3\times2$、$B$ 是 $2\times3$，则 $AB$ 是 $3$ 阶方阵而 $A,B$ 根本不是方阵，此时 $AB$ 甚至真的可能可逆。</div>
+          <div class="q-explain">两边取行列式：$|A|\cdot|B|=|AB|\ne0$。两个数相乘非零，说明两个因子都非零，所以 $|A|\ne0$ 且 $|B|\ne0$，由定理 2.3 知 $A,B$ 都可逆。反过来也对：$A,B$ 可逆时 $AB$ 可逆且 $(AB)^{-1}=B^{-1}A^{-1}$。要留神的是这条<strong>依赖"方阵"前提</strong>：若 $A$ 是 $3\times2$、$B$ 是 $2\times3$，则 $AB$ 是 $3$ 阶方阵而 $A,B$ 根本不是方阵，此时 $AB$ 必不可逆（$R(AB)\le\min\{R(A),R(B)\}\le2&lt;3$）。</div>
         </div>
 
         <div class="q" data-type="multi" data-level="中等">
@@ -1831,7 +1831,7 @@
           <ul class="options">
             <li data-correct="true"><span class="opt-body">$R(A)+R(B)\le5$</span></li>
             <li><span class="opt-body">$R(A)+R(B)\le3$</span></li>
-            <li><span class="opt-body">$R(A)+R(B)\le8$</span></li>
+            <li><span class="opt-body">$R(A)+R(B)\ge6$</span></li>
             <li><span class="opt-body">$R(A)+R(B)\ge5$</span></li>
           </ul>
           <div class="q-explain">对 $A,B$ 用 Sylvester 不等式 $R(A)+R(B)-n\le R(AB)$。这里的中间维数 $n$ 是 $A$ 的列数、也是 $B$ 的行数，即 $n=5$；又 $R(AB)=R(O)=0$，所以 $R(A)+R(B)\le5$。选项 B 把中间维数错当成了 $A$ 的行数 $3$；选项 C 把"$3+5$"当成了上界，那是两个外标之和，与不等式无关；选项 D 方向反了——$R(A)+R(B)$ 受中间维数压制，只可能有上界。几何解释：$AB=O$ 说明 $B$ 的每一列都是 $AX=0$ 的解，而 $AX=0$ 的解的全体维数只有 $5-R(A)$。</div>
