@@ -717,12 +717,14 @@
     if (!host) return;
     var cls = dir === 'right' ? 'is-slide-from-right' : 'is-slide-from-left';
     host.classList.add(cls);
+    var timer = 0;
     var done = function () {
+      if (timer) { window.clearTimeout(timer); timer = 0; }   // 清理兜底定时器，避免残留
       host.classList.remove(cls);
       host.removeEventListener('animationend', done);
     };
     host.addEventListener('animationend', done);
-    setTimeout(done, 600);   // 兜底：动画未触发也清掉类，不留残留 transform
+    timer = window.setTimeout(done, 600);   // 兜底：动画未触发也清掉类，不留残留 transform
   }
 
   /* 顶部平行科目标签：插在 header-nav 最前（品牌之后、「首页」之前） */
@@ -863,7 +865,28 @@
           改为 rAF 节流：一帧最多写一次，并存下最新值。
        ③ 拖动期间置 Plot 的暂停标记，抑制所有图表的 ResizeObserver 重绘；
           松手后统一重绘一次，避免"每移动一像素重画一遍插图"（本页有 9 幅图时尤甚）。 */
-    var dragging = false, dragLeft = 0, pendingW = null, rafId = 0;
+    /* ------------------------------------------------------------------
+       第 46 节：手势状态机 + pointer 事件 + pointer capture（最小修补）
+       ------------------------------------------------------------------
+       原实现的三处硬伤（2026-10-08 用户报"抢鼠标、滑到一半回跳"）：
+       ① 起点用 mousedown、中断却监听 pointercancel —— 两套事件族混用；
+          且从未 setPointerCapture，指针离开 grip 后浏览器有权把指针流
+          "抢走"（触控板双指手势、系统拖拽、笔输入都会触发），
+          于是 pointercancel 在拖拽中途到达，拖拽被硬生生终止。
+       ② 没有状态机：dragging 只是一个布尔量，被中断时仍然走正常收尾，
+          把"半途的宽度"当成最终值提交 —— 表现为滑到一半直接停住/回跳。
+       ③ 拖拽中每次 pointermove 都读 getComputedStyle，强制同步样式重算。
+       修法：只保留指针事件；用 gesture 状态机（idle/dragging/animating）
+       明确拒绝滑动过程中的新手势；指针捕获在容器上成对设置与释放；
+       取消时回滚到本次拖拽的起始宽度（而不是提交半途值）。
+       本次只改这一块的内部实现，对外行为（宽度存储键、is-resizing 类、
+       Plot 暂停/重绘、双击复位）一律保持不变。 */
+
+    var gesture = 'idle';          // idle | dragging | animating
+    var dragLeft = 0, dragStartW = 0, dragStartX = 0, pendingW = null, rafId = 0;
+    var DRAG_THRESHOLD = 3;        // 小于该位移视为点击，不进入拖拽
+    var DAMPING = 1;               // 阻尼系数（1 = 跟手；>1 更慢）
+    var contentEl = null, contentBaseW = 0, contentLeft = 0, baseSidebarW = 0;
 
     function flushWidth() {
       rafId = 0;
@@ -872,27 +895,57 @@
       pendingW = null;
     }
 
-    grip.addEventListener('mousedown', function (e) {
-      if (window.innerWidth <= 1000) return;   // 窄屏侧栏是抽屉，不拖动
-      dragging = true; e.preventDefault();
-      dragLeft = layout.getBoundingClientRect().left;   // 只读一次
+    function clearPreview() {
+      if (contentEl) { contentEl.style.transform = ''; contentEl.style.transformOrigin = ''; }
+      contentEl = null; contentBaseW = 0;
+    }
+
+    /* 统一收尾。commit=true 提交最终宽度；commit=false 回滚到本次起始宽度。
+       两条路径都必须：释放指针捕获、清预览 transform、摘掉 is-resizing、
+       恢复 Plot 重绘、并且只写一次存储。 */
+    function finishGesture(commit) {
+      if (gesture !== 'dragging') return;
+      gesture = 'animating';
+      if (rafId) { window.cancelAnimationFrame(rafId); rafId = 0; }
+      if (!commit) pendingW = dragStartW;      // 取消：回到起始宽度，不留半途值
+      flushWidth();
+      clearPreview();
+      document.body.classList.remove('is-resizing');
+      if (window.Plot && window.Plot.setResizePaused) window.Plot.setResizePaused(false);
+      var w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'), 10);
+      if (w) writeJSON(SIDE_W_KEY, w);
+      resyncPlots();
+      /* 等网格列宽的过渡（.18s）走完再解除 animating，期间拒绝新手势 */
+      window.setTimeout(function () { if (gesture === 'animating') gesture = 'idle'; }, 200);
+    }
+
+    grip.addEventListener('pointerdown', function (e) {
+      if (window.innerWidth <= 1000) return;      // 窄屏侧栏是抽屉，不拖动
+      if (gesture !== 'idle') return;             // 动画未结束：拒绝新手势
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      gesture = 'dragging';
+      e.preventDefault();
+      dragLeft = layout.getBoundingClientRect().left;
+      dragStartX = e.clientX;
+      baseSidebarW = parseInt(getComputedStyle(document.documentElement)
+        .getPropertyValue('--sidebar-w'), 10) || 274;
+      dragStartW = baseSidebarW;
+      pendingW = baseSidebarW;
+      /* 指针捕获：只有捕获之后，指针流才不会被浏览器/触控板手势抢走，
+         pointerup / pointercancel 也必定回到本元素 */
+      if (grip.setPointerCapture) { try { grip.setPointerCapture(e.pointerId); } catch (err) {} }
       document.body.classList.add('is-resizing');
       if (window.Plot && window.Plot.setResizePaused) window.Plot.setResizePaused(true);
     });
-    grip.addEventListener('dblclick', function () {
-      writeJSON(SIDE_W_KEY, 274); applySidebar(); resyncPlots();
-    });
 
-    /* 拖动中的视觉反馈用 transform 而不是逐帧改 --sidebar-w。
-       原因是改网格列宽会触发内容区整体重排（ch1 曾 138 ms/次）；
-       而 transform 只影响合成层，不触发重排（第 24.2 节方案三）。
-       松手时才把最终宽度提交给 --sidebar-w 并移除 transform。 */
-    var contentEl = null, contentLeft = 0, contentBaseW = 0;
-    window.addEventListener('mousemove', function (e) {
-      if (!dragging) return;
-      var w = Math.round(e.clientX - dragLeft);
+    grip.addEventListener('pointermove', function (e) {
+      if (gesture !== 'dragging') return;
+      if (Math.abs(e.clientX - dragStartX) < DRAG_THRESHOLD) return;   // 阈值：防误触
+      var w = Math.round(dragStartW + (e.clientX - dragStartX) / DAMPING);
       pendingW = Math.max(SIDE_MIN, Math.min(SIDE_MAX, w));
-      // 首次移动时量一次内容区基准（之后不再读布局，避免强制同步重排）
+      /* 拖动中的视觉反馈用 transform（不触发重排）。
+         基准量一次即缓存，之后不再读布局；基准宽度也用缓存值，
+         不再每次 pointermove 调 getComputedStyle（原实现的主要卡顿点）。 */
       if (!contentEl) {
         contentEl = document.querySelector('.content') || document.querySelector('.main');
         if (contentEl) {
@@ -901,33 +954,26 @@
         }
       }
       if (contentEl && contentBaseW > 0) {
-        var targetW = contentBaseW - (pendingW - parseInt(
-          getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'), 10) || 0);
-        var scale = Math.max(0.5, targetW / contentBaseW);
-        contentEl.style.transformOrigin = contentLeft + 'px top';
+        var delta = pendingW - baseSidebarW;
+        var scale = Math.max(0.5, (contentBaseW - delta) / contentBaseW);
+        contentEl.style.transformOrigin = '0 top';
         contentEl.style.transform = 'scaleX(' + scale.toFixed(4) + ')';
         return;                       // 拖动期间不写 --sidebar-w
       }
       if (!rafId) rafId = window.requestAnimationFrame(flushWidth);
     });
 
-    function endDrag() {
-      if (!dragging) return;
-      dragging = false;
-      if (rafId) { window.cancelAnimationFrame(rafId); rafId = 0; }
-      flushWidth();
-      // 提交最终宽度：移除 transform，改由网格列宽真正生效
-      if (contentEl) { contentEl.style.transform = ''; contentEl.style.transformOrigin = ''; }
-      contentEl = null; contentBaseW = 0;
-      document.body.classList.remove('is-resizing');
-      if (window.Plot && window.Plot.setResizePaused) window.Plot.setResizePaused(false);
-      var w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'), 10);
-      if (w) writeJSON(SIDE_W_KEY, w);
-      resyncPlots();   // 松手后一次性重绘所有图表
+    function releasePointer(e) {
+      if (grip.releasePointerCapture && e && e.pointerId !== undefined && grip.hasPointerCapture
+          && grip.hasPointerCapture(e.pointerId)) {
+        try { grip.releasePointerCapture(e.pointerId); } catch (err) {}
+      }
     }
-    window.addEventListener('mouseup', endDrag);
-    window.addEventListener('blur', endDrag);          // 切窗口时也要收尾
-    window.addEventListener('pointercancel', endDrag);  // 触控/笔输入的中断
+
+    grip.addEventListener('pointerup', function (e) { releasePointer(e); finishGesture(true); });
+    grip.addEventListener('pointercancel', function (e) { releasePointer(e); finishGesture(false); });
+    /* 窗口失焦 / 指针被系统夺走：按取消处理，回滚到起始宽度，避免留下半途值 */
+    window.addEventListener('blur', function () { finishGesture(false); });
 
     /* 拖动结束后让所有图表按新宽度重绘一次。用 rAF 再等一帧，
        确保 grid 已完成重排、图表容器的 clientWidth 已是最终值。 */
