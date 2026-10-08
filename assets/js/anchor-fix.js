@@ -106,8 +106,11 @@
         var el = document.getElementById(key);
         if (!el) return;
         var top = el.getBoundingClientRect().top;
-        if (top >= -60 && top < window.innerHeight) return;   // 已在视野内，不动
-        el.scrollIntoView({ block: 'start' });
+        if (top >= -60 && top < 80) return;   // 已贴顶就不再动，避免来回抖
+          /* behavior:'instant' 显式写出：即使日后有人重新打开 CSS 的
+             scroll-behavior:smooth，这里也不会退化成慢速缓动动画
+             （跨 15 万 px 的缓动会被下一次校正打断，永远到不了目标）。 */
+          el.scrollIntoView({ block: 'start', behavior: 'instant' });
     }
 
     /* 排版排完之后，再在一个有限窗口内持续校正。

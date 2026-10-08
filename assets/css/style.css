@@ -51,7 +51,12 @@
 /* ---------- 2. 基础重置 ---------- */
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+/* 第 42 节：去掉全局 scroll-behavior:smooth。
+   原因（2026-10-07 实测）：章节页高达 15 万 px，锚点跳转若走缓动动画需要数秒，
+   而 anchor-fix.js 的 settleLoop 每 200 ms 校正一次会不断打断上一次动画，
+   导致「点了侧边栏迟迟不跳、页面卡住不动」。改为瞬时跳转后立即到位。
+   「回到顶部」按钮自带 behavior:'smooth'，不受影响。 */
+html { scroll-padding-top: 84px; }
 
 body {
   margin: 0;
@@ -1701,8 +1706,13 @@ details.link-box .bi > .zh, details.link-box .bi > .en { font-size: .88rem; }
    contain-intrinsic-size 用 auto 关键字：浏览器会记住该节已渲染过的高度，
    来回滚动不会跳动（实测滚动前后总高差 < 1%）。 */
 .sec {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 2400px;
+  /* 第 42 节：移除 content-visibility:auto。
+     原因（2026-10-07 实测）：屏外整节不参与布局时，锚点跳转按 contain-intrinsic-size
+     的估算高度定位，节一进入视口高度就变，滚动位置被反复推走 —— 实测跳转 8 s 未收敛、
+     落点误差 34399 px，且滚动经过每节都要重新布局造成卡顿。
+     导航正确性优先于屏外渲染的微优化。 */
+  /* content-visibility: auto; */
+  /* contain-intrinsic-size: auto 2400px; */
 }
 
 /* 非拖动状态下给网格列宽一个短过渡：双击恢复默认宽度、点收起/展开时视觉更顺。
