@@ -35,6 +35,24 @@
 
     var FALLBACK_SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head';
 
+    /* ------------------------------------------------------------------
+       第 47 节：让位给用户（根因修复）
+       ------------------------------------------------------------------
+       现象（用户报障"程序抢鼠标、滑动直接回跳到起点"）：
+         settleLoop 在锚点跳转后每 200ms 调一次 align()，持续 8 秒，
+         无条件把滚动位置拉回锚点。用户往下滚，200ms 内就被拽回原处。
+       实测（2026-10-08，ch1 点目录跳到某节后连滚 14 次 ×320px）：
+         期望 y≈16679 → 实际 y=15399（被拉回）
+         期望 y≈17639 → 实际 y=15399（被拉回）
+         期望 y≈18919 → 实际 y=15399（被拉回）
+       修法：用户一旦自己滚动 / 触摸 / 按键，就把控制权交还给他，
+            此后不再做任何自动校正。新的锚点跳转（hashchange）重置该标志。
+       ------------------------------------------------------------------ */
+    var userTookOver = false;
+    ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach(function (ev) {
+        window.addEventListener(ev, function () { userTookOver = true; }, { passive: true });
+    });
+
     /* 公式块的选择器**从页面自身的排版脚本里读**，而不是在这里再抄一份。
        各页的 SEL 并不相同（la* 页多 .model-head / .model-signal 等四项），
        抄一份就会漏排；而且两处维护迟早分叉。 */
@@ -101,16 +119,19 @@
     }
 
     function align(force) {
+        if (userTookOver) return;             // 用户已接管滚动：彻底让位，不再自动校正
         var key = hashId();
         if (!key) return;
         var el = document.getElementById(key);
         if (!el) return;
         var top = el.getBoundingClientRect().top;
-        if (top >= -60 && top < 80) return;   // 已贴顶就不再动，避免来回抖
-          /* behavior:'instant' 显式写出：即使日后有人重新打开 CSS 的
-             scroll-behavior:smooth，这里也不会退化成慢速缓动动画
-             （跨 15 万 px 的缓动会被下一次校正打断，永远到不了目标）。 */
-          el.scrollIntoView({ block: 'start', behavior: 'instant' });
+        /* 目标只要还落在视口内，就一点也不动它。
+           ⚠️ 第 42 节曾把这里收成 top < 80，结果目标一离开贴顶位置就被每 200ms
+           拽回来，用户完全没法往下滚 —— 已回退为原判据。 */
+        if (top >= -60 && top < window.innerHeight) return;
+        /* behavior:'instant' 显式写出：即使日后有人重新打开 CSS 的
+           scroll-behavior:smooth，这里也不会退化成慢速缓动动画。 */
+        el.scrollIntoView({ block: 'start', behavior: 'instant' });
     }
 
     /* 排版排完之后，再在一个有限窗口内持续校正。
@@ -137,5 +158,10 @@
         window.addEventListener('load', function () { flushThenAlign(0); });
     }
 
-    window.addEventListener('hashchange', function () { flushThenAlign(0); });
+    /* 新的锚点跳转是用户明确的"带我去那一节"意图：重置接管标志，
+       让这一次对齐正常发生（同页点目录时 pointerdown 会先把标志置位）。 */
+    window.addEventListener('hashchange', function () {
+        userTookOver = false;
+        flushThenAlign(0);
+    });
 })();
