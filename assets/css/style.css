@@ -236,12 +236,18 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 2.4rem 0; }
   background: var(--brand-soft); color: var(--brand-deep);
   border-left-color: var(--brand); font-weight: 600;
 }
-/* 第 43 节：活动小节与它的"· 自测"会同时高亮，两条胶囊上下贴在一起，
-   各自的四个圆角在交界处互相咬合，露出一个缺口，看上去像"两条目录条重叠"
-   （用户截屏 2026-10-08 报障；放大原帧确认并非真的位置重叠，而是圆角咬合）。
-   把交界处的圆角拉平、并去掉那道 1px 缝，让这一对读成一个连续的高亮块。 */
-.toc a.toc-h2.is-active { border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
-.toc-sub a.is-active { border-radius: 0 0 var(--radius-sm) var(--radius-sm); margin-top: 0; }
+/* 第 44 节：目录里所属小节只做颜色与字重提示，不再画第二条背景胶囊。
+   起因（用户录屏 + 截屏 2026-10-08 报障）：活动小节与它的"· 自测"原来都带
+   背景胶囊，滚动时活动项在两者间切换，胶囊数量 1↔2 反复变化 —— 看起来在
+   「闪动」；两条相邻胶囊的四角圆角在交界处咬合出缺口 —— 看起来像「重叠」。
+   两者同源。改为全目录任何时刻**只有一条高亮胶囊**（精确活动的那一项），
+   所属小节用 is-ancestor 走下面的纯文字提示。 */
+.toc a.is-ancestor {
+  background: transparent;
+  color: var(--brand-deep);
+  font-weight: 600;
+  border-left-color: transparent;
+}
 
 /* 侧栏是要读的导航，不是装饰，所以用 --ink-soft（对纸底 7:1）而不是 --ink-faint（3.9:1） */
 .toc a.toc-h3 { padding-left: 1.3rem; font-size: .83rem; color: var(--ink-soft); }

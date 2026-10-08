@@ -214,14 +214,21 @@
       if (!active || !map[active.id]) return;
       if (active.id === lastActiveId) return;   // 活动小节没变：不动 DOM、不滚侧栏
       lastActiveId = active.id;
-      links.forEach(function (a) { a.classList.remove('is-active'); });
+      links.forEach(function (a) {
+        a.classList.remove('is-active');
+        a.classList.remove('is-ancestor');
+      });
       var a = map[active.id];
       a.classList.add('is-active');
-      // 同步高亮所属章节
+      /* 第 44 节：所属小节改用 is-ancestor（只有颜色与字重），不再共用 is-active。
+         原因：共用 is-active 会让"活动小节 + 它的 · 自测"同时画两条背景胶囊。
+         滚动时活动项在这两者之间切换，胶囊数量在 1 与 2 之间反复变化 ——
+         这就是用户报的「闪动」；而两条相邻胶囊的圆角在交界处咬合 ——
+         就是用户报的「重叠」。两者同源，去掉第二条胶囊即可同时消除。 */
       var grp = a.closest('.toc-group');
       if (grp) {
         var head = grp.querySelector('.toc-h2');
-        if (head) head.classList.add('is-active');
+        if (head && head !== a) head.classList.add('is-ancestor');
       }
       // 侧栏内自动滚动（每次只滚一次，不再逐帧微调）
       var sb = document.querySelector('.sidebar');
