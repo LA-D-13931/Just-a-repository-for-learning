@@ -206,7 +206,14 @@
 
     function update() {
       ticking = false;
-      var line = 120; // 距视口顶部多少像素算"当前"
+      /* 第 45 节：判据线要跟着站点头部高度走，并留出一段舒适余量。
+         原来固定 120px 太小 —— 用户把小节标题停在 140~150px 处阅读是很自然的位置，
+         此时该小节的 top 仍大于 120，高亮就停留在上一节，表现为"高亮条与页面对不上"。
+         实测复现：把「数列的极限」标题停在 146px，高亮仍是「映射与函数 · 自测」。 */
+      var headerH = 78;
+      var hd = document.querySelector('.site-header');
+      if (hd && hd.offsetHeight) headerH = hd.offsetHeight;
+      var line = headerH + 92; // 头部之下再留约 92px，合计约 170px
       var active = targets[0];
       for (var i = 0; i < targets.length; i++) {
         if (targets[i].getBoundingClientRect().top <= line) active = targets[i];
