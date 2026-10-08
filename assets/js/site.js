@@ -197,6 +197,12 @@
     if (!targets.length) return;
 
     var ticking = false;
+    /* 第 43 节：记住上一次的活动小节，只有它变了才动 DOM 与侧栏。
+       为什么必须加这道闸：原来每个滚动帧都要「清掉全部 is-active 再加回来」
+       （20+ 次 DOM 写）并在 rAF 里改侧栏 sb.scrollTop。rAF 内改 scrollTop 会让
+       合成器把旧帧与新帧同时呈现，截图可见目录条**上下重叠**（用户实测报障），
+       同时每帧强制样式重算也是滚动发涩的来源之一。 */
+    var lastActiveId = null;
 
     function update() {
       ticking = false;
@@ -205,23 +211,24 @@
       for (var i = 0; i < targets.length; i++) {
         if (targets[i].getBoundingClientRect().top <= line) active = targets[i];
       }
+      if (!active || !map[active.id]) return;
+      if (active.id === lastActiveId) return;   // 活动小节没变：不动 DOM、不滚侧栏
+      lastActiveId = active.id;
       links.forEach(function (a) { a.classList.remove('is-active'); });
-      if (active && map[active.id]) {
-        var a = map[active.id];
-        a.classList.add('is-active');
-        // 同步高亮所属章节
-        var grp = a.closest('.toc-group');
-        if (grp) {
-          var head = grp.querySelector('.toc-h2');
-          if (head) head.classList.add('is-active');
-        }
-        // 侧栏内自动滚动
-        var sb = document.querySelector('.sidebar');
-        if (sb && sb.scrollHeight > sb.clientHeight + 20) {
-          var r = a.getBoundingClientRect(), sr = sb.getBoundingClientRect();
-          if (r.top < sr.top || r.bottom > sr.bottom) {
-            sb.scrollTop += r.top - sr.top - sr.height / 2;
-          }
+      var a = map[active.id];
+      a.classList.add('is-active');
+      // 同步高亮所属章节
+      var grp = a.closest('.toc-group');
+      if (grp) {
+        var head = grp.querySelector('.toc-h2');
+        if (head) head.classList.add('is-active');
+      }
+      // 侧栏内自动滚动（每次只滚一次，不再逐帧微调）
+      var sb = document.querySelector('.sidebar');
+      if (sb && sb.scrollHeight > sb.clientHeight + 20) {
+        var r = a.getBoundingClientRect(), sr = sb.getBoundingClientRect();
+        if (r.top < sr.top || r.bottom > sr.bottom) {
+          sb.scrollTop += r.top - sr.top - sr.height / 2;
         }
       }
     }
