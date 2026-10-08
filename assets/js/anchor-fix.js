@@ -57,6 +57,10 @@
        各页的 SEL 并不相同（la* 页多 .model-head / .model-signal 等四项），
        抄一份就会漏排；而且两处维护迟早分叉。 */
     function pageSel() {
+        /* 第 48 节：分片排版调度器已抽到 assets/js/typeset.js，
+           它会把最终 SEL 挂到 window.__TYPESET_SEL。优先读它。 */
+        if (window.__TYPESET_SEL) return window.__TYPESET_SEL;
+        /* 兼容：内联调度器仍写在页面里的旧结构（用正则从脚本文本里抓 SEL） */
         var scripts = document.querySelectorAll('script:not([src])');
         for (var i = 0; i < scripts.length; i++) {
             var m = /SEL\s*=\s*'([^']+)'/.exec(scripts[i].textContent || '');

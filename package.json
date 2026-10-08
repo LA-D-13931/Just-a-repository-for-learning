@@ -5,7 +5,7 @@
   "description": "无构建步骤的双语高等数学学习站（纯静态，双击 index.html 即用）",
   "scripts": {
     "check": "python3 tests/check-html.py && python3 tests/check-bilingual.py && python3 tests/check-structure.py",
-    "test": "cd tests && node site.test.js && node quiz.test.js && node plot.test.js && node theme.test.js && node videos.test.js && node review.test.js",
+    "test": "cd tests && node site.test.js && node quiz.test.js && node plot.test.js && node theme.test.js && node videos.test.js && node review.test.js && node typeset.test.js",
     "verify": "npm run check && npm run test"
   },
   "repository": {

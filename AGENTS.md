@@ -45,20 +45,23 @@ node tests/review.test.js          # 复习卷
 3. **不要在 HTML 里写 Markdown 加粗 `**`** —— `tests/check-html.py` 会判为残留。
 4. **`assets/js/course-data.js` 是 `assets/course-data.json` 的生成物**。改数据请改 json，再跑生成器；
    直接改 js 会在下次生成时被覆盖。
-5. **公式排版是分片进行的**，不是 `MathJax.typeset()` 一把梭。每个页面 `<head>` 里内联了一份调度器：
-   首屏同步排 60 块 → `IntersectionObserver` 观察其余 → 每批 25 块用 `requestIdleCallback` 排。
-   `assets/js/anchor-fix.js` 会在每批结束后被 `window.__anchorSettle()` 回调。
+5. **公式排版是分片进行的**，不是 `MathJax.typeset()` 一把梭。调度器在 `assets/js/typeset.js`（唯一实现）：
+   首屏同步排 60 块 → `IntersectionObserver`（预取 400px）观察其余 → 每批 25 块用 `requestIdleCallback` 排，
+   批次之间必须真正 yield 给主线程。队列排空后按参数做有界重扫（最多 3 轮）。
+   每批排完回调 `window.__anchorSettle()`，由 `assets/js/anchor-fix.js` 校正锚点。
+   页面只需在 `<head>` 声明参数：`window.__TYPESET = { sel: '…', sweep: 'bounded' }`。
 6. **不要给 `.sec` 加 `content-visibility: auto`**（试过，破坏锚点跳转，实测跳转 8 秒不收敛）；
    **不要给 `html` 加 `scroll-behavior: smooth`**（章节页高达 15 万 px，缓动跳转会卡死）。
-7. **分片调度器在 25 个页面各有一份内联副本**，仅两处参数不同：`SEL`（参与排版的元素选择器）
-   与扫描策略（`sweepDone` 单次 / `sweepLeft = 3` 有界重扫）。改调度逻辑要同步 25 个文件。
-   注意 `assets/js/anchor-fix.js` 的 `pageSel()` 是从内联脚本文本里**正则抓 SEL 字符串**的 —— 移动这段代码必须同步改它。
+7. **调度逻辑只有一份**（`assets/js/typeset.js`，第 48 节从 25 份内联副本抽取）。页面差异只体现在
+   `window.__TYPESET.sel`（参与排版的元素选择器）上；`sweep` 目前全部为 `'bounded'`。
+   改调度逻辑只改这一个文件。`assets/js/anchor-fix.js` 通过 `window.__TYPESET_SEL` 读同一个选择器
+   （它已不再需要从内联脚本文本里正则抓取）。
 
 ## 常见坑（都是真踩过的）
 
 | 现象 | 原因 |
 |---|---|
-| 公式源码裸露成 `$\sqrt{x}$` | 该元素不在 `SEL` 里，或没有走「分片补排」 |
+| 公式源码裸露成 `$\sqrt{x}$` | 该元素不在 `SEL` 里，或扫描策略太弱（`tests/typeset.test.js` 会逐页守住这条） |
 | `IndexSizeError: splitText` | 父子元素都在 `SEL` 里被重复排版；入口列表要过滤掉有匹配祖先的元素 |
 | 滚动时被反复拽回锚点 | `__anchorSettle` 无条件 `scrollIntoView`；用户一动滚轮就该让位 |
 | 侧栏拖拽中途被抢 | 起点用 `mousedown` 却监听 `pointercancel` 且未 `setPointerCapture` |

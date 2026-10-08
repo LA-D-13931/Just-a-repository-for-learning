@@ -17,106 +17,10 @@
 </script>
 <script id="MathJax-script" async src="assets/js/vendor/tex-svg.js"></script>
 <script>
-  (function () {
-    /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
-    if (/[?&]eager=1/.test(location.search)) return;
-
-    var MJ = null, SEL = 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head, .model-head, .model-signal, .model-route, .fb-body, .cs-note, .cs-item';
-    var pending = [], busy = false, started = false, sweepLeft = 3;
-
-    function idle(fn) {
-      if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 400 });
-      else setTimeout(fn, 16);
-    }
-    /* 每批之间必须真正让出主线程：typesetPromise 内部是一次同步排版，
-       不 yield 的话分批毫无意义（时间片必须落在批次之间）。 */
-    function schedule() {
-      if (busy || !pending.length) return;
-      busy = true;
-      var batch = pending.splice(0, 25);
-      idle(function () {
-        MJ.typesetPromise(batch).catch(function () {}).then(function () {
-          busy = false;
-          /* 一批排完：如果地址栏有锚点，把目标重新对齐（MathJax 会撑高页面） */
-          if (typeof window.__anchorSettle === 'function') window.__anchorSettle();
-          if (pending.length) { schedule(); return; }
-          /* 兜底补排（第 32 节）：例题标题 .example-head 里的公式此前从不进入队列，
-             导致例题标题里的公式源码直接裸露。队列排空后重新扫一遍，
-             凡是仍含 `$` 且未被 MathJax 处理的 .example-head，补排一次。
-             只处理这一类元素，不影响其他已排好的内容。 */
-          if (sweepLeft > 0) {
-            sweepLeft--;
-            var left = Array.prototype.slice.call(document.querySelectorAll(SEL))
-              .filter(function (el) {
-                return !el.querySelector('mjx-container') &&
-                  Array.from(el.childNodes).some(function (n) {
-                    return n.nodeType === 3 && /\$[^$]{1,200}\$/.test(n.nodeValue || '');
-                  });
-              });
-            if (left.length) { pending = pending.concat(left); schedule(); }
-          } else {
-            /* 重扫用尽后仍可能剩零星块（工具页的表格 / 折叠块结构不规则）。
-               最后整块兜底排版一次，保证不留下未渲染的公式；只在这时付一次全量代价。 */
-            try {
-              var scope = document.querySelector('.content') || document.body;
-              if (scope) MJ.typesetPromise([scope]).catch(function () {});
-            } catch (e) {}
-          }
-        });
-      });
-    }
-
-    function start() {
-      if (started) return;
-      if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
-        setTimeout(start, 60); return;
-      }
-      started = true;
-      MJ = window.MathJax;
-      var all = Array.prototype.slice.call(document.querySelectorAll(SEL))
-        .filter(function (el) { var a = el.parentElement;
-          while (a && a !== document.body) { if (a.matches && a.matches(SEL)) return false; a = a.parentElement; }
-          return true; });
-      var first = all.filter(function (el) {
-        var r = el.getBoundingClientRect();
-        return r.bottom > -300 && r.top < (window.innerHeight + 300);
-      });
-      var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
-
-      /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
-         ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
-      MJ.typesetPromise(first.slice(0, 60)).then(function () {
-        pending = pending.concat(first.slice(60));
-        /* ② 其余：只在进入视口附近时入队，永不整体排队 */
-        if (typeof IntersectionObserver !== 'function') {
-          pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
-          schedule(); return;
-        }
-        var io = new IntersectionObserver(function (entries) {
-          for (var i = 0; i < entries.length; i++) {
-            if (entries[i].isIntersecting) {
-              pending.push(entries[i].target);
-              io.unobserve(entries[i].target);
-            }
-          }
-          schedule();
-        }, { rootMargin: '400px 0px' });
-        rest.forEach(function (el) { io.observe(el); });
-        schedule();
-      }).catch(function () {});
-    }
-
-    /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
-    function boot() {
-      if (window.requestAnimationFrame) {
-        requestAnimationFrame(function () { requestAnimationFrame(function () { start(); }); });
-      } else setTimeout(start, 0);
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-    else boot();
-  })();
+  window.__TYPESET = { sel: 'p, li, h2, h3, h4, td, th, figcaption, .box-title, .example-head, .model-head, .model-signal, .model-route, .fb-body, .cs-note, .cs-item', sweep: 'bounded' };
 
 </script>
+  <script src="assets/js/typeset.js"></script>
 </head>
 <body data-page="la-exam" data-subject="linearAlgebra">
 
