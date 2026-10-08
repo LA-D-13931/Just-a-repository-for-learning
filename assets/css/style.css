@@ -236,6 +236,13 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 2.4rem 0; }
   background: var(--brand-soft); color: var(--brand-deep);
   border-left-color: var(--brand); font-weight: 600;
 }
+/* 第 43 节：活动小节与它的"· 自测"会同时高亮，两条胶囊上下贴在一起，
+   各自的四个圆角在交界处互相咬合，露出一个缺口，看上去像"两条目录条重叠"
+   （用户截屏 2026-10-08 报障；放大原帧确认并非真的位置重叠，而是圆角咬合）。
+   把交界处的圆角拉平、并去掉那道 1px 缝，让这一对读成一个连续的高亮块。 */
+.toc a.toc-h2.is-active { border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.toc-sub a.is-active { border-radius: 0 0 var(--radius-sm) var(--radius-sm); margin-top: 0; }
+
 /* 侧栏是要读的导航，不是装饰，所以用 --ink-soft（对纸底 7:1）而不是 --ink-faint（3.9:1） */
 .toc a.toc-h3 { padding-left: 1.3rem; font-size: .83rem; color: var(--ink-soft); }
 .toc a.toc-h3.is-active { color: var(--brand-deep); }
