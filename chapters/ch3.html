@@ -2946,7 +2946,7 @@
             <li data-correct="true"><span class="opt-body">$K$ 恒大于等于 0，且 $\rho=\dfrac{1}{K}$（当 $K\ne 0$ 时）</span></li>
             <li data-correct="true"><span class="opt-body">曲率中心一定在曲线该点的法线上，且在曲线凹的一侧</span></li>
             <li><span class="opt-body">曲线在拐点处曲率最大，因此曲率半径最小</span></li>
-            <li><span class="opt-body">曲率圆与曲线在该点相切，且两者在该点有相同的曲率</span></li>
+            <li data-correct="true"><span class="opt-body">曲率圆与曲线在该点相切，且两者在该点有相同的曲率</span></li>
           </ul>
           <div class="q-explain">
             <p>A 对：曲率按定义 3.15 取了绝对值，故 $K\ge 0$；曲率半径按定义 3.16 与它互为倒数。B 对：这是定义 3.17 的构造方式——先在法线上取点，再要求距离为 $\rho$，凹向决定取哪一侧。C 错：拐点处 $y''=0$，故 $K=0$、$\rho=+\infty$，曲率是<strong>局部最小</strong>而不是最大，而且没有有限的曲率圆。D 对：曲率圆的两条定义性性质就是"与曲线同切线、同曲率"，与曲线在该点二阶贴近（例 3.10 的验算③检验了公切线）。</p>
@@ -2993,7 +2993,7 @@
             <li data-correct="true"><span class="opt-body">对于直线 $y=kx+b$，恒有 $K=0$、$\rho=+\infty$</span></li>
             <li><span class="opt-body">$K$ 与 $y''$ 的符号相同，即 $y''&gt;0$ 时曲率取正值、$y''&lt;0$ 时取负值</span></li>
             <li data-correct="true"><span class="opt-body">若 $y''$ 存在且 $y'=0$，则 $\rho=\dfrac{1}{|y''|}$</span></li>
-            <li><span class="opt-body">在点 $(x_0,y_0)$ 处的曲率与曲线用哪种参数化方式表示无关</span></li>
+            <li data-correct="true"><span class="opt-body">在点 $(x_0,y_0)$ 处的曲率与曲线用哪种参数化方式表示无关</span></li>
           </ul>
           <div class="q-explain">
             <p>A 对：$y'=k$ 为常数，$y''=0$，代入公式得 $K=0$，由定义 3.16 得 $\rho=+\infty$。B 错：曲率按定义 3.15 取了绝对值，$K\ge 0$ 恒成立，$y''$ 的符号只反映凹凸方向，不进入曲率的符号。C 对：$y'=0$ 时分母 $\left(1+0\right)^{3/2}=1$，故 $\rho=\dfrac{1}{|y''|}$；这是公式在顶点与极值点的特例，不能推广到一般点（例 3.10 的提示已点出这一条）。D 对：曲率是曲线的内蕴量，$K=\left|\dfrac{\mathrm{d}\alpha}{\mathrm{d}s}\right|$ 的定义里只出现切线与弧长，与参数选取无关；用不同参数化代入方法 3.4 的公式也应得到同一个值。</p>

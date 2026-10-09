@@ -20,6 +20,7 @@
 python3 tests/check-html.py        # 25 页链接与结构
 python3 tests/check-bilingual.py   # 中英对照完整性（中文模式零英文残留）
 python3 tests/check-structure.py   # 章节骨架
+python3 tests/check-answer-key.py  # 答案键与解析一致（解析说 X 对，data-correct 就得在 X 上）
 node tests/site.test.js            # 页壳 / 目录 / 科目切换
 node tests/quiz.test.js            # 自测判分
 node tests/plot.test.js            # 图表引擎
@@ -67,6 +68,7 @@ node tests/review.test.js          # 复习卷
 | 侧栏拖拽中途被抢 | 起点用 `mousedown` 却监听 `pointercancel` 且未 `setPointerCapture` |
 | 侧栏高亮闪动/重叠 | 活动项与其所属小节同时画了背景胶囊 |
 | 高亮与小节对不上 | `scrollSpy` 的判据线写死 120px，没跟站点头部高度走 |
+| **解析算对了却判你错** | 多选题漏标一个 `data-correct`，或单选题标记标错位（`tests/check-answer-key.py` 会守住） |
 
 ## 不要改的东西
 
