@@ -1,7 +1,24 @@
 import puppeteer from 'puppeteer-core';
 import fs from 'fs'; import path from 'path';
-const EDGE='/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
-const b=await puppeteer.launch({executablePath:EDGE,headless:'shell',protocolTimeout:180000,args:['--allow-file-access-from-files','--disable-gpu']});
+/* 浏览器路径必须可配置：本机是 macOS 的 Edge，而 CI 在 ubuntu 上。
+   写死路径会让 CI 直接以 "Browser was not found" 失败（实测踩过）。
+   查找顺序：TYPESET_CHROME → PUPPETEER_EXECUTABLE_PATH → 常见默认位置。
+   一个都找不到时**明确跳过并退出 0**，而不是假装通过 —— 跳过会在输出里写明。 */
+const CANDIDATES = [
+  process.env.TYPESET_CHROME,
+  process.env.PUPPETEER_EXECUTABLE_PATH,
+  '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/usr/bin/google-chrome', '/usr/bin/chromium-browser', '/usr/bin/chromium',
+].filter(Boolean);
+const EXE = CANDIDATES.find(p => { try { return fs.existsSync(p); } catch { return false; } });
+if (!EXE) {
+  console.log('  ⊘ 未找到可用浏览器，跳过本套件');
+  console.log('    已尝试：' + CANDIDATES.join(' , '));
+  console.log('    需要时用 TYPESET_CHROME=<可执行文件路径> 指定。');
+  process.exit(0);
+}
+const b=await puppeteer.launch({executablePath:EXE,headless:'shell',protocolTimeout:180000,args:['--allow-file-access-from-files','--disable-gpu']});
 const ROOT=path.resolve(process.cwd(),'..');
 const pages=fs.readdirSync(path.join(ROOT,'chapters')).filter(f=>f.endsWith('.html')).map(f=>'chapters/'+f)
   .concat(fs.readdirSync(ROOT).filter(f=>f.endsWith('.html')));

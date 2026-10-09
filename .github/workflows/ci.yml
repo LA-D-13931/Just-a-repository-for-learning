@@ -42,8 +42,14 @@ jobs:
       - name: 答案键与解析一致性校验
         run: python3 tests/check-answer-key.py
 
+      - name: 准备 Chrome（typeset 套件要用无头浏览器逐页验证公式渲染）
+        uses: browser-actions/setup-chrome@v1
+        id: chrome
+
       - name: 交互与引擎套件
         working-directory: tests
+        env:
+          TYPESET_CHROME: ${{ steps.chrome.outputs.chrome-path }}
         run: |
           node site.test.js
           node quiz.test.js
