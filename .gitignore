@@ -57,10 +57,13 @@ manifest.txt
 *token*.json
 credentials.json
 
-# 例外：桌面版**运行时校验用的公钥**必须入库（2026-10-09）。
-# 它是纯公钥（-----BEGIN PUBLIC KEY-----），随 app 一起分发、本就不算秘密；
-# 上面那条 *.pem 会误伤它。**私钥仍在仓库外 ../.keys/manifest-private.pem**。
-!desktop/tools/keys/manifest-public.pem
+# desktop/tools/keys/manifest-public.pem **也不入库**（2026-10-09 定案）。
+# 起初给它开了 *.pem 的例外，但工作区体检第 6 项把任何 .pem 都判为禁止文件并报 ERROR。
+# 复核后确认该文件对出包与运行**都不是必需**，故不改安全网、改为不提交它：
+#   ① 运行时公钥**内嵌在 desktop/integrity.js**（该文件在 package.json 的 files 里，随 asar 分发）
+#   ② 出包主路径 build-all.sh → seal.js，而 seal.js 与 gen-manifest.js 都**不读**它
+#      （只有不在主路径上的 seal.sh 读，make-keys.js 生成密钥对时才写它）
+# 文件仍留在本地（未跟踪）。私钥在仓库外 ../.keys/manifest-private.pem。
 
 # ── 目录内生成物（架构图等）──────────────────────────────────
 .archify/
