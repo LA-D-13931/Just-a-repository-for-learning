@@ -31,6 +31,11 @@ node tests/review.test.js          # 复习卷
 
 这 9 项是**仓库内自带**的全部自动化检查，CI（`.github/workflows/ci.yml`）跑的就是它们。
 
+> ⚠️ **`tests/` 在 `.gitignore` 里，但其中 14 个文件已被跟踪**（2026-10-09 清理掉 7 个未引用的探针后）。
+> 在 `tests/` 下**新建任何被 CI 或 `npm run verify` 引用的文件，必须用 `git add -f`**，
+> 否则它不会进仓库、CI 会以 `Cannot find module` 失败（`typeset.test.js` 就这样漏过一次）。
+> 排查方法：把 CI 引用的路径与 `git ls-files` 对一遍。
+
 > 本地另有 `tools/` 目录（11 个更细的校验器，含用 sympy 复算讲解数值等式的
 > `tools/check-math-verify.py`）。它被 `.gitignore` 排除在公开仓库之外，**CI 中不可用**。
 > 若你本地有这个目录，建议在提交前一并运行：
