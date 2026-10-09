@@ -52,3 +52,6 @@ manifest.txt
 *secret*
 *token*.json
 credentials.json
+
+# ── 目录内生成物（架构图等）──────────────────────────────────
+.archify/
