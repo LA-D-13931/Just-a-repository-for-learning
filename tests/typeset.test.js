@@ -18,7 +18,18 @@ if (!EXE) {
   console.log('    需要时用 TYPESET_CHROME=<可执行文件路径> 指定。');
   process.exit(0);
 }
-const b=await puppeteer.launch({executablePath:EXE,headless:'shell',protocolTimeout:180000,args:['--allow-file-access-from-files','--disable-gpu']});
+/* 启动参数要按环境区分：
+   · Ubuntu 23.10+ 限制了非特权用户命名空间，Chrome 会以
+     "FATAL: No usable sandbox!" 直接退出 —— CI 必须加 --no-sandbox（实测踩过）；
+     本机 macOS 不需要，所以只在 CI 上加，不在本地削弱沙箱。
+   · --disable-dev-shm-usage：CI 容器 /dev/shm 通常只有 64MB，不加会随机崩。
+   · headless 模式：CI 里 setup-chrome 给的是完整版 Chrome（不是 headless-shell），
+     故用新版 headless（true）；本机沿用 'shell'。可用 TYPESET_HEADLESS 覆盖。 */
+const IS_CI = !!process.env.CI;
+const HEADLESS = process.env.TYPESET_HEADLESS || (IS_CI ? true : 'shell');
+const ARGS = ['--allow-file-access-from-files', '--disable-gpu'];
+if (IS_CI) ARGS.push('--no-sandbox', '--disable-dev-shm-usage');
+const b=await puppeteer.launch({executablePath:EXE,headless:HEADLESS,protocolTimeout:180000,args:ARGS});
 const ROOT=path.resolve(process.cwd(),'..');
 const pages=fs.readdirSync(path.join(ROOT,'chapters')).filter(f=>f.endsWith('.html')).map(f=>'chapters/'+f)
   .concat(fs.readdirSync(ROOT).filter(f=>f.endsWith('.html')));
