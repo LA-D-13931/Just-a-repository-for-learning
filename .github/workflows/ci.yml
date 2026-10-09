@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: 站点校验与交互套件
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 准备 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 准备 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+
+      - name: 安装测试依赖
+        working-directory: tests
+        run: npm ci --no-audit --no-fund
+
+      - name: 页面结构校验（25 页）
+        run: python3 tests/check-html.py
+
+      - name: 中英对照校验
+        run: python3 tests/check-bilingual.py
+
+      - name: 章节骨架校验
+        run: python3 tests/check-structure.py
+
+      - name: 答案键与解析一致性校验
+        run: python3 tests/check-answer-key.py
+
+      - name: 交互与引擎套件
+        working-directory: tests
+        run: |
+          node site.test.js
+          node quiz.test.js
+          node plot.test.js
+          node theme.test.js
+          node videos.test.js
+          node review.test.js
+          node typeset.test.js
