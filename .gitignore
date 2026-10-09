@@ -11,8 +11,12 @@ desktop.ini
 
 # ── 本地开发与本轮未纳入开源范围的目录 ────────────────────────
 # （这些不是"垃圾"，只是本仓库只发布站点本体；文件仍在你本地）
-desktop/
-tools/
+# desktop/ 已于 2026-10-09 入库：它是桌面版打包工程本体（Electron + 封签脚本），
+# 此前整个被排除，出包工具链一旦丢失无法恢复（与 09-18 事故同类）。
+# 它的依赖目录由上面的 node_modules/ 规则覆盖（任意层级匹配），无需再写。
+# 注意：写成 /tools/ 而不是 tools/ —— 后者不以斜杠开头，会**任意层级**匹配，
+# 把 desktop/tools/（出包工具链本体，必须入库）一并挡掉（2026-10-09 实测踩到）。
+/tools/
 tests/
 .backup/
 当前版本.txt
@@ -52,6 +56,11 @@ manifest.txt
 *secret*
 *token*.json
 credentials.json
+
+# 例外：桌面版**运行时校验用的公钥**必须入库（2026-10-09）。
+# 它是纯公钥（-----BEGIN PUBLIC KEY-----），随 app 一起分发、本就不算秘密；
+# 上面那条 *.pem 会误伤它。**私钥仍在仓库外 ../.keys/manifest-private.pem**。
+!desktop/tools/keys/manifest-public.pem
 
 # ── 目录内生成物（架构图等）──────────────────────────────────
 .archify/

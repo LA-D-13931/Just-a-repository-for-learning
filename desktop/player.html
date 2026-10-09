@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>高数学习站 · 视频讲解</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #14161a; color: #e8eaf0;
+    font: 14px/2 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    display: flex; align-items: center; justify-content: center; text-align: center; }
+  .box { max-width: 34rem; padding: 2rem; }
+  .why { color: #aab2c0; }
+  button { margin: .9rem .35rem 0; padding: .5rem 1.1rem; font-size: 13px;
+    border: 1px solid #3a404c; background: #262b34; color: #e8eaf0;
+    border-radius: 6px; cursor: pointer; }
+  button.primary { background: #2b6cb0; border-color: #2b6cb0; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <p><strong id="ttl">视频讲解</strong> <span id="bv" style="color:#9aa3b2"></span></p>
+    <p class="why">B 站视频改为在<b>系统默认浏览器</b>中打开。<br>
+      B 站对站外嵌入有强制风控，受限视频在应用内只能播放 17 秒报错片，
+      浏览器中登录后可看完整版。</p>
+    <p>
+      <button id="go" class="primary">在浏览器中打开</button>
+      <button id="again">重新打开</button>
+    </p>
+  </div>
+<script>
+  /* 这个页面只做一件事：拿到 bvid/p 后立刻请求主进程用系统浏览器打开。
+     不再加载任何 B 站播放器（iframe / webview / player.bilibili.com 全部移除），
+     因此不会再出现 17 秒报错视频窗口。
+     兜底：file:// 页面拿不到 preload 暴露的 IPC，此时用 location.href；
+     主进程的 will-navigate 会拦下并转 shell.openExternal。 */
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var bv = (q.get('bvid') || '').trim();
+    var p = (q.get('p') || '1').replace(/[^\d]/g, '') || '1';
+    var title = q.get('title') || '视频讲解';
+    document.getElementById('ttl').textContent = title;
+    document.getElementById('bv').textContent = bv ? (bv + ' · P' + p) : '';
+    document.title = title;
+
+    var full = /^BV[0-9A-Za-z]{10}$/.test(bv)
+      ? 'https://www.bilibili.com/video/' + bv + (p !== '1' ? '?p=' + p : '')
+      : 'https://www.bilibili.com/';
+
+    function open() {
+      if (typeof window.amOpenExternal === 'function') window.amOpenExternal(full);
+      else location.href = full;      /* 主进程会拦下并转 shell.openExternal */
+    }
+    document.getElementById('go').onclick = open;
+    document.getElementById('again').onclick = open;
+    /* 打开窗口即自动跳转一次，省掉一次点击 */
+    setTimeout(open, 250);
+  })();
+</script>
+</body>
+</html>
