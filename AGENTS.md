@@ -11,6 +11,10 @@
 - 共享运行时 `assets/js/`：`assets/js/site.js`（页壳 / 目录 / 科目切换 / 侧栏拖拽）、`assets/js/quiz.js`、`assets/js/plot.js`（自建 SVG 图表引擎）、
   `assets/js/videos.js`、`assets/js/theme.js`、`assets/js/anchor-fix.js`、`assets/js/course-data.js`（**生成物，勿手改**）
 - 样式 `assets/css/style.css` + `assets/css/theme-tokens.css`；数据源 `assets/course-data.json`
+- 桌面版打包工程 `desktop/`（Electron + 封签脚本，2026-10-09 起已入库，仅 `node_modules` 除外）：
+  主进程 `desktop/main.js`、预加载 `desktop/preload.js`、运行时完整性校验 `desktop/integrity.js`，
+  出包工具链在 `desktop/tools/`（`build-all.sh` 一键出包 · `seal.js` 封签 · `sync-site.sh` 同步进已装 app）。
+  **它不属于站点内容**：改站点不必动它，但改完站点后要让桌面版跟上（见下）。
 
 ## 改完必须跑什么
 
