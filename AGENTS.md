@@ -26,6 +26,7 @@ python3 tests/check-bilingual.py   # 中英对照完整性（中文模式零英�
 python3 tests/check-structure.py   # 章节骨架
 python3 tests/check-answer-key.py  # 答案键与解析一致（解析说 X 对，data-correct 就得在 X 上）
 python3 tests/check-mathjax.py     # 未使用本站 MathJax 无法渲染的命令（\boldsymbol / \cancel 等）
+python3 tests/check-tracked.py     # CI / npm 引用的 tests 文件都已入库（tests/ 被 gitignore 的坑）
 node tests/site.test.js            # 页壳 / 目录 / 科目切换
 node tests/quiz.test.js            # 自测判分
 node tests/plot.test.js            # 图表引擎
@@ -35,12 +36,12 @@ node tests/review.test.js          # 复习卷
 node tests/render.test.js          # 逐页渲染：无 LaTeX 源码裸露、无 MathJax 报错（需无头浏览器）
 ```
 
-这 13 项是**仓库内自带**的全部自动化检查，CI（`.github/workflows/ci.yml`）跑的就是它们。
+这 14 项是**仓库内自带**的全部自动化检查，CI（`.github/workflows/ci.yml`）跑的就是它们。
 
-> ⚠️ **`tests/` 在 `.gitignore` 里，但其中 14 个文件已被跟踪**（2026-10-09 清理掉 7 个未引用的探针后）。
-> 在 `tests/` 下**新建任何被 CI 或 `npm run verify` 引用的文件，必须用 `git add -f`**，
-> 否则它不会进仓库、CI 会以 `Cannot find module` 失败（`typeset.test.js` 就这样漏过一次）。
-> 排查方法：把 CI 引用的路径与 `git ls-files` 对一遍。
+> ⚠️ **`tests/` 在 `.gitignore` 里，但其中十余个文件已被跟踪**。在 `tests/`
+> 新建被 CI 引用的文件必须 `git add -f`。**这条由 `tests/check-tracked.py` 强制**
+> （它把 CI 与 package.json 引用的每条路径与 `git ls-files` 对一遍），
+> 不再靠人记：跑到它就报错，报错信息直接告诉你哪个文件漏了。
 
 > 本地另有 `tools/` 目录（11 个更细的校验器，含用 sympy 复算讲解数值等式的
 > `tools/check-math-verify.py`）。它被 `.gitignore` 排除在公开仓库之外，**CI 中不可用**。

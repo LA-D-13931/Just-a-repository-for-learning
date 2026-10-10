@@ -45,6 +45,9 @@ jobs:
       - name: MathJax 命令可用性校验
         run: python3 tests/check-mathjax.py
 
+      - name: CI 引用路径入库校验
+        run: python3 tests/check-tracked.py
+
       - name: 准备 Chrome（typeset 套件要用无头浏览器逐页验证公式渲染）
         uses: browser-actions/setup-chrome@v1
         id: chrome
