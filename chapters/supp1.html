@@ -396,8 +396,7 @@
             <li data-correct="true"><span class="opt-body">对快振荡函数，把视窗缩到几个周期以内，图形才可能反映真实振荡</span></li>
           </ul>
           <div class="q-explain">
-            <p>A 对：这是采样规则，同时解释了为什么定义域之外与 $y$ 区间之外的部分不出现。B 对：线段是显示约定，采样点之间的极值、间断、振荡软件并不知道。C 错：视窗越大，$y\sin(Kx)$ 的周期是 $\frac{2\pi}{K}$，视窗宽度要与周期匹配，每个周期至少 4 个采样点才算可信。</p>
-            <p>$$ 区间往往越宽，极值反而更容易被压平或被裁掉，快振荡函数的每个周期采样点也更少——例 1.3 的 (a) 就是这种情况。D 对：$$</p>
+            <p>A 对：这是采样规则，同时解释了为什么定义域之外与 $y$ 区间之外的部分不出现。B 对：线段是显示约定，采样点之间的极值、间断、振荡软件并不知道。C 错：视窗越大，$y$ 区间往往越宽，极值反而更容易被压平或被裁掉，快振荡函数的每个周期采样点也更少——例 1.3 的 (a) 就是这种情况。D 对：$\sin(Kx)$ 的周期是 $\frac{2\pi}{K}$，视窗宽度要与周期匹配，每个周期至少 4 个采样点才算可信。</p>
             <p class="en" lang="en">A and B describe the sampling rule and the joining convention. C is false: a wider window often flattens or clips extrema and leaves fewer samples per period. D is correct, since the period is $2\pi/K$ and the window must match it.</p>
           </div>
         </div>
@@ -426,8 +425,7 @@
             <li><span class="opt-body">视窗一旦确定，参数区间就随之唯一确定</span></li>
           </ul>
           <div class="q-explain">
-            <p>A 对：软件对 $t$ 采样得到点 $(x(t),y(t))$，所以既要定 $ty=f(x)$ 并不妨碍绘制——§2-4 会给出这类曲线的求导方法。D 错：同一个视窗可以由许多不同的参数区间得到相应的曲线段，二者没有一一对应关系。</p>
-            <p>$$ 的范围，又要定显示哪一块矩形，两者互相独立。B 错：参数区间太大会把曲线的许多圈压在一起，采样点也跟不上，图形会糊成一团。C 错：参数曲线正是软件擅长的对象，没有显式 $$</p>
+            <p>A 对：软件对 $t$ 采样得到点 $(x(t),y(t))$，所以既要定 $t$ 的范围，又要定显示哪一块矩形，两者互相独立。B 错：参数区间太大会把曲线的许多圈压在一起，采样点也跟不上，图形会糊成一团。C 错：参数曲线正是软件擅长的对象，没有显式 $y=f(x)$ 并不妨碍绘制——§2-4 会给出这类曲线的求导方法。D 错：同一个视窗可以由许多不同的参数区间得到相应的曲线段，二者没有一一对应关系。</p>
             <p class="en" lang="en">A is correct: the software samples $t$, so both the parameter interval and the window must be chosen from the curve's ranges. A long parameter interval crowds many loops together, and a window does not determine the parameter interval.</p>
           </div>
         </div>
