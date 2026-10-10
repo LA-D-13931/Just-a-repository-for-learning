@@ -25,15 +25,17 @@ python3 tests/check-html.py        # 25 页链接与结构
 python3 tests/check-bilingual.py   # 中英对照完整性（中文模式零英文残留）
 python3 tests/check-structure.py   # 章节骨架
 python3 tests/check-answer-key.py  # 答案键与解析一致（解析说 X 对，data-correct 就得在 X 上）
+python3 tests/check-mathjax.py     # 未使用本站 MathJax 无法渲染的命令（\boldsymbol / \cancel 等）
 node tests/site.test.js            # 页壳 / 目录 / 科目切换
 node tests/quiz.test.js            # 自测判分
 node tests/plot.test.js            # 图表引擎
 node tests/theme.test.js           # 明暗与语言
 node tests/videos.test.js          # 视频映射
 node tests/review.test.js          # 复习卷
+node tests/render.test.js          # 逐页渲染：无 LaTeX 源码裸露、无 MathJax 报错（需无头浏览器）
 ```
 
-这 9 项是**仓库内自带**的全部自动化检查，CI（`.github/workflows/ci.yml`）跑的就是它们。
+这 13 项是**仓库内自带**的全部自动化检查，CI（`.github/workflows/ci.yml`）跑的就是它们。
 
 > ⚠️ **`tests/` 在 `.gitignore` 里，但其中 14 个文件已被跟踪**（2026-10-09 清理掉 7 个未引用的探针后）。
 > 在 `tests/` 下**新建任何被 CI 或 `npm run verify` 引用的文件，必须用 `git add -f`**，
@@ -78,6 +80,9 @@ node tests/review.test.js          # 复习卷
 | 侧栏高亮闪动/重叠 | 活动项与其所属小节同时画了背景胶囊 |
 | 高亮与小节对不上 | `scrollSpy` 的判据线写死 120px，没跟站点头部高度走 |
 | **解析算对了却判你错** | 多选题漏标一个 `data-correct`，或单选题标记标错位（`tests/check-answer-key.py` 会守住） |
+| **长公式不渲染** | 判据正则写死 `\$[^$]{1,200}\$`（200 字符上限）→ 超过 200 字符的行间公式被判成"没有公式"而跳过。**上限必须足够大**（现为 4000），实测 la1 / la-exam 各有一处 `\begin{vmatrix}` 长块因此永不渲染 |
+| **公式在子元素里被静默跳过** | 判据只看直接子文本节点，`<li><span class="opt-body">$…$</span></li>` 这种结构两条路都会漏。**看整棵子树**才对（已排部分 `$` 被 MathJax 取走，不会误判） |
+| **折叠的 `<details>` 里公式没排** | 闭合内容不在视口，`IntersectionObserver` 不触发；`typeset.js` 里用 `toggle` 监听在展开时补排 |
 
 ## 不要改的东西
 

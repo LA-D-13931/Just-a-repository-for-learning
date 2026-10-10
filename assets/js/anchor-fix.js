@@ -74,21 +74,23 @@
         catch (err) { return (location.hash || '').replace(/^#/, ''); }
     }
 
+    /* 是否还有没排的公式。必须看整棵子树——原实现只看直接子文本节点，
+       于是 <li><span class="opt-body">$…$</span></li> 这类结构被判为"没有公式"。
+       判据本体在 typeset.js（window.__needTypeset，该文件在全部页面里都先加载），
+       这里只留一份等价的兜底，两者行为必须一致。 */
     function hasFormulaText(el) {
-        for (var i = 0; i < el.childNodes.length; i++) {
-            var n = el.childNodes[i];
-            if (n.nodeType === 3 && /\$[^$]{1,400}\$/.test(n.nodeValue || '')) return true;
-        }
-        return false;
+        if (typeof window.__needTypeset === 'function') return window.__needTypeset(el);
+        return /\$[^$]{1,4000}\$/.test(el.textContent || '');
     }
 
-    /* 找出「还没有被 MathJax 处理、且仍含 $ 公式」的块 */
+    /* 找出「还没有被 MathJax 处理、且仍含 $ 公式」的块。
+       不加 el.querySelector('mjx-container') 这道闸：它会连同「一部分已排、
+       一部分仍是源码」的块一起跳过；hasFormulaText 已能区分这两者。 */
     function untypeset() {
         var all = document.querySelectorAll(pageSel());
         var out = [];
         for (var i = 0; i < all.length; i++) {
             var el = all[i];
-            if (el.querySelector && el.querySelector('mjx-container')) continue;
             if (hasFormulaText(el)) out.push(el);
         }
         return out;

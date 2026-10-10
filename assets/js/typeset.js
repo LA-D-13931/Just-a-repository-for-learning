@@ -40,14 +40,36 @@
     else setTimeout(fn, 16);
   }
 
-  /* 只有「直接文本子节点里还含 $」的块才算没排过。
-     用 textContent 会把已排好的子元素也算进来，导致重复入队。 */
+  /* 「这个块还需要排版吗」。
+     ------------------------------------------------------------------------
+     ⚠️ 必须看**整棵子树**，不能只看直接子文本节点。
+     原实现只看 childNodes 里的文本节点，于是
+         <li><span class="opt-body">$\dfrac{\pi^{2}}{6}$</span></li>
+     这种「公式在子元素里」的结构被判为"没有公式"而跳过；同时 dropNested()
+     又会把 .opt-body 丢掉（它的祖先 li 命中 SEL）→ **两条路都漏，永久不排**，
+     读者直接看到 $\dfrac{\pi^{2}}{6}$ 这样的源码。
+     2026-10-10 实测：ch12 有 8 处如此（慢滚 8 秒仍在），手动 typesetPromise 立刻好。
+
+     为什么用 textContent 是安全的：MathJax 排完后会把 $…$ 原文从 DOM 里取走，
+     只留下 <mjx-container>（SVG）与无障碍用的 MathML —— 都不含 $。
+     所以「textContent 里还有 $…$」精确等价于「还有没排的公式」，
+     不会因为把已排好的子元素算进来而重复入队。 */
   function hasRawFormula(el) {
-    var n = el.childNodes;
-    for (var i = 0; i < n.length; i++) {
-      if (n[i].nodeType === 3 && /\$[^$]{1,200}\$/.test(n[i].nodeValue || '')) return true;
-    }
-    return false;
+    return /\$[^$]{1,4000}\$/.test(el.textContent || '');
+  }
+  /* 供 anchor-fix.js 复用同一个判据（它在全部页面里都于本文件之后加载） */
+  window.__needTypeset = needsWork;
+
+  /* 这个块还需不需要重扫？——两个条件都必须满足：
+       ① 里面确实还有没排的公式（hasRawFormula：看整棵子树里还有没有 $…$）；
+       ② 它还没有任何排版结果（不含 mjx-container）。
+     ⚠️ ② 是**承重**的，不能省。2026-10-10 实测：把 ② 去掉之后，重扫会把
+     「已经排好、但内部还夹着个别未排片段」的大块（例如 cheatsheet 的 td/li）
+     重新交给 MathJax，结果**把已排好的 369 个容器打回 204 个**——本来正确的
+     公式也跟着坏掉。所以宁可漏掉极少数「一半已排一半没排」的块，
+     也不能让重排碰到已排内容。 */
+  function needsWork(el) {
+    return !el.querySelector('mjx-container') && hasRawFormula(el);
   }
 
   /* 去掉「有匹配祖先」的元素，避免父子重复排版（见文件头约束 ②） */
@@ -67,7 +89,16 @@
     busy = true;
     var batch = pending.splice(0, 25);
     idle(function () {
-      MJ.typesetPromise(batch).catch(function () {}).then(function () {
+      /* ⚠️ 批次级失败会连坐：只要批里有一个公式有语法错误，MathJax 会让整个
+         typesetPromise reject，而 .catch() 一吞，同批其余本来没问题的块就**跟着漏排**。
+         2026-10-10 实测：la-exam 有 3 处因此一直不排（手动单独排立刻就好）。
+         所以失败时退化为逐块重试 —— 坏的只坏它自己，不再拖累同批。
+         只在失败路径上做，正常情况一次都不会走到。 */
+      MJ.typesetPromise(batch).catch(function () {
+        batch.forEach(function (el) {
+          try { MJ.typesetPromise([el]).catch(function () { }); } catch (e) { }
+        });
+      }).then(function () {
         busy = false;
         /* 一批排完：把锚点重新对齐（MathJax 会撑高页面）。
            anchor-fix.js 内部会在用户自己滚动时让位，这里只管回调。 */
@@ -79,15 +110,12 @@
           if (sweepDone) return;
           sweepDone = true;
           var left = Array.prototype.slice.call(document.querySelectorAll('.example-head'))
-            .filter(function (el) {
-              return !el.querySelector('mjx-container') && /\$[^$]{1,200}\$/.test(el.textContent || '');
-            });
+            .filter(needsWork);
           if (left.length) { pending = pending.concat(left); schedule(); }
         } else {
           if (sweepLeft <= 0) return;
           sweepLeft--;
-          var rest2 = Array.prototype.slice.call(document.querySelectorAll(SEL))
-            .filter(function (el) { return !el.querySelector('mjx-container') && hasRawFormula(el); });
+          var rest2 = Array.prototype.slice.call(document.querySelectorAll(SEL)).filter(needsWork);
           if (rest2.length) { pending = pending.concat(rest2); schedule(); }
         }
       });
@@ -130,6 +158,28 @@
       schedule();
     }).catch(function () {});
   }
+
+  /* ── <details> 折叠内容 ──────────────────────────────────────────────────
+     闭合的 <details> 内容不在视口内，IntersectionObserver 不会触发；而队列排空时
+     那几块早已被滚过（实测 rect 在 y=-9070），于是从未被排。
+     2026-10-10 实测：linear-algebra-exam 有 3 处（还有 3 个公式块）在闭合的
+     <details class="reveal"> 里一直没排版，用户一展开就看到 $$…$$ 源码。
+     用户只在展开后才需要看见它们，所以在**展开的那一刻**入队最省也最准。
+     toggle 事件不冒泡，故在捕获阶段监听。 */
+  document.addEventListener('toggle', function (ev) {
+    var d = ev.target;
+    if (!d || d.tagName !== 'DETAILS' || !d.open || !MJ) return;
+    /* 延后一拍再入队：toggle 事件触发时，刚展开的内容还没完成布局，
+       此时 MathJax 可能判定它不可见而不排（实测 la-exam 有 3 处这样被漏掉）。 */
+    setTimeout(function () {
+      var els = Array.prototype.slice.call(d.querySelectorAll(SEL)).filter(needsWork);
+      if (!els.length) return;
+      /* 直接排，**不走调度队列**：实测走队列时这几块始终没被交到 MathJax 手上
+         （插桩确认 typesetPromise 从未收到它们），而在这里直接调用立刻就好。
+         代价只是展开时多一次排版调用，且只针对本次展开的那个 <details>。 */
+      try { MJ.typesetPromise(els).catch(function () { }); } catch (e) { }
+    }, 250);
+  }, true);
 
   /* 等首帧画完再启动排版：保证 FCP 不被排版阻塞（26.1 首屏 < 100 ms） */
   function boot() {
