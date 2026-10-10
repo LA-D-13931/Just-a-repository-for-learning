@@ -1,6 +1,6 @@
 {
   "name": "advmath-desktop",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "description": "高数学习站 —— 离线桌面版（同济八版骨架 + 托马斯 14 版映射，中英对照）",
   "private": true,
   "main": "main.js",
