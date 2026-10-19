@@ -93,6 +93,51 @@
         <p>其中 $\alpha_j$ 是 $A$ 的第 $j$ 列，$\beta=b$。一句话：<strong>解方程组 ＝ 用系数矩阵的列向量去"拼"出右端向量</strong>。</p>
         <p>于是"方程组有没有解"这个问题，就变成了"$\beta$ 能不能被 $\alpha_1,\dots,\alpha_n$ 拼出来"。比如 $x_1\alpha_1+x_2\alpha_2=\beta$ 在二维里就是"两个向量能不能合成第三个向量"的平行四边形问题。这个"拼"字，就是本章第一个严格概念——<span class="term">线性表示</span>。</p>
       </div>
+      <figure class="plot-figure">
+        <div id="fig-a-combo"></div>
+        <figcaption>图　线性组合的几何含义。$a_3=a_1+a_2$ 就是先把 $a_1$ 走完、再接着走 $a_2$；虚线围出的是平行四边形。既然 $a_3$ 能由 $a_1,a_2$ 表示，三者的向量组就是线性相关的——多出来的那个没有带来新方向。</figcaption>
+      </figure>
+      <script>
+      (function () {
+        'use strict';
+        var t = 0;
+        (function go() { if (window.Plot) { run(); return; } if (++t > 80) return; setTimeout(go, 50); })();
+        function run() {
+          var host = document.getElementById('fig-a-combo');
+          if (!host) return;
+          var a1 = [2, 0], a2 = [0.5, 1.5];
+          var a3 = [a1[0] + a2[0], a1[1] + a2[1]];
+          Plot.render(host, {
+            aria: '线性组合：a3 等于 a1 加 a2，虚线围出平行四边形，三个向量线性相关',
+            width: 406, height: 400, maxWidth: 620,
+            x: [-0.3, 2.5], y: [-0.6, 2.2],
+            axes: { x: { step: 0.5, label: 'x' }, y: { step: 0.5, label: 'y' } },
+            padding: { l: 46, r: 30, t: 26, b: 44 },
+            legend: [ { c: 'brand', t: 'a₁、a₂（基）' }, { c: 'thm', t: 'a₃ = a₁ + a₂' } ],
+            legendOutside: 'bottom',
+            equalScale: true,
+            elements: [
+              { type: 'vector', from: [0, 0], to: a1, color: 'brand', width: 2.4 },
+              { type: 'vector', from: [0, 0], to: a2, color: 'brand', width: 2.4 },
+              { type: 'segment', from: a1, to: a3, color: 'soft', width: 1.6, dash: true },
+              { type: 'segment', from: a2, to: a3, color: 'soft', width: 1.6, dash: true },
+              { type: 'vector', from: [0, 0], to: a3, color: 'thm', width: 2.8 },
+              { type: 'label', at: [a1[0] + 0.08, -0.24], text: 'a₁', color: 'brand' },
+              { type: 'label', at: [a2[0] - 0.30, a2[1] + 0.10], text: 'a₂', color: 'brand' },
+              { type: 'label', at: [1.12, 1.82], text: 'a₃ = a₁ + a₂', color: 'thm' },
+              { type: 'point', at: a3, color: 'thm', r: 3.5 }
+            ],
+            verify: function () {
+              if (a3[0] !== a1[0] + a2[0] || a3[1] !== a1[1] + a2[1]) throw new Error('a3 ≠ a1+a2');
+              var det = a1[0] * a2[1] - a1[1] * a2[0];
+              if (Math.abs(det) < 1e-9) throw new Error('a1、a2 线性相关，不能作基');
+              var det13 = a1[0] * a3[1] - a1[1] * a3[0];
+              if (Math.abs(det13) < 1e-9 && Math.abs(a3[0]) + Math.abs(a3[1]) > 0) throw new Error('a3 与 a1 共线');
+            }
+          });
+        }
+      })();
+      </script>
 
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 4.1　$n$ 维向量</div>
@@ -1397,6 +1442,49 @@
         <p>$$\text{基础解系}=\text{解空间的"基"（一组基）},\qquad \text{通解}=\text{用基把所有解表示出来}$$</p>
         <p>这就是本节的全部思想：<strong>把无穷多解用有限个"基本解"的线性组合表示出来</strong>。而且解空间的维数恰好是 $n-R(A)$——自由未知量的个数，正是第 3 章里"自由未知量"的维数含义。</p>
       </div>
+      <figure class="plot-figure">
+        <div id="fig-b-nullspace"></div>
+        <figcaption>图　齐次方程组 $x-y=0$ 的全部解是一条过原点的直线：解空间是 1 维的，基础解系只要有 $(1,1)$ 一个向量就够了。$x=1,\ y=0$ 不满足方程，落在解集之外。</figcaption>
+      </figure>
+      <script>
+      (function () {
+        'use strict';
+        var t = 0;
+        (function go() { if (window.Plot) { run(); return; } if (++t > 80) return; setTimeout(go, 50); })();
+        function run() {
+          var host = document.getElementById('fig-b-nullspace');
+          if (!host) return;
+          var Arow = [1, -1], basis = [1, 1], outside = [1, 0];
+          Plot.render(host, {
+            aria: '齐次方程 x−y=0 的解集是过原点的直线，解空间 1 维，基础解系只需一个向量',
+            width: 406, height: 400, maxWidth: 600,
+            x: [-2, 2], y: [-2, 2],
+            axes: { x: { step: 1, label: 'x' }, y: { step: 1, label: 'y' } },
+            padding: { l: 46, r: 30, t: 26, b: 44 },
+            legend: [ { c: 'brand', t: '解空间（过原点的直线）' }, { c: 'soft', t: '不在解集里的点' } ],
+            legendOutside: 'bottom',
+            equalScale: true,
+            elements: [
+              { type: 'segment', from: [-1.7 * basis[0], -1.7 * basis[1]], to: [1.7 * basis[0], 1.7 * basis[1]], color: 'brand', width: 2.6 },
+              { type: 'vector', from: [0, 0], to: basis, color: 'brand', width: 2.4 },
+              { type: 'label', at: [basis[0] + 0.10, basis[1] + 0.10], text: '基础解系 (1,1)', color: 'brand' },
+              { type: 'point', at: outside, color: 'soft', r: 4.0 },
+              { type: 'label', at: [0.30, -0.58], text: '(1,0) 不满足 x−y=0', color: 'soft' },
+              { type: 'point', at: [0, 0], color: 'method', r: 3.5 },
+              { type: 'label', at: [-0.72, -0.34], text: '零解', color: 'method' }
+            ],
+            verify: function () {
+              var dot = function (v) { return Arow[0] * v[0] + Arow[1] * v[1]; };
+              if (dot(basis) !== 0) throw new Error('基础解系不满足 Ax=0');
+              if (dot([0, 0]) !== 0) throw new Error('零解不满足 Ax=0');
+              if (dot(outside) === 0) throw new Error('反例点其实满足方程');
+              var rank = (Math.abs(Arow[0]) + Math.abs(Arow[1]) > 0) ? 1 : 0;
+              if (2 - rank !== 1) throw new Error('解空间维数不是 1');
+            }
+          });
+        }
+      })();
+      </script>
 
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 4.7　齐次线性方程组的解空间</div>

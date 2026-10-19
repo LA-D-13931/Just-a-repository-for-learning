@@ -30,13 +30,14 @@ python3 tests/check-tracked.py     # CI / npm 引用的 tests 文件都已入库
 node tests/site.test.js            # 页壳 / 目录 / 科目切换
 node tests/quiz.test.js            # 自测判分
 node tests/plot.test.js            # 图表引擎
+node tests/figures.test.js         # 页面内每幅图的 verify 断言 + 坐标等比（需无头浏览器）
 node tests/theme.test.js           # 明暗与语言
 node tests/videos.test.js          # 视频映射
 node tests/review.test.js          # 复习卷
 node tests/render.test.js          # 逐页渲染：无 LaTeX 源码裸露、无 MathJax 报错（需无头浏览器）
 ```
 
-这 14 项是**仓库内自带**的全部自动化检查，CI（`.github/workflows/ci.yml`）跑的就是它们。
+这 15 项是**仓库内自带**的全部自动化检查，CI（`.github/workflows/ci.yml`）跑的就是它们。
 
 > ⚠️ **`tests/` 在 `.gitignore` 里，但其中十余个文件已被跟踪**。在 `tests/`
 > 新建被 CI 引用的文件必须 `git add -f`。**这条由 `tests/check-tracked.py` 强制**

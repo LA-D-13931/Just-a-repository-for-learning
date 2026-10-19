@@ -93,6 +93,62 @@
         <p>你会发现 $b^2-4ac=-4\begin{vmatrix}a&amp;b/2\\b/2&amp;c\end{vmatrix}$——判别式本质上就是对称矩阵的行列式。</p>
         <p>更关键的是"化简"。$x^2+2xy+y^2=(x+y)^2$，换元 $u=x+y$ 就把交叉项消掉了，几何上相当于<strong>旋转坐标轴，让新坐标轴落在曲线的对称轴上</strong>。本章要回答：交叉项能不能总消掉（能）；消掉之后哪些量是换元也改不掉的本质量（正负项的<em>个数</em>）；什么时候所有平方项系数都是正的（正定）。换元 $x=Cy$ 代进去得到 $y^T(C^TAC)y$，所以"换元"在矩阵层面的动作就是 $A\mapsto C^TAC$。</p>
       </div>
+      <figure class="plot-figure">
+        <div id="fig-quadform-axes"></div>
+        <figcaption>图　二次型的等值线就是一条圆锥曲线。取 $f(x,y)=2.5x^2+3xy+2.5y^2$，它的等值线 $f=1$ 是一个椭圆；椭圆的两条半轴方向正是 $A=\begin{pmatrix}2.5&1.5\\ 1.5&2.5\end{pmatrix}$ 的特征向量 $(1,1)$、$(1,-1)$，半轴长由特征值按 $\lambda a^2=1$ 定出——<strong>特征值越大，半轴越短</strong>。</figcaption>
+      </figure>
+      <script>
+      (function () {
+        'use strict';
+        var t = 0;
+        (function go() { if (window.Plot) { run(); return; } if (++t > 80) return; setTimeout(go, 50); })();
+        function run() {
+          var host = document.getElementById('fig-quadform-axes');
+          if (!host) return;
+          var SS = Math.SQRT1_2;
+          var A = [[2.5, 1.5], [1.5, 2.5]];
+          var L1 = 4, L2 = 1;
+          var a1 = 1 / Math.sqrt(L1), a2 = 1 / Math.sqrt(L2);
+          Plot.render(host, {
+            aria: '二次型的等值线是椭圆，两条半轴方向即特征向量方向，半轴长由特征值决定',
+            width: 426, height: 420, maxWidth: 640,
+            x: [-0.85, 1.45], y: [-1.15, 1.15],
+            axes: { x: { step: 0.5, label: 'x' }, y: { step: 0.5, label: 'y' } },
+            padding: { l: 46, r: 30, t: 26, b: 44 },
+            legend: [ { c: 'brand', t: '等值线 f(x,y)=1（椭圆）' }, { c: 'method', t: '特征方向 = 主轴', dash: true } ],
+            legendOutside: 'bottom',
+            equalScale: true,
+            elements: [
+              { type: 'param', x: '(' + a1 + '*cos(t)+' + a2 + '*sin(t))*' + SS,
+                y: '(' + a1 + '*cos(t)-' + a2 + '*sin(t))*' + SS,
+                t: [0, 6.2832], color: 'brand', width: 2.4 },
+              { type: 'vector', from: [0, 0], to: [ a1 * SS,  a1 * SS], color: 'method', width: 2.0, dash: true },
+              { type: 'vector', from: [0, 0], to: [-a1 * SS, -a1 * SS], color: 'method', width: 1.2, dash: true },
+              { type: 'vector', from: [0, 0], to: [ a2 * SS, -a2 * SS], color: 'method', width: 2.0, dash: true },
+              { type: 'vector', from: [0, 0], to: [-a2 * SS,  a2 * SS], color: 'method', width: 1.2, dash: true },
+              { type: 'label', at: [ a1 * SS + 0.10,  a1 * SS + 0.14], text: 'λ=4，半轴 1/2', color: 'method' },
+              { type: 'label', at: [ a2 * SS + 0.08, -a2 * SS - 0.22], text: 'λ=1，半轴 1', color: 'method' },
+              { type: 'point', at: [ a1 * SS,  a1 * SS], color: 'brand', r: 3.5 },
+              { type: 'point', at: [ a2 * SS, -a2 * SS], color: 'brand', r: 3.5 }
+            ],
+            verify: function () {
+              var f = function (p) { return A[0][0]*p[0]*p[0] + 2*A[0][1]*p[0]*p[1] + A[1][1]*p[1]*p[1]; };
+              var tr = A[0][0] + A[1][1], dt = A[0][0]*A[1][1] - A[0][1]*A[1][0];
+              var l1 = (tr + Math.sqrt(tr*tr - 4*dt)) / 2, l2 = (tr - Math.sqrt(tr*tr - 4*dt)) / 2;
+              if (Math.abs(l1 - L1) > 1e-9 || Math.abs(l2 - L2) > 1e-9) throw new Error('特征值校验失败');
+              if (Math.abs(f([a1*SS, a1*SS]) - 1) > 1e-9) throw new Error('短半轴端点不在 f=1 上');
+              if (Math.abs(f([a2*SS, -a2*SS]) - 1) > 1e-9) throw new Error('长半轴端点不在 f=1 上');
+              if (Math.abs(L1*a1*a1 - 1) > 1e-9) throw new Error('λ=4 的半轴关系不符');
+              if (Math.abs(L2*a2*a2 - 1) > 1e-9) throw new Error('λ=1 的半轴关系不符');
+              var mv = function (v) { return [A[0][0]*v[0] + A[0][1]*v[1], A[1][0]*v[0] + A[1][1]*v[1]]; };
+              var t1 = mv([SS, SS]), t2 = mv([SS, -SS]);
+              if (Math.abs(t1[0] - L1*SS) > 1e-9 || Math.abs(t1[1] - L1*SS) > 1e-9) throw new Error('(1,1) 不是特征方向');
+              if (Math.abs(t2[0] - L2*SS) > 1e-9 || Math.abs(t2[1] + L2*SS) > 1e-9) throw new Error('(1,-1) 不是特征方向');
+            }
+          });
+        }
+      })();
+      </script>
 
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 6.1　二次型、二次型的矩阵与秩</div>
@@ -544,6 +600,65 @@
         </ul>
         <p>两条路的标准形系数不同，但正负平方项的<strong>个数一定相同</strong>。考试里两种都要会，因为题目会指定用哪一种。</p>
       </div>
+      <figure class="plot-figure">
+        <div id="fig-d-rotation"></div>
+        <figcaption>图　正交变换就是把坐标系转一个角度。同一个椭圆，在原来的 $x,y$ 系里方程带交叉项；转到 $u,v$ 系（沿两条主轴）后写成 $4u^2+v^2=1$，交叉项消失——这就是"化标准形"。</figcaption>
+      </figure>
+      <script>
+      (function () {
+        'use strict';
+        var t = 0;
+        (function go() { if (window.Plot) { run(); return; } if (++t > 80) return; setTimeout(go, 50); })();
+        function run() {
+          var host = document.getElementById('fig-d-rotation');
+          if (!host) return;
+          var SS = Math.SQRT1_2;
+          var A = [[2.5, 1.5], [1.5, 2.5]];
+          Plot.render(host, {
+            aria: '正交变换即旋转坐标系：转到主轴方向后，二次型的交叉项消失，写成 4u²+v²=1',
+            width: 426, height: 420, maxWidth: 640,
+            x: [-0.85, 1.45], y: [-1.15, 1.15],
+            axes: { x: { step: 0.5, label: 'x' }, y: { step: 0.5, label: 'y' } },
+            padding: { l: 46, r: 30, t: 26, b: 44 },
+            legend: [ { c: 'brand', t: '原系里的椭圆（带交叉项）' }, { c: 'method', t: 'u、v 主轴（转 45°）' } ],
+            legendOutside: 'bottom',
+            equalScale: true,
+            elements: [
+              { type: 'param', x: '(0.5*cos(t)+sin(t))*' + SS, y: '(0.5*cos(t)-sin(t))*' + SS,
+                t: [0, 6.2832], color: 'brand', width: 2.2 },
+              { type: 'segment', from: [-1.1 * SS, -1.1 * SS], to: [1.1 * SS, 1.1 * SS], color: 'method', width: 1.8, dash: true },
+              { type: 'segment', from: [-1.1 * SS,  1.1 * SS], to: [1.1 * SS, -1.1 * SS], color: 'method', width: 1.8, dash: true },
+              { type: 'label', at: [1.02 * SS + 0.06,  1.02 * SS + 0.16], text: 'u', color: 'method' },
+              { type: 'label', at: [1.02 * SS + 0.06, -1.02 * SS - 0.10], text: 'v', color: 'method' },
+              { type: 'point', at: [0.5 * SS,  0.5 * SS], color: 'method', r: 3.2 },
+              { type: 'point', at: [SS, -SS], color: 'method', r: 3.2 },
+              { type: 'label', at: [0.02, -1.02], text: '转 45° 后：4u²+v²=1', color: 'method' }
+            ],
+            verify: function () {
+              var c = SS, s = SS;
+              var R = [[c, -s], [s, c]];
+              var AT = function (M) { return [[M[0][0], M[1][0]], [M[0][1], M[1][1]]]; };
+              var mul = function (X, Y) {
+                return [[X[0][0]*Y[0][0] + X[0][1]*Y[1][0], X[0][0]*Y[0][1] + X[0][1]*Y[1][1]],
+                        [X[1][0]*Y[0][0] + X[1][1]*Y[1][0], X[1][0]*Y[0][1] + X[1][1]*Y[1][1]]];
+              };
+              var Bm = mul(mul(AT(R), A), R);
+              if (Math.abs(Bm[0][1]) > 1e-9 || Math.abs(Bm[1][0]) > 1e-9) throw new Error('正交变换后仍有交叉项');
+              if (Math.abs(Bm[0][0] - 4) > 1e-9) throw new Error('对角元不是 4');
+              if (Math.abs(Bm[1][1] - 1) > 1e-9) throw new Error('对角元不是 1');
+              var mv = function (v) { return [A[0][0]*v[0] + A[0][1]*v[1], A[1][0]*v[0] + A[1][1]*v[1]]; };
+              var t1 = mv([SS, SS]);
+              if (Math.abs(t1[0] - 4*SS) > 1e-9 || Math.abs(t1[1] - 4*SS) > 1e-9) throw new Error('u 不是特征方向');
+              var t2 = mv([SS, -SS]);
+              if (Math.abs(t2[0] - SS) > 1e-9 || Math.abs(t2[1] + SS) > 1e-9) throw new Error('v 不是特征方向');
+              var f = function (p) { return A[0][0]*p[0]*p[0] + 2*A[0][1]*p[0]*p[1] + A[1][1]*p[1]*p[1]; };
+              if (Math.abs(f([0.5*SS, 0.5*SS]) - 1) > 1e-9) throw new Error('短半轴端点不在 f=1');
+              if (Math.abs(f([SS, -SS]) - 1) > 1e-9) throw new Error('长半轴端点不在 f=1');
+            }
+          });
+        }
+      })();
+      </script>
 
       <div class="box def-box">
         <div class="box-title"><span class="ico">📘</span>定义 6.3　可逆线性变换与正交变换</div>
