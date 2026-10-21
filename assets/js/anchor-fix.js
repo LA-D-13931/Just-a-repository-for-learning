@@ -109,8 +109,21 @@
     function flushThenAlign(round) {
         round = round || 0;
         if (!ready(function (MJ) {
+            /* ⚠️ 只排「文档顺序在锚点之前」的块。
+               锚点对齐只需要它上面的内容全部成型（上面的没排完，目标就会被不断
+               撑高、位置一直漂）；它下面的块排不排都不影响这次对齐。
+               原来这里对整篇 untypeset() 每轮排 800 块、最多 12 轮（=9600 块），
+               而**侧栏每个链接都带 hash**，于是点任何一节都等于把整页排一遍
+               —— 这就是"点侧边栏要卡很久"的来源（2026-10-21 实测）。 */
+            var __key = hashId();
+            var __target = __key ? document.getElementById(__key) : null;
             var left = untypeset();
             if (!left.length || round >= 12) { align(true); settleLoop(); return; }
+            if (__target) {
+                left = left.filter(function (el) {
+                    return el.compareDocumentPosition(__target) & Node.DOCUMENT_POSITION_FOLLOWING;
+                });
+            }
             /* 分批，避免一次丢太多块造成长时间卡顿。
                轮数上限要够大：公式密集的章节有数千个块（实测 ch5 有 1434 个块、
                3900+ 个 mjx-container），批次太小或轮数太少会漏排后面那些。 */
