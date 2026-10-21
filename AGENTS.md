@@ -88,6 +88,7 @@ node tests/render.test.js          # 逐页渲染：无 LaTeX 源码裸露、无
 | 侧栏高亮闪动/重叠 | 活动项与其所属小节同时画了背景胶囊 |
 | 高亮与小节对不上 | `scrollSpy` 的判据线写死 120px，没跟站点头部高度走 |
 | **解析算对了却判你错** | 多选题漏标一个 `data-correct`，或单选题标记标错位（`tests/check-answer-key.py` 会守住） |
+| **整页公式 16 秒才出来（页面像卡死）** | `localStorage['MathJax-Menu-Settings']` 里被勾了 `{"explorer":true}` —— MathJax 的「无障碍 Explorer」会让 SRE 给**每条公式**建朗读语义树，ch1 的 7669 条公式实测 16 秒。**它存在应用数据目录里，重装 app / 清缓存都不消失**（2026-10-21 踩，查了四小时）。`typeset.js` 现在会在 MathJax 初始化前自动清掉该键 |
 | **长公式 / 子元素里的公式 / 折叠内容不渲染** | 三类同源：判据的字符数上限太小、判据只看直接子文本节点、闭合 `<details>` 不在视口。**由 `tests/render.test.js` 逐页守住**，机理与修法见 `docs/诊断陷阱.md` §4、§8、§10 |
 
 ## 不要改的东西

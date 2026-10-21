@@ -23,6 +23,21 @@
 (function () {
   'use strict';
 
+  /* ⚠️ 清掉 MathJax 右键菜单里可能被勾开的「无障碍 Explorer」开关。
+     2026-10-21 真机定位：localStorage['MathJax-Menu-Settings'] = {"explorer":true}
+     会让语音规则引擎（SRE）给**每一条公式**生成朗读语义树。ch1 有 7669 条公式，
+     实测首个公式从 290ms 涨到 16275ms —— 整整 16 秒，页面看着像卡死。
+     这个开关存在应用数据目录里（~/Library/Application Support/advmath-desktop），
+     所以重装 app、清浏览器缓存都不会消失，只有删这个键才行。
+     本站不需要朗读功能，故在 MathJax 初始化之前直接清掉。
+     （本文件在 <head> 里同步执行，tex-svg.js 是 async，所以一定赶在它之前。） */
+  try {
+    if (window.localStorage) {
+      var __mms = localStorage.getItem('MathJax-Menu-Settings');
+      if (__mms && /"explorer"\s*:\s*true/.test(__mms)) localStorage.removeItem('MathJax-Menu-Settings');
+    }
+  } catch (e) { }
+
   /* URL 加 ?eager=1 时退回"一次性排版全页"（校验脚本量最终版面用） */
   if (/[?&]eager=1/.test(location.search)) return;
 
@@ -144,6 +159,7 @@
 
   var IO = null;
   function start() {
+    if (window.__startAt === undefined) window.__startAt = Math.round(performance.now() - (window.__T0 || 0));
     if (started) return;
     if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
       setTimeout(start, 60); return;
@@ -160,11 +176,30 @@
       var r = el.getBoundingClientRect();
       return r.bottom > 0 && r.top < window.innerHeight;
     });
+    /* ⚠️ 兜底：布局还没算出来时 getBoundingClientRect 全返回 0，
+       上面那个判定（r.bottom > 0）会把**所有元素都排除**，于是首批是空的、
+       一个公式都不同步排，全部走排队 —— 用户要盯十几秒空白源码才见到第一个公式
+       （2026-10-21 真机实测：首个公式 15658ms、容器 7669）。
+       首批为空时就退回「文档开头的前 12 个」，保证立刻有东西成型。 */
+    if (!first.length) first = all.slice(0, 12);
+
+    /* ⚠️ 首批必须挑「真的含公式」的元素。
+       视口内最靠前的往往是页头标题/导语（纯文字，没有 $…$），
+       同步首批排它们产出 0 个公式，用户要等排队轮到第一个数学块才见到公式
+       —— 2026-10-21 真机实测：首批 11 个、首个公式 15772ms、容器 7669。
+       这里改为优先取视口内含公式的块；一个都没有时，从全文档里找最靠前的含公式块。 */
+    var withMath = first.filter(needsWork);
+    if (!withMath.length) {
+      withMath = all.filter(needsWork).slice(0, 24);
+    }
+    window.__firstLen = withMath.length;
+    window.__usedFallback = !first.filter(needsWork).length;
     var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
 
     /* ① 首屏：排最靠近顶端的一批（60 个块，实测约 25 ms）——主线程立刻可用。
        ⚠️ 绝不能把 first 全部丢给一次 typesetPromise：那是原来 1.7 s 卡顿的来源。 */
-    MJ.typesetPromise(first.slice(0, 60)).then(function () {
+    MJ.typesetPromise(withMath.slice(0, 24)).then(function () {
+      window.__mjxFirstBatch = true;
       pending = pending.concat(first.slice(60));
       /* ② 其余：只在进入视口附近时入队，永不整体排队 */
       if (typeof IntersectionObserver !== 'function') {

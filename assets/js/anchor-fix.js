@@ -106,6 +106,19 @@
 
     /* 一次排完全部剩余公式，然后对齐。最多尝试若干轮：
        有些块要等前面的排完才会露出源码。 */
+    /* ⚠️ 必须等 typeset.js 的首批公式**先出来**，再做锚点补排。
+       侧栏跳转带 hash，本文件的补排循环（每轮 800 块 × 最多 12 轮）
+       如果先跑，用户会先盯着空白的 LaTeX 源码十几秒才见到第一个公式
+       （2026-10-21 实测：首个公式 16170ms、全部完成 19025ms）。
+       等首批完成后再补排，首个公式能立刻出现，补排只影响"对齐精度"。 */
+    function waitFirstBatch(fn) {
+        var t0 = Date.now();
+        (function poll() {
+            if (window.__mjxFirstBatch || Date.now() - t0 > 3000) { fn(); return; }
+            setTimeout(poll, 50);
+        })();
+    }
+
     function flushThenAlign(round) {
         round = round || 0;
         if (!ready(function (MJ) {
@@ -172,7 +185,7 @@
     if (!hashId()) return;                    // 没有锚点：什么都不做
 
     if (document.readyState === 'complete') {
-        flushThenAlign(0);
+        waitFirstBatch(function () { flushThenAlign(0); });
     } else {
         window.addEventListener('load', function () { flushThenAlign(0); });
     }
@@ -181,6 +194,6 @@
        让这一次对齐正常发生（同页点目录时 pointerdown 会先把标志置位）。 */
     window.addEventListener('hashchange', function () {
         userTookOver = false;
-        flushThenAlign(0);
+        waitFirstBatch(function () { flushThenAlign(0); });
     });
 })();
