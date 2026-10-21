@@ -94,7 +94,10 @@
          2026-10-10 实测：la-exam 有 3 处因此一直不排（手动单独排立刻就好）。
          所以失败时退化为逐块重试 —— 坏的只坏它自己，不再拖累同批。
          只在失败路径上做，正常情况一次都不会走到。 */
-      MJ.typesetPromise(batch).catch(function () {
+      MJ.typesetPromise(batch).catch(function (err) {
+        /* 2026-10-21：原来这里是完全静默的 .catch，导致「整页不排但控制台无报错」，
+           用户只能靠肉眼发现。留一条 warn，下次同类问题能被直接看到。 */
+        if (window.console && console.warn) console.warn('[typeset] 批次失败，逐块重试：', err && (err.message || err));
         batch.forEach(function (el) {
           try { MJ.typesetPromise([el]).catch(function () { }); } catch (e) { }
         });
@@ -130,9 +133,14 @@
     started = true;
     MJ = window.MathJax;
     var all = dropNested(Array.prototype.slice.call(document.querySelectorAll(SEL)));
+    /* ⚠️ 只取「严格在视口内」的元素。
+       不能用 ±300px 的余量：排版前页面很矮（原始 $…$ 是纯文本），
+       带余量会把大半个页面都算进首批，然后 first.slice(60) 又整批进队列，
+       等于一上来就把整页排掉 —— 实测 ch1 因此要 14.8 秒。
+       视口外的交给下面的 IntersectionObserver，滚动到才排。 */
     var first = all.filter(function (el) {
       var r = el.getBoundingClientRect();
-      return r.bottom > -300 && r.top < (window.innerHeight + 300);
+      return r.bottom > 0 && r.top < window.innerHeight;
     });
     var rest = all.filter(function (el) { return first.indexOf(el) < 0; });
 

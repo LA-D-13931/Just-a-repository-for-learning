@@ -11,7 +11,7 @@
   window.MathJax = {
     tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
     options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
-    svg: { fontCache: 'local', overflow: 'scale' },
+    svg: { fontCache: 'local' },
     startup: { typeset: false, ready: function () { MathJax.startup.defaultReady(); window.__mjxReady = true; } }
   };
 </script>

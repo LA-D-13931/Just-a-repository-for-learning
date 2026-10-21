@@ -38,7 +38,7 @@
   window.MathJax = {
     tex: { inlineMath: [['$', '$'], ['\(', '\)']], displayMath: [['$$', '$$'], ['\[', '\]']] },
     options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
-    svg: { fontCache: 'local', overflow: 'scale' },
+    svg: { fontCache: 'local' },
     /* 关键（第 26 节 · 页面切换性能）：
        默认 startup 会在 MathJax 就绪时自动同步扫描全页并排版，
        实测这一步在主线程上连续占用 1.7 s（ch3：0 → 5484 个公式一次成型），
