@@ -88,6 +88,23 @@
     if (busy || !pending.length) return;
     busy = true;
     var batch = pending.splice(0, 25);
+    /* ⚠️ 出队后按**真实布局**再核一次位置。
+       IO 注册那一刻布局还没稳定（getBoundingClientRect 全返回 0），
+       实测 ch1 会一次性把 1860 个元素判成"相交"，77 批把整页 7638 个公式全排了，
+       主线程被占用约 10 秒 —— 这就是"切页卡"。在 idle 回调里复核时布局已稳，
+       不在附近的放回观察队列，等真的滚到再排。 */
+    if (IO) {
+      var near = [];
+      for (var bi = 0; bi < batch.length; bi++) {
+        var be = batch[bi];
+        if (!be || !be.isConnected) continue;
+        var br = be.getBoundingClientRect();
+        if (br.bottom < -800 || br.top > window.innerHeight + 800) { IO.observe(be); }
+        else { near.push(be); }
+      }
+      batch = near;
+      if (!batch.length) { busy = false; if (pending.length) schedule(); return; }
+    }
     idle(function () {
       /* ⚠️ 批次级失败会连坐：只要批里有一个公式有语法错误，MathJax 会让整个
          typesetPromise reject，而 .catch() 一吞，同批其余本来没问题的块就**跟着漏排**。
@@ -125,6 +142,7 @@
     });
   }
 
+  var IO = null;
   function start() {
     if (started) return;
     if (!(window.MathJax && MathJax.startup && MathJax.startup.document && MathJax.typesetPromise)) {
@@ -153,16 +171,16 @@
         pending = pending.concat(rest);          /* 老浏览器：退回补排，保证文字正确 */
         schedule(); return;
       }
-      var io = new IntersectionObserver(function (entries) {
+      IO = new IntersectionObserver(function (entries) {
         for (var i = 0; i < entries.length; i++) {
           if (entries[i].isIntersecting) {
             pending.push(entries[i].target);
-            io.unobserve(entries[i].target);
+            IO.unobserve(entries[i].target);
           }
         }
         schedule();
       }, { rootMargin: '400px 0px' });
-      rest.forEach(function (el) { io.observe(el); });
+      rest.forEach(function (el) { IO.observe(el); });
       schedule();
     }).catch(function () {});
   }
