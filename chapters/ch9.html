@@ -4312,7 +4312,154 @@
       </div>
 
 
-                                                                  <!-- SHELL:BOTTOMNAV -->
+                                                                  <h2 id="final">第 9 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前两题考偏导数与连续的关系（这是全章最容易踩空的概念），第三、四题是全微分与混合偏导，第五、六题是梯度与隐函数求导，最后两题是考研档：无条件极值与拉格朗日乘数法。做题时先分清「偏导存在」「可微」「连续」是三件不同的事。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first two probe the relationship between partial derivatives and continuity, the next two handle the total differential and mixed partials, then the gradient and implicit differentiation, and finally the two graduate-level items on unconstrained extrema and Lagrange multipliers.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch9-final" data-title="第 9 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>设 $z=x^2y$，则 $\dfrac{\partial z}{\partial x}=$（　）。</p>
+            <p class="q-stem-en" lang="en">For $z=x^2y$, $\dfrac{\partial z}{\partial x}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$2xy$</span></li>
+            <li><span class="opt-body">$x^2$</span></li>
+            <li><span class="opt-body">$2x+y$</span></li>
+            <li><span class="opt-body">$2xy+x^2$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：对 $x$ 求偏导时把 $y$ 当作<strong>常数</strong>，于是 $x^2y$ 就是「常数乘 $x^2$」，求导得 $2xy$。B 是对 $y$ 求偏导的结果（$\dfrac{\partial z}{\partial y}=x^2$），方向弄反了。C 是把 $x^2y$ 当成了 $x^2+y$，用成了加法。D 是既求了偏导又没有把 $y$ 当常数（相当于对 $x$ 求导时把 $y$ 也当成了函数），多出一项。</p>
+            <p class="en" lang="en">A is correct: treat $y$ as a constant, so $x^2y$ differentiates to $2xy$. B is the partial with respect to $y$, C treats the product as a sum, and D fails to hold $y$ constant.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>若二元函数 $z=f(x,y)$ 在点 $P_0$ 处的两个偏导数都存在，则 $f$ 在 $P_0$ 处必连续。</p>
+            <p class="q-stem-en" lang="en">If both partial derivatives of $z=f(x,y)$ exist at $P_0$, then $f$ is continuous at $P_0$.</p>
+          </div>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>错误，这是本章最容易想当然的一处。一元函数里「可导 ⇒ 连续」，但<strong>二元函数偏导数存在推不出连续</strong>——因为偏导数只考察沿两条坐标轴方向的变化，管不了沿其他方向。标准反例：$f(x,y)=\dfrac{xy}{x^2+y^2}$（$(x,y)\ne(0,0)$），$f(0,0)=0$。它的两个偏导数在原点都存在且都等于 $0$，但沿 $y=x$ 逼近时 $f=\dfrac{1}{2}$，沿 $y=0$ 逼近时 $f=0$，极限不存在，故不连续。正确的蕴含关系是：<strong>可微 ⇒ 连续，可微 ⇒ 偏导存在</strong>，反过来都不成立。</p>
+            <p class="en" lang="en">False. Partial derivatives only control two coordinate directions, so they cannot force continuity. The standard counterexample is $xy/(x^2+y^2)$ with $f(0,0)=0$: both partials vanish at the origin yet the limit depends on the approach direction. The valid implications run the other way: differentiability implies continuity and the existence of partials.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>函数 $z=x^2+y^3$ 在点 $(1,1)$ 处的全微分为（　）。</p>
+            <p class="q-stem-en" lang="en">The total differential of $z=x^2+y^3$ at $(1,1)$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$2\,\mathrm{d}x+3\,\mathrm{d}y$</span></li>
+            <li><span class="opt-body">$2\,\mathrm{d}x+3y^2\,\mathrm{d}y$</span></li>
+            <li><span class="opt-body">$2x\,\mathrm{d}x+3y^2\,\mathrm{d}y$</span></li>
+            <li><span class="opt-body">$3\,\mathrm{d}x+2\,\mathrm{d}y$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：全微分是 $\mathrm{d}z=\dfrac{\partial z}{\partial x}\mathrm{d}x+\dfrac{\partial z}{\partial y}\mathrm{d}y$。先求两个偏导：$z_x=2x$、$z_y=3y^2$；<strong>再代入点 $(1,1)$</strong> 得 $2$ 与 $3$，故 $\mathrm{d}z=2\mathrm{d}x+3\mathrm{d}y$。B 与 C 都停在「一般点」的表达式上，没有代入坐标——严格说那是全微分的公式而不是「在点 $(1,1)$ 处的全微分」，题目既然给了点就必须代入。D 把两个偏导的数值弄反了。</p>
+            <p class="en" lang="en">A is correct: compute $z_x=2x$ and $z_y=3y^2$, then substitute $(1,1)$ to get $2$ and $3$. B and C stop at the general expression without substituting, and D swaps the two values.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>设 $z=e^{xy}$，则 $\dfrac{\partial^2 z}{\partial x\partial y}$ 在点 $(0,0)$ 处的值为 ______。</p>
+            <p class="q-stem-en" lang="en">For $z=e^{xy}$, the value of $\dfrac{\partial^2 z}{\partial x\partial y}$ at $(0,0)$ is ______.</p>
+          </div>
+          <div class="q-answer" data-answer="1"></div>
+          <div class="q-explain">
+            <p>答案是 $1$。先对 $x$ 求偏导（把 $y$ 当常数）：$\dfrac{\partial z}{\partial x}=y\,e^{xy}$；再对 $y$ 求偏导：$\dfrac{\partial^2z}{\partial x\partial y}=e^{xy}+xy\,e^{xy}=e^{xy}(1+xy)$。代入 $(0,0)$ 得 $e^0(1+0)=1$。<strong>注意乘积法则</strong>：$y\,e^{xy}$ 里有 $y$ 和 $e^{xy}$ 两个含 $y$ 的因子，求导时要产生两项，漏掉任何一项都会算成 $0$ 或 $e^{xy}$。另外本题两个混合偏导相等（$\dfrac{\partial^2z}{\partial x\partial y}=\dfrac{\partial^2z}{\partial y\partial x}$），这是二阶偏导连续时的结论，可以拿来交叉验算。</p>
+            <p class="en" lang="en">The answer is $1$: $\partial z/\partial x=ye^{xy}$, and differentiating again in $y$ by the product rule gives $e^{xy}(1+xy)$, which equals $1$ at the origin. The mixed partials agree here, which provides a cross-check.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于方向导数与梯度，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about directional derivatives and the gradient are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">梯度所指的方向是函数值增长最快的方向</span></li>
+            <li data-correct="true"><span class="opt-body">梯度的模等于该点处方向导数的最大值</span></li>
+            <li data-correct="true"><span class="opt-body">若某点的梯度为零向量，则该点是驻点</span></li>
+            <li><span class="opt-body">方向导数与所选方向无关，只与点的位置有关</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这是梯度的几何意义，由 $\dfrac{\partial f}{\partial\vec l}=\nabla f\cdot\vec e_l=|\nabla f|\cos\theta$ 看出，当 $\vec e_l$ 与梯度同向（$\theta=0$）时取最大。B 对：上面那个式子取 $\cos\theta=1$ 即得最大值 $|\nabla f|$。C 对：梯度为零意味着各偏导同时为零，这正是驻点的定义（但驻点不一定是极值点）。D 错：方向导数的<strong>定义就是沿某个指定方向的变化率</strong>，方向一变数值就变——它等于梯度在该方向上的投影，随着夹角余弦变化。这一题的价值在于把「梯度是向量、方向导数是数」这层区别钉住。</p>
+            <p class="en" lang="en">A, B and C are correct, all following from $\partial f/\partial\vec l=|\nabla f|\cos\theta$. D is false because a directional derivative depends on the chosen direction by definition, being the projection of the gradient onto that direction.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>设 $z=z(x,y)$ 由方程 $x^2+y^2+z^2=1$ 确定，则 $\dfrac{\partial z}{\partial x}=$（　）。</p>
+            <p class="q-stem-en" lang="en">If $z=z(x,y)$ is defined by $x^2+y^2+z^2=1$, then $\dfrac{\partial z}{\partial x}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$-\dfrac{x}{z}$</span></li>
+            <li><span class="opt-body">$-\dfrac{x}{z^2}$</span></li>
+            <li><span class="opt-body">$\dfrac{x}{z}$</span></li>
+            <li><span class="opt-body">$-2x$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：把 $z$ 看成 $x,y$ 的函数，两边对 $x$ 求偏导（$y$ 当常数），得 $2x+2z\dfrac{\partial z}{\partial x}=0$，解出 $\dfrac{\partial z}{\partial x}=-\dfrac{x}{z}$。<strong>关键一步是 $z^2$ 求导得 $2z\cdot z_x$</strong>，用链式法则，不能把 $z$ 当常数（当常数就得到 $2x=0$，显然荒谬）。B 是把分母记成了 $z^2$。C 丢了负号，可用球面上半部分 $z&gt;0$、$x&gt;0$ 处曲面下降来验证：$x$ 增大时 $z$ 减小，故偏导应为负。D 相当于只对 $x^2$ 求导而忽略了 $z$ 的依赖关系。</p>
+            <p class="en" lang="en">A is correct: differentiating $x^2+y^2+z^2=1$ in $x$ gives $2x+2z\,z_x=0$, so $z_x=-x/z$. The essential step is $2z\,z_x$ via the chain rule; B misplaces the denominator, C loses the sign, and D ignores the dependence of $z$ on $x$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>函数 $f(x,y)=x^2+y^2-2x-4y$ 的极小值点和极小值分别为（　）。</p>
+            <p class="q-stem-en" lang="en">The local minimum of $f(x,y)=x^2+y^2-2x-4y$ occurs at (point, value)</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$(1,2)$，极小值 $-5$</span></li>
+            <li><span class="opt-body">$(1,2)$，极小值 $-4$</span></li>
+            <li><span class="opt-body">$(2,1)$，极小值 $-5$</span></li>
+            <li><span class="opt-body">$(1,2)$，极大值 $-5$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。第一步求驻点：$f_x=2x-2=0$ 得 $x=1$，$f_y=2y-4=0$ 得 $y=2$，唯一驻点 $(1,2)$。第二步判别：$A=f_{xx}=2$、$B=f_{xy}=0$、$C=f_{yy}=2$，$AC-B^2=4&gt;0$ 且 $A&gt;0$，故为极小值点。第三步求值：$f(1,2)=1+4-2-8=-5$。B 是求值时漏算了某一项（如把 $-4y$ 代成 $-4$）。C 把 $x$、$y$ 的顺序弄反了。D 把「$AC-B^2&gt;0$ 且 $A&gt;0$ 为极小」记成了极大——符号记反是最常见的失分点，可用 $f=x^2+y^2$ 在原点作锚点自查（$A=2&gt;0$，显然是极小）。</p>
+            <p class="en" lang="en">A is correct: the stationary point is $(1,2)$, and $AC-B^2=4&gt;0$ with $A=2&gt;0$ makes it a minimum, with value $-5$. B mis-evaluates, C swaps the coordinates, and D reverses the $A&gt;0$ criterion, best checked against the anchor $f=x^2+y^2$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>函数 $u=x+y$ 在约束条件 $x^2+y^2=1$ 下的最大值为（　）。</p>
+            <p class="q-stem-en" lang="en">The maximum of $u=x+y$ subject to $x^2+y^2=1$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\sqrt2$</span></li>
+            <li><span class="opt-body">$2$</span></li>
+            <li><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$2\sqrt2$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。用拉格朗日乘数法：构造 $L=x+y+\lambda(x^2+y^2-1)$，令 $L_x=1+2\lambda x=0$、$L_y=1+2\lambda y=0$，两式相减得 $2\lambda(x-y)=0$，故 $x=y$（$\lambda\ne0$）。代入约束得 $2x^2=1$，$x=y=\pm\dfrac{\sqrt2}{2}$。取正号时 $u=\sqrt2$，取负号时 $u=-\sqrt2$，故最大值为 $\sqrt2$。<strong>另解（更直观）</strong>：$x+y=\sqrt2\sin\left(\theta+\dfrac{\pi}{4}\right)$（令 $x=\cos\theta$、$y=\sin\theta$），最大值为 $\sqrt2$，两法一致。B 是忘了约束（无约束时 $x+y$ 无上界）。C 是把 $x=y$ 时的单个分量当成了和。D 是把振幅算成了 $\sqrt2\cdot2$。</p>
+            <p class="en" lang="en">A is correct: Lagrange multipliers give $x=y=\pm\frac{\sqrt2}{2}$, so the maximum is $\sqrt2$. The trigonometric route $x+y=\sqrt2\sin(\theta+\frac\pi4)$ confirms it. B ignores the constraint, C mistakes one coordinate for the sum, and D doubles the amplitude.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷的主线是<strong>「一元到多元的三个新麻烦」</strong>——偏导存在不再蕴含连续、方向变成连续统（所以有了方向导数与梯度）、约束变成等式（所以有了拉格朗日乘数法）。前两题正是第一个麻烦，第三、四题是全微分与混合偏导，第五、六题是梯度与隐函数，最后两题是两类极值问题。</p>
+          <p>最常见的错法有四个。第一，<strong>把一元函数的直觉直接搬过来</strong>：认为偏导存在就可微或连续，这在二元里是错的。第二，<strong>求偏导时没有把另一个变量当常数</strong>，尤其在对 $z^2$ 这类含未知函数的项求导时会漏掉链式因子 $2z\,z_x$。第三，<strong>极值判别式的符号记反</strong>：$AC-B^2&gt;0$ 且 $A&gt;0$ 是极小，$A&lt;0$ 是极大。第四，<strong>条件极值忘了约束</strong>，直接求偏导得零。</p>
+          <p>知识之间的联系有三处值得记住。向前，本章的偏导数就是第 2 章导数在「固定其他变量」下的重复使用，复合函数求导法则（链式法则）在这里被推广成树状结构，而全微分的线性主部思想在第 3 章的微分里已经出现过一次。向后，第 10 章重积分的变量替换要用本章的雅可比行列式与隐函数求导，第 11 章的散度与旋度是用偏导数写成的算子，第 12 章的最小二乘法（本章 9.10 节）与第 9.9 节的二元泰勒公式则直接通向数值方法与优化。可以说本章是把一元微积分推广到多维的枢纽。</p>
+          <p>下一步建议：若错在前两题，请把「连续、偏导存在、可微」三者的蕴含关系画成一张图，并记住 $\dfrac{xy}{x^2+y^2}$ 这个反例；若错在第三、四题，重点练「代入点」这一步，以及乘积法则在偏导里的展开；若错在第五、六题，把梯度的三条性质与隐函数求导的公式各默写一遍；若错在最后两题，无条件极值请固定走「求驻点、算 $AC-B^2$、判断符号」三步，条件极值则把拉格朗日乘数法的方程组写完整再解。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch8.html"><span class="dir">← 上一页</span><span class="ttl">第 8 章 向量代数与空间解析几何</span></a>
         <a class="next" href="ch10.html"><span class="dir">下一页 →</span><span class="ttl">第 10 章 重积分</span></a>

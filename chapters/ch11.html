@@ -3112,7 +3112,154 @@
       </div>
 
 
-                                                                  <!-- SHELL:BOTTOMNAV -->
+                                                                  <h2 id="final">第 11 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前两题考两类曲线积分的区别（一个与方向无关、一个变号），第三到第六题是格林公式的条件、弧长积分的计算、三大公式的对应关系与路径无关的判据，最后两题是考研档：用格林公式算环流量、用高斯公式算通量。做题时先问「这是第一类还是第二类」，再看能否用公式化简。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first two distinguish the two kinds of line integrals (one direction-free, one sign-changing), the next four handle Green's theorem's hypotheses, an arc-length integral, the correspondence among the three big theorems, and the path-independence criterion, and the last two are graduate-level — circulation via Green and flux via Gauss.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch11-final" data-title="第 11 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>对坐标的曲线积分 $\displaystyle\int_L P\,\mathrm{d}x+Q\,\mathrm{d}y$，若把曲线 $L$ 的方向反转，则积分值（　）。</p>
+            <p class="q-stem-en" lang="en">If the orientation of $L$ is reversed, the line integral $\displaystyle\int_L P\,\mathrm{d}x+Q\,\mathrm{d}y$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">变号</span></li>
+            <li><span class="opt-body">不变</span></li>
+            <li><span class="opt-body">变为原来的两倍</span></li>
+            <li><span class="opt-body">变为零</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：对坐标的曲线积分（第二类）是<strong>有向</strong>的——它的物理原型是变力沿曲线做的功，力与位移反向时功取负值，所以方向反转积分变号。这与对弧长的曲线积分（第一类）恰好相反：后者以 $\mathrm{d}s&gt;0$ 为微元，与方向无关（见下一题）。判断方法：看微元是 $\mathrm{d}s$（第一类，无向）还是 $\mathrm{d}x$、$\mathrm{d}y$（第二类，有向）。</p>
+            <p class="en" lang="en">A is correct: a coordinate line integral is oriented, modelling the work done by a varying force, so reversing the path flips the sign. The arc-length integral is the opposite case, since $\mathrm{d}s&gt;0$ carries no orientation.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>对弧长的曲线积分 $\displaystyle\int_L f(x,y)\,\mathrm{d}s$ 的值与曲线 $L$ 的方向无关。</p>
+            <p class="q-stem-en" lang="en">The value of $\displaystyle\int_L f(x,y)\,\mathrm{d}s$ does not depend on the orientation of $L$.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。对弧长的曲线积分（第一类）的微元是弧长 $\mathrm{d}s$，它是<strong>非负的长度量</strong>，与走的方向无关；求和时无论从哪端开始，累加的都是同样的长度元素。计算时只需把 $L$ 用参数表示并取 $t$ 从小到大，代入 $\mathrm{d}s=\sqrt{x'^2+y'^2}\,\mathrm{d}t$ 即可，<strong>不必考虑上下限谁大谁小</strong>（这与第二类必须「起点对应下限、终点对应上限」形成鲜明对比）。</p>
+            <p class="en" lang="en">Correct: $\mathrm{d}s$ is a nonnegative length element, so the sum does not care where you start. This contrasts with the second kind, where the lower limit must correspond to the starting point.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>格林公式 $\displaystyle\oint_L P\,\mathrm{d}x+Q\,\mathrm{d}y=\iint_D\left(\dfrac{\partial Q}{\partial x}-\dfrac{\partial P}{\partial y}\right)\mathrm{d}\sigma$ 成立的条件是（　）。</p>
+            <p class="q-stem-en" lang="en">Green's theorem holds provided that</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$L$ 是区域 $D$ 的正向边界，且 $P$、$Q$ 在 $D$ 上有连续的一阶偏导数</span></li>
+            <li><span class="opt-body">$L$ 的方向可以任意取</span></li>
+            <li><span class="opt-body">$P$、$Q$ 在 $D$ 上连续即可，不必可偏导</span></li>
+            <li><span class="opt-body">区域 $D$ 必须是圆形区域</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。两个条件缺一不可：<strong>方向性</strong>——$L$ 必须是 $D$ 的正向边界（沿 $L$ 走时 $D$ 在左手侧），方向反了结果会差一个负号；<strong>可偏导性</strong>——$P$、$Q$ 要在 $D$ 上有连续的一阶偏导，否则右端的被积函数没有意义（若 $D$ 内有奇点，还要挖洞处理）。B 错：方向不能任意。C 错：只连续不足以保证偏导存在。D 错：区域形状没有任何限制，只要满足条件即可，这也是格林公式比直接计算强大的地方。</p>
+            <p class="en" lang="en">A is correct: the boundary must be positively oriented and $P,Q$ must have continuous first partials on $D$; neither condition can be dropped. B ignores orientation, C is insufficient, and D invents a restriction that does not exist.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>设 $L$ 是以原点为心、半径为 $1$ 的圆周，则 $\displaystyle\oint_L 1\,\mathrm{d}s=$ ______。</p>
+            <p class="q-stem-en" lang="en">For the unit circle $L$, $\displaystyle\oint_L 1\,\mathrm{d}s=$ ______.</p>
+          </div>
+          <div class="q-answer" data-answer="2π|2pi|6.2832|6.28"></div>
+          <div class="q-explain">
+            <p>答案是 $2\pi$。被积函数恒为 $1$ 时，对弧长的积分就是曲线的<strong>长度</strong>，单位圆周长为 $2\pi\cdot1=2\pi$，不必真去积分。<strong>若坚持算一遍</strong>：令 $x=\cos t$、$y=\sin t$（$0\le t\le2\pi$），$\mathrm{d}s=\sqrt{\sin^2t+\cos^2t}\,\mathrm{d}t=\mathrm{d}t$，故积分为 $\displaystyle\int_0^{2\pi}\mathrm{d}t=2\pi$ ✓。常见错法是把 $\displaystyle\oint\mathrm{d}s$ 与 $\displaystyle\oint\mathrm{d}x$ 混淆——后者是闭合曲线上一元全微分的积分，结果为零。</p>
+            <p class="en" lang="en">The answer is $2\pi$: with integrand $1$ the arc-length integral is just the curve's length. Parametrising the circle gives $\mathrm{d}s=\mathrm{d}t$ and the same result. Do not confuse it with $\oint\mathrm{d}x$, which vanishes on a closed curve.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于格林公式、高斯公式与斯托克斯公式，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about Green's, Gauss's and Stokes's theorems are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">格林公式把平面闭曲线上的积分化为二重积分</span></li>
+            <li data-correct="true"><span class="opt-body">高斯公式把闭曲面上的曲面积分化为三重积分</span></li>
+            <li data-correct="true"><span class="opt-body">斯托克斯公式把空间闭曲线上的积分化为曲面积分</span></li>
+            <li><span class="opt-body">这三个公式都要求曲线或曲面取负向（内侧）</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：格林公式把平面闭曲线的线积分化为它所围区域的二重积分。B 对：高斯公式把闭曲面的面积分化为所围立体的三重积分。C 对：斯托克斯公式把空间闭曲线的线积分化为以该曲线为边界的曲面积分。D 错：三个公式都有<strong>方向要求，但要求的是「正向/外侧」而不是负向</strong>——平面曲线取正向（$D$ 在左侧），闭曲面取外侧，空间曲线与所张曲面的法向量成右手系。方向反了要加负号，所以这个「正负」必须记准，本题把它写成「都要求负向」，正是最常见的反向错误。</p>
+            <p class="en" lang="en">A, B and C are each correct: Green reduces a plane line integral to a double integral, Gauss a closed-surface integral to a triple integral, and Stokes a space line integral to a surface integral. D inverts the orientation requirement — the theorems ask for the positive orientation and the outward normal, not the negative ones.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>设 $P$、$Q$ 在单连通区域 $G$ 内有连续的一阶偏导数，则 $\displaystyle\int_L P\,\mathrm{d}x+Q\,\mathrm{d}y$ 在 $G$ 内与路径无关的充要条件是（　）。</p>
+            <p class="q-stem-en" lang="en">For $P,Q$ with continuous first partials in a simply connected region $G$, the integral $\displaystyle\int_L P\,\mathrm{d}x+Q\,\mathrm{d}y$ is path-independent in $G$ if and only if</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{\partial P}{\partial y}=\dfrac{\partial Q}{\partial x}$</span></li>
+            <li><span class="opt-body">$\dfrac{\partial P}{\partial x}=\dfrac{\partial Q}{\partial y}$</span></li>
+            <li><span class="opt-body">$P=Q$</span></li>
+            <li><span class="opt-body">$\dfrac{\partial P}{\partial y}=-\dfrac{\partial Q}{\partial x}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。这个条件等价于「$P\,\mathrm{d}x+Q\,\mathrm{d}y$ 是某个函数的全微分」，也等价于沿任意闭曲线的积分为零——三个说法互相等价，而「单连通」这个前提不能省（例如 $\dfrac{-y\,\mathrm{d}x+x\,\mathrm{d}y}{x^2+y^2}$ 在挖去原点的区域里虽然满足 $P_y=Q_x$，但绕原点一圈的积分是 $2\pi\ne0$）。B 是把交叉的偏导写反了，属于符记错误。C 太强，与路径无关毫无关系。D 多了一个负号，那是调和函数（柯西—黎曼方程）的形式，不是这里需要的条件。</p>
+            <p class="en" lang="en">A is correct, equivalent to $P\,\mathrm{d}x+Q\,\mathrm{d}y$ being an exact differential and to every closed-loop integral vanishing; the simply-connected hypothesis is essential, as the classic vortex example shows. B swaps the partials, C imposes an unrelated condition, and D adds a stray minus sign.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $L$ 是单位圆周 $x^2+y^2=1$ 取逆时针方向，则 $\displaystyle\oint_L x\,\mathrm{d}y-y\,\mathrm{d}x=$（　）。</p>
+            <p class="q-stem-en" lang="en">For the unit circle $L$ oriented counterclockwise, $\displaystyle\oint_L x\,\mathrm{d}y-y\,\mathrm{d}x=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$2\pi$</span></li>
+            <li><span class="opt-body">$\pi$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$-2\pi$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。用格林公式：这里 $P=-y$、$Q=x$，故 $\dfrac{\partial Q}{\partial x}=1$、$\dfrac{\partial P}{\partial y}=-1$，右端被积函数是 $1-(-1)=2$，于是积分为 $\displaystyle\iint_D2\,\mathrm{d}\sigma=2|D|=2\pi$ ✓。<strong>方向检查</strong>：逆时针正是正向，所以取正号；若是顺时针则要写成 $-2\pi$。<strong>直接计算也可验算</strong>：令 $x=\cos t$、$y=\sin t$，则 $x\,\mathrm{d}y-y\,\mathrm{d}x=\cos t\cdot\cos t\,\mathrm{d}t-\sin t\cdot(-\sin t)\mathrm{d}t=\mathrm{d}t$，积分得 $2\pi$ ✓。C 是误以为被积函数是恰当微分（其实 $\partial Q/\partial x\ne\partial P/\partial y$，差 $2$）。</p>
+            <p class="en" lang="en">A is correct: with $P=-y$, $Q=x$ the integrand of Green's theorem is $2$, so the value is $2\pi$; counterclockwise is the positive orientation. Direct parametrisation gives $\int_0^{2\pi}\mathrm{d}t=2\pi$ as a check.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $\Sigma$ 是单位球面 $x^2+y^2+z^2=1$ 的外侧，则 $\displaystyle\oiint_\Sigma x\,\mathrm{d}y\mathrm{d}z+y\,\mathrm{d}z\mathrm{d}x+z\,\mathrm{d}x\mathrm{d}y=$（　）。</p>
+            <p class="q-stem-en" lang="en">For the unit sphere $\Sigma$ with outward orientation, $\displaystyle\oiint_\Sigma x\,\mathrm{d}y\mathrm{d}z+y\,\mathrm{d}z\mathrm{d}x+z\,\mathrm{d}x\mathrm{d}y=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$4\pi$</span></li>
+            <li><span class="opt-body">$\dfrac{4\pi}{3}$</span></li>
+            <li><span class="opt-body">$12\pi$</span></li>
+            <li><span class="opt-body">$3\pi$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。用高斯公式：散度 $\dfrac{\partial P}{\partial x}+\dfrac{\partial Q}{\partial y}+\dfrac{\partial R}{\partial z}=1+1+1=3$，故积分为 $\displaystyle\iiint_\Omega3\,\mathrm{d}V=3\cdot\dfrac{4\pi}{3}\cdot1^3=4\pi$ ✓。<strong>注意这一步</strong>：先把散度算成常数 $3$，再把 $3$ 提到积分号外面乘以球的体积，而不是把 $3$ 与球的体积相乘后再平方之类。B 是忘了乘散度 $3$（直接答成球的体积）。C 是把球体积公式记成了 $4\pi r^3$（漏了 $\dfrac{1}{3}$）。D 是散度算成了 $1$ 再乘 $3$ 之类的错算。</p>
+            <p class="en" lang="en">A is correct: the divergence is $3$, so Gauss's theorem gives $3$ times the unit ball's volume $4\pi/3$, namely $4\pi$. B forgets the divergence, C misremembers the ball volume, and D mishandles the arithmetic.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷的主线是<strong>「先分类，再用公式」</strong>。前两题问两类曲线积分的本质区别（有向与无向），第三到第六题是格林公式的条件、弧长积分、三大公式的对应关系与路径无关的判据，最后两题是考研档的两个标准套路：用格林公式算环流量、用高斯公式算通量。</p>
+          <p>最常见的错法有四个。第一，<strong>把两类曲线积分混为一谈</strong>：看到曲线积分就用 $\mathrm{d}s$ 的算法，忽略了第二类必须考虑方向。第二，<strong>格林公式忘了方向</strong>：$L$ 必须取正向（$D$ 在左手侧），否则结果差一个负号。第三，<strong>三大公式的「正向」记反</strong>：曲线取正向、闭曲面取外侧，不是内侧。第四，<strong>用高斯公式时散度算错或忘了乘体积</strong>。</p>
+          <p>知识之间的联系有三处值得记住。向前，本章的每一项计算都要回到第 10 章的重积分（格林、高斯、斯托克斯的右端全是重积分）与第 9 章的偏导数（散度、旋度都由偏导算子写成），而弧长积分则用了第 6 章的 $\mathrm{d}s$。向后，这条线索在物理里变成电磁学的麦克斯韦方程组（四个方程分别对应高斯通量、高斯磁场、法拉第与安培—麦克斯韦，其中两个含旋度），在数学里则通向多元微积分的最终形式——微分形式与外微分 $d\omega$，而三大公式就是广义斯托克斯定理在三维的特例。理解这一层，三个公式就不必分别背了。</p>
+          <p>下一步建议：若错在前两题，把两类曲线积分的记号与物理含义列成对照表，各记一题；若错在第三、四题，格林公式请把三个前提（正向、连续偏导、单连通或挖洞）写下来，弧长积分则固定用参数化 + $\mathrm{d}s$ 的路子；若错在第五题，把三大公式的左端、右端与方向要求画成一张表（三行三列）；若错在最后两题，环流量与通量各做三题，特别注意「先算散度/旋度，再乘区域或曲面」这个顺序。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch10.html"><span class="dir">← 上一页</span><span class="ttl">第 10 章 重积分</span></a>
         <a class="next" href="ch12.html"><span class="dir">下一页 →</span><span class="ttl">第 12 章 无穷级数</span></a>

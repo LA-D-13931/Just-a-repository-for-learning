@@ -2304,7 +2304,154 @@
       </div>
 
 
-                                          <!-- SHELL:BOTTOMNAV -->
+                                          <h2 id="final">第 10 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前两题考二重积分的意义与交换次序的原则，第三到第六题是计算的基本功（极坐标的面积元素、圆的面积、柱面与球面坐标的体积元素、交换积分次序），最后两题是考研档：利用对称性化简与极坐标下的计算。做题时先画区域、再选坐标系。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first two test the meaning of the double integral and the rule for swapping the order, the next four are computational essentials (polar area element, the circle's area, volume elements in cylindrical and spherical coordinates, swapping the order), and the last two are graduate-level — symmetry and a polar computation.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch10-final" data-title="第 10 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>设 $f(x,y)\ge0$ 在区域 $D$ 上连续，则 $\displaystyle\iint_D f(x,y)\,\mathrm{d}\sigma$ 的几何意义是（　）。</p>
+            <p class="q-stem-en" lang="en">For continuous $f(x,y)\ge0$ on $D$, the geometric meaning of $\displaystyle\iint_D f(x,y)\,\mathrm{d}\sigma$ is the</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">以 $D$ 为底、以 $z=f(x,y)$ 为顶的曲顶柱体的体积</span></li>
+            <li><span class="opt-body">区域 $D$ 的面积</span></li>
+            <li><span class="opt-body">$f$ 在 $D$ 上的平均值</span></li>
+            <li><span class="opt-body">区域 $D$ 的边界长度</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：把 $D$ 分成小区域，每一小块上以 $f$ 的值乘面积 $\Delta\sigma$ 近似小柱体体积，求和取极限就是曲顶柱体体积，这正是二重积分的定义。B 只有在 $f\equiv1$ 时才成立（此时积分退化为面积 $\displaystyle\iint_D\mathrm{d}\sigma=|D|$），题目若写 $f\equiv1$ 才可选它。C 是「积分除以面积」，差一个因子。D 完全无关，周长是一元弧长的内容（第 6 章）。</p>
+            <p class="en" lang="en">A is correct: summing $f$ times small areas over a partition gives the volume under the surface. B holds only when $f\equiv1$, C needs division by the area, and D belongs to arc length.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>把二次积分 $\displaystyle\int_0^1\mathrm{d}x\int_0^x f(x,y)\,\mathrm{d}y$ 交换积分次序时，只需把两个积分号的位置对调，积分限保持不变。</p>
+            <p class="q-stem-en" lang="en">To swap the order of $\displaystyle\int_0^1\mathrm{d}x\int_0^x f(x,y)\,\mathrm{d}y$, it suffices to interchange the two integral signs and keep the limits unchanged.</p>
+          </div>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>错误，而且这是本章最危险的一个错法。积分限是<strong>依附于积分变量</strong>的：内层的 $0\le y\le x$ 里的 $x$ 是外层变量，一旦内外层对调，这个 $x$ 就成了外层变量，原来的限就说不通了。正确做法是<strong>先画出积分区域，再按新的次序重新定限</strong>：本题区域是 $0\le x\le1$、$0\le y\le x$，即以 $(0,0)$、$(1,0)$、$(1,1)$ 为顶点的三角形。改为先对 $x$ 积分时，$y$ 的范围是 $0\le y\le1$，而固定的 $y$ 对应 $x$ 从 $y$ 到 $1$，故结果为 $\displaystyle\int_0^1\mathrm{d}y\int_y^1f(x,y)\,\mathrm{d}x$，与原来完全不同。</p>
+            <p class="en" lang="en">False, and this is the chapter's most dangerous error: the limits belong to their variables, so after swapping they must be re-derived from a sketch of the region. Here the triangle $0\le y\le x\le1$ becomes $\int_0^1\mathrm{d}y\int_y^1 f\,\mathrm{d}x$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>在极坐标下，面积元素 $\mathrm{d}\sigma=$（　）。</p>
+            <p class="q-stem-en" lang="en">In polar coordinates the area element $\mathrm{d}\sigma$ equals</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$r\,\mathrm{d}r\,\mathrm{d}\theta$</span></li>
+            <li><span class="opt-body">$\mathrm{d}r\,\mathrm{d}\theta$</span></li>
+            <li><span class="opt-body">$r^2\,\mathrm{d}r\,\mathrm{d}\theta$</span></li>
+            <li><span class="opt-body">$r\,\mathrm{d}\theta$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：极坐标下的小区域近似为一个矩形，两条边长分别是 $\mathrm{d}r$ 与 $r\,\mathrm{d}\theta$（注意后者的弧长里含因子 $r$），故面积元素为 $r\,\mathrm{d}r\,\mathrm{d}\theta$。这个因子 $r$ 就是雅可比行列式的值。B 漏掉了 $r$——若按它积出单位圆的面积会得到 $2\pi$ 而不是 $\pi$，用这个例子就能立刻发现错误。C 多乘了一个 $r$。D 少了一个 $\mathrm{d}r$（那是一条弧长微元，不是面积）。</p>
+            <p class="en" lang="en">A is correct: the polar cell has sides $\mathrm{d}r$ and $r\,\mathrm{d}\theta$, so the element is $r\,\mathrm{d}r\,\mathrm{d}\theta$ — this factor is the Jacobian. B would give $2\pi$ for the unit disc, an immediate check that it must be wrong.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>设 $D$ 是单位圆 $x^2+y^2\le1$ 所围区域，则 $\displaystyle\iint_D 1\,\mathrm{d}\sigma=$ ______。</p>
+            <p class="q-stem-en" lang="en">For the unit disc $D: x^2+y^2\le1$, $\displaystyle\iint_D 1\,\mathrm{d}\sigma=$ ______.</p>
+          </div>
+          <div class="q-answer" data-answer="π|pi|3.1416|3.14"></div>
+          <div class="q-explain">
+            <p>答案是 $\pi$。被积函数恒为 $1$ 时，二重积分就等于区域的面积，而单位圆的面积是 $\pi\cdot1^2=\pi$，<strong>不必真去积分</strong>。<strong>若坚持算一遍</strong>：极坐标下 $\displaystyle\int_0^{2\pi}\mathrm{d}\theta\int_0^1r\,\mathrm{d}r=2\pi\cdot\dfrac{1}{2}=\pi$ ✓，可见因子 $r$ 的作用正是让半径方向的积分给出 $\dfrac{1}{2}$。常见错法：用 $\mathrm{d}r\,\mathrm{d}\theta$（漏 $r$）会得 $2\pi$；把限写成 $\int_0^1\mathrm{d}\theta$ 会得 $\dfrac{1}{2}$。</p>
+            <p class="en" lang="en">The answer is $\pi$: with integrand $1$ the integral is just the area. Computing in polar coordinates gives $2\pi\cdot\frac12=\pi$, which shows why the factor $r$ is needed.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于三重积分及其坐标系，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about triple integrals and coordinate systems are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">柱面坐标下的体积元素为 $\mathrm{d}V=r\,\mathrm{d}r\,\mathrm{d}\theta\,\mathrm{d}z$</span></li>
+            <li data-correct="true"><span class="opt-body">球面坐标下的体积元素为 $\mathrm{d}V=\rho^2\sin\varphi\,\mathrm{d}\rho\,\mathrm{d}\varphi\,\mathrm{d}\theta$</span></li>
+            <li data-correct="true"><span class="opt-body">三重积分可以化为三次累次积分来计算</span></li>
+            <li><span class="opt-body">三重积分的值与所选的坐标系无关，因此体积元素也不必换</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：柱面坐标就是在 $xOy$ 面用极坐标、$z$ 不变，故体积元素为极坐标面积元素再乘 $\mathrm{d}z$。B 对：球面坐标的雅可比是 $\rho^2\sin\varphi$，注意这里是 $\sin\varphi$ 而不是 $\cos\varphi$，且 $\rho$ 是平方。C 对：与二重积分类似，化为累次积分是计算的主要手段。D 错：<strong>积分的值确实与坐标系无关，但体积元素必须随坐标系更换</strong>（否则雅可比因子丢失，算出的值就变了）。这句话前半句对、后半句错，正是最容易误导人的「半真」命题。</p>
+            <p class="en" lang="en">A, B and C are correct: cylindrical and spherical volume elements carry the Jacobians $r$ and $\rho^2\sin\varphi$. D is a half-truth — the value is coordinate-free, but the volume element must be transformed or the Jacobian factor is lost.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>交换积分次序：$\displaystyle\int_0^1\mathrm{d}x\int_0^x f(x,y)\,\mathrm{d}y=$（　）。</p>
+            <p class="q-stem-en" lang="en">Reversing the order, $\displaystyle\int_0^1\mathrm{d}x\int_0^x f(x,y)\,\mathrm{d}y=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\displaystyle\int_0^1\mathrm{d}y\int_y^1 f(x,y)\,\mathrm{d}x$</span></li>
+            <li><span class="opt-body">$\displaystyle\int_0^1\mathrm{d}y\int_0^y f(x,y)\,\mathrm{d}x$</span></li>
+            <li><span class="opt-body">$\displaystyle\int_0^1\mathrm{d}y\int_0^1 f(x,y)\,\mathrm{d}x$</span></li>
+            <li><span class="opt-body">$\displaystyle\int_0^1\mathrm{d}x\int_x^1 f(x,y)\,\mathrm{d}y$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。积分区域是 $0\le x\le1$、$0\le y\le x$，即以 $(0,0)$、$(1,0)$、$(1,1)$ 为顶点的三角形（在直线 $y=x$ 的下方）。改为先对 $x$ 积分：$y$ 的范围是 $0\le y\le1$；固定 $y$ 后，$x$ 从直线 $x=y$ 到右边界 $x=1$，即 $y\le x\le1$。故结果为 A。B 对应的是<strong>另一个</strong>三角形（直线 $y=x$ 的上方，$0\le y\le x$ 的补区域），是本题最常见的错误答案——它恰好是把原区域弄反了。C 把 $x$ 的限写成了常数全区间，等于把区域放大成了正方形。D 只是换了字母，没有真正交换。</p>
+            <p class="en" lang="en">A is correct: the region $0\le y\le x\le1$ becomes $0\le y\le1$ with $y\le x\le1$. B describes the complementary triangle above the line $y=x$ and is the most common wrong answer.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设区域 $D$ 关于 $x$ 轴对称，且 $f(x,-y)=-f(x,y)$ 对 $D$ 内一切点成立，则 $\displaystyle\iint_D f(x,y)\,\mathrm{d}\sigma=$（　）。</p>
+            <p class="q-stem-en" lang="en">If $D$ is symmetric about the $x$-axis and $f(x,-y)=-f(x,y)$ throughout $D$, then $\displaystyle\iint_D f(x,y)\,\mathrm{d}\sigma=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$2\displaystyle\iint_{D_1}f(x,y)\,\mathrm{d}\sigma$，其中 $D_1$ 是 $D$ 的上半部分</span></li>
+            <li><span class="opt-body">$\displaystyle\iint_{D_1}f(x,y)\,\mathrm{d}\sigma$</span></li>
+            <li><span class="opt-body">无法确定，取决于 $f$ 的具体形式</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。把 $D$ 按 $x$ 轴分成上下两半 $D_1$（$y\ge0$）与 $D_2$（$y\le0$），两者关于 $x$ 轴对称。在 $D_2$ 上作代换 $y\to-y$，面积元素不变（因为对称性），而被积函数变号，于是 $\displaystyle\iint_{D_2}f\mathrm{d}\sigma=-\iint_{D_1}f\mathrm{d}\sigma$，两半相加为零。B 是对<strong>偶函数</strong>（即 $f(x,-y)=f(x,y)$）才成立的结论——这是本题最大的陷阱，符号方向记反就会选它。C 只在 $D$ 有一半时才对。D 错：对称性已经足以定出结果，不需要知道 $f$ 的具体形式。</p>
+            <p class="en" lang="en">A is correct: substituting $y\to-y$ on the lower half shows the two halves cancel. B is the corresponding rule for an even integrand, which is the trap here, and D ignores that symmetry alone decides the value.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $D$ 是单位圆 $x^2+y^2\le1$ 所围区域，则 $\displaystyle\iint_D(x^2+y^2)\,\mathrm{d}\sigma=$（　）。</p>
+            <p class="q-stem-en" lang="en">For the unit disc $D$, $\displaystyle\iint_D(x^2+y^2)\,\mathrm{d}\sigma=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{\pi}{2}$</span></li>
+            <li><span class="opt-body">$\pi$</span></li>
+            <li><span class="opt-body">$\dfrac{\pi}{4}$</span></li>
+            <li><span class="opt-body">$2\pi$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。换成极坐标：$x^2+y^2=r^2$，$\mathrm{d}\sigma=r\,\mathrm{d}r\,\mathrm{d}\theta$，故积分为 $\displaystyle\int_0^{2\pi}\mathrm{d}\theta\int_0^1r^2\cdot r\,\mathrm{d}r=2\pi\cdot\dfrac{1}{4}=\dfrac{\pi}{2}$。<strong>注意被积函数与面积元素各贡献一个 $r$，合起来是 $r^3$</strong>，漏掉任何一个都会算错。B 是漏了 $\mathrm{d}\sigma$ 里的 $r$（把被积函数当成 $r^2$ 后积分得 $2\pi\cdot\dfrac{1}{3}$……实际错算成 $\pi$ 对应的是把 $r^3$ 积成了 $r^2$）。C 是少乘了一个 $2\pi$ 里的一半。D 是既漏 $r$ 又没除对。量级自查：$x^2+y^2$ 在单位圆上的平均值在 $0$ 与 $1$ 之间，而区域面积是 $\pi$，所以结果必小于 $\pi$ ✓。</p>
+            <p class="en" lang="en">A is correct: in polar coordinates the integrand contributes $r^2$ and the area element another $r$, so the integral is $2\pi\int_0^1r^3\mathrm{d}r=2\pi\cdot\frac14=\frac{\pi}{2}$. Missing either factor $r$ is the usual error.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷的主线是<strong>「先画区域、再选坐标系、最后定限」</strong>。前两题问数学意义与交换次序的原则，第三到第六题是四类基本功：面积元素、几何意义、柱面与球面坐标的体积元素、交换积分次序，最后两题把难度抬到考研档：对称性化简与极坐标计算。</p>
+          <p>最常见的错法有四个。第一，<strong>交换次序只对调积分号</strong>：积分限必须按新次序重新定，这是全章失分最集中的一处。第二，<strong>极坐标漏掉因子 $r$</strong>：$\mathrm{d}\sigma=r\,\mathrm{d}r\,\mathrm{d}\theta$，漏掉后连单位圆面积都会算成 $2\pi$，可作为自查标准。第三，<strong>球面坐标的雅可比记错</strong>：是 $\rho^2\sin\varphi$，不是 $\rho^2\cos\varphi$，也不是 $\rho\sin\varphi$。第四，<strong>对称性里奇偶方向弄反</strong>：关于 $x$ 轴对称时，对 $y$ 为奇函数的积分才是零。</p>
+          <p>知识之间的联系有三处值得记住。向前，本章是第 5 章定积分「分割、近似、求和、取极限」思想向二维、三维的推广，而极坐标面积元素里的雅可比因子与第 9 章的偏导数、行列式直接相关（变量替换的雅可比就是由偏导数构成的）。向后，第 11 章的曲线积分与曲面积分可以看成重积分在不同维数流形上的版本，格林公式把平面曲线积分化为二重积分，高斯公式把曲面积分化为三重积分，斯托克斯公式把空间曲线积分化为曲面积分——这三个公式的右端都是本章的重积分。本章的 10.4 节应用（质心、转动惯量、引力）则把积分变成了物理量。</p>
+          <p>下一步建议：若错在前两题，把「积分限依附于变量」这句话写在笔记首页，并画三个典型区域（三角形、矩形、圆）各做一次交换；若错在第三到第六题，把三个体积/面积元素写成卡片每天默写——$\mathrm{d}\sigma=r\mathrm{d}r\mathrm{d}\theta$、$\mathrm{d}V=r\mathrm{d}r\mathrm{d}\theta\mathrm{d}z$、$\mathrm{d}V=\rho^2\sin\varphi\,\mathrm{d}\rho\mathrm{d}\varphi\mathrm{d}\theta$；若错在最后两题，对称性请把奇函数与偶函数两种情形并列记，极坐标计算则固定走「换成极坐标、写出 $r$ 的范围、积 $r^3$」三步。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch9.html"><span class="dir">← 上一页</span><span class="ttl">第 9 章 多元函数微分法及其应用</span></a>
         <a class="next" href="ch11.html"><span class="dir">下一页 →</span><span class="ttl">第 11 章 曲线积分与曲面积分</span></a>

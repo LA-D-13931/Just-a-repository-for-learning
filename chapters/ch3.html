@@ -3468,7 +3468,154 @@
       </div>
 
 
-                                                                                                                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+                                                                                                                                                                                                                  <h2 id="final">第 3 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前三题考中值定理的条件与洛必达法则的适用范围，第四到第六题是极值、驻点与曲率这些「用导数看图形」的运算，最后两题是考研档的泰勒余项与中值定理的直接应用。做题时先问「这题是判存在性，还是算具体值」。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first three test the hypotheses of the mean value theorems and when L'Hôpital's rule applies, the next three are computations that read the graph through derivatives (extrema, critical points, curvature), and the last two are graduate-level items on Taylor remainders and a direct use of the mean value theorem.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch3-final" data-title="第 3 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>下列函数在给定区间上<strong>不满足</strong>罗尔定理条件的是（　）。</p>
+            <p class="q-stem-en" lang="en">Which function fails the hypotheses of Rolle's theorem on the given interval?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$f(x)=|x|$ 在 $[-1,1]$ 上</span></li>
+            <li><span class="opt-body">$f(x)=x^2$ 在 $[-1,1]$ 上</span></li>
+            <li><span class="opt-body">$f(x)=\sin x$ 在 $[0,\pi]$ 上</span></li>
+            <li><span class="opt-body">$f(x)=\cos x$ 在 $[0,2\pi]$ 上</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：$|x|$ 在 $x=0$ 处左右导数分别为 $-1$ 与 $1$，<strong>在开区间内不可导</strong>，罗尔定理的第二个条件不成立。B：$x^2$ 在 $[-1,1]$ 上连续、可导，且端点值都是 $1$，三条全满足。C：$\sin x$ 在 $[0,\pi]$ 上光滑，两端都是 $0$ ✓。D：$\cos x$ 在 $[0,2\pi]$ 上光滑，两端都是 $1$ ✓。这三题都能找到 $f'(\xi)=0$ 的点，正是罗尔定理的结论。</p>
+            <p class="en" lang="en">A is correct: $|x|$ has one-sided derivatives $-1$ and $1$ at $0$, so it is not differentiable on the open interval. B, C and D are all continuous, differentiable and have equal endpoint values, so the theorem applies to each of them.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>若 $f$ 在 $[a,b]$ 上连续、在 $(a,b)$ 内可导，则存在 $\xi\in(a,b)$，使 $f(b)-f(a)=f'(\xi)(b-a)$。</p>
+            <p class="q-stem-en" lang="en">If $f$ is continuous on $[a,b]$ and differentiable on $(a,b)$, then some $\xi\in(a,b)$ satisfies $f(b)-f(a)=f'(\xi)(b-a)$.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确，这就是拉格朗日中值定理的原文。要注意两点：一是结论只说「存在」，$\xi$ 的具体位置不唯一也不可求；二是两个条件都不能省——只在闭区间连续不足以保证开区间内可导，而开区间不可导时结论可能失效（如 $f(x)=|x|$ 在 $[-1,1]$ 上，差商为 $0$，但没有任何一点的导数为 $0$）。</p>
+            <p class="en" lang="en">Correct — this is Lagrange's mean value theorem verbatim. The conclusion asserts existence only, and neither hypothesis can be dropped: $|x|$ on $[-1,1]$ has zero difference quotient yet no point with zero derivative.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>下列极限中，<strong>不能</strong>用洛必达法则求出的是（　）。</p>
+            <p class="q-stem-en" lang="en">For which limit does L'Hôpital's rule fail to apply?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\lim\limits_{x\to+\infty}\dfrac{x+\sin x}{x}$</span></li>
+            <li><span class="opt-body">$\lim\limits_{x\to0}\dfrac{\sin x}{x}$</span></li>
+            <li><span class="opt-body">$\lim\limits_{x\to0}\dfrac{e^{x}-1}{x}$</span></li>
+            <li><span class="opt-body">$\lim\limits_{x\to0}\dfrac{1-\cos x}{x^2}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对（即选它）。它属于 $\dfrac{\infty}{\infty}$ 型，但求导后得到 $\dfrac{1+\cos x}{1}$，当 $x\to+\infty$ 时 $\cos x$ 在 $-1$ 与 $1$ 之间振荡，<strong>导数之比的极限不存在</strong>，洛必达法则的前提（导数之比有极限）落空，所以不能用它。而原极限其实存在：$\dfrac{x+\sin x}{x}=1+\dfrac{\sin x}{x}\to1$。这正是「洛必达失效 ≠ 原极限不存在」的经典反例。B、C、D 都是标准的 $\dfrac{0}{0}$ 型且导数之比有极限，可以正常使用。</p>
+            <p class="en" lang="en">A is the answer: it is of type $\infty/\infty$, but the ratio of derivatives $(1+\cos x)/1$ has no limit as $x\to+\infty$, so the rule's hypothesis fails. The original limit does exist, namely $1$, because $(x+\sin x)/x=1+\sin x/x$. B, C and D are genuine $0/0$ forms whose derivative ratios do have limits.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>函数 $f(x)=x^3-3x$ 的驻点为 $x=$ ______。（两个驻点，用逗号分隔）</p>
+            <p class="q-stem-en" lang="en">The critical points of $f(x)=x^3-3x$ are $x=$ ______ (two values, comma separated).</p>
+          </div>
+          <div class="q-answer" data-answer="-1,1|-1, 1|±1|-1;1"></div>
+          <div class="q-explain">
+            <p>驻点是使 $f'(x)=0$ 的点。$f'(x)=3x^2-3=3(x-1)(x+1)$，故 $x=\pm1$。<strong>验算</strong>：$f'(-1)=3-3=0$ ✓，$f'(1)=3-3=0$ ✓。要提防两个混淆：一是把「驻点」与「极值点」当成一回事——本题 $x=\pm1$ 恰好都是极值点，但 $y=x^3$ 在 $0$ 处是驻点却不是极值点；二是漏掉负的那个根，只写 $1$。</p>
+            <p class="en" lang="en">Critical points solve $f'(x)=0$: $3(x-1)(x+1)=0$, so $x=\pm1$. Both check out. Note that a critical point need not be an extremum — $y=x^3$ at $0$ is the standard counterexample — and do not drop the negative root.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>设 $f$ 在含 $x_0$ 的区间内可导，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Let $f$ be differentiable on an interval containing $x_0$. Which statements are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $f$ 在 $x_0$ 处取得极值且 $f'(x_0)$ 存在，则 $f'(x_0)=0$</span></li>
+            <li><span class="opt-body">若 $f'(x_0)=0$，则 $f$ 在 $x_0$ 处必取得极值</span></li>
+            <li data-correct="true"><span class="opt-body">若 $f'(x_0)=0$ 且 $f''(x_0)&lt;0$，则 $f$ 在 $x_0$ 处取得极大值</span></li>
+            <li data-correct="true"><span class="opt-body">若 $f'(x_0)=0$ 且 $f''(x_0)&gt;0$，则 $f$ 在 $x_0$ 处取得极小值</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 是费马引理：可导的极值点必为驻点。B 是把它反过来用，<strong>错</strong>——$f(x)=x^3$ 在 $0$ 处 $f'(0)=0$ 但既非极大也非极小（导数不变号）。C、D 是第二充分条件，注意符号方向：$f''&lt;0$ 时曲线在 $x_0$ 附近是「开口向下」，故为极大；$f''&gt;0$ 时为极小。这个符号最容易记反，可用 $f(x)=-x^2$（$f''=-2&lt;0$，$x=0$ 处极大）作锚点自查。</p>
+            <p class="en" lang="en">A is Fermat's lemma. B reverses it and fails for $x^3$ at $0$. C and D are the second-derivative test: $f''&lt;0$ gives a local maximum and $f''&gt;0$ a local minimum, which is best memorised against the anchor $f=-x^2$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>曲线 $y=x^2$ 在点 $(1,1)$ 处的曲率为（　）。</p>
+            <p class="q-stem-en" lang="en">The curvature of $y=x^2$ at $(1,1)$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{2}{5\sqrt5}$</span></li>
+            <li><span class="opt-body">$\dfrac{2}{5}$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{5}$</span></li>
+            <li><span class="opt-body">$\dfrac{2\sqrt5}{5}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。曲率 $K=\dfrac{|y''|}{(1+y'^2)^{3/2}}$。$y'=2x$，在 $x=1$ 处 $y'=2$；$y''=2$。代入得 $K=\dfrac{2}{(1+4)^{3/2}}=\dfrac{2}{5\sqrt5}$。B 忘了把分母开 $3/2$ 次方（当成 $1+y'^2=5$）。C 是分母用了 $(\cdot)^{3}$ 或把分子记成 $1$。D 是把 $\dfrac{2}{5\sqrt5}$ 有理化时算错了：$\dfrac{2}{5\sqrt5}=\dfrac{2\sqrt5}{25}$，不是 $\dfrac{2\sqrt5}{5}$。</p>
+            <p class="en" lang="en">A is correct: $K=|y''|/(1+y'^2)^{3/2}$ with $y'=2$ and $y''=2$ gives $2/5\sqrt5$. B forgets the $3/2$ power, C misplaces the exponent, and D rationalises incorrectly — the correct rationalised form is $2\sqrt5/25$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $f(x)=\ln(1+x)$，它在 $x=0$ 处带拉格朗日余项的二阶泰勒公式为 $f(x)=x-\dfrac{x^2}{2}+R_2(x)$，其中 $R_2(x)=$（　）。</p>
+            <p class="q-stem-en" lang="en">For $f(x)=\ln(1+x)$, the second-order Taylor formula at $x=0$ with Lagrange remainder is $f(x)=x-\frac{x^2}{2}+R_2(x)$, where $R_2(x)=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{x^3}{3(1+\xi)^3}$，$\xi$ 介于 $0$ 与 $x$ 之间</span></li>
+            <li><span class="opt-body">$\dfrac{x^3}{6(1+\xi)^3}$，$\xi$ 介于 $0$ 与 $x$ 之间</span></li>
+            <li><span class="opt-body">$-\dfrac{x^3}{3(1+\xi)^3}$，$\xi$ 介于 $0$ 与 $x$ 之间</span></li>
+            <li><span class="opt-body">$\dfrac{x^2}{2(1+\xi)^2}$，$\xi$ 介于 $0$ 与 $x$ 之间</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。先求三阶导：$f'(x)=\dfrac{1}{1+x}$、$f''(x)=-\dfrac{1}{(1+x)^2}$、$f'''(x)=\dfrac{2}{(1+x)^3}$。二阶泰勒的拉格朗日余项是 $R_2(x)=\dfrac{f'''(\xi)}{3!}x^3=\dfrac{1}{6}\cdot\dfrac{2}{(1+\xi)^3}x^3=\dfrac{x^3}{3(1+\xi)^3}$。B 漏掉了 $\dfrac{2}{3!}$ 里的因子 $2$（把三阶导当成 $\dfrac{1}{(1+\xi)^3}$）。C 多了一个负号——负号只出现在 $f''$ 上，$f'''$ 已经是正的。D 把阶数弄错了：二阶公式配的余项是三次项，含 $x^3$ 而不是 $x^2$。</p>
+            <p class="en" lang="en">A is correct: $f'''=2/(1+x)^3$, so $R_2=f'''(\xi)x^3/3!=x^3/(3(1+\xi)^3)$. B loses the factor $2$ in the numerator, C carries a spurious minus sign that belongs to $f''$ only, and D uses the wrong power — a second-order formula has a cubic remainder.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $f$ 在 $[0,1]$ 上连续、在 $(0,1)$ 内可导，且 $f(0)=0$、$f(1)=1$。则下列结论一定成立的是（　）。</p>
+            <p class="q-stem-en" lang="en">Let $f$ be continuous on $[0,1]$, differentiable on $(0,1)$, with $f(0)=0$ and $f(1)=1$. Which conclusion must hold?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">存在 $\xi\in(0,1)$，使 $f'(\xi)=1$</span></li>
+            <li><span class="opt-body">存在 $\xi\in(0,1)$，使 $f'(\xi)=0$</span></li>
+            <li><span class="opt-body">对任意 $\xi\in(0,1)$ 都有 $f'(\xi)=1$</span></li>
+            <li><span class="opt-body">不存在这样的 $\xi$，因为 $f$ 未给出具体表达式</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：由拉格朗日中值定理，$\dfrac{f(1)-f(0)}{1-0}=\dfrac{1-0}{1}=1$，故存在 $\xi$ 使 $f'(\xi)=1$。<strong>注意这是「存在」而不是「恒等于」</strong>，所以 C 错——例如 $f(x)=x^2$ 满足全部条件，但 $f'(x)=2x$ 只在 $x=\dfrac{1}{2}$ 处等于 $1$。B 错：$f(0)\ne f(1)$，不能套罗尔定理，$f'$ 完全可以处处为正（如 $f(x)=x$）。D 错：中值定理的价值恰恰在于不依赖具体表达式就能断定存在性。</p>
+            <p class="en" lang="en">A follows at once: the difference quotient equals $1$, so some $\xi$ has $f'(\xi)=1$. It is an existence statement, not an identity, so C fails — $f(x)=x^2$ satisfies all hypotheses but has $f'=2x$, equal to $1$ only at $x=1/2$. B fails because $f(0)\ne f(1)$, and D ignores the point of the theorem.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷的主线是<strong>「用导数反推函数的整体性质」</strong>。前三题问条件与适用范围（罗尔的三条前提、拉格朗日的结论形式、洛必达什么时候会失效），第四到第六题是三类基本运算（驻点、极值的充分条件、曲率），最后两题把难度抬到考研档：泰勒余项的求法，以及「存在性命题」的读法。</p>
+          <p>最常见的错法有三个。第一，<strong>把存在性当成恒等性或可求性</strong>：中值定理只保证 $\xi$ 存在，既不唯一也不一定算得出，写成「对任意 $\xi$ 都有」就错了。第二，<strong>反过来用充分条件</strong>：$f'(x_0)=0$ 推不出极值（$x^3$ 加 $0$ 处），连续也推不出可导。第三，<strong>曲率公式记错</strong>：分母是 $(1+y'^2)^{3/2}$，那个 $\dfrac{3}{2}$ 次幂是丢分高发点。</p>
+          <p>知识之间的联系有三处值得记住。向前，本章全部结论都建立在第 2 章的导数与第 1 章的极限之上：洛必达是柯西中值定理的推论，而柯西又是拉格朗日的推广，拉格朗日则由罗尔「旋转坐标系」得到。向后，第 3 章给出的是<strong>定性</strong>结论（单调、极值、凹凸），第 4、5 章的积分给出的是<strong>定量</strong>结论（面积、体积），而把两者连起来的是「$f'$ 的符号决定 $f$ 的走向、$f''$ 的符号决定弯曲方向」这条主线。第 7 章的微分方程求解也要靠本章判别解曲线的走向与稳定性。</p>
+          <p>下一步建议：若错在前三题，请把罗尔、拉格朗日、柯西三个定理的条件列成一张表，并各写一个「条件不满足则结论失效」的反例；若错在第四到第六题，重点练第二充分条件的符号方向，并把曲率公式默写三遍；若错在最后两题，泰勒余项建议从 $f^{(n+1)}(\xi)$ 的定义出发推一遍（不要背形式），中值定理那题则把「存在」与「恒等」的区别写进错题本。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch2.html"><span class="dir">← 上一页</span><span class="ttl">第 2 章 导数与微分</span></a>
         <a class="next" href="ch4.html"><span class="dir">下一页 →</span><span class="ttl">第 4 章 不定积分</span></a>

@@ -93,7 +93,10 @@ for (const f of pages) {
     r = await p.evaluate(AUDIT);
     const n = r.raw.length + r.errs.length;
     if (n === 0) break;
-    if (n >= prev) stable++; else stable = 0;
+    /* 只有「数量不再变化」才算收敛。原写法是 n >= prev，把「还在增加」也当成
+       收敛，于是 3 次（1.8 秒）就提前退出，把仍在排版的页面误判成有裸公式
+       （2026-10-25 实测 la6 因此间歇性失败 53 处）。 */
+    if (n === prev) stable++; else stable = 0;
     if (stable >= 3 || Date.now() > deadline) break;
     prev = n;
     await new Promise(res => setTimeout(res, 600));

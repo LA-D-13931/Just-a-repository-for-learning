@@ -2371,7 +2371,154 @@
       </div>
 
 
-                                                                                                                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+                                                                                                                                                                                                                  <h2 id="final">第 4 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前两题考不定积分的定义（尤其是那个「$+C$」），第三题到第六题是换元与分部积分的基本功，最后两题是考研档：有理函数的部分分式与「已知原函数反求积分」。做题时先看被积函数属于哪一类，再决定凑微分、换元还是分部。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first two test the definition of the indefinite integral (especially the constant of integration), the next four are routine substitution and integration by parts, and the last two are graduate-level — partial fractions and recovering an integral from a known antiderivative.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch4-final" data-title="第 4 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>下列等式正确的是（　）。</p>
+            <p class="q-stem-en" lang="en">Which identity is correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{\mathrm{d}}{\mathrm{d}x}\displaystyle\int f(x)\,\mathrm{d}x=f(x)$</span></li>
+            <li><span class="opt-body">$\displaystyle\int f'(x)\,\mathrm{d}x=f(x)$</span></li>
+            <li><span class="opt-body">$\displaystyle\int \mathrm{d}f(x)=f(x)$</span></li>
+            <li><span class="opt-body">$\displaystyle\int f(x)\,\mathrm{d}x=f(x)+C$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：先积分再求导，恰好回到被积函数，常数 $C$ 被求导消掉，所以这里<strong>不需要也不应该</strong>写 $+C$。B、C 错在漏了常数：先求导再积分（或直接积分微分）得到的是全体原函数，必须写 $f(x)+C$。D 错得更直接——右边是被积函数本身，左边是它的原函数族，两者不是一回事，只有在 $f(x)=e^{x}$ 这类特殊函数上才「看起来」对。</p>
+            <p class="en" lang="en">A is correct: differentiating an indefinite integral returns the integrand, and the constant disappears under differentiation, so no $+C$ belongs here. B and C omit the constant that integration must carry, and D confuses the integrand with its family of antiderivatives.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>记号 $\displaystyle\int f(x)\,\mathrm{d}x$ 表示 $f$ 的一个原函数。</p>
+            <p class="q-stem-en" lang="en">The symbol $\displaystyle\int f(x)\,\mathrm{d}x$ denotes one antiderivative of $f$.</p>
+          </div>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>错误，差在「一个」与「全体」。$\displaystyle\int f(x)\,\mathrm{d}x$ 表示 $f$ 的<strong>全体</strong>原函数，即 $F(x)+C$（$C$ 为任意常数），是一个函数族而不是一个函数。若 $F$ 与 $G$ 都是 $f$ 的原函数，则 $F-G$ 恒为常数，这正是「全体」这个说法的依据。考试里最常见的扣分就是把 $+C$ 漏掉。</p>
+            <p class="en" lang="en">False — the symbol denotes the whole family $F(x)+C$, not a single antiderivative. Any two antiderivatives differ by a constant, which is exactly what makes the family the right object; omitting $+C$ is the classic loss of marks.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>$\displaystyle\int\dfrac{\mathrm{d}x}{1+x^2}=$（　）。</p>
+            <p class="q-stem-en" lang="en">$\displaystyle\int\dfrac{\mathrm{d}x}{1+x^2}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\arctan x+C$</span></li>
+            <li><span class="opt-body">$\ln(1+x^2)+C$</span></li>
+            <li><span class="opt-body">$\arcsin x+C$</span></li>
+            <li><span class="opt-body">$-\arctan x+C$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：$(\arctan x)'=\dfrac{1}{1+x^2}$，直接由基本积分表得到。B 是把 $\arctan$ 与 $\ln$ 的导数记混了——$\displaystyle\int\dfrac{2x}{1+x^2}\,\mathrm{d}x=\ln(1+x^2)+C$ 才是对的，分子少一个 $2x$ 就不是这个结果。C 是 $\dfrac{1}{\sqrt{1-x^2}}$ 的原函数，与本题的被积函数不同。D 多了一个负号，可用 $x=0$ 处两边求导自查。</p>
+            <p class="en" lang="en">A is correct, straight from the basic table. B confuses the logarithm form, which needs a factor $2x$ in the numerator; C belongs to $1/\sqrt{1-x^2}$; D has a spurious minus sign.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>$\displaystyle\int x\,e^{x^2}\,\mathrm{d}x=$ ______ $+C$。</p>
+            <p class="q-stem-en" lang="en">$\displaystyle\int x\,e^{x^2}\,\mathrm{d}x=$ ______ $+C$.</p>
+          </div>
+          <div class="q-answer" data-answer="e^(x^2)/2|(1/2)e^(x^2)|1/2e^(x^2)|e^{x^2}/2|(1/2)e^{x^2}"></div>
+          <div class="q-explain">
+            <p>凑微分：注意到 $\mathrm{d}(x^2)=2x\,\mathrm{d}x$，故 $x\,\mathrm{d}x=\dfrac{1}{2}\mathrm{d}(x^2)$，于是 $\displaystyle\int x e^{x^2}\mathrm{d}x=\dfrac{1}{2}\int e^{u}\,\mathrm{d}u=\dfrac{1}{2}e^{x^2}+C$。<strong>验算</strong>：$\left(\dfrac{1}{2}e^{x^2}\right)'=\dfrac{1}{2}e^{x^2}\cdot2x=x e^{x^2}$ ✓。最常见的错法是漏掉 $\dfrac{1}{2}$，直接写 $e^{x^2}$——那是因为把 $\mathrm{d}(x^2)$ 当成了 $\mathrm{d}x$。</p>
+            <p class="en" lang="en">Use $\mathrm{d}(x^2)=2x\,\mathrm{d}x$, so the integral becomes $\frac12\int e^u\mathrm{d}u=\frac12e^{x^2}+C$. Differentiating gives back $xe^{x^2}$. The usual error is to drop the factor $\frac12$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于 $\displaystyle\int x\cos x\,\mathrm{d}x$ 的分部积分，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Concerning integration by parts for $\displaystyle\int x\cos x\,\mathrm{d}x$, which statements are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">应取 $u=x$，$\mathrm{d}v=\cos x\,\mathrm{d}x$</span></li>
+            <li data-correct="true"><span class="opt-body">结果为 $x\sin x+\cos x+C$</span></li>
+            <li><span class="opt-body">若取 $u=\cos x$、$\mathrm{d}v=x\,\mathrm{d}x$，计算会更简单</span></li>
+            <li data-correct="true"><span class="opt-body">分部积分公式为 $\displaystyle\int u\,\mathrm{d}v=uv-\int v\,\mathrm{d}u$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：选 $u$ 的原则是「求导后变简单」，$x$ 求导成 $1$，正好消掉；$\cos x$ 便于积分。B 对：$uv-\displaystyle\int v\mathrm{d}u=x\sin x-\int\sin x\,\mathrm{d}x=x\sin x+\cos x+C$，<strong>验算</strong>：$(x\sin x+\cos x)'=\sin x+x\cos x-\sin x=x\cos x$ ✓。C 错：取 $u=\cos x$ 后 $\displaystyle\int v\mathrm{d}u$ 里会出现 $x^2\sin x$，次数反而升高，越做越复杂——这是分部积分「选错 $u$」的典型后果。D 对：这就是分部积分的公式原文，$\displaystyle\int u\,\mathrm{d}v=uv-\int v\,\mathrm{d}u$。</p>
+            <p class="en" lang="en">A is the right choice because $x$ simplifies under differentiation. B is the result $x\sin x+\cos x+C$, which checks by differentiation. C would raise the power through $x^2\sin x$ and is the classic wrong choice of $u$. D states the formula itself.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>$\displaystyle\int\dfrac{\mathrm{d}x}{x^2+a^2}$（$a\ne0$）$=$（　）。</p>
+            <p class="q-stem-en" lang="en">For $a\ne0$, $\displaystyle\int\dfrac{\mathrm{d}x}{x^2+a^2}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{1}{a}\arctan\dfrac{x}{a}+C$</span></li>
+            <li><span class="opt-body">$\arctan\dfrac{x}{a}+C$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{a}\ln(x^2+a^2)+C$</span></li>
+            <li><span class="opt-body">$\arctan(x+a)+C$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：作代换 $x=a\tan t$，$\mathrm{d}x=a\sec^2t\,\mathrm{d}t$，分母为 $a^2\sec^2t$，于是积分化为 $\dfrac{1}{a}\displaystyle\int\mathrm{d}t=\dfrac{1}{a}t+C=\dfrac{1}{a}\arctan\dfrac{x}{a}+C$。<strong>求导自查</strong>：$\left(\dfrac{1}{a}\arctan\dfrac{x}{a}\right)'=\dfrac{1}{a}\cdot\dfrac{1}{1+(x/a)^2}\cdot\dfrac{1}{a}=\dfrac{1}{x^2+a^2}$ ✓。B 漏了系数 $\dfrac{1}{a}$（求导后会多出 $a^2$）。C 是对数形式，与反正切无关。D 把 $\arctan$ 的变量写成了 $x+a$，属于公式记错。</p>
+            <p class="en" lang="en">A is correct: with $x=a\tan t$ the integral collapses to $\frac1a t+C=\frac1a\arctan\frac xa+C$, and differentiating verifies it. B omits the factor $\frac1a$, C is the logarithmic form, and D misremembers the argument.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>$\displaystyle\int\dfrac{\mathrm{d}x}{x^2-1}=$（　）。</p>
+            <p class="q-stem-en" lang="en">$\displaystyle\int\dfrac{\mathrm{d}x}{x^2-1}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{1}{2}\ln\left|\dfrac{x-1}{x+1}\right|+C$</span></li>
+            <li><span class="opt-body">$\ln|x^2-1|+C$</span></li>
+            <li><span class="opt-body">$\arctan x+C$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{2}\ln\left|\dfrac{x+1}{x-1}\right|+C$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：分解部分分式 $\dfrac{1}{x^2-1}=\dfrac{1}{2}\left(\dfrac{1}{x-1}-\dfrac{1}{x+1}\right)$，逐项积分得 $\dfrac{1}{2}\big(\ln|x-1|-\ln|x+1|\big)+C=\dfrac{1}{2}\ln\left|\dfrac{x-1}{x+1}\right|+C$。<strong>求导自查</strong>：$\dfrac{1}{2}\left(\dfrac{1}{x-1}-\dfrac{1}{x+1}\right)=\dfrac{1}{2}\cdot\dfrac{2}{x^2-1}=\dfrac{1}{x^2-1}$ ✓。B 相当于把被积函数当成 $\dfrac{2x}{x^2-1}$（少了分子的 $2x$）。C 属于 $x^2+1$ 的情形，符号不同结果完全不同。D 是 A 的倒数，求导会得到 $-\dfrac{1}{x^2-1}$，符号反了。</p>
+            <p class="en" lang="en">A is correct: $\frac{1}{x^2-1}=\frac12\left(\frac{1}{x-1}-\frac{1}{x+1}\right)$, giving $\frac12\ln\left|\frac{x-1}{x+1}\right|+C$, which differentiates back correctly. B fits $\frac{2x}{x^2-1}$, C belongs to $x^2+1$, and D has the opposite sign.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $e^{-x}$ 是 $f(x)$ 的一个原函数，则 $\displaystyle\int x f'(x)\,\mathrm{d}x=$（　）。</p>
+            <p class="q-stem-en" lang="en">If $e^{-x}$ is an antiderivative of $f(x)$, then $\displaystyle\int x f'(x)\,\mathrm{d}x=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$-(x+1)e^{-x}+C$</span></li>
+            <li><span class="opt-body">$-xe^{-x}+C$</span></li>
+            <li><span class="opt-body">$(x+1)e^{-x}+C$</span></li>
+            <li><span class="opt-body">$-(x-1)e^{-x}+C$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。先由题意求出 $f$：$f(x)=\left(e^{-x}\right)'=-e^{-x}$，于是 $f'(x)=e^{-x}$。所求积分为 $\displaystyle\int xe^{-x}\mathrm{d}x$，分部积分取 $u=x$、$\mathrm{d}v=e^{-x}\mathrm{d}x$，得 $-xe^{-x}+\displaystyle\int e^{-x}\mathrm{d}x=-xe^{-x}-e^{-x}+C=-(x+1)e^{-x}+C$。<strong>验算</strong>：$\left(-(x+1)e^{-x}\right)'=-e^{-x}+(x+1)e^{-x}=xe^{-x}$ ✓。B 漏了 $\displaystyle\int e^{-x}\mathrm{d}x$ 那一项。C 少了个负号。D 是把 $+1$ 写成了 $-1$，核对展开即可发现。</p>
+            <p class="en" lang="en">A is correct: $f=-e^{-x}$ so $f'=e^{-x}$, and parts on $\int xe^{-x}\mathrm{d}x$ give $-(x+1)e^{-x}+C$, which differentiates back to $xe^{-x}$. B drops the remaining integral, C loses the sign, and D gets the constant term wrong.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷的主线是<strong>「逆运算 + 凑微分」</strong>。前两题问定义（那个 $+C$ 到底该不该加、什么时候不加），第三到第六题是最常见的四类操作：基本积分表、第一类换元（凑微分）、分部积分、带参数的反正切，最后两题把难度抬到考研档：部分分式分解与「已知原函数反求积分」。</p>
+          <p>最常见的错法有四个。第一，<strong>$+C$ 忘写或乱加</strong>：不定积分的结果是函数族，必须带常数；但「先积分再求导」这一步不要带，因为求导会把常数消掉。第二，<strong>凑微分时漏系数</strong>：$\mathrm{d}(x^2)=2x\,\mathrm{d}x$，所以 $x\,\mathrm{d}x$ 前面要配 $\dfrac{1}{2}$，漏掉就是全错。第三，<strong>分部积分选错 $u$</strong>：选 $u$ 的原则是被求导后变简单，$x\cos x$ 若取 $u=\cos x$ 会让次数升高。第四，<strong>把带 $a$ 的公式的系数丢掉</strong>：$\displaystyle\int\dfrac{\mathrm{d}x}{x^2+a^2}$ 的系数是 $\dfrac{1}{a}$，不是 $1$。</p>
+          <p>知识之间的联系有三处值得记住。向前，本章完全依赖第 2 章的求导法则——每一条积分公式都是某个求导公式的逆写，换元法正是链式法则的逆运算，分部积分正是乘积法则的逆运算。向后，第 5 章的牛顿—莱布尼茨公式把不定积分与定积分接起来（先求原函数再代上下限），第 6 章求面积体积、第 7 章解微分方程、第 10 章的二重积分归根到底也要回到本章的基本功。可以说本章是后续所有积分内容的地基。</p>
+          <p>下一步建议：若错在前两题，把「不定积分 = 全体原函数」这句话抄三遍，并把 $+C$ 的两种例外（求导后、定积分中）标出来；若错在第四、六题，专门练「凑微分」：把 $\mathrm{d}(x^2)$、$\mathrm{d}(\ln x)$、$\mathrm{d}(\sin x)$ 与对应的 $x\,\mathrm{d}x$、$\mathrm{d}x/x$、$\cos x\,\mathrm{d}x$ 写成一张对照表；若错在第七、八题，部分分式那题请把分解过程完整写三遍，第八题则要养成「先由原函数求 $f$、再求 $f'$」这个固定顺序。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch3.html"><span class="dir">← 上一页</span><span class="ttl">第 3 章 微分中值定理与导数的应用</span></a>
         <a class="next" href="ch5.html"><span class="dir">下一页 →</span><span class="ttl">第 5 章 定积分</span></a>

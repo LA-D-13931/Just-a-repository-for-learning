@@ -2462,7 +2462,154 @@
 
 
 
-                                                                                                                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+                                                                                                                                                                                                                  <h2 id="final">第 5 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前两题考定积分的本质（它是一个数）与变上限积分求导，第三到第六题是最基本的计算与性质（牛顿—莱布尼茨、对称区间、性质判断、变限求导），最后两题是考研档：无界函数的反常积分与变限积分的极限。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first two test what a definite integral actually is and how to differentiate an integral with a variable upper limit, the next four are routine computation and properties, and the last two are graduate-level — an improper integral with an unbounded integrand and a limit of a variable-limit integral.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch5-final" data-title="第 5 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>设 $f$ 在 $[a,b]$ 上可积，则 $\displaystyle\int_a^b f(x)\,\mathrm{d}x$ 是一个（　）。</p>
+            <p class="q-stem-en" lang="en">If $f$ is integrable on $[a,b]$, then $\displaystyle\int_a^b f(x)\,\mathrm{d}x$ is a</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">确定的数</span></li>
+            <li><span class="opt-body">函数</span></li>
+            <li><span class="opt-body">$f$ 的全体原函数</span></li>
+            <li><span class="opt-body">一定非负的数（因为它表示面积）</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：定积分是黎曼和的极限，极限是一个<strong>数</strong>，与积分变量用什么字母无关（写成 $t$ 或 $u$ 都不影响结果）。B、C 说的是不定积分——那才是函数族。D 错：定积分表示的是<strong>代数面积</strong>，$f$ 在 $x$ 轴下方时取负值，「面积」只有在取绝对值之后才成立。</p>
+            <p class="en" lang="en">A is correct: the definite integral is a limit of Riemann sums, hence a number, independent of the dummy variable. B and C describe the indefinite integral, and D forgets that the integral is a signed area.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>若 $f$ 在 $[a,b]$ 上连续，则 $\dfrac{\mathrm{d}}{\mathrm{d}x}\displaystyle\int_a^x f(t)\,\mathrm{d}t=f(x)$。</p>
+            <p class="q-stem-en" lang="en">If $f$ is continuous on $[a,b]$, then $\dfrac{\mathrm{d}}{\mathrm{d}x}\displaystyle\int_a^x f(t)\,\mathrm{d}t=f(x)$.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确，这就是变上限积分求导公式（微积分基本定理的第一形式）。要注意三点：一是被积函数里的字母是 $t$（哑变量），求导的变量是 $x$，两者必须区分开；二是下限 $a$ 是常数，若下限也含 $x$（如 $\displaystyle\int_{x}^{b}$）则要带负号；三是若上限是 $\varphi(x)$，则结果是 $f(\varphi(x))\varphi'(x)$，别漏了链式法则那一步。</p>
+            <p class="en" lang="en">Correct — this is the first form of the fundamental theorem. Keep the dummy variable $t$ distinct from the differentiation variable $x$, add a minus sign if the lower limit depends on $x$, and multiply by $\varphi'(x)$ when the upper limit is $\varphi(x)$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>$\displaystyle\int_0^1 x^2\,\mathrm{d}x=$（　）。</p>
+            <p class="q-stem-en" lang="en">$\displaystyle\int_0^1 x^2\,\mathrm{d}x=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{1}{3}$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{2}$</span></li>
+            <li><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{4}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：由牛顿—莱布尼茨公式，原函数 $\dfrac{x^3}{3}$ 在 $1$ 与 $0$ 处取值相减，得 $\dfrac{1}{3}-0=\dfrac{1}{3}$。B 是被积函数当成 $x$ 的结果（$\dfrac{x^2}{2}$ 在 $1$ 处为 $\dfrac{1}{2}$）。C 是直接把上限代入被积函数（$1^2=1$），完全没做积分。D 是把幂次算成了 $x^4/4$ 或答案记混。几何上也能判断：$y=x^2$ 在 $[0,1]$ 上的图形完全落在三角形（面积 $\dfrac{1}{2}$）下方，所以结果必须小于 $\dfrac{1}{2}$。</p>
+            <p class="en" lang="en">A is correct by Newton–Leibniz. B integrates $x$ instead of $x^2$, C substitutes the limit into the integrand without integrating, and D uses the wrong power. Geometrically the region lies inside a triangle of area $1/2$, so the answer must be smaller.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>$\displaystyle\int_{-1}^{1}x^3\cos x\,\mathrm{d}x=$ ______。</p>
+            <p class="q-stem-en" lang="en">$\displaystyle\int_{-1}^{1}x^3\cos x\,\mathrm{d}x=$ ______.</p>
+          </div>
+          <div class="q-answer" data-answer="0|零"></div>
+          <div class="q-explain">
+            <p>答案是 $0$。理由是利用对称性：$f(x)=x^3\cos x$ 满足 $f(-x)=(-x)^3\cos(-x)=-x^3\cos x=-f(x)$，是<strong>奇函数</strong>，而积分区间 $[-1,1]$ 关于原点对称，故积分为零——不必真去求原函数。<strong>反向检查</strong>：若题目是偶函数（如 $x^2\cos x$），结果就应写成 $2\displaystyle\int_0^1x^2\cos x\,\mathrm{d}x$，不能直接判零。常见错法是硬算：$x^3\cos x$ 的原函数确实存在，但要分部积分三次，算完还会发现常数项恰好抵消——不如先用对称性。</p>
+            <p class="en" lang="en">The answer is $0$ by symmetry: $x^3\cos x$ is odd and the interval is symmetric about the origin, so no antiderivative is needed. For an even integrand such as $x^2\cos x$ the integral would instead double the half-interval value.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>设 $f$、$g$ 在 $[a,b]$ 上连续，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Let $f$ and $g$ be continuous on $[a,b]$. Which statements are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\displaystyle\int_a^b\big[f(x)+g(x)\big]\mathrm{d}x=\int_a^b f(x)\,\mathrm{d}x+\int_a^b g(x)\,\mathrm{d}x$</span></li>
+            <li><span class="opt-body">若 $\displaystyle\int_a^b f(x)\,\mathrm{d}x=0$，则 $f(x)\equiv0$</span></li>
+            <li data-correct="true"><span class="opt-body">$\displaystyle\int_a^a f(x)\,\mathrm{d}x=0$</span></li>
+            <li data-correct="true"><span class="opt-body">若 $f(x)&gt;0$ 在 $[a,b]$ 上恒成立且 $a&lt;b$，则 $\displaystyle\int_a^b f(x)\,\mathrm{d}x&gt;0$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这是线性性质。C 对：上下限相同时，黎曼和的每一项都是零。D 对：连续且严格为正的函数在闭区间上有正的最小值，积分至少是「最小值 × 区间长度」，严格大于零。B 错：积分为零只说明<strong>代数面积</strong>为零，正负抵消即可，例如 $f(x)=x$ 在 $[-1,1]$ 上积分为 $0$，但 $f$ 并不恒为零。这是「积分值」与「函数值」最容易被混为一谈的一处。</p>
+            <p class="en" lang="en">A is linearity and C is the degenerate interval. D holds because a continuous strictly positive function attains a positive minimum on a closed interval. B fails since a zero integral means the signed areas cancel — $f(x)=x$ on $[-1,1]$ is the standard counterexample.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>设 $F(x)=\displaystyle\int_0^x t\sin t\,\mathrm{d}t$，则 $F'(x)=$（　）。</p>
+            <p class="q-stem-en" lang="en">For $F(x)=\displaystyle\int_0^x t\sin t\,\mathrm{d}t$, $F'(x)=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$x\sin x$</span></li>
+            <li><span class="opt-body">$\sin x+x\cos x$</span></li>
+            <li><span class="opt-body">$-x\cos x+\sin x$</span></li>
+            <li><span class="opt-body">$x\cos x$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：由变上限积分求导公式，直接把被积函数里的 $t$ 换成上限 $x$ 即可，得 $x\sin x$，<strong>不需要真的算出 $F(x)$</strong>。C 是 $F(x)$ 本身（因为 $\displaystyle\int t\sin t\,\mathrm{d}t=-t\cos t+\sin t$），求导之后才等于 A。B 是把 C 再求一次导的错误结果，D 则把 $\sin$ 认成了 $\cos$。<strong>自查方法</strong>：选 $x=\dfrac{\pi}{2}$，$F'(\tfrac{\pi}{2})=\dfrac{\pi}{2}\cdot1=\dfrac{\pi}{2}$，只有 A 满足。</p>
+            <p class="en" lang="en">A is correct: the formula replaces $t$ by the upper limit $x$ directly, with no need to compute $F(x)$. C is $F(x)$ itself, B mis-differentiates it, and D confuses sine with cosine.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>反常积分 $\displaystyle\int_0^1\dfrac{\mathrm{d}x}{\sqrt{x}}$ 的值为（　）。</p>
+            <p class="q-stem-en" lang="en">The improper integral $\displaystyle\int_0^1\dfrac{\mathrm{d}x}{\sqrt{x}}$ equals</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$2$</span></li>
+            <li><span class="opt-body">发散</span></li>
+            <li><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$+\infty$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。被积函数在 $x=0$ 处无界，这是<strong>无界函数的反常积分</strong>（瑕积分），必须按极限定义算：$\displaystyle\lim_{\varepsilon\to0^+}\int_{\varepsilon}^{1}x^{-1/2}\mathrm{d}x=\lim_{\varepsilon\to0^+}\left[2\sqrt{x}\right]_{\varepsilon}^{1}=\lim_{\varepsilon\to0^+}(2-2\sqrt{\varepsilon})=2$。B、D 是误以为「函数无界就一定发散」——收敛与否取决于无穷大片区域的面积是否可积，$x^{-1/2}$ 增长得不够快，故收敛。C 是漏了系数（$\int x^{1/2}\mathrm{d}x$ 才会给出与 $\tfrac{2}{3}$ 有关的数）。判据可记：$\displaystyle\int_0^1 x^{-p}\mathrm{d}x$ 当 $p&lt;1$ 时收敛、$p\ge1$ 时发散。</p>
+            <p class="en" lang="en">A is correct: the integrand is unbounded at $0$, so the integral is defined by a limit, which evaluates to $2$. B and D assume unboundedness implies divergence, but $x^{-1/2}$ grows slowly enough to converge. In general $\int_0^1x^{-p}\mathrm{d}x$ converges exactly when $p&lt;1$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>$\displaystyle\lim_{x\to0}\dfrac{\displaystyle\int_0^x\sin t\,\mathrm{d}t}{x^2}=$（　）。</p>
+            <p class="q-stem-en" lang="en">$\displaystyle\lim_{x\to0}\dfrac{\displaystyle\int_0^x\sin t\,\mathrm{d}t}{x^2}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{1}{2}$</span></li>
+            <li><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">不存在</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。这是 $\dfrac{0}{0}$ 型：分子上限代入 $x\to0$ 得 $0$，分母也趋于 $0$。用洛必达法则并对分子套变上限求导，得 $\displaystyle\lim_{x\to0}\dfrac{\sin x}{2x}=\dfrac{1}{2}$。<strong>另解</strong>：先算 $\displaystyle\int_0^x\sin t\,\mathrm{d}t=1-\cos x\sim\dfrac{x^2}{2}$，同样得 $\dfrac{1}{2}$，两法一致。B 是漏了分母求导产生的 $2$。C 是只看到分子趋于 $0$ 就下结论（分母同样趋于 $0$，不能直接得零）。D 错，极限显然存在。</p>
+            <p class="en" lang="en">A is correct. This is a $0/0$ form; L'Hôpital together with the variable-limit derivative gives $\lim\sin x/(2x)=1/2$, and the expansion $1-\cos x\sim x^2/2$ confirms it. B drops the factor $2$, C treats the numerator's vanishing as decisive, and D denies an obvious limit.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷的主线是<strong>「定积分是一个数，而变上限积分是一个函数」</strong>。前两题问清了这个区别，第三到第六题是四种基本功：牛顿—莱布尼茨、对称区间的奇偶性、性质的真假判断、变上限求导，最后两题把难度抬到考研档：无界函数的反常积分要用极限定义算，变限积分的极限要配合洛必达。</p>
+          <p>最常见的错法有四个。第一，<strong>把定积分当函数或当面积</strong>：它是数，且是代数面积，$x$ 轴下方的部分取负。第二，<strong>看到积分为零就断定函数恒零</strong>：正负可以抵消（$x$ 在 $[-1,1]$ 上）。第三，<strong>对称区间不先看奇偶</strong>：奇函数直接得零能省掉大量计算。第四，<strong>反常积分当成普通积分算</strong>：无界点必须用极限逼近，而且要单独判断收敛性，不能直接把端点代进去。</p>
+          <p>知识之间的联系有三处值得记住。向前，本章把第 4 章的不定积分变成可计算的数（牛顿—莱布尼茨），而它自身建立在第 1 章的极限与第 2 章的导数之上——变上限求导就是把这两者接起来的桥。向后，第 6 章的几何与物理应用全部是「列出一个定积分再算出来」，第 7 章解微分方程时会用到定积分形式的初始条件，第 10、11 章的重积分与曲线积分则是把本章的一维积分推广到二重、三重与曲线、曲面上去，思想完全一样：分割、近似、求和、取极限。</p>
+          <p>下一步建议：若错在前两题，把「定积分 = 数、不定积分 = 函数族、变上限积分 = 函数」这三句话写成对照表；若错在第三到第六题，重点练对称区间的奇偶性与变上限求导（各做五题），并把性质里「积分为零」与「函数恒零」的区别标进错题本；若错在最后两题，反常积分请从定义出发写一遍极限过程，变限极限则固定用「洛必达 + 变上限求导」这条路走三遍。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch4.html"><span class="dir">← 上一页</span><span class="ttl">第 4 章 不定积分</span></a>
         <a class="next" href="ch6.html"><span class="dir">下一页 →</span><span class="ttl">第 6 章 定积分的应用</span></a>

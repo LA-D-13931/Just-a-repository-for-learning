@@ -2953,7 +2953,154 @@ Plot.render(host, {
       </div>
 
 
-                                                                                          <!-- SHELL:BOTTOMNAV -->
+                                                                                          <h2 id="final">第 8 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前两题考向量的基本运算与垂直判据，第三到第六题是两种乘积与空间图形（向量积求法向量、夹角、平面与直线的方程、二次曲面识别），最后两题是考研档：点到平面的距离与空间曲线在坐标面上的投影。做题时先判断「这题考的是方向还是位置」。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first two test basic vector operations and the perpendicularity criterion, the next four are the two products and spatial figures (cross product, angle, planes and lines, quadric surfaces), and the last two are graduate-level — distance from a point to a plane and the projection of a space curve.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch8-final" data-title="第 8 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>设 $\vec a=(1,2,3)$，$\vec b=(2,1,1)$，则 $\vec a\cdot\vec b=$（　）。</p>
+            <p class="q-stem-en" lang="en">For $\vec a=(1,2,3)$ and $\vec b=(2,1,1)$, $\vec a\cdot\vec b=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$7$</span></li>
+            <li><span class="opt-body">$6$</span></li>
+            <li><span class="opt-body">$5$</span></li>
+            <li><span class="opt-body">$(2,2,3)$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：数量积按坐标计算是「对应分量相乘再相加」，$1\times2+2\times1+3\times1=2+2+3=7$。<strong>注意数量积的结果是一个数，不是向量</strong>，所以 D 的形状就不对（那是逐分量相乘，没有这种运算）。B、C 是漏加或错算某一项的结果，例如只算前两项得 $4$、或把 $3\times1$ 记成 $2$。自查方法：$|\vec a|=\sqrt{14}$、$|\vec b|=\sqrt6$，则 $\cos\theta=\dfrac{7}{\sqrt{84}}\approx0.764$，夹角约 $40^\circ$，几何上合理。</p>
+            <p class="en" lang="en">A is correct: the dot product multiplies corresponding components and adds, giving $2+2+3=7$, a scalar rather than a vector, so D is malformed. As a check, $\cos\theta=7/\sqrt{84}\approx0.764$, an angle of about $40^\circ$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>两个非零向量 $\vec a$、$\vec b$ 互相垂直的充要条件是 $\vec a\cdot\vec b=0$。</p>
+            <p class="q-stem-en" lang="en">Two nonzero vectors $\vec a$ and $\vec b$ are perpendicular if and only if $\vec a\cdot\vec b=0$.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。由 $\vec a\cdot\vec b=|\vec a||\vec b|\cos\theta$，两个模都不为零时，数量积为零等价于 $\cos\theta=0$，即 $\theta=\dfrac{\pi}{2}$。这里「非零」不能去掉：零向量与任何向量的数量积都是零，但零向量没有方向，谈不上垂直。用坐标写就是 $a_1b_1+a_2b_2+a_3b_3=0$，这是本章判断垂直最常用的工具。</p>
+            <p class="en" lang="en">Correct: since $\vec a\cdot\vec b=|\vec a||\vec b|\cos\theta$, a vanishing dot product forces $\cos\theta=0$. The hypothesis that both vectors are nonzero matters, because the zero vector has no direction.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>设 $\vec a=(1,0,0)$，$\vec b=(0,1,0)$，则 $\vec a\times\vec b=$（　）。</p>
+            <p class="q-stem-en" lang="en">For $\vec a=(1,0,0)$ and $\vec b=(0,1,0)$, $\vec a\times\vec b=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$(0,0,1)$</span></li>
+            <li><span class="opt-body">$(0,0,-1)$</span></li>
+            <li><span class="opt-body">$(1,1,0)$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：按行列式展开 $\vec a\times\vec b=\begin{vmatrix}\vec i&amp;\vec j&amp;\vec k\\1&amp;0&amp;0\\0&amp;1&amp;0\end{vmatrix}=(0\cdot0-0\cdot1,\;0\cdot0-1\cdot0,\;1\cdot1-0\cdot0)=(0,0,1)$。这就是右手系中 $\vec i\times\vec j=\vec k$。<strong>方向</strong>用右手定则自查：四指从 $\vec i$ 转向 $\vec j$，拇指指向 $+z$ ✓。B 是写反了次序的结果（$\vec b\times\vec a$ 才是 $(0,0,-1)$），<strong>向量积不满足交换律</strong>，交换后变号。C 是与数量积混淆了。D 只有两向量平行时向量积才是零向量。</p>
+            <p class="en" lang="en">A is correct, giving the familiar $\vec i\times\vec j=\vec k$ and matching the right-hand rule. B reverses the order, which flips the sign because the cross product is not commutative; C confuses it with the dot product; D would require parallel vectors.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>向量 $\vec a=(1,1,0)$ 与 $\vec b=(1,0,1)$ 的夹角为 ______。（用弧度表示）</p>
+            <p class="q-stem-en" lang="en">The angle between $\vec a=(1,1,0)$ and $\vec b=(1,0,1)$ is ______ (in radians).</p>
+          </div>
+          <div class="q-answer" data-answer="π/3|pi/3|1.0472|1.05"></div>
+          <div class="q-explain">
+            <p>用夹角公式：$\vec a\cdot\vec b=1\times1+1\times0+0\times1=1$；$|\vec a|=\sqrt2$，$|\vec b|=\sqrt2$，故 $\cos\theta=\dfrac{1}{\sqrt2\cdot\sqrt2}=\dfrac{1}{2}$，得 $\theta=\dfrac{\pi}{3}$。<strong>验算</strong>：$\vec a$ 与 $\vec b$ 都是棱长为 $1$ 的正方体面上与坐标轴成 $45^\circ$ 的向量，夹角 $60^\circ$ 与几何直觉一致。常见错法：把 $|\vec a||\vec b|$ 算成 $2\sqrt2$ 或漏掉一个 $\sqrt2$。</p>
+            <p class="en" lang="en">$\vec a\cdot\vec b=1$ and both lengths are $\sqrt2$, so $\cos\theta=1/2$ and $\theta=\pi/3$. The usual slip is mishandling the product of the two lengths.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于平面与空间直线的方程，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about planes and lines in space are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">平面 $Ax+By+Cz+D=0$ 的法向量是 $(A,B,C)$</span></li>
+            <li data-correct="true"><span class="opt-body">直线 $\dfrac{x-x_0}{m}=\dfrac{y-y_0}{n}=\dfrac{z-z_0}{p}$ 的方向向量是 $(m,n,p)$</span></li>
+            <li data-correct="true"><span class="opt-body">直线与平面平行时，直线的方向向量与平面的法向量垂直</span></li>
+            <li><span class="opt-body">两个平面垂直的充要条件是它们的法向量平行</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：平面方程中 $x$、$y$、$z$ 的系数就是法向量。B 对：对称式方程的分母就是方向向量（分母为零时表示该方向的分量为零，需单独处理）。C 对：直线平行于平面意味着方向向量「躺在」平面内，因此与法向量垂直，即数量积为零。D 错：<strong>两平面垂直是法向量互相垂直</strong>（数量积为零），法向量平行才是两平面平行（或重合）。这一对「平行/垂直」与「法向量平行/垂直」的对应关系最容易记反，建议画两个平面与它们的法向量对照记。</p>
+            <p class="en" lang="en">A, B and C are correct: the coefficients give the normal, the denominators give the direction, and a line parallel to a plane has a direction orthogonal to the normal. D reverses the correspondence — perpendicular planes have perpendicular normals, while parallel normals mean parallel planes.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>方程 $x^2+y^2=z^2$ 所表示的曲面是（　）。</p>
+            <p class="q-stem-en" lang="en">The surface $x^2+y^2=z^2$ is a</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">圆锥面</span></li>
+            <li><span class="opt-body">球面</span></li>
+            <li><span class="opt-body">旋转抛物面</span></li>
+            <li><span class="opt-body">圆柱面</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：把它写成 $\dfrac{x^2}{1}+\dfrac{y^2}{1}=\dfrac{z^2}{1}$，用平面 $z=z_0$ 去截，得到的截线是 $x^2+y^2=z_0^2$——半径随 $|z_0|$ 线性增长的圆，曲线族张开成一个圆锥面（顶点在原点，半顶角为 $45^\circ$）。B 错：球面方程是 $x^2+y^2+z^2=R^2$，三项同号且等于常数。C 错：旋转抛物面是 $z=x^2+y^2$，截线半径随 $\sqrt{z}$ 增长。D 错：圆柱面是 $x^2+y^2=R^2$，与 $z$ 无关，截线半径不变。</p>
+            <p class="en" lang="en">A is correct: slicing with $z=z_0$ gives circles whose radius grows linearly with $|z_0|$, producing a cone with vertex at the origin. A sphere has all three squares positive and constant, a paraboloid grows like $\sqrt z$, and a cylinder keeps a fixed radius.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>点 $P(1,1,1)$ 到平面 $2x-y+2z-6=0$ 的距离为（　）。</p>
+            <p class="q-stem-en" lang="en">The distance from $P(1,1,1)$ to the plane $2x-y+2z-6=0$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$3$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{3}$</span></li>
+            <li><span class="opt-body">$2$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：点到平面的距离公式是 $d=\dfrac{|Ax_0+By_0+Cz_0+D|}{\sqrt{A^2+B^2+C^2}}$。代入得分子 $|2\times1-1+2\times1-6|=|-3|=3$，分母 $\sqrt{4+1+4}=3$，故 $d=1$。<strong>注意分子要取绝对值</strong>：本题代入后是 $-3$，若忘记取绝对值会算出 $-1$ 这种不存在的「负距离」。B 是只算了分子没除分母。C 是把分子分母颠倒了。D 可能是把某一步算成了 $6/3$。</p>
+            <p class="en" lang="en">A is correct: $d=|2-1+2-6|/\sqrt{4+1+4}=3/3=1$. Do not forget the absolute value — without it the computation gives $-3$. B stops at the numerator, C inverts the fraction, and D mishandles the arithmetic.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>球面 $x^2+y^2+z^2=1$ 与平面 $z=\dfrac{1}{2}$ 的交线在 $xOy$ 面上的投影曲线方程为（　）。</p>
+            <p class="q-stem-en" lang="en">The projection onto the $xOy$ plane of the intersection of $x^2+y^2+z^2=1$ with $z=\frac12$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$x^2+y^2=\dfrac{3}{4}$（$z=0$）</span></li>
+            <li><span class="opt-body">$x^2+y^2=1$（$z=0$）</span></li>
+            <li><span class="opt-body">$x^2+y^2=\dfrac{1}{4}$（$z=0$）</span></li>
+            <li><span class="opt-body">$x^2+y^2+z^2=1$（$z=0$）</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。求投影的方法是<strong>消去投影方向上的变量</strong>：这里投影到 $xOy$ 面，故从两个方程中消去 $z$。把 $z=\dfrac{1}{2}$ 代入球面方程得 $x^2+y^2+\dfrac{1}{4}=1$，即 $x^2+y^2=\dfrac{3}{4}$；再补上 $z=0$，就是投影柱面与 $xOy$ 面的交线。B 是忘了把 $z$ 代进去，相当于把交线当成了赤道大圆。C 是把 $z=\dfrac{1}{2}$ 代成了 $z^2=\dfrac{1}{2}$ 或减反了。D 只是把原球面方程写在 $z=0$ 面上，既没消元也没化简，不构成投影曲线。几何自查：球半径 $1$、截面高度 $\dfrac{1}{2}$，截面圆半径应为 $\sqrt{1-\dfrac{1}{4}}=\dfrac{\sqrt3}{2}$，平方即 $\dfrac{3}{4}$ ✓。</p>
+            <p class="en" lang="en">A is correct: to project onto $xOy$ eliminate $z$, so substituting $z=\frac12$ into the sphere gives $x^2+y^2=\frac34$, together with $z=0$. B forgets the substitution, C mis-substitutes, and D merely restates the sphere. The radius check $\sqrt{1-\frac14}=\frac{\sqrt3}{2}$ confirms the result.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷的主线是<strong>「两种乘积 + 三类图形」</strong>。前两题问数量积与垂直判据，第三、四题问向量积与夹角（区别在于一个得数、一个得向量），第五、六题把平面、直线与二次曲面串起来，最后两题是考研档：点到平面的距离与投影曲线的求法。</p>
+          <p>最常见的错法有四个。第一，<strong>把数量积与向量积的结果混淆</strong>：前者是数，后者是向量，且向量积不满足交换律（交换变号）。第二，<strong>「平行/垂直」与「法向量平行/垂直」对应记反</strong>：两平面垂直 ⇔ 法向量正交，两平面平行 ⇔ 法向量平行。第三，<strong>距离公式忘了绝对值</strong>，算出负数。第四，<strong>求投影时没消去投影方向的变量</strong>：投影到 $xOy$ 面必须消 $z$，再补 $z=0$。</p>
+          <p>知识之间的联系有三处值得记住。向前，本章完全建立在向量的坐标运算之上，而坐标运算又依赖线性代数的基本工具（行列式展开求向量积、线性方程组求解求交点）——这正是线代与解析几何的交汇处。向后，第 9 章的方向导数与梯度用数量积写成 $\dfrac{\partial f}{\partial \vec l}=\nabla f\cdot\vec e_l$，第 10 章重积分的体积元素与第 11 章曲面积分的 $\mathrm{d}\vec S$ 都直接用本章的向量积来写（如 $\vec n=\vec r_u\times\vec r_v$）。所以本章的两种乘积是后面所有内容的基础工具。</p>
+          <p>下一步建议：若错在前两题，把数量积的定义式与坐标式各写一遍，并记一个具体例子检验；若错在第三、四题，重点练向量积的行列式展开与右手定则自查，做五题；若错在第五、六题，把平面（法向量）、直线（方向向量）、二次曲面（截痕法）写成三行对照表；若错在最后两题，距离公式与「消元求投影」各做三遍，并记住投影曲线必须写成「柱面方程 + $z=0$」的形式。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch7.html"><span class="dir">← 上一页</span><span class="ttl">第 7 章 微分方程</span></a>
         <a class="next" href="ch9.html"><span class="dir">下一页 →</span><span class="ttl">第 9 章 多元函数微分法及其应用</span></a>

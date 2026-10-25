@@ -884,7 +884,154 @@
 
 
 
-                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+                                                                                                                  <h2 id="final">托马斯补充 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">这一份补充测验只覆盖两节：用软件绘图时要提防什么，以及导数作为「变化率」在几何、物理与经济里的用法。8 道题里前两题是绘图的判断力，第三到第六题是变化率的基本运算（球体积、线性化、相关变化率），最后两题是考研档的相关变化率与边际成本。</p>
+        <p class="en" lang="en">This supplementary test covers two sections only: what to watch out for when graphing with software, and how the derivative acts as a rate of change in geometry, physics and economics. The first two items test graphing judgement, the next four are routine rate computations, and the last two are graduate-level related rates and marginal cost.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="tx1-final" data-title="托马斯补充综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>用计算软件绘制 $y=f(x)$ 的图像时，下列说法正确的是（　）。</p>
+            <p class="q-stem-en" lang="en">When graphing $y=f(x)$ with software, which statement is correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">图像能显示哪些特征（渐近线、尖点、周期性）取决于取景窗口与缩放比例的选择</span></li>
+            <li><span class="opt-body">软件画出的图像一定完整反映了函数的全部特征</span></li>
+            <li><span class="opt-body">只要画出图像，就能确定函数的定义域</span></li>
+            <li><span class="opt-body">图像形状与坐标轴的缩放比例无关</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：软件只能在给定的窗口里逐个采样求点再连线，窗口选小了会把远处的趋势切掉，选大了又会把局部细节糊掉——<strong>「看到什么」取决于「看哪里」</strong>，这正是本节要传达的第一件事。B 错：任何图像都是有限窗口内的采样，不可能穷尽全部特征。C 错：定义域是解析性质（分母为零、根号内为负等），图像只能提示不能决定，例如 $y=\dfrac{\sin x}{x}$ 在 $x=0$ 处图像看着连续，实际该点无定义。D 错：缩放比例会改变「看起来的斜率与形状」，纵轴压缩后陡峭的曲线也会显得平缓。</p>
+            <p class="en" lang="en">A is correct: software samples points inside a chosen window, so what you see depends on where you look. B ignores the finiteness of the window, C confuses a visual impression with the analytic domain — $\sin x/x$ looks continuous at $0$ yet is undefined there — and D forgets that scaling distorts apparent slopes.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>若绘图窗口选得过小，可能完全看不到函数在远处的变化趋势，从而对其性态作出误判。</p>
+            <p class="q-stem-en" lang="en">If the graphing window is too small, the behaviour of the function far away may be invisible, leading to a wrong conclusion.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。这是软件绘图最典型的陷阱。例如 $y=\sin(1/x)$ 在 $x$ 靠近 $0$ 处无限振荡，若取景窗口只到 $x=0.01$，图像看起来像一条光滑曲线；又如 $y=x^3-100x$ 若窗口取 $[-5,5]$ 与 $[-20,20]$，会分别看到「有多个极值」与「总体上升」两种完全不同的印象，其实都是同一个函数。所以正确做法是<strong>先做解析分析（求导、看极限），再用图像验证</strong>，而不是反过来由图像下结论。</p>
+            <p class="en" lang="en">Correct — this is the classic graphing trap. $\sin(1/x)$ near $0$ looks smooth in a small window, and the same cubic can look oscillatory or monotone depending on the range chosen. Analyse analytically first, then use the plot to confirm.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>球的半径 $R$ 以 $2\ \mathrm{cm/s}$ 的速率增大。当 $R=5\ \mathrm{cm}$ 时，球体积 $V$ 的增长率为（　）。</p>
+            <p class="q-stem-en" lang="en">The radius of a sphere grows at $2\ \mathrm{cm/s}$. When $R=5\ \mathrm{cm}$, the rate of growth of the volume $V$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$200\pi\ \mathrm{cm^3/s}$</span></li>
+            <li><span class="opt-body">$100\pi\ \mathrm{cm^3/s}$</span></li>
+            <li><span class="opt-body">$40\pi\ \mathrm{cm^3/s}$</span></li>
+            <li><span class="opt-body">$20\pi\ \mathrm{cm^3/s}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：由 $V=\dfrac{4}{3}\pi R^3$，对时间 $t$ 求导（用链式法则）得 $\dfrac{\mathrm{d}V}{\mathrm{d}t}=4\pi R^2\dfrac{\mathrm{d}R}{\mathrm{d}t}$。代入 $R=5$、$\dfrac{\mathrm{d}R}{\mathrm{d}t}=2$，得 $4\pi\cdot25\cdot2=200\pi$。<strong>注意</strong>：不能直接把 $\dfrac{4}{3}\pi R^3$ 里的 $R$ 当成常量求导，也不能忘了 $\dfrac{\mathrm{d}R}{\mathrm{d}t}$ 这个因子——这正是相关变化率题目的核心。B 是漏了 $\dfrac{\mathrm{d}R}{\mathrm{d}t}=2$ 的因子之一。C 是把 $4\pi R$（表面积的一半？）当成了导数。D 是把 $R^2$ 记成了 $R$。</p>
+            <p class="en" lang="en">A is correct: $\mathrm{d}V/\mathrm{d}t=4\pi R^2\,\mathrm{d}R/\mathrm{d}t=4\pi\cdot25\cdot2=200\pi$. The mistake to avoid is treating $R$ as constant or dropping the factor $\mathrm{d}R/\mathrm{d}t$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>设 $y=x^2$，则当 $x=3$ 时 $y$ 关于 $x$ 的变化率为 ______。</p>
+            <p class="q-stem-en" lang="en">For $y=x^2$, the rate of change of $y$ with respect to $x$ at $x=3$ is ______.</p>
+          </div>
+          <div class="q-answer" data-answer="6"></div>
+          <div class="q-explain">
+            <p>答案是 $6$。变化率就是导数：$\dfrac{\mathrm{d}y}{\mathrm{d}x}=2x$，在 $x=3$ 处等于 $6$，意思是「在 $x=3$ 附近，$x$ 每增加一个单位，$y$ 大约增加 $6$ 个单位」。<strong>验算</strong>：$3^2=9$、$3.01^2=9.0601$，增量约 $0.06$，除以 $0.01$ 得 $6$ ✓，与导数一致。常见错法是把 $x=3$ 代入原函数得 $9$（那是函数值，不是变化率），或者把导数算成 $x$（漏了系数 $2$）。</p>
+            <p class="en" lang="en">The answer is $6$: $y'=2x$ evaluated at $3$. A numerical check with $3.01$ gives a difference quotient of about $6$. Substituting into the function gives a value, not a rate.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于导数作为变化率，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about the derivative as a rate of change are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $s(t)$ 是位置，则 $s'(t)$ 是速度、$s''(t)$ 是加速度</span></li>
+            <li data-correct="true"><span class="opt-body">若 $f'(x_0)=0$，则 $f$ 在 $x_0$ 处的瞬时变化率为零</span></li>
+            <li data-correct="true"><span class="opt-body">相关变化率问题中，两个量的变化率通过链式法则联系起来</span></li>
+            <li><span class="opt-body">变化率一定是不随时间变化的常数</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这是导数的运动学解释，逐阶求导对应位置、速度、加速度。B 对：导数为零正是「瞬时变化率为零」，几何上表现为切线水平。C 对：相关变化率的标准做法就是对约束关系（如 $V=\dfrac{4}{3}\pi R^3$）两边同时对 $t$ 求导，链式法则会自动带出 $\dfrac{\mathrm{d}R}{\mathrm{d}t}$，这正是上一题的做法。D 错：变化率一般随位置或时间改变（$y=x^2$ 在 $x=3$ 处是 $6$，在 $x=10$ 处是 $20$），只有在常函数或线性函数的特殊情形下才是常数。</p>
+            <p class="en" lang="en">A, B and C are correct: the derivative gives velocity and acceleration, vanishing derivative means zero instantaneous rate, and related rates come from differentiating the constraint in $t$. D is false because rates generally vary with position.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>用线性化近似 $\sqrt{1+x}$ 在 $x=0$ 附近的值，一次近似式为（　）。</p>
+            <p class="q-stem-en" lang="en">The linear approximation of $\sqrt{1+x}$ near $x=0$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$1+\dfrac{x}{2}$</span></li>
+            <li><span class="opt-body">$1+x$</span></li>
+            <li><span class="opt-body">$1+\dfrac{x}{4}$</span></li>
+            <li><span class="opt-body">$\dfrac{x}{2}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：线性化公式是 $L(x)=f(a)+f'(a)(x-a)$。取 $a=0$、$f(x)=\sqrt{1+x}$，则 $f(0)=1$，$f'(x)=\dfrac{1}{2\sqrt{1+x}}$、$f'(0)=\dfrac{1}{2}$，故 $L(x)=1+\dfrac{x}{2}$。<strong>验算</strong>：$x=0.02$ 时 $\sqrt{1.02}\approx1.00995$，而 $1+0.01=1.01$，误差约 $10^{-5}$ 量级 ✓。B 是把导数当成了 $1$（那是 $\sqrt{x}$ 在 $x=1$ 处的导数）。C 是把 $\dfrac{1}{2}$ 又除了一次。D 漏掉了常数项 $f(0)=1$。</p>
+            <p class="en" lang="en">A is correct: $f(0)=1$ and $f'(0)=\frac12$, so $L(x)=1+\frac x2$; at $x=0.02$ it agrees with $\sqrt{1.02}$ to four decimals. B uses the derivative of $\sqrt x$ at $1$, C divides twice, and D omits the constant term.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>一个气球以 $100\ \mathrm{cm^3/s}$ 的速率充气。当球的半径为 $5\ \mathrm{cm}$ 时，半径的增长率为（　）。</p>
+            <p class="q-stem-en" lang="en">A balloon is inflated at $100\ \mathrm{cm^3/s}$. When its radius is $5\ \mathrm{cm}$, the radius grows at</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{1}{\pi}\ \mathrm{cm/s}$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{4\pi}\ \mathrm{cm/s}$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{2\pi}\ \mathrm{cm/s}$</span></li>
+            <li><span class="opt-body">$\dfrac{4}{5}\pi\ \mathrm{cm/s}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。约束关系是 $V=\dfrac{4}{3}\pi R^3$，两边对 $t$ 求导得 $\dfrac{\mathrm{d}V}{\mathrm{d}t}=4\pi R^2\dfrac{\mathrm{d}R}{\mathrm{d}t}$。<strong>已知 $\dfrac{\mathrm{d}V}{\mathrm{d}t}=100$、$R=5$</strong>，代入得 $100=4\pi\cdot25\cdot\dfrac{\mathrm{d}R}{\mathrm{d}t}=100\pi\dfrac{\mathrm{d}R}{\mathrm{d}t}$，故 $\dfrac{\mathrm{d}R}{\mathrm{d}t}=\dfrac{1}{\pi}\approx0.318$。<strong>注意与上上题的区别</strong>：那题给的是 $\dfrac{\mathrm{d}R}{\mathrm{d}t}$ 求 $\dfrac{\mathrm{d}V}{\mathrm{d}t}$，这题反过来，但用的仍是同一个公式。B 是分母多算了一个 $4$（把 $R^2$ 记成了 $R^3$）。C 是分母少了 $2$。D 是把式子倒过来乘了错的系数。</p>
+            <p class="en" lang="en">A is correct: differentiating $V=\frac43\pi R^3$ gives $100=100\pi\,\mathrm{d}R/\mathrm{d}t$, so $\mathrm{d}R/\mathrm{d}t=1/\pi$. B and C use the wrong power of $R$, and D inverts the relation incorrectly.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设某产品的总成本为 $C(x)=x^2+10x+100$（元），其中 $x$ 为产量。当产量 $x=10$ 时的边际成本为（　）。</p>
+            <p class="q-stem-en" lang="en">If total cost is $C(x)=x^2+10x+100$ (yuan) for output $x$, the marginal cost at $x=10$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$30$ 元</span></li>
+            <li><span class="opt-body">$300$ 元</span></li>
+            <li><span class="opt-body">$20$ 元</span></li>
+            <li><span class="opt-body">$120$ 元</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：边际成本就是成本的导数 $C'(x)$——它表示「再多生产一个单位时总成本增加多少」。$C'(x)=2x+10$，代入 $x=10$ 得 $30$ 元。<strong>数值核对</strong>：$C(10)=100+100+100=300$，$C(11)=121+110+100=331$，多生产一个单位实际多花 $31$ 元，与导数值 $30$ 相差 $1$，正是「导数给出的是近似值」的体现（对二次函数，差值是二阶导的一半）。B 是算成了总成本 $C(10)=300$。C 是只算了 $2x$ 而漏掉常数项 $10$。D 是 $C'(10)$ 与 $C(10)$ 混算的结果。</p>
+            <p class="en" lang="en">A is correct: marginal cost is $C'(x)=2x+10$, giving $30$ at $x=10$. Checking numerically, $C(11)-C(10)=31$, so the derivative approximates the true increment. B reports the total cost, C drops the constant term, and D mixes the two.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一份补充测验只有两条主线——<strong>「软件绘图要看窗口」</strong>与<strong>「导数是变化率」</strong>。前两题训练的是对图像的批判性阅读：软件只能采样，看不到的地方不等于不存在。第三到第六题是变化率的标准运算：链式法则、线性化、以及「变化率」与「函数值」的区别，最后两题是考研与应用的常见形态——相关变化率与边际成本。</p>
+          <p>最常见的错法有四个。第一，<strong>由图像直接下结论</strong>：窗口外的行为一概不知，尖点、渐近线可能被采样跳过，必须先用解析方法（求导、求极限）判断。第二，<strong>相关变化率漏掉链式因子</strong>：对 $V=\dfrac{4}{3}\pi R^3$ 直接求导写成 $4\pi R^2$ 而不乘 $\dfrac{\mathrm{d}R}{\mathrm{d}t}$，是这一节最集中的错误。第三，<strong>把变化率与函数值混淆</strong>：$x=3$ 时 $y=x^2$ 的变化率是 $6$ 而不是 $9$。第四，<strong>线性化漏掉常数项</strong>：$L(x)=f(a)+f'(a)(x-a)$ 里那个 $f(a)$ 不能省。</p>
+          <p>知识之间的联系有三处值得记住。向前，本节完全建立在第 2 章的导数与第 3 章的切线之上——线性化就是「用切线代替曲线」，而相关变化率就是链式法则的实际应用；绘图部分则呼应第 3 章的图形描绘（单调性、凹凸、渐近线），只不过把纸笔换成了软件。向后，这套变化率的语言在多元情形下变成第 9 章的方向导数与梯度，在积分情形下变成第 4、5 章的「变化率的累积」——微积分基本定理说的正是「积分是变化率的累加」。再往后，微分方程（第 7 章）研究的对象就是「已知变化率求函数」。</p>
+          <p>下一步建议：若错在前两题，请找三个「窗口不同则印象不同」的函数各画两幅图对比，体会采样的局限；若错在第三、七题，相关变化率固定走「写出约束、两边对 $t$ 求导、代入已知量」三步，练五题；若错在第四、六题，把「变化率 = 导数 ≠ 函数值」与线性化公式各写一遍；若错在最后一题，请把边际成本、边际收入、边际利润三个概念放到一起对照记忆。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch12.html"><span class="dir">← 上一页</span><span class="ttl">第 12 章 无穷级数</span></a>
         <a class="next" href="../cheatsheet.html"><span class="dir">下一页 →</span><span class="ttl">公式速查表</span></a>

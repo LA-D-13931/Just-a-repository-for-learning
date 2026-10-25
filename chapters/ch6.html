@@ -1393,7 +1393,154 @@
 
 
 
-                                                                                                                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+                                                                                                                                                                                                                  <h2 id="final">第 6 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前两题考元素法的思路与面积公式成立的条件，第三到第六题是几何应用的基本功（旋转体体积、两曲线间的面积、弧长公式、极坐标面积），最后两题是考研档：需要分部积分的弧长计算与函数平均值。做题时先画图、再定积分变量与积分限。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first two test the element method and when the area formula applies, the next four are standard geometric applications (solids of revolution, area between curves, arc length formulas, polar area), and the last two are graduate-level — an arc length needing integration by parts and the mean value of a function.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch6-final" data-title="第 6 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>用定积分解决几何或物理问题时，「元素法」的核心做法是（　）。</p>
+            <p class="q-stem-en" lang="en">The core idea of the element method in applying definite integrals is to</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">把所求量拆成一小段上的近似值（微元），再对全体微元求积分取极限</span></li>
+            <li><span class="opt-body">先求出所求量的导数，再从这个导数反推原量</span></li>
+            <li><span class="opt-body">直接把公式中的长度换成区间长度即可</span></li>
+            <li><span class="opt-body">用区间中点处的函数值代替整段上的值</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对，这是元素法的规范表述：分割、近似、求和、取极限。关键在于把「微元」写成 $f(x)\,\mathrm{d}x$ 的形式——它必须与真实小区间上的量相差 $o(\mathrm{d}x)$，否则积分出来的结果是错的。B 描述的是不定积分与导数互逆，不是元素法。C 忽略了「每一段的被积函数值随位置变化」。D 只是构造黎曼和的一种取点方式（中点法），不能作为通用方法。</p>
+            <p class="en" lang="en">A is the standard formulation: cut, approximate, sum, take the limit, with the element written as $f(x)\mathrm{d}x$ up to $o(\mathrm{d}x)$. B describes the inverse relationship of derivative and integral, C ignores that the integrand varies along the interval, and D is only one way of choosing sample points.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>由曲线 $y=f(x)$、$x$ 轴以及 $x=a$、$x=b$ 所围成图形的面积一定等于 $\displaystyle\int_a^b f(x)\,\mathrm{d}x$。</p>
+            <p class="q-stem-en" lang="en">The area bounded by $y=f(x)$, the $x$-axis and the lines $x=a$, $x=b$ always equals $\displaystyle\int_a^b f(x)\,\mathrm{d}x$.</p>
+          </div>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>错误。这个等式只在 $f(x)\ge0$ 恒成立时才是面积；一旦 $f$ 在部分区间上取负值，定积分算的是<strong>代数面积</strong>（正负相抵），而面积必须取绝对值：$S=\displaystyle\int_a^b|f(x)|\mathrm{d}x$。例如 $f(x)=x$ 在 $[-1,1]$ 上积分得 $0$，可这块图形的面积明明是 $1$。所以做题时必须先看图形是否跨过 $x$ 轴，跨过就要分段。</p>
+            <p class="en" lang="en">False. The identity holds only when $f\ge0$; where $f$ is negative the integral gives a signed area and the true area needs $|f(x)|$. With $f(x)=x$ on $[-1,1]$ the integral vanishes while the enclosed area is $1$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>曲线 $y=x^2$（$0\le x\le1$）与 $x$ 轴及直线 $x=1$ 围成的图形绕 $x$ 轴旋转一周，所得旋转体的体积为（　）。</p>
+            <p class="q-stem-en" lang="en">The region bounded by $y=x^2$, the $x$-axis and $x=1$ ($0\le x\le1$) is rotated about the $x$-axis. The volume is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{\pi}{5}$</span></li>
+            <li><span class="opt-body">$\dfrac{\pi}{3}$</span></li>
+            <li><span class="opt-body">$\dfrac{\pi}{4}$</span></li>
+            <li><span class="opt-body">$\dfrac{2\pi}{5}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：绕 $x$ 轴旋转的体积微元是 $\mathrm{d}V=\pi y^2\,\mathrm{d}x$，故 $V=\pi\displaystyle\int_0^1x^4\,\mathrm{d}x=\pi\cdot\dfrac{1}{5}=\dfrac{\pi}{5}$。<strong>注意被积函数是 $y^2=x^4$</strong>，不是 $y=x^2$——这是本题最大的陷阱。B 是把被积函数当成 $y=x^2$ 积分的结果（$\dfrac{\pi}{3}$）。C 是被积函数当成 $x^3$（$\dfrac{\pi}{4}$）。D 漏了 $\dfrac{1}{2}$ 或把上限算错。</p>
+            <p class="en" lang="en">A is correct: the element is $\pi y^2\mathrm{d}x$, so $V=\pi\int_0^1x^4\mathrm{d}x=\pi/5$. The trap is to integrate $y=x^2$ instead of $y^2=x^4$, which produces $\pi/3$ as in B.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>由曲线 $y=x$ 与 $y=x^2$ 所围成的图形面积为 ______。</p>
+            <p class="q-stem-en" lang="en">The area enclosed by $y=x$ and $y=x^2$ is ______.</p>
+          </div>
+          <div class="q-answer" data-answer="1/6|0.1667|1/6."></div>
+          <div class="q-explain">
+            <p>先求交点：解 $x=x^2$ 得 $x=0$ 与 $x=1$，故积分区间是 $[0,1]$。在 $(0,1)$ 内 $x&gt;x^2$，上减下得 $\displaystyle\int_0^1(x-x^2)\mathrm{d}x=\dfrac{1}{2}-\dfrac{1}{3}=\dfrac{1}{6}$。<strong>验算</strong>：这块区域完全落在单位正方形内，$\dfrac{1}{6}\approx0.167$ 数量级合理。常见错法：一是把上下曲线弄反（结果变成 $-\dfrac{1}{6}$，面积为正应取绝对值）；二是积分限用了 $[0,\infty)$ 或忘了求交点。</p>
+            <p class="en" lang="en">The curves meet at $x=0$ and $x=1$, and $x&gt;x^2$ in between, so the area is $\int_0^1(x-x^2)\mathrm{d}x=1/6$. Watch for reversing the two curves, which yields a negative value.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于平面曲线的弧长公式，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which arc length formulas are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">直角坐标 $y=f(x)$（$a\le x\le b$）的弧长为 $\displaystyle\int_a^b\sqrt{1+y'^2}\,\mathrm{d}x$</span></li>
+            <li data-correct="true"><span class="opt-body">参数方程 $x=x(t)$、$y=y(t)$（$\alpha\le t\le\beta$）的弧长为 $\displaystyle\int_\alpha^\beta\sqrt{x'^2+y'^2}\,\mathrm{d}t$</span></li>
+            <li data-correct="true"><span class="opt-body">极坐标 $r=r(\theta)$（$\alpha\le\theta\le\beta$）的弧长为 $\displaystyle\int_\alpha^\beta\sqrt{r^2+r'^2}\,\mathrm{d}\theta$</span></li>
+            <li><span class="opt-body">弧长总等于两端点之间的直线距离</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这是弧长微元 $\mathrm{d}s=\sqrt{\mathrm{d}x^2+\mathrm{d}y^2}$ 在 $y$ 是 $x$ 的函数时的写法。B 对：同一微元在参数形式下的写法，$\mathrm{d}s=\sqrt{x'^2+y'^2}\mathrm{d}t$。C 对：极坐标下 $\mathrm{d}s=\sqrt{\mathrm{d}r^2+(r\,\mathrm{d}\theta)^2}=\sqrt{r'^2+r^2}\mathrm{d}\theta$，注意被开方式里是<strong>两项相加</strong>，容易错写成相减。D 错：弧长只有在曲线是直线段时才等于弦长，一般严格大于弦长（这正是「曲线比直线长」的解析表述）。</p>
+            <p class="en" lang="en">A, B and C are the three standard forms of $\mathrm{d}s=\sqrt{\mathrm{d}x^2+\mathrm{d}y^2}$ in Cartesian, parametric and polar coordinates — note that the polar form has a plus sign between $r'^2$ and $r^2$. D fails because arc length exceeds chord length except for a straight segment.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>极坐标曲线 $r=a$（$a&gt;0$，常数）所围成图形的面积为（　）。</p>
+            <p class="q-stem-en" lang="en">The area enclosed by the polar curve $r=a$ (constant, $a&gt;0$) is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\pi a^2$</span></li>
+            <li><span class="opt-body">$2\pi a$</span></li>
+            <li><span class="opt-body">$\dfrac{\pi a^2}{2}$</span></li>
+            <li><span class="opt-body">$a^2$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：极坐标面积微元是 $\mathrm{d}S=\dfrac{1}{2}r^2\,\mathrm{d}\theta$（扇形面积 $\dfrac{1}{2}r^2\theta$ 的微分形式），故 $S=\dfrac{1}{2}\displaystyle\int_0^{2\pi}a^2\mathrm{d}\theta=\dfrac{1}{2}a^2\cdot2\pi=\pi a^2$——就是半径 $a$ 的圆面积，与几何直觉一致。B 算的是周长 $2\pi a$，把面积与周长弄混了。C 漏乘了 $2\pi$ 中的一半（把积分限当成了 $\pi$）。D 少了 $\pi$。这道题的价值在于用最简单的情形检验公式：若你的结果不是 $\pi a^2$，说明公式里的 $\dfrac{1}{2}$ 或积分限有误。</p>
+            <p class="en" lang="en">A is correct: the element is $\frac12r^2\mathrm{d}\theta$, giving $\pi a^2$, the familiar circle area. B computes the circumference, C uses half the range, and D drops $\pi$. This trivial case is a good sanity check on the factor $\frac12$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>曲线 $y=x^2$ 从点 $(0,0)$ 到点 $(1,1)$ 的弧长为（　）。</p>
+            <p class="q-stem-en" lang="en">The arc length of $y=x^2$ from $(0,0)$ to $(1,1)$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{\sqrt5}{2}+\dfrac{1}{4}\ln(2+\sqrt5)$</span></li>
+            <li><span class="opt-body">$\dfrac{\sqrt5}{2}$</span></li>
+            <li><span class="opt-body">$\sqrt5+\ln(2+\sqrt5)$</span></li>
+            <li><span class="opt-body">$\dfrac{\sqrt5}{4}+\dfrac{1}{2}\ln(2+\sqrt5)$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。$y'=2x$，弧长 $L=\displaystyle\int_0^1\sqrt{1+4x^2}\,\mathrm{d}x$。设 $2x=\tan t$ 或用公式 $\displaystyle\int\sqrt{x^2+a^2}\mathrm{d}x=\dfrac{x}{2}\sqrt{x^2+a^2}+\dfrac{a^2}{2}\ln(x+\sqrt{x^2+a^2})$，代入 $x=2u$ 整理得 $L=\left[\dfrac{x}{2}\sqrt{1+4x^2}+\dfrac{1}{4}\ln(2x+\sqrt{1+4x^2})\right]_0^1=\dfrac{\sqrt5}{2}+\dfrac{1}{4}\ln(2+\sqrt5)$。<strong>量级自查</strong>：两端点之间的直线距离是 $\sqrt2\approx1.414$，弧长必须略大于它，而 A 的数值约为 $1.118+0.361=1.479$，落在 $1.414$ 与 $1.5$ 之间 ✓。算完务必与弦长比一比——这是检验弧长答案是否离谱最快的方法。B 漏了第二项（对数项）。C 各项系数都大了一倍。D 是 A 的一半，像是把 $\dfrac{1}{2}$ 提前约掉了。正确做法是把原函数完整求出后再代上下限，不要中途约分。</p>
+            <p class="en" lang="en">A is correct, obtained from $\int_0^1\sqrt{1+4x^2}\mathrm{d}x$ with the standard formula for $\int\sqrt{x^2+a^2}\mathrm{d}x$, evaluated as $\frac{\sqrt5}{2}+\frac14\ln(2+\sqrt5)$. Always compare with the chord length $\sqrt2$ as a sanity check. B drops the logarithmic term, C doubles every coefficient, and D halves A.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>函数 $f(x)=x^2$ 在区间 $[0,3]$ 上的平均值为（　）。</p>
+            <p class="q-stem-en" lang="en">The mean value of $f(x)=x^2$ on $[0,3]$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$3$</span></li>
+            <li><span class="opt-body">$9$</span></li>
+            <li><span class="opt-body">$\dfrac{9}{2}$</span></li>
+            <li><span class="opt-body">$1$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：平均值定义为 $\bar f=\dfrac{1}{b-a}\displaystyle\int_a^b f(x)\mathrm{d}x$，故 $\bar f=\dfrac{1}{3}\displaystyle\int_0^3x^2\mathrm{d}x=\dfrac{1}{3}\cdot9=3$。<strong>验算</strong>：$x^2$ 在 $[0,3]$ 上从 $0$ 增到 $9$，平均值 $3$ 落在中间偏下，符合「平方函数增长越来越快」的直觉。B 是积分值 $9$ 本身，忘了除以区间长度。C 是除以 $2$（把下限当成 $1$ 或把长度算成 $2$）。D 可能是把平均值误记成 $\displaystyle\int_0^1f(x)\mathrm{d}x$ 的结果。</p>
+            <p class="en" lang="en">A is correct: $\bar f=\frac{1}{b-a}\int_a^b f=\frac13\int_0^3x^2\mathrm{d}x=3$. B reports the integral itself without dividing by the interval length, C divides by $2$, and D confuses the mean with a unit-interval value.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷的主线是<strong>「先画图列式，再算积分」</strong>。前两题问方法与条件（元素法的四个步骤、面积公式什么时候才等于定积分），第三到第六题是四个标准模型：绕轴旋转的体积、两曲线间的面积、三种坐标下的弧长、极坐标面积，最后两题把难度抬到考研档：需要标准积分公式的弧长，以及函数平均值的定义。</p>
+          <p>最常见的错法有四个。第一，<strong>旋转体体积里被积函数忘了平方</strong>：微元是 $\pi y^2\mathrm{d}x$，不是 $\pi y\,\mathrm{d}x$。第二，<strong>面积算成代数面积</strong>：图形跨过 $x$ 轴时必须分段或取绝对值。第三，<strong>极坐标弧长或面积的常数记错</strong>：面积是 $\dfrac{1}{2}\displaystyle\int r^2\mathrm{d}\theta$，弧长是 $\displaystyle\int\sqrt{r^2+r'^2}\mathrm{d}\theta$，前者的 $\dfrac{1}{2}$ 与后者的「两项相加」都极易漏。第四，<strong>平均值忘了除以区间长度</strong>。</p>
+          <p>知识之间的联系有三处值得记住。向前，本章所有公式都来自第 5 章的定积分与第 4 章的积分技巧——弧长那题就要用换元与对数型原函数，这与第 4 章的公式表直接相关。向后，第 7 章解微分方程后会遇到「由曲线围成的区域」这类问题，第 10 章的二重积分把「面积、体积」推广到区域上的积分，第 11 章的曲线积分则把本章的弧长微元 $\mathrm{d}s$ 变成了被积表达式的一部分（第一类曲线积分就是以 $\mathrm{d}s$ 为微元）。所以本章的 $\mathrm{d}s$、$\mathrm{d}S$、$\mathrm{d}V$ 三个微元值得背熟。</p>
+          <p>下一步建议：若错在前两题，把元素法的四步与「面积 = $\displaystyle\int|f|$」各写一遍；若错在第三到第六题，请把三个微元写成一张卡片——$\mathrm{d}V=\pi y^2\mathrm{d}x$（绕 $x$ 轴）、$\mathrm{d}S=\dfrac{1}{2}r^2\mathrm{d}\theta$（极坐标）、$\mathrm{d}s=\sqrt{1+y'^2}\mathrm{d}x$（直角坐标），每天默写一遍；若错在最后两题，弧长那题建议先把 $\displaystyle\int\sqrt{x^2+a^2}\mathrm{d}x$ 的公式推一遍再代入，平均值那题则记住「先积分、再除以区间长度」这个顺序。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch5.html"><span class="dir">← 上一页</span><span class="ttl">第 5 章 定积分</span></a>
         <a class="next" href="ch7.html"><span class="dir">下一页 →</span><span class="ttl">第 7 章 微分方程</span></a>
