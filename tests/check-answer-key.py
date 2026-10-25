@@ -157,7 +157,62 @@ def main():
         print('  ✗ 请逐题核对：以解析的数学推导为准修正 data-correct 的位置')
         return 1
     print('  ✓ 答案键与解析一致')
+
+    fb = check_fill_blanks()
+    if fb:
+        print()
+        print(f'  ✗ 有 {len(fb)} 道填空题的多空答案写不全（用户填对也会被判错）：')
+        for x in fb:
+            print('    ·', x)
+        print('    修法：把全部空的答案写成一个完整分支，如 data-answer="0.02;0.0201;0.0001"')
+        return 1
+    print('  ✓ 填空题多空答案完整')
     return 0
+
+
+
+# ---------------------------------------------------------------------------
+# 填空题多空答案的完整性（2026-10-25 补）
+#
+# 判分器（quiz.js acceptedAnswers）是 raw.split('|') 后**整串比对**：
+# 没有 data-blanks 时必须把全部空的答案写成一整串才算对。
+# 踩过的坑：ch2 的「dy、Δy、|Δy-dy|」三空题，data-answer 只写了
+#   0.02|0.02;0.0201|0.0201;0.0001|0.0001|1e-4
+# 四个分支里没有一个是完整三空形式，用户填 "0.02;0.0201;0.0001"（完全正确）
+# 却被判错。本检查要求：中文题干有 n≥2 个空时，至少有一个 | 分支能拆成 n 段
+# （分隔符认 ; , 、 或空格）。
+# ---------------------------------------------------------------------------
+def check_fill_blanks():
+    import glob as _glob, re as _re
+    bad = []
+    for f in sorted(_glob.glob(os.path.join(ROOT, 'chapters', '*.html'))) + \
+             sorted(_glob.glob(os.path.join(ROOT, '*.html'))):
+        s = open(f, encoding='utf-8').read()
+        for m in _re.finditer(r'<div class="q" data-type="fill"([\s\S]*?)<div class="q-answer"([^>]*)>', s):
+            body, attrs = m.group(1), m.group(2)
+            if 'data-blanks' in attrs:      # 每空独立输入框，不适用整串比对
+                continue
+            am = _re.search(r'data-answer="([^"]*)"', attrs)
+            if not am:
+                continue
+            zm = _re.search(r'<div class="q-stem">([\s\S]*?)</div>', body)
+            if not zm:
+                continue
+            pm = _re.search(r'<p>(?!<p class="q-stem-en")[\s\S]*?</p>', zm.group(1))
+            zh = pm.group(0) if pm else zm.group(1)
+            nb = len(_re.findall(r'_{5,}', zh))
+            if nb < 2:
+                continue
+            best = 0
+            for part in am.group(1).split('|'):
+                n = len([x for x in _re.split(r'[;,、]|\s+', part) if x])
+                if n > best:
+                    best = n
+            if best < nb:
+                line = s[:m.start()].count("\n") + 1
+                bad.append("%s:%d 题干 %d 空，但 data-answer 最长分支只有 %d 段" %
+                           (os.path.relpath(f, ROOT), line, nb, best))
+    return bad
 
 
 if __name__ == '__main__':

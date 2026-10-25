@@ -3392,7 +3392,154 @@
       </div>
 
 
-                                                                                                                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+                                                                                                                                                                                                                  <h2 id="final">第 7 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前三题考基本概念与可分离变量方程，第四到第六题是二阶常系数线性方程的三种情形（齐次通解、非齐次特解、定解条件），最后两题是考研级的欧拉方程与共振特解。做题时先判断「这是哪一类方程」，再决定用分离变量、常数变易还是待定系数。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first three test basic concepts and separable equations, the next three handle second-order constant-coefficient equations (homogeneous general solution, particular solution, initial conditions), and the last two are at graduate-entrance level — Euler equations and resonance. Identify the type of equation first, then choose separation of variables, variation of parameters, or undetermined coefficients.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch7-final" data-title="第 7 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>下列微分方程中，阶数为 $2$ 的是（　）。</p>
+            <p class="q-stem-en" lang="en">Which of the following differential equations has order $2$?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$y''+3y'+2y=0$</span></li>
+            <li><span class="opt-body">$y'=x^2$</span></li>
+            <li><span class="opt-body">$(y')^2+y=1$</span></li>
+            <li><span class="opt-body">$y'''=0$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：方程中出现的最高阶导数是 $y''$，故为二阶。B 只含 $y'$，一阶。C 里 $(y')^2$ 是把一阶导数平方，导数阶数仍是一阶，只是次数为二——「阶」看导数求了几次，不看它的幂次，这是本题最容易栽的地方。D 含 $y'''$，是三阶。</p>
+            <p class="en" lang="en">A is correct: the highest derivative present is $y''$. B has order one; C also has order one, since $(y')^2$ squares a first derivative — the order counts how many times you differentiate, not the power. D is third order.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>$n$ 阶微分方程的通解中含有 $n$ 个相互独立的任意常数。</p>
+            <p class="q-stem-en" lang="en">The general solution of an $n$-th order differential equation contains $n$ mutually independent arbitrary constants.</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。这就是通解的定义要求：常数的个数等于阶数，且必须<strong>相互独立</strong>——$C_1+C_2$ 与 $C_1-C_2$ 只能算两个，不能把 $C_1+C_2$ 再当成第三个。二阶方程带两个独立常数，正好由两个定解条件（通常是 $y(x_0)$ 与 $y'(x_0)$）唯一确定一个特解。</p>
+            <p class="en" lang="en">Correct: the number of arbitrary constants equals the order, and they must be independent — $C_1+C_2$ and $C_1-C_2$ still count as two. Two independent constants on a second-order equation are exactly what two initial conditions fix.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>方程 $y'=2xy$ 的通解是（　）。</p>
+            <p class="q-stem-en" lang="en">The general solution of $y'=2xy$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$y=Ce^{x^2}$</span></li>
+            <li><span class="opt-body">$y=e^{x^2}+C$</span></li>
+            <li><span class="opt-body">$y=Ce^{2x}$</span></li>
+            <li><span class="opt-body">$y=Cx^2$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：分离变量得 $\dfrac{\mathrm{d}y}{y}=2x\,\mathrm{d}x$，两边积分 $\ln|y|=x^2+C_1$，取指数得 $y=Ce^{x^2}$（$C=\pm e^{C_1}$）。B 把任意常数加在了外面——只有写成指数上的常数才是乘性因子，加在外面不是解。C 把 $\int 2x\,\mathrm{d}x$ 算成了 $2x$，应为 $x^2$。D 完全不符：把右边当成常数项积分了。</p>
+            <p class="en" lang="en">A is correct: $\mathrm{d}y/y=2x\,\mathrm{d}x$ gives $\ln|y|=x^2+C_1$, hence $y=Ce^{x^2}$. B puts the constant outside the exponential where it does not belong; C integrates $2x$ as $2x$ instead of $x^2$; D treats the right side as a constant.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>方程 $y''-3y'+2y=0$ 的通解为 $y=C_1e^{x}+C_2e^{2x}$。若满足 $y(0)=0$、$y'(0)=1$，则 $C_1=$ ______。</p>
+            <p class="q-stem-en" lang="en">The general solution of $y''-3y'+2y=0$ is $y=C_1e^{x}+C_2e^{2x}$. If $y(0)=0$ and $y'(0)=1$, then $C_1=$ ______.</p>
+          </div>
+          <div class="q-answer" data-answer="-1|−1"></div>
+          <div class="q-explain">
+            <p>$y(0)=C_1+C_2=0$；$y'=C_1e^x+2C_2e^{2x}$，故 $y'(0)=C_1+2C_2=1$。两式相减得 $C_2=1$，再由第一式得 $C_1=-1$。<strong>验算</strong>：$y=-e^x+e^{2x}$，$y(0)=-1+1=0$ ✓，$y'=-e^x+2e^{2x}$，$y'(0)=-1+2=1$ ✓。常见错法是直接把 $y(0)=0$ 代进含 $e^0$ 的式子后漏看第二个条件，只解出 $C_1=-C_2$ 就停手。</p>
+            <p class="en" lang="en">$C_1+C_2=0$ and $C_1+2C_2=1$ give $C_2=1$ and $C_1=-1$. Check: $y=-e^x+e^{2x}$ satisfies $y(0)=0$ and $y'(0)=1$. The usual slip is to solve only the first condition and stop at $C_1=-C_2$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>设 $y''+py'+qy=0$，其特征方程为 $r^2+pr+q=0$。下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">For $y''+py'+qy=0$ with characteristic equation $r^2+pr+q=0$, which statements are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">特征根为两个相异实根 $r_1\ne r_2$ 时，通解为 $C_1e^{r_1x}+C_2e^{r_2x}$</span></li>
+            <li data-correct="true"><span class="opt-body">特征根为二重实根 $r$ 时，通解为 $(C_1+C_2x)e^{rx}$</span></li>
+            <li data-correct="true"><span class="opt-body">特征根为一对共轭复根 $\alpha\pm\beta i$ 时，通解为 $e^{\alpha x}(C_1\cos\beta x+C_2\sin\beta x)$</span></li>
+            <li><span class="opt-body">特征根为共轭复根时，通解可以直接写成 $C_1e^{(\alpha+\beta i)x}+C_2e^{(\alpha-\beta i)x}$（$C_1$、$C_2$ 为任意实常数）</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A、B、C 是二阶常系数齐次方程通解的三种标准情形，按判别式 $\Delta=p^2-4q$ 的正、零、负分别对应。D 错在「实常数」三个字：$e^{(\alpha\pm\beta i)x}$ 是复值函数，要凑出实值解必须让两个常数取共轭复数，写出来的实值形式就是 C 选项那个样子。把复值解当成最终答案，等于没有落到实数域上。</p>
+            <p class="en" lang="en">A, B and C are the three standard cases, keyed to the sign of $\Delta=p^2-4q$. D is wrong because $C_1$, $C_2$ cannot both be real: the exponentials are complex-valued, and a real solution requires conjugate constants, which is exactly form C.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>方程 $y''-3y'+2y=e^{x}$ 的一个特解应设为（　）。</p>
+            <p class="q-stem-en" lang="en">A particular solution of $y''-3y'+2y=e^{x}$ should be taken in the form</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$y^*=Axe^{x}$</span></li>
+            <li><span class="opt-body">$y^*=Ae^{x}$</span></li>
+            <li><span class="opt-body">$y^*=Ax^2e^{x}$</span></li>
+            <li><span class="opt-body">$y^*=A$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。先看齐次部分的特征根：$r^2-3r+2=0$ 给出 $r=1,2$。右端是 $e^{x}$，指数上的系数 $1$ <strong>恰是单重特征根</strong>，属于共振情形，所以要在标准形式 $Ae^{x}$ 上多乘一个 $x$。B 与齐次通解里的 $C_1e^{x}$ 同形，代入左端必为 $0$，永远凑不出 $e^x$。C 乘了两次 $x$，那是特征根为二重根时该用的（此处不是）。D 代入左端得常数 $2A$，与 $e^x$ 不同类。</p>
+            <p class="en" lang="en">A is correct: the characteristic roots are $1$ and $2$, and the exponent in $e^x$ matches a simple root, so resonance forces one extra factor $x$. B duplicates a homogeneous solution and always yields zero; C takes two factors, which is only for a double root; D cannot match $e^x$ at all.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>欧拉方程 $x^2y''+xy'-y=0$（$x&gt;0$）的通解是（　）。</p>
+            <p class="q-stem-en" lang="en">The general solution of the Euler equation $x^2y''+xy'-y=0$ for $x&gt;0$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$y=C_1x+\dfrac{C_2}{x}$</span></li>
+            <li><span class="opt-body">$y=C_1x+C_2x\ln x$</span></li>
+            <li><span class="opt-body">$y=C_1e^{x}+C_2e^{-x}$</span></li>
+            <li><span class="opt-body">$y=C_1x^2+\dfrac{C_2}{x}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。令 $x=e^{t}$（即 $t=\ln x$），欧拉方程化为常系数方程，其特征方程为 $r(r-1)+r-1=0$，即 $r^2-1=0$，得 $r=\pm1$。于是 $y=C_1e^{t}+C_2e^{-t}=C_1x+\dfrac{C_2}{x}$。<strong>验算</strong>：取 $y=x$，代入得 $0+x-x=0$ ✓；取 $y=\dfrac{1}{x}$，$y'=-\dfrac{1}{x^2}$、$y''=\dfrac{2}{x^3}$，左端为 $\dfrac{2}{x}-\dfrac{1}{x}-\dfrac{1}{x}=0$ ✓。B 是特征根有二重根时才出现的 $x\ln x$ 形式。C 忘了 $x=e^t$ 这一层替换，直接把 $t$ 当成了 $x$。D 的特征根应为 $\pm1$，不是 $2$ 与 $-1$。</p>
+            <p class="en" lang="en">A is correct: with $x=e^{t}$ the characteristic equation is $r(r-1)+r-1=r^2-1=0$, so $r=\pm1$ and $y=C_1x+C_2/x$. Both $x$ and $1/x$ check out by substitution. B is the double-root form; C forgets the substitution $x=e^t$; D uses the wrong roots.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>方程 $y''+4y=\sin 2x$ 的一个特解应设为（　）。</p>
+            <p class="q-stem-en" lang="en">A particular solution of $y''+4y=\sin 2x$ should be taken in the form</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$y^*=x(A\cos 2x+B\sin 2x)$</span></li>
+            <li><span class="opt-body">$y^*=A\cos 2x+B\sin 2x$</span></li>
+            <li><span class="opt-body">$y^*=Ax\cos 2x$</span></li>
+            <li><span class="opt-body">$y^*=x^2(A\cos 2x+B\sin 2x)$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。特征方程 $r^2+4=0$ 的根是 $\pm2i$，而右端 $\sin 2x$ 对应的正是 $\pm2i$——<strong>属于共振</strong>，所以必须乘 $x$。同时右端只有正弦，但特解里 <strong>正弦与余弦都要留</strong>：求导会把 $\cos$ 变成 $-\sin$、把 $\sin$ 变成 $\cos$，只留一项凑不齐。B 是齐次解的形状，代入左端恒为 $0$。C 漏了余弦项。D 乘了两次 $x$，那是特征根为「二重」共振时才该用的（此处 $\pm2i$ 是单根）。</p>
+            <p class="en" lang="en">A is correct: the roots are $\pm2i$, matching the frequency of $\sin 2x$, so resonance requires a factor $x$; and both sine and cosine must be retained because differentiation mixes them. B has the homogeneous shape, C drops the cosine term, and D applies the double-root factor that does not apply here.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷的主线是<strong>「先分类，再套法」</strong>。第一、二题问概念（阶数与通解中常数的个数），第三题是可分离变量，第四到第六题是二阶常系数线性方程的完整链条：由初始条件定常数、三种特征根情形、以及非齐次方程特解该怎么设。最后两题把难度抬到考研档——欧拉方程考「令 $x=e^t$ 化常系数」，共振考「乘不乘 $x$、乘几次」。</p>
+          <p>最常见的错法有四个。第一，<strong>把「阶」与「次数」混为一谈</strong>，看到 $(y')^2$ 就以为是二阶。第二，<strong>分离变量后把常数放错位置</strong>，写成 $y=e^{x^2}+C$ 而不是 $Ce^{x^2}$。第三，<strong>特解形式不看特征根就设</strong>：右端指数/频率撞上特征根时必须多乘 $x$，撞上二重根要乘 $x^2$，这是全章失分最集中的一处。第四，<strong>欧拉方程忘了 $x=e^t$ 这层替换</strong>，把 $t$ 与 $x$ 混用。</p>
+          <p>知识之间的联系有两处要记住。向前，本卷所有解法都建立在第 4、5 章的积分之上——分离变量要积分、一阶线性公式里的 $e^{\int P\mathrm{d}x}$ 也是积分，常数变易法更是把「猜」变成了一次积分。向后，第 8 章里求空间曲线、第 12 章里由幂级数逐项求导得到的方程，都会回到本章这套分类；而线性代数的特征值问题与本章的「特征方程」是同一件事在两个领域的名字。</p>
+          <p>下一步建议：若错在前三题，说明概念与分离变量还没稳，重做 §7.1 与 §7.2 的例题；若错在第四到第六题，请把二阶常系数齐次的三种情形与右端三种类型的特解设法各写成一张对照表贴在笔记首页，这张表能覆盖考研里绝大多数一阶到二阶的方程题；若错在最后两题，专门练「先看特征根、再定特解形式」这两步，并各重做两道欧拉方程。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch6.html"><span class="dir">← 上一页</span><span class="ttl">第 6 章 定积分的应用</span></a>
         <a class="next" href="ch8.html"><span class="dir">下一页 →</span><span class="ttl">第 8 章 向量代数与空间解析几何</span></a>

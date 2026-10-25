@@ -2068,7 +2068,7 @@ where the last step uses $\cos\theta=\sin\left(\theta+\dfrac{\pi}{2}\right)$; he
             <p>设 $y=x^2$。当 $x=1$、$\Delta x=0.01$ 时，$dy=$ ______，$\Delta y=$ ______，$|\Delta y-dy|=$ ______。</p>
             <p class="q-stem-en" lang="en">Let $y=x^2$. For $x=1$ and $\Delta x=0.01$, find $dy$, $\Delta y$ and $|\Delta y-dy|$.</p>
           </div>
-          <div class="q-answer" data-answer="0.02|0.02;0.0201|0.0201;0.0001|0.0001|1e-4"></div>
+          <div class="q-answer" data-answer="0.02;0.0201;0.0001|0.02,0.0201,0.0001|0.02 0.0201 0.0001"></div>
           <div class="q-explain">
             <p>先求导数：$y'=2x$，在 $x=1$ 处 $y'=2$，故 $dy=y'\Delta x=2\times 0.01=0.02$。<br>再算真实增量：$\Delta y=(1.01)^2-1^2=1.0201-1=0.0201$。<br>于是 $|\Delta y-dy|=0.0201-0.02=0.0001$，正是 $(\Delta x)^2=0.0001$（对 $y=x^2$ 有 $f''=2$，余项恰为 $\frac{1}{2}\cdot 2\cdot(\Delta x)^2$）。<br>对照可见 $dy&lt;\Delta y$，且差额的量级是 $(\Delta x)^2$，即 $o(\Delta x)$——这就是 $\Delta x$ 从 $0.01$ 缩到 $0.001$ 时，$dy$ 与 $\Delta y$ 的相对差会缩小约十倍的原因。</p>
             <p class="en" lang="en">$dy=2(0.01)=0.02$ and $\Delta y=1.0201-1=0.0201$, so $|\Delta y-dy|=0.0001=(\Delta x)^2$, an error of order $o(\Delta x)$.</p>
@@ -2145,7 +2145,154 @@ where the last step uses $\cos\theta=\sin\left(\theta+\dfrac{\pi}{2}\right)$; he
 
 
 
-                                                                                                                  <!-- SHELL:BOTTOMNAV -->
+                                                                                                                  <h2 id="final">第 2 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前几题检验导数定义与「可导—连续」的关系，中间几题把复合求导、隐函数与参数方程的二阶导数串起来，最后两题是考研级的分段函数可导性判断。做题时先问自己「这题考的是哪一节的哪条法则」，再动手。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first few test the definition and the link between differentiability and continuity, the middle ones connect the chain rule with implicit and parametric second derivatives, and the last two ask for differentiability of piecewise functions at the graduate-entrance level. Ask yourself which rule of which section is being tested before you compute.</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch2-final" data-title="第 2 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>设 $f(x)$ 在 $x_0$ 处可导，则下列结论正确的是（　）。</p>
+            <p class="q-stem-en" lang="en">Let $f$ be differentiable at $x_0$. Which conclusion is correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$f$ 在 $x_0$ 处必连续</span></li>
+            <li><span class="opt-body">$f$ 在 $x_0$ 处连续，则 $f$ 在 $x_0$ 处必可导</span></li>
+            <li><span class="opt-body">$f$ 在 $x_0$ 处可导，则 $f'$ 在 $x_0$ 处必连续</span></li>
+            <li><span class="opt-body">$f$ 在 $x_0$ 处有极限，则 $f$ 在 $x_0$ 处必可导</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这正是定理 2.1，可导必连续。B 是把定理反过来用，反例 $|x|$ 在 $0$ 处连续但左右导数为 $-1$ 与 $1$，不可导。C 错：可导只保证 $f'$ 在该点的值存在，不保证 $f'$ 连续——反例 $f(x)=x^2\sin\dfrac{1}{x}$（$x\ne0$）、$f(0)=0$，它在 $0$ 处可导且 $f'(0)=0$，但 $f'$ 在 $0$ 附近无界振荡，不连续。D 错：有极限既不保证连续（还要求极限值等于函数值），更不保证可导。</p>
+            <p class="en" lang="en">A is Theorem 2.1. B reverses it: $|x|$ is continuous but has one-sided derivatives $-1$ and $1$. C confuses "the derivative exists at a point" with "the derivative is continuous there" — $x^2\sin(1/x)$ with $f(0)=0$ is differentiable at $0$ yet $f'$ oscillates without bound nearby. D fails because a limit need not equal the function value.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>「$f$ 在 $x_0$ 处连续」是「$f$ 在 $x_0$ 处可导」的必要条件。</p>
+            <p class="q-stem-en" lang="en">"$f$ is continuous at $x_0$" is a necessary condition for "$f$ is differentiable at $x_0$".</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">正确</span></li>
+            <li><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>正确。定理 2.1 说的是「可导 $\Rightarrow$ 连续」。按「若 $P$ 则 $Q$」的读法拆开：$Q$（连续）是 $P$（可导）的必要条件，$P$ 是 $Q$ 的充分条件。所以不连续一定不可导，而连续未必可导（$|x|$ 在 $0$ 处）。把「连续」说成可导的充分条件，正是本卷第 1 题 B 选项的错法。</p>
+            <p class="en" lang="en">Correct. Theorem 2.1 reads "differentiable implies continuous", so continuity is necessary for differentiability: a discontinuity at a point rules differentiability out, while continuity alone is not enough, as $|x|$ at $0$ shows.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>设 $y=\ln(\sin x)$（其中 $\sin x&gt;0$），则 $\dfrac{\mathrm{d}y}{\mathrm{d}x}=$（　）。</p>
+            <p class="q-stem-en" lang="en">For $y=\ln(\sin x)$ with $\sin x&gt;0$, $\dfrac{\mathrm{d}y}{\mathrm{d}x}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\cot x$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{\sin x}$</span></li>
+            <li><span class="opt-body">$-\cot x$</span></li>
+            <li><span class="opt-body">$\cos x\cdot\ln(\sin x)$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：外形是 $\ln u$，$u=\sin x$。外层导数 $\dfrac{1}{u}$，内层导数 $\cos x$，乘起来是 $\dfrac{\cos x}{\sin x}=\cot x$。B 只做了外层，漏掉内层导数（链式法则只用了一半）。C 多了个负号，那是 $\ln(\cos x)$ 的导数。D 把对数当成乘法因子，与 $u\ln u$ 那类结构混淆了。</p>
+            <p class="en" lang="en">A is correct: the outer derivative $1/u$ times the inner derivative $\cos x$ gives $\cot x$. B applies only the outer layer, C carries a spurious minus sign (that is the derivative of $\ln(\cos x)$), and D treats the logarithm as a multiplicative factor.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于隐函数与参数方程所确定的函数的导数，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about derivatives of implicitly and parametrically defined functions are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">由 $x^2+y^2=1$ 确定的隐函数，在 $y\ne0$ 处满足 $y'=-\dfrac{x}{y}$</span></li>
+            <li data-correct="true"><span class="opt-body">参数方程 $x=\cos t$、$y=\sin t$ 确定的函数满足 $\dfrac{\mathrm{d}y}{\mathrm{d}x}=-\cot t$</span></li>
+            <li><span class="opt-body">参数方程的二阶导数，可以把 $\dfrac{\mathrm{d}y}{\mathrm{d}x}$ 直接对 $t$ 求导得到</span></li>
+            <li data-correct="true"><span class="opt-body">隐函数求导不必先解出 $y$，把 $y$ 看成 $x$ 的函数、按链式法则处理即可</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：两边对 $x$ 求导，$2x+2yy'=0$，解出 $y'=-\dfrac{x}{y}$（$y\ne0$ 时分母才有意义）。B 对：$\dfrac{\mathrm{d}y}{\mathrm{d}x}=\dfrac{\mathrm{d}y/\mathrm{d}t}{\mathrm{d}x/\mathrm{d}t}=\dfrac{\cos t}{-\sin t}=-\cot t$。C 错：这是本章最集中的一处错误——$\dfrac{\mathrm{d}y}{\mathrm{d}x}$ 已经是 $t$ 的函数，二阶导数要对 $x$ 再求一次导，必须写成 $\dfrac{\mathrm{d}}{\mathrm{d}t}\left(\dfrac{\mathrm{d}y}{\mathrm{d}x}\right)\Big/\dfrac{\mathrm{d}x}{\mathrm{d}t}$，直接对 $t$ 求导会漏掉分母那个因子。D 对：这就是隐函数求导法的全部要点。</p>
+            <p class="en" lang="en">A follows from $2x+2yy'=0$. B applies $\mathrm{d}y/\mathrm{d}x=(\mathrm{d}y/\mathrm{d}t)/(\mathrm{d}x/\mathrm{d}t)$. C is the chapter's most common error: the second derivative must be divided by $\mathrm{d}x/\mathrm{d}t$ once more. D states the whole point of implicit differentiation.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>设 $f(x)=x^2e^x$，则 $f''(0)=$（　）。</p>
+            <p class="q-stem-en" lang="en">For $f(x)=x^2e^x$, $f''(0)=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$2$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$4$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：逐步算。$f'(x)=2xe^x+x^2e^x=e^x(x^2+2x)$；再求一次导得 $f''(x)=e^x(x^2+2x)+e^x(2x+2)=e^x(x^2+4x+2)$；代入 $x=0$ 得 $2$。B 是把 $f'(0)=0$ 当成了 $f''(0)$，求导次数不够。C 是漏了乘积法则的第二项。D 是取了 $x^2+4x$ 中一次项的系数 $4$ 而丢掉了常数项 $2$。</p>
+            <p class="en" lang="en">A is correct: $f'(x)=e^x(x^2+2x)$ and $f''(x)=e^x(x^2+4x+2)$, so $f''(0)=2$. B stops after one derivative, C drops the second product-rule term, D keeps only the linear coefficient $4$ and loses the constant $2$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>设 $y=x^3-3x$，则 $y''(1)=$ ______。</p>
+            <p class="q-stem-en" lang="en">For $y=x^3-3x$, $y''(1)=$ ______.</p>
+          </div>
+          <div class="q-answer" data-answer="6"></div>
+          <div class="q-explain">
+            <p>$y'=3x^2-3$，再求一次导得 $y''=6x$，代入 $x=1$ 得 $6$。要提防两种写法：一是把 $y''$ 写成 $6x-3$（把 $y'$ 里的常数项又带了下来）；二是直接算 $y(1)=-2$，那是函数值，不是二阶导数。</p>
+            <p class="en" lang="en">$y'=3x^2-3$ and $y''=6x$, so $y''(1)=6$. Watch out for carrying the constant $-3$ into $y''$, or reporting $y(1)=-2$, which is a function value rather than a second derivative.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设参数方程 $x=t-\sin t$、$y=1-\cos t$（$0&lt;t&lt;2\pi$），则 $\dfrac{\mathrm{d}^2y}{\mathrm{d}x^2}=$（　）。</p>
+            <p class="q-stem-en" lang="en">For the parametric curve $x=t-\sin t$, $y=1-\cos t$ with $0&lt;t&lt;2\pi$, $\dfrac{\mathrm{d}^2y}{\mathrm{d}x^2}=$</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$-\dfrac{1}{(1-\cos t)^2}$</span></li>
+            <li><span class="opt-body">$-\dfrac{1}{1-\cos t}$</span></li>
+            <li><span class="opt-body">$\dfrac{\sin t}{(1-\cos t)^2}$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{(1-\cos t)^2}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。一阶：$\dfrac{\mathrm{d}y}{\mathrm{d}t}=\sin t$，$\dfrac{\mathrm{d}x}{\mathrm{d}t}=1-\cos t$，故 $\dfrac{\mathrm{d}y}{\mathrm{d}x}=\dfrac{\sin t}{1-\cos t}$。二阶：先把这个商对 $t$ 求导，分子是 $\cos t(1-\cos t)-\sin t\cdot\sin t=\cos t-(\cos^2t+\sin^2t)=\cos t-1$，除以 $(1-\cos t)^2$ 得 $-\dfrac{1}{1-\cos t}$；<strong>再除以 $\dfrac{\mathrm{d}x}{\mathrm{d}t}=1-\cos t$</strong>，才是 $-\dfrac{1}{(1-\cos t)^2}$。B 恰好漏了最后这一步（本卷第 4 题 C 选项说的就是它）。C 是把商求导算成了「分子不动」的形式。D 是符号丢了——分子化简后是 $\cos t-1$，为负。</p>
+            <p class="en" lang="en">A is correct. First, $\mathrm{d}y/\mathrm{d}x=\sin t/(1-\cos t)$. Differentiating that quotient in $t$ gives $-1/(1-\cos t)$, and dividing once more by $\mathrm{d}x/\mathrm{d}t$ yields $-1/(1-\cos t)^2$. B omits exactly that final division, C mishandles the quotient rule, and D drops the sign of $\cos t-1$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $f(x)=|x|^3$，则在 $x=0$ 处（　）。</p>
+            <p class="q-stem-en" lang="en">For $f(x)=|x|^3$ at $x=0$, which statement is true?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">二阶可导，但三阶不可导</span></li>
+            <li><span class="opt-body">一阶可导，但二阶不可导</span></li>
+            <li><span class="opt-body">三阶可导</span></li>
+            <li><span class="opt-body">不可导</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。分段写出：$x\ge0$ 时 $f=x^3$，$x&lt;0$ 时 $f=-x^3$。于是 $f'(x)=3x^2$（$x&gt;0$）、$-3x^2$（$x&lt;0$），且 $f'(0)=\lim\limits_{h\to0}\dfrac{|h|^3}{h}=\lim\limits_{h\to0}h|h|=0$，一阶可导。$f''(x)=6x$（$x&gt;0$）、$-6x$（$x&lt;0$），即 $f''(x)=6|x|$，且 $f''(0)=\lim\limits_{h\to0}\dfrac{3h|h|}{h}=0$，二阶可导。但 $f''(x)=6|x|$ 在 $0$ 处有角点，$\lim\limits_{h\to0}\dfrac{6|h|}{h}$ 左右分别为 $6$ 与 $-6$，所以三阶导数不存在。B 是与 $x|x|$ 那类函数混淆了——那种才是「一阶可导、二阶不可导」；绝对值升到三次，恰好把可导阶数抬高了两次。</p>
+            <p class="en" lang="en">A is correct. The piecewise form gives $f'=3x^2$ or $-3x^2$ with $f'(0)=0$, then $f''=6|x|$ with $f''(0)=0$, so the first two derivatives exist at the origin; but $6|x|$ has a corner there, so the third derivative fails. B describes $x|x|$ rather than $|x|^3$ — raising the absolute value to the third power buys two orders of differentiability.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷只考一件事——<strong>「导数」这个词背后有几层含义</strong>，以及它们在复合、隐式、参数三种外壳下的同一套法则。前两题问可导与连续的逻辑方向，第三题到第六题是三种基本的求导运算（链式、乘积与高阶、隐函数与参数），最后两题把难度抬到考研档：参数方程的二阶导数考「再除以一次 $\mathrm{d}x/\mathrm{d}t$」，分段函数考「可导阶数」。</p>
+          <p>最常见的错法集中在三处。第一，<strong>把「可导必连续」反着用</strong>，看到连续就断言可导；或者把「$f'$ 存在」误读成「$f'$ 连续」。第二，<strong>参数方程二阶导数漏除因子</strong>：$\dfrac{\mathrm{d}^2y}{\mathrm{d}x^2}$ 不是 $\dfrac{\mathrm{d}}{\mathrm{d}t}\left(\dfrac{\mathrm{d}y}{\mathrm{d}x}\right)$，这一处的错误率远高于其它任何一处。第三，<strong>求导次数不够就代入</strong>，把 $f'(0)$ 当成 $f''(0)$。</p>
+          <p>知识之间的联系有两处要记住。向前，本卷所有题目都建立在极限之上：导数定义本身是一个差商极限，隐函数求导用到链式法则，而链式法则的证明又回到极限的乘法法则。向后，第 3 章的中值定理需要「闭区间连续、开区间可导」这对条件，也就是本卷前两题讨论的那两个概念；而 2.5 节的微分 $\mathrm{d}y=f'(x)\mathrm{d}x$ 会在第 4 章换元积分里直接变成 $\mathrm{d}u=u'\mathrm{d}x$ 的写法。</p>
+          <p>下一步建议：若错在前两题，请把定理 2.1 与其逆命题的真值各写一遍，并记住 $|x|$ 与 $x^2\sin\dfrac{1}{x}$ 两个反例；若错在参数方程那题，就把「先对 $t$ 求导、再除以 $\mathrm{d}x/\mathrm{d}t$」默写五遍，然后重做 §2.4 的例题；若错在最后的分段函数题，说明「可导阶数」的直觉还没建立，建议先把 $|x|$、$x|x|$、$|x|^3$ 三个函数并排列出各阶导数是否存在，再进入第 3 章。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch1.html"><span class="dir">← 上一页</span><span class="ttl">第 1 章 函数与极限</span></a>
         <a class="next" href="ch3.html"><span class="dir">下一页 →</span><span class="ttl">第 3 章 微分中值定理与导数的应用</span></a>

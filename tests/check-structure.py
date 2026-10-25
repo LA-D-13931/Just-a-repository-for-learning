@@ -376,9 +376,49 @@ def main():
             continue
         check_file(name, p, issues, quiz_ids, stats, pending)
 
+    # --- 线代页：只参与 id 唯一性与章末综测的检查 ---
+    # 它们的页面解剖（.model-head / .model-signal 等）与高数页不同，
+    # 套 check_file 的结构规则会误报；但**测验 id 必须一起比**，否则会漏重名
+    # （2026-10-25 实测：la1 曾用 ch1-final，与 ch1 撞车而无人发现，正因为本文件从未扫线代页）。
+    LA_PAGES = [f"la{i}" for i in range(1, 7)] + \
+               ["linear-algebra", "linear-algebra-cheatsheet", "linear-algebra-exam"]
+    for name in LA_PAGES:
+        p = os.path.join(SITE, "chapters", f"{name}.html") if name.startswith("la") and name[2:].isdigit() \
+            else os.path.join(SITE, f"{name}.html")
+        if not os.path.exists(p):
+            continue
+        html = read(p)
+        rel = os.path.relpath(p, SITE)
+        for m in QUIZ_RE.finditer(html):
+            quiz_ids[m.group(1)].append(rel)
+
     for qid, files in quiz_ids.items():
         if len(files) > 1:
             issues.append(f"测验 id 重复：{qid} 出现在 {', '.join(files)}")
+
+    # --- 每章必须有章末综合测验；id 必须与该页对应 ---
+    # 「缺」不判失败：全站分批施工，缺的那几章已登记在 pending_final 里当待补项
+    # （与上面「待建小节」同一套口径）。但一旦某页有 -final 却**命名不对**，
+    # 那就是实打实的缺陷，必须判失败——这正是 la1 用 ch1-final 撞车的那类问题。
+    pending_final = []
+    ALL_CHAPTER_PAGES = [os.path.splitext(os.path.basename(f))[0] for _n, f, _t, _i in COURSE] \
+        + [f"la{i}" for i in range(1, 7)]
+    for name in ALL_CHAPTER_PAGES:
+        p = os.path.join(SITE, "chapters", f"{name}.html")
+        if not os.path.exists(p):
+            continue
+        html = read(p)
+        rel = os.path.relpath(p, SITE)
+        ids = QUIZ_RE.findall(html)
+        want = "tx1-final" if name == "supp1" else f"{name}-final"
+        finals = [i for i in ids if i.endswith("-final")]
+        if want in finals:
+            continue
+        if finals:
+            issues.append(f"[{rel}] 章末综合测验 id 应为 {want}，实际是 "
+                          f"{', '.join(finals)}（id 必须与页面一一对应）")
+        else:
+            pending_final.append(f"{rel}（缺 {want}）")
 
     lv1, lv2, lv3 = stats["lv_基础"], stats["lv_中等"], stats["lv_考研"]
     tot = lv1 + lv2 + lv3
@@ -401,6 +441,12 @@ def main():
     if pending:
         print(f"待建小节 {len(pending)} 个（已建小节之后的部分，分批施工的正常状态）：")
         for x in pending:
+            print("  ·", x)
+        print()
+
+    if pending_final:
+        print(f"待补章末综合测验 {len(pending_final)} 章（分批施工的正常状态）：")
+        for x in pending_final:
             print("  ·", x)
         print()
 

@@ -3264,7 +3264,154 @@
       </div>
 
 
-                                                                        <!-- SHELL:BOTTOMNAV -->
+                                                                        <h2 id="final">第 12 章 · 综合测验</h2>
+
+      <div class="bi">
+        <p class="zh" lang="zh">下面 8 道题覆盖全章：前三题考常数项级数的概念与审敛法，第四到第七题是幂级数的收敛半径、和函数与逐项运算，最后一题考傅里叶级数在间断点的和。做题时先分清「常数项级数」与「幂级数」，前者判敛散，后者先求收敛半径再谈和函数。</p>
+        <p class="en" lang="en">Eight questions cover the whole chapter: the first three test constant-term series and convergence tests, the next four handle radius of convergence, sum functions and term-by-term operations for power series, and the last one is the value of a Fourier series at a jump. Distinguish constant-term series (test convergence) from power series (find the radius first, then the sum).</p>
+      </div>
+
+      <div class="quiz" data-quiz-id="ch12-final" data-title="第 12 章综合测验" data-pass="0.7">
+
+        <div class="q" data-type="single" data-level="基础">
+          <div class="q-stem">
+            <p>若级数 $\sum\limits_{n=1}^{\infty}u_n$ 收敛，则下列结论一定成立的是（　）。</p>
+            <p class="q-stem-en" lang="en">If the series $\sum\limits_{n=1}^{\infty}u_n$ converges, which conclusion must hold?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\lim\limits_{n\to\infty}u_n=0$</span></li>
+            <li><span class="opt-body">$\sum\limits_{n=1}^{\infty}|u_n|$ 必收敛</span></li>
+            <li><span class="opt-body">$\lim\limits_{n\to\infty}u_n\ne0$</span></li>
+            <li><span class="opt-body">余项 $r_n$ 随 $n$ 增大而趋于无穷</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这是收敛的必要条件（通项趋于零）。B 错：$\sum u_n$ 收敛不保证绝对收敛，反例 $\sum\dfrac{(-1)^{n-1}}{n}$ 收敛但 $\sum\dfrac{1}{n}$ 发散，属条件收敛。C 与必要条件正相反。D 错：收敛时余项 $r_n$ 趋于 $0$，正因为它趋于零才说明「尾部可以忽略」。</p>
+            <p class="en" lang="en">A is the necessary condition. B fails for conditionally convergent series: $\sum(-1)^{n-1}/n$ converges while $\sum 1/n$ diverges. C contradicts the necessary condition, and D reverses the fact that the remainder tends to $0$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="judge" data-level="基础">
+          <div class="q-stem">
+            <p>若 $\lim\limits_{n\to\infty}u_n=0$，则级数 $\sum\limits_{n=1}^{\infty}u_n$ 必定收敛。</p>
+            <p class="q-stem-en" lang="en">If $\lim\limits_{n\to\infty}u_n=0$, then $\sum\limits_{n=1}^{\infty}u_n$ must converge.</p>
+          </div>
+          <ul class="options">
+            <li><span class="opt-body">正确</span></li>
+            <li data-correct="true"><span class="opt-body">错误</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>错误。通项趋于零只是<strong>必要</strong>条件，不是充分条件。标准反例是调和级数 $\sum\dfrac{1}{n}$：通项 $\dfrac{1}{n}\to0$，但部分和 $\ln n$ 无界，级数发散。这正是本章要引入各种审敛法的原因——只靠通项看不出敛散，必须比较、比值或积分。</p>
+            <p class="en" lang="en">False. Vanishing terms are necessary but not sufficient; the harmonic series $\sum 1/n$ has terms tending to zero while its partial sums grow like $\ln n$. That is precisely why comparison, ratio and integral tests are needed.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>级数 $\sum\limits_{n=1}^{\infty}\dfrac{1}{n^{p}}$ 收敛的充要条件是（　）。</p>
+            <p class="q-stem-en" lang="en">The series $\sum\limits_{n=1}^{\infty}1/n^{p}$ converges if and only if</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$p&gt;1$</span></li>
+            <li><span class="opt-body">$p\ge1$</span></li>
+            <li><span class="opt-body">$p&lt;1$</span></li>
+            <li><span class="opt-body">对一切 $p&gt;0$ 都收敛</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：这是 $p$ 级数的结论，$p&gt;1$ 收敛、$p\le1$ 发散。B 把 $p=1$ 也算进去了，但 $p=1$ 正是调和级数，发散。C 完全说反了。D 更宽——$p=\dfrac{1}{2}$ 时 $\sum\dfrac{1}{\sqrt{n}}$ 发散，可见 $p$ 再大一点都可能不收敛，何况只要求 $p&gt;0$。<strong>记忆锚点</strong>：$p=1$ 是分界线，恰好发散，所以收敛必须严格大于 1。</p>
+            <p class="en" lang="en">A is the $p$-series test: convergent exactly when $p&gt;1$. B wrongly includes $p=1$, the harmonic series, which diverges; C reverses the inequality; D fails already at $p=1/2$. The boundary case $p=1$ diverges, so the inequality must be strict.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="中等">
+          <div class="q-stem">
+            <p>幂级数 $\sum\limits_{n=1}^{\infty}\dfrac{x^{n}}{n}$ 的收敛半径是（　）。</p>
+            <p class="q-stem-en" lang="en">The radius of convergence of $\sum\limits_{n=1}^{\infty}x^{n}/n$ is</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$1$</span></li>
+            <li><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$+\infty$</span></li>
+            <li><span class="opt-body">$2$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：系数 $a_n=\dfrac{1}{n}$，由比值法 $R=\lim\limits_{n\to\infty}\left|\dfrac{a_n}{a_{n+1}}\right|=\lim\limits_{n\to\infty}\dfrac{n+1}{n}=1$。B 对应「系数增长极快」的情形（如 $\sum n!x^n$）；C 对应「系数衰减极快」（如 $\sum\dfrac{x^n}{n!}$）；D 是把分母的 $n$ 误当成了 $2^n$。补充一句：$x=1$ 处是调和级数、发散，$x=-1$ 处是交错调和级数、收敛——收敛区间是 $[-1,1)$，与收敛半径 $1$ 不矛盾。</p>
+            <p class="en" lang="en">A is correct: with $a_n=1/n$, $R=\lim|a_n/a_{n+1}|=1$. B and C correspond to rapidly growing or decaying coefficients; D mistakes $n$ for $2^n$. At $x=1$ the series is harmonic and diverges while $x=-1$ converges, so the interval is $[-1,1)$ — consistent with radius $1$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="fill" data-level="中等">
+          <div class="q-stem">
+            <p>幂级数 $\sum\limits_{n=0}^{\infty}x^{n}$ 在 $|x|&lt;1$ 内的和函数为 $S(x)=$ ______。</p>
+            <p class="q-stem-en" lang="en">For $|x|&lt;1$, the sum function of $\sum\limits_{n=0}^{\infty}x^{n}$ is $S(x)=$ ______.</p>
+          </div>
+          <div class="q-answer" data-answer="1/(1-x)|1/(1−x)"></div>
+          <div class="q-explain">
+            <p>这是公比为 $x$ 的几何级数，部分和 $S_n=\dfrac{1-x^{n}}{1-x}$，当 $|x|&lt;1$ 时 $x^{n}\to0$，故 $S(x)=\dfrac{1}{1-x}$。<strong>验算</strong>：取 $x=\dfrac{1}{2}$，左边 $=1+\dfrac{1}{2}+\dfrac{1}{4}+\cdots=2$，右边 $=\dfrac{1}{1-1/2}=2$ ✓。要提醒的是：这个式子的成立范围严格是 $|x|&lt;1$，$x=1$ 时右边分母为零，级数本身也发散。</p>
+            <p class="en" lang="en">A geometric series with ratio $x$: $S_n=(1-x^n)/(1-x)$ and $x^n\to0$ for $|x|&lt;1$, so $S(x)=1/(1-x)$. For $x=1/2$ both sides equal $2$. The identity holds strictly on $|x|&lt;1$.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="multi" data-level="中等">
+          <div class="q-stem">
+            <p>关于常数项级数的审敛法，下列说法正确的有（　）。</p>
+            <p class="q-stem-en" lang="en">Which statements about convergence tests are correct?</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">若 $\sum|u_n|$ 收敛，则 $\sum u_n$ 必收敛</span></li>
+            <li data-correct="true"><span class="opt-body">若 $u_n$ 单调递减且 $\lim\limits_{n\to\infty}u_n=0$，则交错级数 $\sum(-1)^{n-1}u_n$ 收敛</span></li>
+            <li data-correct="true"><span class="opt-body">若 $0\le u_n\le v_n$ 且 $\sum v_n$ 收敛，则 $\sum u_n$ 收敛</span></li>
+            <li><span class="opt-body">若 $\lim\limits_{n\to\infty}\dfrac{u_{n+1}}{u_n}=1$，则该级数必发散</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：绝对收敛必收敛。B 对：这就是莱布尼茨判别法的两个条件。C 对：比较判别法，注意前提 $u_n\ge0$ 不能省。D 错：比值极限等于 $1$ 时<strong>该方法失效</strong>，既不能断定收敛也不能断定发散——$\sum\dfrac{1}{n}$（发散）与 $\sum\dfrac{1}{n^2}$（收敛）的比值极限都是 $1$，正好互为反例。这是把「判据失效」误读成「结论为发散」的典型。</p>
+            <p class="en" lang="en">A is absolute convergence implies convergence; B is the Leibniz test; C is the comparison test, whose hypothesis $u_n\ge0$ cannot be dropped. D is wrong because a ratio limit of $1$ makes the test inconclusive — $\sum 1/n$ and $\sum 1/n^2$ both give $1$ yet behave oppositely.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>幂级数 $\sum\limits_{n=1}^{\infty}nx^{n-1}$ 在 $(-1,1)$ 内的和函数为（　）。</p>
+            <p class="q-stem-en" lang="en">On $(-1,1)$ the sum of $\sum\limits_{n=1}^{\infty}nx^{n-1}$ equals</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$\dfrac{1}{(1-x)^2}$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{1-x}$</span></li>
+            <li><span class="opt-body">$\dfrac{x}{(1-x)^2}$</span></li>
+            <li><span class="opt-body">$\dfrac{1}{(1+x)^2}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对：由几何级数 $\sum\limits_{n=0}^{\infty}x^{n}=\dfrac{1}{1-x}$（$|x|&lt;1$），两边<strong>逐项求导</strong>得 $\sum\limits_{n=1}^{\infty}nx^{n-1}=\dfrac{1}{(1-x)^2}$。<strong>验算</strong>：取 $x=\dfrac{1}{2}$，左边 $=1+2\cdot\dfrac{1}{2}+3\cdot\dfrac{1}{4}+\cdots=4$，右边 $=\dfrac{1}{(1-1/2)^2}=4$ ✓。B 是原级数（少了因子 $n$）的和；C 是把 $x$ 提到了外面——$\sum nx^{n-1}$ 与 $x\sum nx^{n-2}$ 不是同一个式子；D 的分母符号错了，只有 $1+x$ 的负幂次才出现那个形式。</p>
+            <p class="en" lang="en">A is correct: differentiating $\sum x^n=1/(1-x)$ term by term gives $\sum nx^{n-1}=1/(1-x)^2$. At $x=1/2$ both sides equal $4$. B omits the factor $n$, C factors out an $x$ that does not belong, and D has the wrong sign in the denominator.</p>
+          </div>
+        </div>
+
+        <div class="q" data-type="single" data-level="考研">
+          <div class="q-stem">
+            <p>设 $f(x)=x$（$-\pi&lt;x&lt;\pi$），它的傅里叶级数在 $x=\pi$ 处收敛于（　）。</p>
+            <p class="q-stem-en" lang="en">For $f(x)=x$ on $(-\pi,\pi)$, its Fourier series at $x=\pi$ converges to</p>
+          </div>
+          <ul class="options">
+            <li data-correct="true"><span class="opt-body">$0$</span></li>
+            <li><span class="opt-body">$\pi$</span></li>
+            <li><span class="opt-body">$-\pi$</span></li>
+            <li><span class="opt-body">$\dfrac{\pi}{2}$</span></li>
+          </ul>
+          <div class="q-explain">
+            <p>A 对。$f(x)=x$ 在 $(-\pi,\pi)$ 上光滑，但按 $2\pi$ 周期延拓后，$x=\pi$ 是跳跃点：左极限 $f(\pi^-)=\pi$，右极限 $f(\pi^+)=f(-\pi^+)=-\pi$。由狄利克雷定理，级数在该点收敛于左右极限的<strong>平均值</strong> $\dfrac{\pi+(-\pi)}{2}=0$。选 $\pi$ 或 $-\pi$ 的人只取了单侧极限，忽略了延拓后在端点处函数已经被「接」成锯齿状；选 $\dfrac{\pi}{2}$ 是把平均值算成了「模长的一半」。</p>
+            <p class="en" lang="en">A is correct: after periodic extension $x=\pi$ is a jump with left limit $\pi$ and right limit $-\pi$, and Dirichlet's theorem gives the mean value $0$. Choosing $\pi$ or $-\pi$ takes only one side, and $\pi/2$ confuses the average with half the magnitude.</p>
+          </div>
+        </div>
+
+        <div class="q-review">
+          <p>本卷讲评：这一卷分两半——<strong>常数项级数判敛散、幂级数求和函数</strong>。前三题问概念与 $p$ 级数，第四到第六题围绕收敛半径、几何级数与审敛法的适用条件，最后两题是考研档：逐项求导求和函数，以及傅里叶级数在跳跃点的收敛值。</p>
+          <p>最常见的错法有四个。第一，<strong>把必要条件当充分条件</strong>：通项趋于零就断言收敛，被调和级数打脸。第二，<strong>把 $p=1$ 划到收敛一侧</strong>，忽略了它恰好是分界线且发散。第三，<strong>把「判据失效」读成「结论相反」</strong>：比值极限等于 $1$ 时什么也说明不了，既不能说收敛也不能说发散。第四，<strong>傅里叶级数在端点只取单侧极限</strong>，忘了间断点处取左右极限的平均值。</p>
+          <p>知识之间的联系有三处值得记住。向前，本章所有判据都依赖第 1 章的极限工具：比较判别法靠极限比较、比值法靠数列极限、$p$ 级数的证明靠第 5 章的积分（$\int_1^{\infty}x^{-p}\mathrm{d}x$ 收敛当且仅当 $p&gt;1$）。向后，幂级数展开在第 12.5 节用于近似计算，而它的合法性（逐项求导、逐项积分）依赖 12.6 节的一致收敛性——那正是「能不能交换求和与求导」的问题。此外，第 7 章的特征方程与本章的收敛半径都建立在「把函数看成无穷维对象」这一视角上，抽掉它就是线性代数里的特征值与谱。</p>
+          <p>下一步建议：若错在前三题，请把收敛的必要条件、$p$ 级数、调和级数三个锚点各写一遍，并记住调和级数这个反例；若错在判据那题，把「比值法失效」的两种反例（$\dfrac{1}{n}$ 与 $\dfrac{1}{n^2}$）并排写下来；若错在最后两题，幂级数那题建议把「先求和、再逐项求导」这条路线完整走三遍，傅里叶那题则把狄利克雷定理在连续点、跳跃点两种情形的结论各默写一次。</p>
+        </div>
+
+      </div>
+
+      <!-- SHELL:BOTTOMNAV -->
       <nav class="chapter-nav">
         <a class="prev" href="ch11.html"><span class="dir">← 上一页</span><span class="ttl">第 11 章 曲线积分与曲面积分</span></a>
         <a class="next" href="supp1.html"><span class="dir">下一页 →</span><span class="ttl">托马斯补充</span></a>
