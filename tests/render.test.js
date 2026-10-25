@@ -38,7 +38,7 @@ if (IS_CI) ARGS.push('--no-sandbox', '--disable-dev-shm-usage');
 const ROOT = path.resolve(process.cwd(), '..');
 const b = await puppeteer.launch({
   executablePath: EXE, headless: process.env.TYPESET_HEADLESS || (IS_CI ? true : 'shell'),
-  protocolTimeout: 300000, args: ARGS,
+  protocolTimeout: 600000, args: ARGS,
 });
 
 /* 全文档级别的判据：任何未被 mjx-container 吸收的 $…$ 都算未渲染 */

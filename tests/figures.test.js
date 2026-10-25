@@ -48,7 +48,7 @@ const ok = (name, cond, extra) => {
 const launchArgs = ['--allow-file-access-from-files'];
 if (process.env.CI) launchArgs.push('--no-sandbox', '--disable-dev-shm-usage');
 
-const browser = await puppeteer.launch({ executablePath: exe, headless: 'new', args: launchArgs });
+const browser = await puppeteer.launch({ executablePath: exe, headless: 'new', protocolTimeout: 600000, args: launchArgs });
 
 try {
   for (const rel of PAGES) {
@@ -91,7 +91,11 @@ try {
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('file://' + SITE.split('/').map(encodeURIComponent).join('/') + '/' + rel,
-      { waitUntil: 'networkidle0' });
+      /* 用 'load' 而不是 'networkidle0'：本站是 file:// 页面，没有真正的网络活动，
+         networkidle0 只会跟着 load 完成走；而重页（ch1 有 7669 条公式）的 load
+         可能超过 puppeteer 默认的 30 秒，于是报一个与图形无关的导航超时
+         （2026-10-26 实测）。render.test.js 一直用 'load'，这里与之对齐。 */
+      { waitUntil: 'load', timeout: 90000 });
     await new Promise(r => setTimeout(r, 2500));
 
     const state = await page.evaluate(() => {
