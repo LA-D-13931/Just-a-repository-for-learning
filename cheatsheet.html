@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>高等数学公式速查表 · 高等数学学习站</title>
-<meta name="description" content="第 1 期 17 节的核心公式汇总：定义域限制、极限定义与运算法则、等价无穷小表、基本导数公式表、高阶导数、参数方程求导、微分与变化率，按模块排版，供做题时查用。A one-page reference for the core formulas of Chapter 1, Chapter 2 and the Thomas supplement: domains, limits and limit laws, equivalent infinitesimals, basic derivatives, higher-order derivatives, implicit and parametric differentiation, differentials and rates of change.">
+<meta name="description" content="全 12 章 + 补充的核心公式汇总：定义域限制、极限定义与运算法则、等价无穷小表、基本导数公式表、高阶导数、参数方程求导、微分与变化率，按模块排版，供做题时查用。A one-page reference for the core formulas of Chapter 1, Chapter 2 and the Thomas supplement: domains, limits and limit laws, equivalent infinitesimals, basic derivatives, higher-order derivatives, implicit and parametric differentiation, differentials and rates of change.">
 <script>
   /* 尽早应用主题与亮暗模式，避免刷新时"先亮后暗"闪一下。
      theme.js 里还有一份同样的逻辑，这里是关键路径上的同步版本。 */
@@ -83,6 +83,10 @@
                                                                                                                                                                                                                   <!-- SHELL:SIDEBAR -->
       <aside class="sidebar">
         <div class="toc-group">
+          <div class="toc-title">本页目录</div>
+          <nav class="toc" data-toc></nav>
+        </div>
+        <div class="toc-group">
         <div class="toc-title">课程导航</div>
           <a class="toc-chapter" href="chapters/ch1.html"><span class="num">1</span>函数与极限</a>
           <a class="toc-chapter" href="chapters/ch2.html"><span class="num">2</span>导数与微分</a>
@@ -110,11 +114,11 @@
     <div class="content">
 
       <div class="page-head">
-        <div class="page-eyebrow"><span class="en-inline">TOOLS</span> · 第 1 期 17 节<span class="en-inline"> / Formula Reference</span></div>
+        <div class="page-eyebrow"><span class="en-inline">TOOLS</span> · 全 12 章 + 补充<span class="en-inline"> / Formula Reference</span></div>
         <h1>高等数学公式速查表</h1>
         <div class="bi">
-          <p class="lede" lang="zh">本页把第 1 期 17 节的核心公式按模块排开，做题时直接查：定义域的五条限制、两种极限定义、等价无穷小表、基本导数公式表、高阶导数、参数方程求导、微分与变化率。每一条都与正文的写法一致，公式的条件与适用范围逐字对应，不省略前提。</p>
-          <p class="en" lang="en">This page collects the core formulas of all 17 sections of Phase 1, module by module: the five domain restrictions, the two limit definitions, the table of equivalent infinitesimals, the basic derivative table, higher-order derivatives, parametric differentiation, differentials and rates of change. Every formula is written exactly as it appears in the lessons, hypotheses and admissible ranges included.</p>
+          <p class="lede" lang="zh">本页把第 1–12 章与补充章共 40 余个小节的核心公式按模块排开，做题时直接查：定义域的五条限制、两种极限定义、等价无穷小表、基本导数公式表、高阶导数、参数方程求导、微分与变化率。每一条都与正文的写法一致，公式的条件与适用范围逐字对应，不省略前提。</p>
+          <p class="en" lang="en">This page collects the core formulas of the whole course (Chapters 1 to 12 plus the supplement), module by module: the five domain restrictions, the two limit definitions, the table of equivalent infinitesimals, the basic derivative table, higher-order derivatives, parametric differentiation, differentials and rates of change. Every formula is written exactly as it appears in the lessons, hypotheses and admissible ranges included.</p>
         </div>
       </div>
 
@@ -513,6 +517,495 @@
       </div>
 
       <!-- ======== 托马斯补充 ======== -->
+
+      <h2 id="cs-3-1">3-1 微分中值定理与洛必达法则<span class="en-inline"> / Mean Value Theorems and L'Hôpital</span></h2>
+      <p>三个中值定理是同一件事的三级推广：罗尔是「两端等高时必有一处切线水平」，拉格朗日把等高条件换成斜率，柯西把自变量也换成函数。它们都只断言「存在」，不给 $\xi$ 的位置。洛必达法则是柯西中值定理的推论，用法上有前提，不符合前提就没有结论。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>定理</th><th>条件</th><th>结论</th></tr></thead>
+          <tbody>
+            <tr><td>罗尔</td><td>$f$ 在 $[a,b]$ 连续，在 $(a,b)$ 可导，$f(a)=f(b)$</td><td>存在 $\xi\in(a,b)$，$f'(\xi)=0$</td></tr>
+            <tr><td>拉格朗日</td><td>$f$ 在 $[a,b]$ 连续，在 $(a,b)$ 可导</td><td>存在 $\xi\in(a,b)$，$f(b)-f(a)=f'(\xi)(b-a)$</td></tr>
+            <tr><td>柯西</td><td>$f$、$g$ 在 $[a,b]$ 连续、在 $(a,b)$ 可导，且 $g'(x)\ne0$</td><td>存在 $\xi\in(a,b)$，$\dfrac{f(b)-f(a)}{g(b)-g(a)}=\dfrac{f'(\xi)}{g'(\xi)}$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="cs-3-1-a">洛必达法则的用法与失效<span class="en-inline"> / Using L'Hôpital's Rule</span></h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>要点</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>适用型</td><td>$\dfrac{0}{0}$ 或 $\dfrac{\infty}{\infty}$；其余型（$0\cdot\infty$、$\infty-\infty$、$1^{\infty}$、$0^{0}$、$\infty^{0}$）需先化成这两种</td></tr>
+            <tr><td>前提</td><td>$\lim\dfrac{f'(x)}{g'(x)}$ <strong>存在或为无穷</strong>；若该极限不存在（振荡），洛必达<b>失效</b>，不能据此判定原极限不存在</td></tr>
+            <tr><td>经典失效例</td><td>$\lim\limits_{x\to+\infty}\dfrac{x+\sin x}{x}=1$，但 $\dfrac{(x+\sin x)'}{x'}=1+\cos x$ 无极限</td></tr>
+            <tr><td>可重复使用</td><td>用过一次后仍是 $\dfrac{0}{0}$ 或 $\dfrac{\infty}{\infty}$ 才能再用；每用一次都要重新核对型</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-3-2">3-2 泰勒公式<span class="en-inline"> / Taylor's Formula</span></h2>
+      <p>带拉格朗日余项的 $n$ 阶泰勒公式：$f(x)=\sum\limits_{k=0}^{n}\dfrac{f^{(k)}(x_0)}{k!}(x-x_0)^{k}+R_n(x)$，其中 $R_n(x)=\dfrac{f^{(n+1)}(\xi)}{(n+1)!}(x-x_0)^{n+1}$，$\xi$ 介于 $x_0$ 与 $x$ 之间。<strong>余项的阶数比多项式高一阶</strong>，这是最容易记错的地方。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>函数</th><th>麦克劳林展开（$x_0=0$）</th><th>收敛范围</th></tr></thead>
+          <tbody>
+            <tr><td>$e^{x}$</td><td>$1+x+\dfrac{x^{2}}{2!}+\cdots+\dfrac{x^{n}}{n!}+o(x^{n})$</td><td>$x\in\mathbb{R}$</td></tr>
+            <tr><td>$\sin x$</td><td>$x-\dfrac{x^{3}}{3!}+\dfrac{x^{5}}{5!}-\cdots+(-1)^{n}\dfrac{x^{2n+1}}{(2n+1)!}+o(x^{2n+2})$</td><td>$x\in\mathbb{R}$</td></tr>
+            <tr><td>$\cos x$</td><td>$1-\dfrac{x^{2}}{2!}+\dfrac{x^{4}}{4!}-\cdots+(-1)^{n}\dfrac{x^{2n}}{(2n)!}+o(x^{2n+1})$</td><td>$x\in\mathbb{R}$</td></tr>
+            <tr><td>$\ln(1+x)$</td><td>$x-\dfrac{x^{2}}{2}+\dfrac{x^{3}}{3}-\cdots+(-1)^{n-1}\dfrac{x^{n}}{n}+o(x^{n})$</td><td>$-1&lt;x\le1$</td></tr>
+            <tr><td>$(1+x)^{\alpha}$</td><td>$1+\alpha x+\dfrac{\alpha(\alpha-1)}{2!}x^{2}+\cdots+\dfrac{\alpha(\alpha-1)\cdots(\alpha-n+1)}{n!}x^{n}+o(x^{n})$</td><td>$|x|&lt;1$</td></tr>
+            <tr><td>$\dfrac{1}{1-x}$</td><td>$1+x+x^{2}+\cdots+x^{n}+o(x^{n})$</td><td>$|x|&lt;1$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-3-3">3-3 单调性 · 极值 · 凹凸 · 拐点<span class="en-inline"> / Monotonicity, Extrema, Concavity</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>研究对象</th><th>判据</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>单调增加</td><td>$f'(x)&gt;0$ 在 $I$ 上</td><td>严格单调只需 $f'\ge0$ 且不在任何子区间上恒为 $0$</td></tr>
+            <tr><td>极值必要</td><td>可导的极值点必为驻点：$f'(x_0)=0$</td><td>反之不成立，$y=x^{3}$ 在 $0$ 处是驻点但非极值</td></tr>
+            <tr><td>第一充分条件</td><td>$f'$ 在 $x_0$ 左右<strong>变号</strong>：$+ \to -$ 为极大，$- \to +$ 为极小</td><td>不变号（如 $x^{3}$）则不是极值</td></tr>
+            <tr><td>第二充分条件</td><td>$f'(x_0)=0$ 且 $f''(x_0)\ne0$：$f''&lt;0$ 极大，$f''&gt;0$ 极小</td><td>取 $f=-x^{2}$ 作锚点自查符号</td></tr>
+            <tr><td>凹凸</td><td>$f''&gt;0$：图形为凹（下凸）；$f''&lt;0$：凸（上凸）</td><td>以教材约定为准，本站采用「$f''&gt;0$ 为凹」</td></tr>
+            <tr><td>拐点</td><td>$f''$ 在该点<strong>两侧变号</strong>且该点连续</td><td>仅 $f''=0$ 但不变号（如 $x^{4}$ 在 $0$）不是拐点</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-3-4">3-4 曲率与渐近线<span class="en-inline"> / Curvature and Asymptotes</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>概念</th><th>公式</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr><td>曲率（直角坐标）</td><td>$K=\dfrac{|y''|}{(1+y'^{2})^{3/2}}$</td><td>分母是 $\dfrac{3}{2}$ 次幂，不是平方</td></tr>
+            <tr><td>曲率半径</td><td>$\rho=\dfrac{1}{K}$</td><td>$K=0$ 处（直线）半径为无穷大</td></tr>
+            <tr><td>曲率（参数方程）</td><td>$K=\dfrac{|x'y''-y'x''|}{(x'^{2}+y'^{2})^{3/2}}$</td><td>分子是二阶行列式</td></tr>
+            <tr><td>铅直渐近线</td><td>$x=x_0$，若 $\lim\limits_{x\to x_0}f(x)=\infty$</td><td>在无定义点或边界找</td></tr>
+            <tr><td>水平渐近线</td><td>$y=b$，若 $\lim\limits_{x\to\infty}f(x)=b$</td><td>$x\to+\infty$ 与 $x\to-\infty$ 分别求</td></tr>
+            <tr><td>斜渐近线</td><td>$y=kx+b$，$k=\lim\limits_{x\to\infty}\dfrac{f(x)}{x}$（须存在且 $\ne0$ 且 $\ne\infty$），$b=\lim\limits_{x\to\infty}[f(x)-kx]$</td><td>先求 $k$ 再求 $b$，顺序不能反</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-4-1">4-1 基本积分表<span class="en-inline"> / Basic Integral Table</span></h2>
+      <p>每一条都是求导公式的逆写。<strong>不定积分的结果必须带 $+C$</strong>；而定积分或有初始条件时才能定出具体的 $C$。</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>被积函数</th><th>原函数</th><th>成立范围</th></tr></thead>
+          <tbody>
+            <tr><td>$x^{\mu}$（$\mu\ne-1$）</td><td>$\dfrac{x^{\mu+1}}{\mu+1}+C$</td><td>$x&gt;0$（$\mu$ 非整数时）</td></tr>
+            <tr><td>$\dfrac{1}{x}$</td><td>$\ln|x|+C$</td><td>$x\ne0$，注意绝对值</td></tr>
+            <tr><td>$e^{x}$</td><td>$e^{x}+C$</td><td>$x\in\mathbb{R}$</td></tr>
+            <tr><td>$a^{x}$</td><td>$\dfrac{a^{x}}{\ln a}+C$</td><td>$a&gt;0$，$a\ne1$</td></tr>
+            <tr><td>$\sin x$</td><td>$-\cos x+C$</td><td>$x\in\mathbb{R}$</td></tr>
+            <tr><td>$\cos x$</td><td>$\sin x+C$</td><td>$x\in\mathbb{R}$</td></tr>
+            <tr><td>$\sec^{2}x$</td><td>$\tan x+C$</td><td>$x\ne\dfrac{\pi}{2}+k\pi$</td></tr>
+            <tr><td>$\csc^{2}x$</td><td>$-\cot x+C$</td><td>$x\ne k\pi$</td></tr>
+            <tr><td>$\sec x\tan x$</td><td>$\sec x+C$</td><td>$x\ne\dfrac{\pi}{2}+k\pi$</td></tr>
+            <tr><td>$\csc x\cot x$</td><td>$-\csc x+C$</td><td>$x\ne k\pi$</td></tr>
+            <tr><td>$\dfrac{1}{1+x^{2}}$</td><td>$\arctan x+C$</td><td>$x\in\mathbb{R}$</td></tr>
+            <tr><td>$\dfrac{1}{\sqrt{1-x^{2}}}$</td><td>$\arcsin x+C$</td><td>$|x|&lt;1$</td></tr>
+            <tr><td>$\dfrac{1}{a^{2}+x^{2}}$</td><td>$\dfrac{1}{a}\arctan\dfrac{x}{a}+C$</td><td>$a\ne0$，<strong>系数 $\dfrac{1}{a}$ 不能丢</strong></td></tr>
+            <tr><td>$\dfrac{1}{\sqrt{a^{2}-x^{2}}}$</td><td>$\arcsin\dfrac{x}{a}+C$</td><td>$a&gt;0$，$|x|&lt;a$</td></tr>
+            <tr><td>$\dfrac{1}{x^{2}-a^{2}}$</td><td>$\dfrac{1}{2a}\ln\left|\dfrac{x-a}{x+a}\right|+C$</td><td>$a\ne0$，$x\ne\pm a$</td></tr>
+            <tr><td>$\dfrac{1}{\sqrt{x^{2}+a^{2}}}$</td><td>$\ln\left(x+\sqrt{x^{2}+a^{2}}\right)+C$</td><td>$x\in\mathbb{R}$</td></tr>
+            <tr><td>$\tan x$</td><td>$-\ln|\cos x|+C$</td><td>$x\ne\dfrac{\pi}{2}+k\pi$</td></tr>
+            <tr><td>$\cot x$</td><td>$\ln|\sin x|+C$</td><td>$x\ne k\pi$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-4-2">4-2 换元与分部积分<span class="en-inline"> / Substitution and Integration by Parts</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>方法</th><th>公式</th><th>什么时候用</th></tr></thead>
+          <tbody>
+            <tr><td>第一类换元（凑微分）</td><td>$\displaystyle\int f[\varphi(x)]\varphi'(x)\,\mathrm{d}x=\int f(u)\,\mathrm{d}u$</td><td>被积函数里能凑出「某个函数与其导数」</td></tr>
+            <tr><td>第二类换元</td><td>$x=\psi(t)$，$\displaystyle\int f(x)\mathrm{d}x=\int f[\psi(t)]\psi'(t)\,\mathrm{d}t$</td><td>含 $\sqrt{a^{2}-x^{2}}$（令 $x=a\sin t$）、$\sqrt{a^{2}+x^{2}}$（令 $x=a\tan t$）、$\sqrt{x^{2}-a^{2}}$（令 $x=a\sec t$）</td></tr>
+            <tr><td>分部积分</td><td>$\displaystyle\int u\,\mathrm{d}v=uv-\int v\,\mathrm{d}u$</td><td>「反对幂指三」：$u$ 取靠前者——反三角、对数、幂、指数、三角</td></tr>
+            <tr><td>有理函数</td><td>先化真分式（分子次数 &lt; 分母次数），再拆部分分式</td><td>分母可分解为一次因子（含重根）与二次不可约因子（含重根）四类</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>凑微分的常用对照</strong>：$\mathrm{d}(x^{2})=2x\,\mathrm{d}x$，$\mathrm{d}(\ln x)=\dfrac{\mathrm{d}x}{x}$，$\mathrm{d}(\sin x)=\cos x\,\mathrm{d}x$，$\mathrm{d}(e^{x})=e^{x}\mathrm{d}x$，$\mathrm{d}(\sqrt{x})=\dfrac{\mathrm{d}x}{2\sqrt{x}}$。漏系数是这一节最常见的失分点——如 $\displaystyle\int x e^{x^{2}}\mathrm{d}x=\dfrac{1}{2}e^{x^{2}}+C$，那个 $\dfrac{1}{2}$ 来自 $\mathrm{d}(x^{2})=2x\,\mathrm{d}x$。</p>
+
+      <h2 id="cs-5-1">5-1 微积分基本公式<span class="en-inline"> / The Fundamental Theorem of Calculus</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>形式</th><th>公式</th><th>前提</th></tr></thead>
+          <tbody>
+            <tr><td>第一形式（变上限求导）</td><td>$\dfrac{\mathrm{d}}{\mathrm{d}x}\displaystyle\int_{a}^{x}f(t)\,\mathrm{d}t=f(x)$</td><td>$f$ 在 $[a,b]$ 连续</td></tr>
+            <tr><td>一般形式</td><td>$\dfrac{\mathrm{d}}{\mathrm{d}x}\displaystyle\int_{\varphi(x)}^{\psi(x)}f(t)\,\mathrm{d}t=f[\psi(x)]\psi'(x)-f[\varphi(x)]\varphi'(x)$</td><td>上下限都含 $x$ 时<strong>两项都要写</strong>，别漏负号</td></tr>
+            <tr><td>第二形式（牛顿—莱布尼茨）</td><td>$\displaystyle\int_{a}^{b}f(x)\,\mathrm{d}x=F(b)-F(a)$</td><td>$F$ 是 $f$ 的任一原函数</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-5-2">5-2 定积分的性质与计算<span class="en-inline"> / Properties and Evaluation</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>性质 / 方法</th><th>内容</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr><td>对称区间（奇函数）</td><td>$\displaystyle\int_{-a}^{a}f(x)\mathrm{d}x=0$（$f$ 为奇函数）</td><td>先看奇偶，能省大量计算</td></tr>
+            <tr><td>对称区间（偶函数）</td><td>$\displaystyle\int_{-a}^{a}f(x)\mathrm{d}x=2\int_{0}^{a}f(x)\mathrm{d}x$</td><td>奇偶判据：$f(-x)=\pm f(x)$</td></tr>
+            <tr><td>换元（定积分）</td><td>$\displaystyle\int_{a}^{b}f[\varphi(x)]\varphi'(x)\mathrm{d}x=\int_{\alpha}^{\beta}f(u)\mathrm{d}u$</td><td><strong>换元必须同时换限</strong>：新下限 $\alpha=\varphi(a)$，新上限 $\beta=\varphi(b)$</td></tr>
+            <tr><td>分部（定积分）</td><td>$\displaystyle\int_{a}^{b}u\,\mathrm{d}v=\Big[uv\Big]_{a}^{b}-\int_{a}^{b}v\,\mathrm{d}u$</td><td>边界项要代值相减</td></tr>
+            <tr><td>区间可加</td><td>$\displaystyle\int_{a}^{b}=\int_{a}^{c}+\int_{c}^{b}$</td><td>绝对值、分段函数必用</td></tr>
+            <tr><td>周期性</td><td>$\displaystyle\int_{a}^{a+T}f=\int_{0}^{T}f$（$f$ 以 $T$ 为周期）</td><td>长度为一个周期的区间上都相等</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-5-3">5-3 反常积分<span class="en-inline"> / Improper Integrals</span></h2>
+      <p>两类：<strong>无穷区间</strong>与<strong>无界函数</strong>。都必须按极限定义写出来判断敛散，不能直接代端点。</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>判据</th><th>结论</th></tr></thead>
+          <tbody>
+            <tr><td>无穷区间 $\displaystyle\int_{1}^{+\infty}\dfrac{\mathrm{d}x}{x^{p}}$</td><td>$p$</td><td>$p&gt;1$ 收敛，$p\le1$ 发散</td></tr>
+            <tr><td>无界函数 $\displaystyle\int_{0}^{1}\dfrac{\mathrm{d}x}{x^{p}}$</td><td>$p$</td><td>$p&lt;1$ 收敛，$p\ge1$ 发散</td></tr>
+            <tr><td>定义（无穷区间）</td><td>$\displaystyle\int_{a}^{+\infty}f=\lim_{b\to+\infty}\int_{a}^{b}f$</td><td>极限存在且有限才收敛</td></tr>
+            <tr><td>定义（无界函数）</td><td>$\displaystyle\int_{a}^{b}f=\lim_{\varepsilon\to0^{+}}\int_{a+\varepsilon}^{b}f$（$a$ 为瑕点）</td><td>算完极限才能下结论</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>注意</strong>：同样的幂函数，无穷区间与无界函数两个方向的收敛条件是<strong>相反</strong>的（$p$ 与 $1-p$ 互换角色）。记的时候用 $\displaystyle\int_{1}^{+\infty}\dfrac{\mathrm{d}x}{x}$（调和级数类比，发散）与 $\displaystyle\int_{0}^{1}\dfrac{\mathrm{d}x}{\sqrt{x}}=2$（收敛）两个具体例子作锚点。</p>
+
+      <h2 id="cs-6-1">6-1 定积分的几何应用<span class="en-inline"> / Geometric Applications</span></h2>
+      <p>一切应用题都是同一个流程：画图 → 选积分变量 → 写出微元（$\mathrm{d}A$、$\mathrm{d}V$、$\mathrm{d}s$）→ 定积分限。微元必须与真实小量相差 $o(\mathrm{d}x)$，否则积分出来是错的。</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>所求量</th><th>微元与公式</th><th>易错点</th></tr></thead>
+          <tbody>
+            <tr><td>面积（直角坐标）</td><td>$S=\displaystyle\int_{a}^{b}\big|f(x)-g(x)\big|\mathrm{d}x$</td><td>上减下；图形跨 $x$ 轴要分段，或直接加绝对值</td></tr>
+            <tr><td>面积（极坐标）</td><td>$S=\dfrac{1}{2}\displaystyle\int_{\alpha}^{\beta}r^{2}(\theta)\,\mathrm{d}\theta$</td><td>系数 $\dfrac{1}{2}$ 与 $r^{2}$（不是 $r$）都不能错</td></tr>
+            <tr><td>体积（绕 $x$ 轴）</td><td>$V=\pi\displaystyle\int_{a}^{b}y^{2}\,\mathrm{d}x$</td><td><strong>被积函数是 $y^{2}$</strong>，不是 $y$</td></tr>
+            <tr><td>体积（绕 $y$ 轴，柱壳法）</td><td>$V=2\pi\displaystyle\int_{a}^{b}x\,y\,\mathrm{d}x$</td><td>半径 $x$ 与高 $y$ 相乘，系数 $2\pi$</td></tr>
+            <tr><td>弧长（直角坐标）</td><td>$s=\displaystyle\int_{a}^{b}\sqrt{1+y'^{2}}\,\mathrm{d}x$</td><td>—</td></tr>
+            <tr><td>弧长（参数方程）</td><td>$s=\displaystyle\int_{\alpha}^{\beta}\sqrt{x'^{2}+y'^{2}}\,\mathrm{d}t$</td><td>上下限按 $t$ 从小到大</td></tr>
+            <tr><td>弧长（极坐标）</td><td>$s=\displaystyle\int_{\alpha}^{\beta}\sqrt{r^{2}+r'^{2}}\,\mathrm{d}\theta$</td><td>两项<strong>相加</strong>，容易错写成相减</td></tr>
+            <tr><td>旋转体侧面积</td><td>$S=2\pi\displaystyle\int_{a}^{b}|y|\sqrt{1+y'^{2}}\,\mathrm{d}x$</td><td>与体积公式区别在多了弧长因子</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="cs-6-1-a">物理应用与平均值<span class="en-inline"> / Physical Applications</span></h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>量</th><th>公式</th></tr></thead>
+          <tbody>
+            <tr><td>变力做功</td><td>$W=\displaystyle\int_{a}^{b}F(x)\,\mathrm{d}x$</td></tr>
+            <tr><td>液压力</td><td>$F=\rho g\displaystyle\int_{a}^{b}h(x)\cdot w(x)\,\mathrm{d}x$（$h$ 为深度，$w$ 为宽度）</td></tr>
+            <tr><td>函数平均值</td><td>$\bar f=\dfrac{1}{b-a}\displaystyle\int_{a}^{b}f(x)\,\mathrm{d}x$</td></tr>
+            <tr><td>质心（均匀薄片）</td><td>$\bar x=\dfrac{1}{S}\displaystyle\int_{a}^{b}x\big[f(x)-g(x)\big]\mathrm{d}x$，$\bar y$ 同理</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-7-1">7-1 一阶微分方程<span class="en-inline"> / First-Order Equations</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>标准形与解法</th><th>通解</th></tr></thead>
+          <tbody>
+            <tr><td>可分离变量</td><td>$y'=f(x)g(y)$ → 分离为 $\dfrac{\mathrm{d}y}{g(y)}=f(x)\mathrm{d}x$，两边积分</td><td>隐式即可，不必强行解出 $y$</td></tr>
+            <tr><td>齐次方程</td><td>$y'=\varphi\left(\dfrac{y}{x}\right)$ → 令 $u=\dfrac{y}{x}$，$y=ux$，$y'=u+xu'$</td><td>化为可分离</td></tr>
+            <tr><td>一阶线性</td><td>$y'+P(x)y=Q(x)$</td><td>$y=e^{-\int P\mathrm{d}x}\left[\displaystyle\int Q(x)e^{\int P\mathrm{d}x}\mathrm{d}x+C\right]$</td></tr>
+            <tr><td>伯努利</td><td>$y'+P(x)y=Q(x)y^{n}$（$n\ne0,1$）→ 令 $z=y^{1-n}$</td><td>化为一阶线性</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>一阶线性公式的记忆法</strong>：先算积分因子 $\mu=e^{\int P\mathrm{d}x}$，通解就是 $y=\dfrac{1}{\mu}\left[\displaystyle\int Q\mu\,\mathrm{d}x+C\right]$。注意 $P$ 带正号时积分因子取 $e^{+\int P}$，符号搞反是最常见的错。</p>
+
+      <h2 id="cs-7-2">7-2 可降阶的高阶方程<span class="en-inline"> / Equations Reducible in Order</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>处理</th></tr></thead>
+          <tbody>
+            <tr><td>$y^{(n)}=f(x)$</td><td>逐次积分 $n$ 次，得到 $n$ 个任意常数</td></tr>
+            <tr><td>$y''=f(x,y')$（缺 $y$）</td><td>令 $p=y'$，则 $y''=p'$，降为一阶方程 $p'=f(x,p)$</td></tr>
+            <tr><td>$y''=f(y,y')$（缺 $x$）</td><td>令 $p=y'$，则 $y''=p\dfrac{\mathrm{d}p}{\mathrm{d}y}$，降为 $p\dfrac{\mathrm{d}p}{\mathrm{d}y}=f(y,p)$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-7-3">7-3 二阶常系数线性方程<span class="en-inline"> / Second-Order Constant-Coefficient Equations</span></h2>
+      <p>齐次方程 $y''+py'+qy=0$ 的通解由特征方程 $r^{2}+pr+q=0$ 的根型决定：</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>判别式 $\Delta=p^{2}-4q$</th><th>根型</th><th>通解</th></tr></thead>
+          <tbody>
+            <tr><td>$\Delta&gt;0$</td><td>两个相异实根 $r_1\ne r_2$</td><td>$C_1e^{r_1x}+C_2e^{r_2x}$</td></tr>
+            <tr><td>$\Delta=0$</td><td>二重实根 $r$</td><td>$(C_1+C_2x)e^{rx}$</td></tr>
+            <tr><td>$\Delta&lt;0$</td><td>共轭复根 $\alpha\pm\beta i$</td><td>$e^{\alpha x}\left(C_1\cos\beta x+C_2\sin\beta x\right)$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="cs-7-3-a">非齐次方程的特解设法<span class="en-inline"> / Particular Solutions</span></h3>
+      <p>$y''+py'+qy=f(x)$ 的通解 = 齐次通解 + 一个特解。特解的形式由 $f(x)$ 的类型与特征根是否「撞车」决定。</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>右端 $f(x)$</th><th>标准设法</th><th>共振处理</th></tr></thead>
+          <tbody>
+            <tr><td>$P_m(x)e^{\lambda x}$</td><td>$y^{*}=x^{k}Q_m(x)e^{\lambda x}$</td><td>$k$ = $\lambda$ 作为特征根的<strong>重数</strong>（不是根则 $k=0$，单根 $k=1$，二重根 $k=2$）</td></tr>
+            <tr><td>$e^{\lambda x}\big[P_l(x)\cos\omega x+Q_n(x)\sin\omega x\big]$</td><td>$y^{*}=x^{k}e^{\lambda x}\big[R_m(x)\cos\omega x+S_m(x)\sin\omega x\big]$，$m=\max(l,n)$</td><td>$\lambda\pm\omega i$ 是特征根时 $k=1$，否则 $k=0$</td></tr>
+            <tr><td>纯三角函数（$\lambda=0$）</td><td>$y^{*}=x^{k}(A\cos\omega x+B\sin\omega x)$</td><td><strong>正余弦都要写</strong>，只写一个凑不齐</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>欧拉方程</strong> $x^{2}y''+axy'+by=0$（$x&gt;0$）：令 $x=e^{t}$（即 $t=\ln x$），化为常系数方程，其特征方程为 $r(r-1)+ar+b=0$。解出 $r$ 后把 $t$ 换回 $\ln x$。</p>
+
+      <h2 id="cs-8-1">8-1 向量的运算<span class="en-inline"> / Vector Operations</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>运算</th><th>公式</th><th>结果与用途</th></tr></thead>
+          <tbody>
+            <tr><td>数量积（点积）</td><td>$\vec a\cdot\vec b=|\vec a||\vec b|\cos\theta=a_1b_1+a_2b_2+a_3b_3$</td><td>得<strong>数</strong>；判垂直（$=0$）、求夹角、求投影</td></tr>
+            <tr><td>向量积（叉积）</td><td>$\vec a\times\vec b=\begin{vmatrix}\vec i&amp;\vec j&amp;\vec k\\a_1&amp;a_2&amp;a_3\\b_1&amp;b_2&amp;b_3\end{vmatrix}$</td><td>得<strong>向量</strong>；判平行（$=\vec0$）、求法向量、求面积</td></tr>
+            <tr><td>模</td><td>$|\vec a|=\sqrt{a_1^{2}+a_2^{2}+a_3^{2}}$</td><td>—</td></tr>
+            <tr><td>方向余弦</td><td>$\cos\alpha=\dfrac{a_1}{|\vec a|}$，$\cos\beta=\dfrac{a_2}{|\vec a|}$，$\cos\gamma=\dfrac{a_3}{|\vec a|}$</td><td>满足 $\cos^{2}\alpha+\cos^{2}\beta+\cos^{2}\gamma=1$</td></tr>
+            <tr><td>夹角</td><td>$\cos\theta=\dfrac{\vec a\cdot\vec b}{|\vec a||\vec b|}$</td><td>—</td></tr>
+            <tr><td>混合积</td><td>$[\vec a\vec b\vec c]=\vec a\cdot(\vec b\times\vec c)$</td><td>绝对值等于平行六面体体积；$=0$ 表示三向量共面</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>两条易错</strong>：向量积<strong>不满足交换律</strong>（$\vec a\times\vec b=-\vec b\times\vec a$），把顺序写反就全错；$\vec i\times\vec j=\vec k$ 用右手定则自查——四指从 $\vec i$ 转向 $\vec j$，拇指指向 $+z$。</p>
+
+      <h2 id="cs-8-2">8-2 平面与空间直线<span class="en-inline"> / Planes and Lines</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>对象</th><th>方程</th><th>关键向量</th></tr></thead>
+          <tbody>
+            <tr><td>平面（点法式）</td><td>$A(x-x_0)+B(y-y_0)+C(z-z_0)=0$</td><td>法向量 $\vec n=(A,B,C)$</td></tr>
+            <tr><td>平面（一般式）</td><td>$Ax+By+Cz+D=0$</td><td>系数就是法向量</td></tr>
+            <tr><td>直线（对称式）</td><td>$\dfrac{x-x_0}{m}=\dfrac{y-y_0}{n}=\dfrac{z-z_0}{p}$</td><td>方向向量 $\vec s=(m,n,p)$</td></tr>
+            <tr><td>直线（参数式）</td><td>$x=x_0+mt$，$y=y_0+nt$，$z=z_0+pt$</td><td>同上</td></tr>
+            <tr><td>点到平面距离</td><td>$d=\dfrac{|Ax_0+By_0+Cz_0+D|}{\sqrt{A^{2}+B^{2}+C^{2}}}$</td><td><strong>分子必须取绝对值</strong></td></tr>
+            <tr><td>点到直线距离</td><td>$d=\dfrac{|\vec s\times\overrightarrow{P_0P}|}{|\vec s|}$</td><td>用向量积</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>位置关系</th><th>判据</th></tr></thead>
+          <tbody>
+            <tr><td>两平面平行</td><td>法向量平行：$\vec n_1\parallel\vec n_2$</td></tr>
+            <tr><td>两平面垂直</td><td>法向量垂直：$\vec n_1\cdot\vec n_2=0$</td></tr>
+            <tr><td>直线与平面平行</td><td>方向向量与法向量垂直：$\vec s\cdot\vec n=0$</td></tr>
+            <tr><td>直线与平面垂直</td><td>方向向量与法向量平行：$\vec s\parallel\vec n$</td></tr>
+            <tr><td>两直线平行 / 垂直</td><td>方向向量平行 / 垂直</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>最容易记反的一对</strong>：两平面<b>垂直</b> ⇔ 法向量<b>正交</b>（数量积为零）；两平面<b>平行</b> ⇔ 法向量<b>平行</b>。「平面的关系」与「法向量的关系」是反着对应的。</p>
+
+      <h2 id="cs-8-3">8-3 曲面与空间曲线<span class="en-inline"> / Surfaces and Space Curves</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>曲面</th><th>方程</th><th>截痕特征</th></tr></thead>
+          <tbody>
+            <tr><td>球面</td><td>$x^{2}+y^{2}+z^{2}=R^{2}$</td><td>三项同号且系数相同</td></tr>
+            <tr><td>椭球面</td><td>$\dfrac{x^{2}}{a^{2}}+\dfrac{y^{2}}{b^{2}}+\dfrac{z^{2}}{c^{2}}=1$</td><td>—</td></tr>
+            <tr><td>圆锥面</td><td>$x^{2}+y^{2}=z^{2}$（或 $\dfrac{x^{2}}{a^{2}}+\dfrac{y^{2}}{a^{2}}=\dfrac{z^{2}}{c^{2}}$）</td><td>截线是半径随 $|z|$ <strong>线性</strong>增长的圆</td></tr>
+            <tr><td>旋转抛物面</td><td>$z=x^{2}+y^{2}$</td><td>截线半径随 $\sqrt{z}$ 增长</td></tr>
+            <tr><td>圆柱面</td><td>$x^{2}+y^{2}=R^{2}$</td><td>与 $z$ 无关，截线半径不变</td></tr>
+            <tr><td>双曲抛物面（马鞍面）</td><td>$z=x^{2}-y^{2}$</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>求投影曲线</strong>：投影到 $xOy$ 面就<strong>消去 $z$</strong>，得到的柱面方程再补上 $z=0$。例如球面 $x^{2}+y^{2}+z^{2}=1$ 与平面 $z=\dfrac{1}{2}$ 的交线，代入消 $z$ 得 $x^{2}+y^{2}=\dfrac{3}{4}$，即投影圆（半径 $\dfrac{\sqrt3}{2}$，与「球半径 $1$、截面高 $\dfrac12$」的几何一致）。</p>
+
+      <h2 id="cs-9-1">9-1 偏导数 · 全微分 · 复合求导<span class="en-inline"> / Partial and Total Derivatives</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>概念</th><th>公式</th><th>要点</th></tr></thead>
+          <tbody>
+            <tr><td>偏导数</td><td>$f_x(x_0,y_0)=\lim\limits_{\Delta x\to0}\dfrac{f(x_0+\Delta x,y_0)-f(x_0,y_0)}{\Delta x}$</td><td>对一个变量求导，其余<strong>当常数</strong></td></tr>
+            <tr><td>全微分</td><td>$\mathrm{d}z=f_x\,\mathrm{d}x+f_y\,\mathrm{d}y$</td><td>可微 ⇒ 连续且偏导存在；反之不成立</td></tr>
+            <tr><td>可微的充分条件</td><td>偏导数连续 ⇒ 可微</td><td>这是充分不必要</td></tr>
+            <tr><td>复合（全导数）</td><td>$z=f(u,v)$，$u=u(t)$，$v=v(t)$：$\dfrac{\mathrm{d}z}{\mathrm{d}t}=f_u\dfrac{\mathrm{d}u}{\mathrm{d}t}+f_v\dfrac{\mathrm{d}v}{\mathrm{d}t}$</td><td>画变量树，<strong>每条路径加起来</strong></td></tr>
+            <tr><td>复合（偏导）</td><td>$z=f(u,v)$，$u=u(x,y)$，$v=v(x,y)$：$\dfrac{\partial z}{\partial x}=f_u\dfrac{\partial u}{\partial x}+f_v\dfrac{\partial v}{\partial x}$</td><td>同样按路径累加</td></tr>
+            <tr><td>隐函数（一个方程）</td><td>$F(x,y,z)=0$ 确定 $z=z(x,y)$：$\dfrac{\partial z}{\partial x}=-\dfrac{F_x}{F_z}$，$\dfrac{\partial z}{\partial y}=-\dfrac{F_y}{F_z}$</td><td><strong>负号不能丢</strong>；$F_z\ne0$</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>最反直觉的一条</strong>：二元函数<b>偏导数都存在推不出连续</b>。反例 $f(x,y)=\dfrac{xy}{x^{2}+y^{2}}$（$(x,y)\ne(0,0)$）、$f(0,0)=0$：两个偏导在原点都存在且为 $0$，但沿 $y=x$ 逼近得 $\dfrac{1}{2}$、沿 $y=0$ 逼近得 $0$，极限不存在。一元函数里「可导 ⇒ 连续」的直觉在这里不能照搬。</p>
+
+      <h2 id="cs-9-2">9-2 方向导数 · 梯度 · 几何应用<span class="en-inline"> / Directional Derivatives and Gradients</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>概念</th><th>公式</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>方向导数</td><td>$\dfrac{\partial f}{\partial\vec l}=\nabla f\cdot\vec e_l=|\nabla f|\cos\theta$</td><td>得<strong>数</strong>，随方向变化</td></tr>
+            <tr><td>梯度</td><td>$\nabla f=(f_x,f_y,f_z)$</td><td>得<strong>向量</strong>；梯度的模就是方向导数的最大值</td></tr>
+            <tr><td>梯度为零</td><td>$\nabla f=\vec0$ ⇔ 该点为驻点</td><td>驻点不一定是极值点</td></tr>
+            <tr><td>曲面切平面</td><td>$F_x(P)(x-x_0)+F_y(P)(y-y_0)+F_z(P)(z-z_0)=0$</td><td>法向量就是梯度 $\nabla F(P)$</td></tr>
+            <tr><td>曲面法线</td><td>$\dfrac{x-x_0}{F_x(P)}=\dfrac{y-y_0}{F_y(P)}=\dfrac{z-z_0}{F_z(P)}$</td><td>同上</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-9-3">9-3 多元函数的极值<span class="en-inline"> / Extrema of Functions of Several Variables</span></h2>
+      <p><strong>无条件极值</strong>：先解 $\begin{cases}f_x=0\\f_y=0\end{cases}$ 得驻点，再令 $A=f_{xx}$、$B=f_{xy}$、$C=f_{yy}$，用 $AC-B^{2}$ 判别：</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>$AC-B^{2}$</th><th>结论</th></tr></thead>
+          <tbody>
+            <tr><td>$&gt;0$ 且 $A&gt;0$</td><td>极小值</td></tr>
+            <tr><td>$&gt;0$ 且 $A&lt;0$</td><td>极大值</td></tr>
+            <tr><td>$&lt;0$</td><td>不是极值（鞍点）</td></tr>
+            <tr><td>$=0$</td><td>判别法失效，需另行判断</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>条件极值（拉格朗日乘数法）</strong>：求 $u=f(x,y,z)$ 在约束 $\varphi=0$、$\psi=0$ 下的极值，构造 $L=f+\lambda\varphi+\mu\psi$，令 $L$ 对各变量的偏导与两个约束方程同时为零，解出候选点。<strong>不要忘了约束方程本身</strong>——只解偏导方程会漏掉驻点的个数。</p>
+
+      <h2 id="cs-10-1">10-1 二重积分<span class="en-inline"> / Double Integrals</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>坐标系</th><th>面积元素</th><th>积分限的写法</th></tr></thead>
+          <tbody>
+            <tr><td>直角坐标</td><td>$\mathrm{d}\sigma=\mathrm{d}x\,\mathrm{d}y$</td><td>X 型：$a\le x\le b$，$\varphi_1(x)\le y\le\varphi_2(x)$；Y 型反过来</td></tr>
+            <tr><td>极坐标</td><td>$\mathrm{d}\sigma=r\,\mathrm{d}r\,\mathrm{d}\theta$</td><td><strong>因子 $r$ 不能丢</strong>；圆域、扇形域、$x^{2}+y^{2}$ 型被积函数优先用</td></tr>
+            <tr><td>一般变量替换</td><td>$\mathrm{d}\sigma=|J|\,\mathrm{d}u\,\mathrm{d}v$，$J=\dfrac{\partial(x,y)}{\partial(u,v)}$</td><td>雅可比行列式的<strong>绝对值</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>交换积分次序</strong>：积分限依附于变量，所以<strong>必须先画区域再重新定限</strong>，不能只把两个积分号对调。以 $\displaystyle\int_0^1\mathrm{d}x\int_0^x f\,\mathrm{d}y$ 为例，区域是三角形 $0\le y\le x\le1$，交换后为 $\displaystyle\int_0^1\mathrm{d}y\int_y^1 f\,\mathrm{d}x$。</p>
+      <p><strong>对称性</strong>：区域关于 $x$ 轴对称时，若 $f$ 对 $y$ 为奇函数则积分为 $0$，为偶函数则等于上半部分的两倍。先用对称性化简，是二重积分最快的路。</p>
+
+      <h2 id="cs-10-2">10-2 三重积分<span class="en-inline"> / Triple Integrals</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>坐标系</th><th>体积元素 $\mathrm{d}V$</th><th>适用场景</th></tr></thead>
+          <tbody>
+            <tr><td>直角坐标</td><td>$\mathrm{d}x\,\mathrm{d}y\,\mathrm{d}z$</td><td>长方体、柱体（上下为常数面）</td></tr>
+            <tr><td>柱面坐标</td><td>$r\,\mathrm{d}r\,\mathrm{d}\theta\,\mathrm{d}z$</td><td>绕 $z$ 轴的旋转体、$x^{2}+y^{2}$ 型</td></tr>
+            <tr><td>球面坐标</td><td>$\rho^{2}\sin\varphi\,\mathrm{d}\rho\,\mathrm{d}\varphi\,\mathrm{d}\theta$</td><td>球、锥、$x^{2}+y^{2}+z^{2}$ 型；<strong>是 $\rho^{2}\sin\varphi$，不是 $\rho^{2}\cos\varphi$</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>应用</th><th>公式</th></tr></thead>
+          <tbody>
+            <tr><td>立体体积</td><td>$V=\displaystyle\iiint_{\Omega}\mathrm{d}V$</td></tr>
+            <tr><td>质量（密度 $\rho$）</td><td>$m=\displaystyle\iiint_{\Omega}\rho\,\mathrm{d}V$</td></tr>
+            <tr><td>质心</td><td>$\bar z=\dfrac{1}{V}\displaystyle\iiint z\,\mathrm{d}V$（其余分量同理）</td></tr>
+            <tr><td>转动惯量（绕 $z$ 轴）</td><td>$I_z=\displaystyle\iiint(x^{2}+y^{2})\rho\,\mathrm{d}V$</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-11-1">11-1 曲线积分<span class="en-inline"> / Line Integrals</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>记号与计算</th><th>方向性</th></tr></thead>
+          <tbody>
+            <tr><td>第一类（对弧长）</td><td>$\displaystyle\int_L f\,\mathrm{d}s$，按参数方程化为 $\displaystyle\int_{\alpha}^{\beta}f\cdot\sqrt{x'^{2}+y'^{2}}\,\mathrm{d}t$</td><td><strong>与方向无关</strong>（$\mathrm{d}s&gt;0$）</td></tr>
+            <tr><td>第二类（对坐标）</td><td>$\displaystyle\int_L P\,\mathrm{d}x+Q\,\mathrm{d}y$</td><td><strong>方向反转则变号</strong>；起点对应下限</td></tr>
+            <tr><td>两类的关系</td><td>$\displaystyle\int_L P\mathrm{d}x+Q\mathrm{d}y=\int_L(P\cos\alpha+Q\cos\beta)\,\mathrm{d}s$</td><td>$\cos\alpha$、$\cos\beta$ 为切向量的方向余弦</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-11-2">11-2 格林公式与路径无关<span class="en-inline"> / Green's Theorem and Path Independence</span></h2>
+      <p><strong>格林公式</strong>：$\displaystyle\oint_L P\,\mathrm{d}x+Q\,\mathrm{d}y=\iint_D\left(\dfrac{\partial Q}{\partial x}-\dfrac{\partial P}{\partial y}\right)\mathrm{d}\sigma$。条件：$L$ 是 $D$ 的<strong>正向边界</strong>（沿 $L$ 走时 $D$ 在左手侧），$P$、$Q$ 在 $D$ 上有连续一阶偏导。</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>事项</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>路径无关的充要条件</td><td>$\dfrac{\partial P}{\partial y}=\dfrac{\partial Q}{\partial x}$（在<strong>单连通</strong>区域内）</td></tr>
+            <tr><td>等价说法</td><td>沿任意闭曲线积分为零 ⇔ $P\mathrm{d}x+Q\mathrm{d}y$ 是某函数的全微分</td></tr>
+            <tr><td>单连通不能省</td><td>$\dfrac{-y\,\mathrm{d}x+x\,\mathrm{d}y}{x^{2}+y^{2}}$ 在挖去原点的区域满足 $P_y=Q_x$，但绕原点一圈积分是 $2\pi\ne0$</td></tr>
+            <tr><td>方向错了</td><td>反向要加负号；若 $L$ 是负向，格林公式右端取负</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-11-3">11-3 曲面积分与三大公式<span class="en-inline"> / Surface Integrals and the Three Big Theorems</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>记号</th><th>方向性</th></tr></thead>
+          <tbody>
+            <tr><td>第一类（对面积）</td><td>$\displaystyle\iint_{\Sigma}f\,\mathrm{d}S$</td><td>与侧无关（$\mathrm{d}S&gt;0$）</td></tr>
+            <tr><td>第二类（对坐标）</td><td>$\displaystyle\iint_{\Sigma}P\,\mathrm{d}y\mathrm{d}z+Q\,\mathrm{d}z\mathrm{d}x+R\,\mathrm{d}x\mathrm{d}y$</td><td>与所选<strong>侧</strong>有关，换侧变号</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>公式</th><th>内容</th><th>方向要求</th></tr></thead>
+          <tbody>
+            <tr><td>格林</td><td>平面闭曲线积分 → 二重积分</td><td>曲线正向</td></tr>
+            <tr><td>高斯</td><td>$\displaystyle\oiint_{\Sigma}P\mathrm{d}y\mathrm{d}z+Q\mathrm{d}z\mathrm{d}x+R\mathrm{d}x\mathrm{d}y=\iiint_{\Omega}\left(\dfrac{\partial P}{\partial x}+\dfrac{\partial Q}{\partial y}+\dfrac{\partial R}{\partial z}\right)\mathrm{d}V$</td><td>曲面取<strong>外侧</strong></td></tr>
+            <tr><td>斯托克斯</td><td>$\displaystyle\oint_{\Gamma}P\mathrm{d}x+Q\mathrm{d}y+R\mathrm{d}z=\iint_{\Sigma}\begin{vmatrix}\mathrm{d}y\mathrm{d}z&amp;\mathrm{d}z\mathrm{d}x&amp;\mathrm{d}x\mathrm{d}y\\ \dfrac{\partial}{\partial x}&amp;\dfrac{\partial}{\partial y}&amp;\dfrac{\partial}{\partial z}\\ P&amp;Q&amp;R\end{vmatrix}$</td><td>$\Gamma$ 与 $\Sigma$ 的法向量成<strong>右手系</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>散度与旋度</strong>：$\operatorname{div}\vec A=\dfrac{\partial P}{\partial x}+\dfrac{\partial Q}{\partial y}+\dfrac{\partial R}{\partial z}$（高斯公式的被积函数）；$\operatorname{rot}\vec A=\nabla\times\vec A$（斯托克斯公式的被积函数）。三个公式的右端全是<b>重积分</b>，所以第 10 章是本章的地基。</p>
+
+      <h2 id="cs-12-1">12-1 常数项级数的审敛法<span class="en-inline"> / Convergence Tests</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>判据</th><th>内容</th><th>注意</th></tr></thead>
+          <tbody>
+            <tr><td>必要条件</td><td>$\sum u_n$ 收敛 ⇒ $\lim\limits_{n\to\infty}u_n=0$</td><td>逆命题<strong>不成立</strong>：调和级数通项趋于 $0$ 却发散</td></tr>
+            <tr><td>$p$ 级数</td><td>$\sum\dfrac{1}{n^{p}}$：$p&gt;1$ 收敛，$p\le1$ 发散</td><td>$p=1$ 恰好发散（调和级数）</td></tr>
+            <tr><td>几何级数</td><td>$\sum aq^{n}$：$|q|&lt;1$ 收敛，$|q|\ge1$ 发散</td><td>—</td></tr>
+            <tr><td>比较判别法</td><td>$0\le u_n\le v_n$ 且 $\sum v_n$ 收敛 ⇒ $\sum u_n$ 收敛</td><td>$u_n\ge0$ 的前提不能省</td></tr>
+            <tr><td>比值判别法</td><td>$\lim\dfrac{u_{n+1}}{u_n}=\rho$：$\rho&lt;1$ 收敛，$\rho&gt;1$ 发散</td><td>$\rho=1$ 时<b>失效</b>，既不能判定收敛也不能判定发散</td></tr>
+            <tr><td>交错级数（莱布尼茨）</td><td>$u_n$ 单调递减且 $\lim u_n=0$ ⇒ $\sum(-1)^{n-1}u_n$ 收敛</td><td>两个条件缺一不可</td></tr>
+            <tr><td>绝对收敛</td><td>$\sum|u_n|$ 收敛 ⇒ $\sum u_n$ 收敛</td><td>反之不成立（条件收敛）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="cs-12-2">12-2 幂级数<span class="en-inline"> / Power Series</span></h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>事项</th><th>公式 / 方法</th></tr></thead>
+          <tbody>
+            <tr><td>收敛半径（比值法）</td><td>$R=\lim\limits_{n\to\infty}\left|\dfrac{a_n}{a_{n+1}}\right|$</td></tr>
+            <tr><td>收敛半径（根值法）</td><td>$R=\dfrac{1}{\lim\limits_{n\to\infty}\sqrt[n]{|a_n|}}$</td></tr>
+            <tr><td>收敛区间</td><td>先由 $R$ 得 $(-R,R)$，再<strong>单独判定两个端点</strong>的敛散</td></tr>
+            <tr><td>逐项求导</td><td>在收敛区间内 $\left(\sum a_nx^{n}\right)'=\sum na_nx^{n-1}$，半径不变</td></tr>
+            <tr><td>逐项积分</td><td>$\displaystyle\int_0^{x}\sum a_nt^{n}\,\mathrm{d}t=\sum\dfrac{a_n}{n+1}x^{n+1}$，半径不变</td></tr>
+            <tr><td>几何级数基准</td><td>$\sum\limits_{n=0}^{\infty}x^{n}=\dfrac{1}{1-x}$（$|x|&lt;1$）——求和其他级数都靠它</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>求和方法</strong>：先凑成几何级数的形式、再逐项求导或逐项积分。例如 $\sum nx^{n-1}$ 由 $\sum x^{n}=\dfrac{1}{1-x}$ 求导得 $\dfrac{1}{(1-x)^{2}}$。</p>
+
+      <h2 id="cs-12-3">12-3 傅里叶级数<span class="en-inline"> / Fourier Series</span></h2>
+      <p>设 $f$ 以 $2\pi$ 为周期、在 $[-\pi,\pi]$ 上可积，则</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>系数</th><th>公式</th></tr></thead>
+          <tbody>
+            <tr><td>$a_n$（$n\ge0$）</td><td>$a_n=\dfrac{1}{\pi}\displaystyle\int_{-\pi}^{\pi}f(x)\cos nx\,\mathrm{d}x$</td></tr>
+            <tr><td>$b_n$（$n\ge1$）</td><td>$b_n=\dfrac{1}{\pi}\displaystyle\int_{-\pi}^{\pi}f(x)\sin nx\,\mathrm{d}x$</td></tr>
+            <tr><td>级数</td><td>$\dfrac{a_0}{2}+\sum\limits_{n=1}^{\infty}\left(a_n\cos nx+b_n\sin nx\right)$</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>要点</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>奇偶简化</td><td>$f$ 为奇函数 ⇒ $a_n=0$（只剩正弦项）；$f$ 为偶函数 ⇒ $b_n=0$（只剩余弦项）</td></tr>
+            <tr><td>狄利克雷定理</td><td>在<strong>连续点</strong>收敛于 $f(x)$；在<strong>跳跃点</strong>收敛于 $\dfrac{f(x^{-})+f(x^{+})}{2}$</td></tr>
+            <tr><td>端点处的值</td><td>$x=\pm\pi$ 处按周期延拓后的左右极限取平均，如 $f(x)=x$ 在 $x=\pi$ 处收敛于 $\dfrac{\pi+(-\pi)}{2}=0$</td></tr>
+            <tr><td>周期 $2l$</td><td>把 $x$ 换成 $\dfrac{\pi x}{l}$，系数前乘 $\dfrac{1}{l}$</td></tr>
+          </tbody>
+        </table>
+      </div>
 
       <h2 id="cs-tx-1">TX1 视窗与方形视窗<span class="en-inline"> / Viewing Windows</span></h2>
       <p>判断软件画出的图形是否与真实形状一致，只用一个比例条件。</p>
