@@ -52,6 +52,12 @@ function secureWebPreferences(extra) {
 
 /* Desmos / 其他网页：应用内独立窗口（不走 iframe，因此不受 X-Frame-Options 限制）。 */
 function openInAppWindow(url, kind) {
+  /* 同一个地址只留一个窗口：原来 extWindows 建了 Map 却只删不写，等于没有登记，
+     同一个链接点两次会开出两个窗口。 */
+  const key = kind === 'desmos' ? 'desmos' : url;
+  const prev = extWindows.get(key);
+  if (prev && !prev.isDestroyed()) { prev.show(); prev.focus(); return prev; }
+
   const wide = kind === 'desmos';
   const w = new BrowserWindow({
     width: wide ? 1280 : 1100,
@@ -62,9 +68,25 @@ function openInAppWindow(url, kind) {
     autoHideMenuBar: true,
     webPreferences: secureWebPreferences()
   });
-  w.webContents.setUserAgent(
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
-    '(KHTML, like Gecko) Chrome/120.0 Safari/537.36');
+  extWindows.set(key, w);
+
+  /* UA 伪装只在 macOS 上做。原来所有平台都被伪装成 Mac，Windows 上打开
+     Desmos 时会拿到与真实平台不符的标识，可能落到非最优的渲染路径
+     （用户实测 Windows 首次打开卡住、第二次才正常）。 */
+  if (process.platform === 'darwin') {
+    w.webContents.setUserAgent(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
+      '(KHTML, like Gecko) Chrome/120.0 Safari/537.36');
+  }
+
+  /* ⚠️ 必须放行 beforeunload，否则窗口关不掉。
+     Electron 的默认行为是：页面注册了 beforeunload 时，用户点关闭会被
+     **静默取消**——没有弹窗、没有提示，窗口就是不动，看起来像卡死，
+     只能去任务管理器强杀。Desmos 这类单页应用会注册 beforeunload，
+     于是「第一次打开关不掉、第二次才正常」。这里显式放行：外链窗口
+     本来就只是浏览，没有需要挽留的编辑状态。 */
+  w.webContents.on('will-prevent-unload', function (e) { e.preventDefault(); });
+
   w.loadURL(url).catch(function () { /* 交给 watchLoading 处理 */ });
   watchLoading(w, url);
   return w;
